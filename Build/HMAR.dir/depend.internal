@@ -266,6 +266,7 @@ HMAR.dir/src/main.cpp.o
  /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
  /home/chen/HMAR/HMAR_Location/src/dbscan.h
  /home/chen/HMAR/HMAR_Location/src/main.cpp
+ /home/chen/HMAR/HMAR_Location/src/parameter.h
  /home/chen/HMAR/HMAR_Location/src/util.h
  /home/chen/vtksrc/VTK-build/Common/Color/vtkCommonColorModule.h
  /home/chen/vtksrc/VTK-build/Common/Core/vtkAtomic.h

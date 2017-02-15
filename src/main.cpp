@@ -6,10 +6,11 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#define SOURCEFILE
+#define SAVEDDATA
 //#define DBSCAN
 
 #include "dataDeclaration.h"
+#include "parameter.h"
 #include "util.h"
 #include "dbscan.h"
 #include "Graph.h"
@@ -35,8 +36,7 @@ int main(int argc, char *argv[])
 {
 
 	vector<unsigned char*> color_code(12);
-	for(int j=0;j<12;j++)
-		color_code[j] = Calloc(unsigned char,3);
+	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
 
 	double ***sector_constraint;
@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 
 
 //[PROGRAM BEGIN]**************************************************************
-#ifdef SOURCEFILE
-	//[READ OBJ FILE]**********************************************************
 
+#ifdef SAVEDDATA
+	//[READ OBJ FILE]**********************************************************
 	//**********************************************************[READ OBJ FILE]
 
 	//[READ FILE]**************************************************************
@@ -197,8 +197,10 @@ int main(int argc, char *argv[])
 //	//[CLUSTERING]*************************************************************
 //	dbscanCluster(epsilon, minpts, num_points, pos);
 //	printf("Clustering training data......Complete\n");
+//
 //	points_centroid = combineNearCluster(pos, num_points, num_locations);
 //	printf("Combining nearby clusters......Complete\n");
+//
 //	location = Calloc(point_t, num_locations);
 //	for(i=0;i<num_locations;i++)
 //	{
@@ -238,8 +240,8 @@ int main(int argc, char *argv[])
 		{
 			if(atoi(obj_data[i][0].c_str())==obj)
 			{
-				for(ii=1;ii<obj_data[i].size();ii++)
-					LABEL_MOV[ii-1] = obj_data[i][ii];
+				for(ii=0;ii<obj_data[i].size()-1;ii++)
+					LABEL_MOV[ii] = obj_data[i][ii+1];
 				flag = true;
 			}
 		}
@@ -523,7 +525,8 @@ int main(int argc, char *argv[])
 			       norm_location, norm_location_normal, distance_location,
 			       pos, num_points,
 			       location, num_locations,
-			       num_location_intervals, num_sector_intervals, file_eof, kernel);
+			       num_location_intervals, num_sector_intervals,
+			       file_eof, kernel);
 
 	checkSectorConstraint(sector, sector_constraint, num_locations,
 						  num_location_intervals, num_sector_intervals);

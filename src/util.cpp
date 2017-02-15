@@ -355,7 +355,7 @@ void checkSectorConstraint(
 			{
 				sector_constraint[i][ii][iii] =
 					(sector[i][ii][iii].max - sector[i][ii][iii].min > 0) &&
-					(0.02 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
+					(0.05 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
 						sector[i][ii][iii].max - sector[i][ii][iii].min : 0;
 				for(int iv=0;iv<5;iv++)
 					for(int v=0;v<5;v++)

@@ -115,12 +115,16 @@ dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/main.cpp
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+parameter.h
+/home/chen/HMAR/HMAR_Location/src/parameter.h
 util.h
 /home/chen/HMAR/HMAR_Location/src/util.h
 dbscan.h
 /home/chen/HMAR/HMAR_Location/src/dbscan.h
 Graph.h
 /home/chen/HMAR/HMAR_Location/src/Graph.h
+
+/home/chen/HMAR/HMAR_Location/src/parameter.h
 
 /home/chen/HMAR/HMAR_Location/src/util.h
 dataDeclaration.h
