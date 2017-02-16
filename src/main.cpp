@@ -10,7 +10,6 @@
 //#define DBSCAN
 
 #include "dataDeclaration.h"
-#include "parameter.h"
 #include "util.h"
 #include "dbscan.h"
 #include "Graph.h"
@@ -98,8 +97,8 @@ int main(int argc, char *argv[])
 	for(int i=0;i<num_surfaces;i++)
 		surface[i] = Calloc(double, 4);
 
-	int obj = 0;
-	int num_objs = 3;
+	int obj = 3;
+	int num_objs = 4;
 
 	int num_filesi = 0;
 	int num_files  = 5;
@@ -112,47 +111,43 @@ int main(int argc, char *argv[])
 	//**********************************************************[READ OBJ FILE]
 
 	//[READ FILE]**************************************************************
-	file_eof = new unsigned int[num_files-1];
-	c = 0; c1 = 1;
-	for(i=num_filesi;i<num_files;i++)
-	{
-		name = new char[256];
-		if ( i == 10 )
-		{
-			c1++;
-			continue;
-		}
-		if ( i == 4 || i == 9 || i == 14 )
-		{
-			c1 = 1;
-			continue;
-		}
-		if ( i >= 10 )
-		{
-			sprintf(name, "../HMAR/3LocationData/traj_data_plyers%d.txt",c1);
-			++c1;
-		}
-		else if ( i >= 5 )
-		{
-			sprintf(name, "../HMAR/3LocationData/traj_data_clean%d.txt",c1);
-			++c1;
-		}
-		else
-		{
-			sprintf(name, "../HMAR/3LocationData/traj_data_drink%d.txt",c1);
-			++c1;
-		}
-		readFile( name, data_full , ',');
-		file_eof[c] = data_full.size(); ++c;
-		delete name;
+	string dir_name = "../../KINECT/data/";
+	file_eof = new unsigned int[100];
+	c = 0;
 
-		//table
-		vector<string> last_line = data_full[data_full.size()-1];
-		surface[0][0] = atof(last_line[1].c_str());
-		surface[0][1] = atof(last_line[2].c_str());
-		surface[0][2] = atof(last_line[3].c_str());
-		surface[0][3] = atof(last_line[4].c_str());
+	DIR *dir;
+	struct dirent *dent;
+	dir = opendir(dir_name.c_str());   
+
+	if(dir!=NULL)
+	{
+		while((dent=readdir(dir))!=NULL)
+		{
+			if (strcmp(dent->d_name,".")==0 || 
+				strcmp(dent->d_name,"..")==0 ||  
+				(*dent->d_name) == '.' )
+				continue;
+
+			string fn = string(dent->d_name);
+			size_t found_extension = fn.find(".txt");
+			if(found_extension==std::string::npos)
+				continue;
+
+			name = new char[256];
+			sprintf(name, "%s%s",dir_name.c_str(),dent->d_name);
+			readFile(name, data_full , ',');
+			file_eof[c] = data_full.size(); c++;
+			delete name;
+
+			//table
+			vector<string> last_line = data_full[data_full.size()-1];
+			surface[0][0] = atof(last_line[5].c_str());
+			surface[0][1] = atof(last_line[6].c_str());
+			surface[0][2] = atof(last_line[7].c_str());
+			surface[0][3] = atof(last_line[8].c_str());
+		}
 	}
+	closedir(dir);
 	//**************************************************************[READ FILE]
 	printf("Reading training data......Complete\n");
 
@@ -194,37 +189,12 @@ int main(int argc, char *argv[])
 
 //[LEARNING]*******************************************************************
 
-//	//[CLUSTERING]*************************************************************
-//	dbscanCluster(epsilon, minpts, num_points, pos);
-//	printf("Clustering training data......Complete\n");
-//
-//	points_centroid = combineNearCluster(pos, num_points, num_locations);
-//	printf("Combining nearby clusters......Complete\n");
-//
-//	location = Calloc(point_t, num_locations);
-//	for(i=0;i<num_locations;i++)
-//	{
-//		location[i].x = points_centroid[i].x;
-//		location[i].y = points_centroid[i].y;
-//		location[i].z = points_centroid[i].z;
-//		location[i].cluster_id = points_centroid[i].cluster_id;
-//	}
-//
-//	location_boundary = new double[num_locations];
-//	contactBoundary(pos, location, location_boundary,
-//					num_points, num_locations, true);
-//	contactBoundary(pos, location, location_boundary,
-//					num_points, num_locations, false);
-//	//*************************************************************[CLUSTERING]
-	printf("Learning boundary of clusters (action locations)......Complete\n");
-
-
 	//[LABELLING MOVEMENT]*****************************************************
 	int mov_tmp = 2;
 	LABEL_MOV.resize(mov_tmp);
 
 	name = new char[256];
-	sprintf(name, "./Object/obj_mov_data.txt");
+	sprintf(name, "../Object/obj_mov_data.txt");
 	readFile(name, obj_data , ',');
 
 	if(obj_data.empty())
@@ -238,6 +208,7 @@ int main(int argc, char *argv[])
 		bool flag = false;
 		for(i=0;i<num_objs;i++)
 		{
+			if(obj_data.size() < num_objs) continue;
 			if(atoi(obj_data[i][0].c_str())==obj)
 			{
 				for(ii=0;ii<obj_data[i].size()-1;ii++)
@@ -255,7 +226,7 @@ int main(int argc, char *argv[])
 	printf("Reviewing movement labels for OBJ...\n");
 	for(i=0;i<mov_tmp;i++) printf("MLabel %d : %s\n", i, LABEL_MOV[i].c_str());
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(true)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -287,7 +258,7 @@ int main(int argc, char *argv[])
 
 	//[LABELLING LOCATION]*****************************************************
 	name = new char[256];
-	sprintf(name, "./Location/loc_data.txt");
+	sprintf(name, "../Location/loc_data.txt");
 	readFile(name, loc_data , ',');
 	bool flag = false;
 	if(loc_data.empty())
@@ -377,7 +348,7 @@ int main(int argc, char *argv[])
 		printf("LLabel %d : %s\n", i+1, LABEL_LOC[i+1].c_str());
 	}
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(true)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -543,34 +514,48 @@ int main(int argc, char *argv[])
 
 //*******************************************************************[LEARNING]
 
+
+
 //[TESTING]********************************************************************
 	//Read file will be replaced later on
 	//[READ FILE]**************************************************************
+		
+	dir_name = "../../KINECT/data/test/";
+	delete[]file_eof;
+	file_eof = new unsigned int[1];
+
+	dir = opendir(dir_name.c_str());   
+
+	if(dir!=NULL)
 	{
-		int i = obj;
-		delete[]file_eof;
-		file_eof = new unsigned int[1];
-		//for(i=1;i<num_files;i++)
+		while((dent=readdir(dir))!=NULL)
 		{
+			if (strcmp(dent->d_name,".")==0 || 
+				strcmp(dent->d_name,"..")==0 ||  
+				(*dent->d_name) == '.' )
+				continue;
+
+			string fn = string(dent->d_name);
+			size_t found_extension = fn.find(".txt");
+			if(found_extension==std::string::npos)
+				continue;
+
 			name = new char[256];
-			if ( i == 1 )
-				sprintf(name, "../HMAR/3LocationData/traj_data_clean%d.txt",5);
-			else if ( i == 2 )
-				sprintf(name, "../HMAR/3LocationData/traj_data_plyers%d.txt",5);
-			else
-				sprintf(name, "../HMAR/3LocationData/traj_data_drink%d.txt",5);
+			sprintf(name, "%s%s",dir_name.c_str(),dent->d_name);
 			readFile( name, data_test , ',');
-			file_eof[i] = data_test.size();
+			file_eof[0] = data_test.size();
 			delete name;
 
 			//table
-			vector<string> last_line = data_test[data_test.size()-1];
-			surface[0][0] = atof(last_line[1].c_str());
-			surface[0][1] = atof(last_line[2].c_str());
-			surface[0][2] = atof(last_line[3].c_str());
-			surface[0][3] = atof(last_line[4].c_str());
+			vector<string> last_line = data_full[data_full.size()-1];
+			surface[0][0] = atof(last_line[5].c_str());
+			surface[0][1] = atof(last_line[6].c_str());
+			surface[0][2] = atof(last_line[7].c_str());
+			surface[0][3] = atof(last_line[8].c_str());
 		}
 	}
+	closedir(dir);
+
 	//**************************************************************[READ FILE]
 	printf("Reading test data......Complete\n");
 
@@ -633,7 +618,7 @@ int main(int argc, char *argv[])
 	double prediction[num_locations];
 	double t_val[num_locations];
 	vector<data_t> tmp_data;
-	bool flag_learned = false;
+	bool learn = false;
 	bool slide = false;
 	int last_location = 0;
 	int surface_num_tmp = 0;
@@ -650,7 +635,7 @@ int main(int argc, char *argv[])
 
 		if (pos_test[i].cluster_id < 0)
 		{
-			flag_learned = true;
+			learn = true;
 
 			checkSector(sector, prediction, t_val,
 						pos_test[i],
@@ -658,7 +643,7 @@ int main(int argc, char *argv[])
 						norm_location, norm_location_normal,
 						distance_location,
 						num_location_intervals, num_sector_intervals,
-						last_location, flag_learned);
+						last_location, learn);
 
 			if (l2Norm(vel_test[i])> vel_limit)
 			{
@@ -666,7 +651,7 @@ int main(int argc, char *argv[])
 				{
 					if (!slide)
 					{
-						slide =	checkMoveSlide(pos_test[i], vel_test[i], surface[ii], 0.1, 0.97); //####needto add
+						slide =	checkMoveSlide(pos_test[i], vel_test[i], surface[ii], 0.1, 0.97); //####need to add
 						surface_num_tmp = ii;
 					}
 				}
@@ -755,7 +740,8 @@ int main(int argc, char *argv[])
 //			}
 
 			for(int ii=0;ii<num_locations;ii++)
-				printf(" %d %.4f ", (int)prediction[ii], prediction2[ii]);
+				//printf(" %d %.4f ", (int)prediction[ii], prediction2[ii]);
+				printf(" %.4f ", prediction2[ii]);
 			for(int ii=0;ii<num_locations;ii++)
 				if((int)prediction[ii]==1)
 					printf(" %s %.4f ", LABEL_LOC[ii+1].c_str(), prediction1[ii]);
@@ -808,7 +794,7 @@ int main(int argc, char *argv[])
 			// if it is moved back to the same location
 			if (last_location != pos_test[i].cluster_id)
 			{
-				if (flag_learned)
+				if (learn)
 				{
 					// copy only the intended values for sectors
 					// updating the values in memory
@@ -834,7 +820,7 @@ int main(int argc, char *argv[])
 							}
 						}
 					}
-					flag_learned = false;
+					learn = false;
 				}
 				else
 				{
@@ -855,7 +841,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				if (flag_learned)
+				if (learn)
 					cout << " (same last location...)";
 			}
 
@@ -868,474 +854,6 @@ int main(int argc, char *argv[])
 		}
 		cout << endl;
 	}
-
-//############################################################################################################### EVAL START
-//Step 00: 	Object identified, contact detected, start analysis
-//Step 01:	Object moving ?
-//			Yes : Step 02
-//			No 	: Step 05
-//Step 02:	Within any known location ?
-//			Yes	: Step 03
-//			No	: Step 04
-//Step 03:	Check category -> 0 : Label = OBJECT** (given at location)
-//	 					   -> 1 : surface contact based labeling -> Step 04 + Label = OBJECT** (given at location)
-//Step 04:  Transport/sliding ?
-//			Transport	: Label = MOVE
-//			Sliding		: Label = SLIDE/PUSHING
-//Step 05:	Within any known location ?
-//			Yes	: Label = OBJECT**
-//			No	: Label = STOP
-
-//	bool flag_learned = false;
-//	vector<data_t> tmp_data;
-//	int last_location = 0;
-//	unsigned int output[num_locations];
-//	bool slide = false;
-//	for(int i=0;i<num_points;i++)
-//	{
-//		decideBoundary(pos_test[i], location, location_boundary, num_locations);
-//
-//		cout << i << " " << pos_test[i].cluster_id << " ";
-//
-//		if (pos_test[i].cluster_id >= 0)
-//		{
-//			if (!Graph[1].checkNode(pos_test[i].cluster_id))
-//			{
-//				tmp_data.push_back(motion_data_test[i]);
-//				Graph[1].addNode(LABEL[pos_test[i].cluster_id], tmp_data,
-//						         Graph[0].getNode(pos_test[i].cluster_id).category,
-//						         Graph[0].getNode(pos_test[i].cluster_id).surface_num);
-//				tmp_data.clear();
-//			}
-//			else
-//			{
-//				tmp_data.push_back(motion_data_test[i]);
-//				Graph[1].extendNode(tmp_data, pos_test[i].cluster_id);
-//				tmp_data.clear();
-//			}
-//			if (flag_learned)
-//			{
-//				// if it is moved back to the same location
-//				if (last_location != pos_test[i].cluster_id)
-//				{
-//					// copy only the intended values for sectors
-//					// updating the values in memory
-//					int c = last_location * num_locations + pos_test[i].cluster_id;
-//					for(int ii=0;ii<num_location_intervals;ii++)
-//					{
-//						for(int iii=0;iii<num_sector_intervals;iii++)
-//						{
-//							sector_mem[c][ii][iii].max = sector[c][ii][iii].max;
-//							sector_mem[c][ii][iii].min = sector[c][ii][iii].min;
-//						}
-//					}
-//				}
-//				else
-//					cout << "same last location...";
-//
-//				// update the sector using values from memory
-//				for(int ii=0;ii<num_locations;ii++)
-//				{
-//					int cc = last_location * num_locations + ii;
-//					for(int iii=0;iii<num_location_intervals;iii++)
-//					{
-//						for(int iiii=0;iiii<num_sector_intervals;iiii++)
-//						{
-//							sector[cc][iii][iiii].max = sector_mem[cc][iii][iiii].max;
-//							sector[cc][iii][iiii].min = sector_mem[cc][iii][iiii].min;
-//						}
-//					}
-//				}
-//				flag_learned = false;
-//			}
-//
-//			for(int ii=0;ii<num_locations;ii++)
-//			{
-//				output[ii] = 0.0;
-//			}
-//
-//			last_location = pos_test[i].cluster_id;
-//
-//// #########Now that we know the object is in location, we can check whether it is in contact with surface.
-////			If not in contact with any surface, then check object for function label.
-////			If in contact, check if it is sliding.
-////			Vel = 0 means place, moving without sliding means normal movement.
-////			Sliding and movement gives more info, to see label have to check object.
-//
-////			double  tmp1 = checkMoveSlideOutside(pos_test[i], vel_test[i], surface, num_surfaces);
-////			cout << l2Norm(vel_test[i]) << " ";
-//
-//			//category switch
-//			switch(Graph[1].getNode(pos_test[i].cluster_id).category)
-//			{
-//				case 0 : // Check Object Label
-//					cout << " Cat 0 ";
-//					if (LABEL[pos_test[i].cluster_id+1].empty())
-//					{
-//						cout << " LABEL: "<< "Empty category 0 Label.";
-//						if (l2Norm(vel_test[i])> vel_limit)
-//							cout << "...MOVE"<< endl;
-//						else
-//							cout << "...NULL"<< endl;
-//					}
-//					else
-//						cout << " LABEL: "<< LABEL[pos_test[i].cluster_id+1] << endl;
-//					break;
-//				case 1 :
-//					cout << " Cat 1 ";
-//					slide =	checkMoveSlide(pos_test[i],
-//							surface[Graph[1].getNode(pos_test[i].cluster_id).surface_num],
-//							0.1);
-//					if (l2Norm(vel_test[i])> vel_limit)
-//					{
-//						if (slide)
-//						{
-//							if (LABEL[pos_test[i].cluster_id+1].empty())
-//								cout << " LABEL: "<< "Empty category 1 Label." << endl;
-//							else
-//								cout << " LABEL: "<< LABEL[pos_test[i].cluster_id+1] << endl;
-//							break;
-//						}
-//						else
-//							cout << " LABEL: "<< "MOVE" << endl;
-//					}
-//					else
-//					{
-//						cout << " "<< l2Norm(vel_test[i]);
-//						cout << " LABEL: "<< "NULL" << endl;
-//					}
-//					break;
-////				case  2 :
-////					...
-////					break;
-//				default:
-//					cout << " LABEL: "<< "Unknown category..." << endl;
-//					break;
-//			}
-//		}
-//		else
-//		{
-//			checkSector(sector, output,
-//						pos_test[i],
-//						location, num_locations,
-//						norm_location, norm_location_normal,
-//						distance_location,
-//						num_location_intervals, num_sector_intervals,
-//						last_location, true);
-//			flag_learned = true;
-//
-//			if (l2Norm(vel_test[i])> vel_limit)
-//			{
-//				if (Graph[1].getNode(last_location).category==1)
-//					slide =	checkMoveSlide(pos_test[i],
-//							surface[Graph[1].getNode(last_location).surface_num],
-//							0.1);
-//				else
-//					slide = false;
-//				if (slide)
-//					if (LABEL[pos_test[i].cluster_id+1].empty())
-//						cout << " LABEL: "<< "Empty category 1 Label.";
-//					else
-//						//cout << " LABEL: "<< LABEL[last_location+1];
-//						cout << " LABEL OUT: "<< " SLIDE ";
-//				else
-//					cout << " LABEL OUT: "<< " MOVE ";
-//			}
-//			else
-//			{
-//				cout << " "<< l2Norm(vel_test[i]);
-//				cout << " LABEL OUT: "<< " NULL ";
-//			}
-//
-//
-//			//cout << l2Norm(vel_test[i]) << " ";
-//
-//			for(int ii=0;ii<num_locations;ii++)
-//			{
-//
-//				switch(output[ii])
-//				{
-//					case 1 :
-//						cout << " Target: "<< ii << " possible...";
-//						break;
-//					case 2 :
-//						cout << " Target: "<< ii << " detected...";
-//						break;
-//					case 3 :
-//						cout << " Target: "<< ii << " learned...";
-//						break;
-//					default:
-//						cout << " Target: "<< ii << " not possible...";
-//						break;
-//				}
-//			}
-//			cout << endl;
-//		}
-//
-//
-////		printf("OUTPUT : %02d %02d ", i, pos_test[i].cluster_id);
-////		printf("%02d %02d %02d %02d\n", output[0], output[1], output[2], output[3]);
-//	}
-//
-//	showConnection(sector,
-//		 norm_location, norm_location_normal, distance_location,
-//		 location, num_locations,
-//		 num_location_intervals, num_sector_intervals);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    int argc;
-//    char **argv;
-//
-//    point_t *points; 				// cluster
-//    point_t *points_centroid; 		// modified cluster centroid
-//    point_t *points_test; 				// test cluster
-//    point_t *pos_visualize;
-//
-//
-//
-//
-//	vector<vector<string> > data_test;
-//
-//
-//	vector<data_t> motionData_train;
-//	vector<data_t> motion_data_test;
-//	vector<data_t> motionData2_test;
-//
-//	Graph Graph[2];
-//
-//	int *label;
-//
-//
-//
-//
-//
-//
-//
-//	int c,c1,c2,c3; // act as temporary counter
-//
-//    double epsilon = 0.015; 	// if datasets are merged these 2 values can be increased.
-//    unsigned int minpts = 10;
-//    unsigned int num_points = 0;
-//	unsigned int num_locations = 0;
-//	unsigned int num_location_intervals = 10;
-//	unsigned int num_sector_intervals = 4;
-//
-//	double vel_limit = 0.01; //##### still need to validate
-//
-//	point_t *pos,*vel,*acc;
-//	point_t *pos_node,*vel_node,*acc_node;
-//	point_t *pos_vel_acc[3];
-//
-//	vector<data_t> motion_data;
-//
-//	point_t *location;
-//	double *location_boundary;
-//
-//	int num_surfaces = 1;
-//	double **surface;
-//	surface = new double*[num_surfaces];
-//	for(int i=0;i<num_surfaces;i++)
-//		surface[i] = new double[4];
-//
-//
-//
-
-
-
-
-
-//
-//
-//
-//
-
-
-//
-//// if the tube is lost or goes in new direction,
-////	we can check the current direction vector to see
-////	which location it is going and check the corresponding sectors
-//
-
-////	//**************************************************************[ADD NODES]
-//////	//[ADD EDGES]**************************************************************
-//////	mem_tmp = -1;
-//////	edge_num = 0;
-//////	edge_data.clear();
-//////	for(int i=0;i<num_points;i++)
-//////	{
-//////		//decideBoundary(num_locations, pos_test[i], location, location_boundary);
-//////		if (i < 1) // first data point is skipped because we need to check for the previous node.
-//////			continue;
-//////		if (pos_test[i].cluster_id < 0)
-//////			if (pos_test[i-1].cluster_id < 0)
-//////				edge_data.push_back(motion_data_test[i]);
-//////			else
-//////				mem_tmp = pos_test[i-1].cluster_id;
-//////		else
-//////			if (pos_test[i-1].cluster_id < 0)
-//////				// check which node is assigned an edge, and check which node the edge is linked to
-//////				if (!Graph[1].checkEdge((unsigned int)pos_test[i].cluster_id,
-//////										(unsigned int)mem_tmp , edge_num))
-//////				{
-//////					// adding a new edge
-//////					Graph[1].addEdge((unsigned int)pos_test[i].cluster_id,
-//////									 (unsigned int)mem_tmp, edge_data);
-//////					edge_data.clear();
-//////				}
-//////				else
-//////				{
-//////					// extending the edge list for each node
-//////					Graph[1].extendEdge((unsigned int)pos_test[i].cluster_id,
-//////										(unsigned int)mem_tmp, edge_data, edge_num);
-//////					edge_data.clear();
-//////				}
-//////			else
-//////				continue;
-//////	}
-//////	//**************************************************************[ADD EDGES]
-////	//[VISUALIZE NODES]********************************************************
-////	node_data_tmp = Graph[1].getNodeDataLabel(true,false,false);
-////	free(pos_test); free(vel_test); free(acc_test);
-////	pos_test = (point_t *)calloc(node_data_tmp.size(), sizeof(point_t));
-////	vel_test = (point_t *)calloc(node_data_tmp.size(), sizeof(point_t));
-////	acc_test = (point_t *)calloc(node_data_tmp.size(), sizeof(point_t));
-////	for(int i=0; i<node_data_tmp.size();i++)
-////	{
-////		vector<double> tmp_data = node_data_tmp[i];
-////		c = 0;
-////		pos_test[i].cluster_id = tmp_data[c]; ++c;
-////		pos_test[i].x = tmp_data[c]; ++c;
-////		pos_test[i].y = tmp_data[c]; ++c;
-////		pos_test[i].z = tmp_data[c]; ++c;
-////		vel_test[i].cluster_id = tmp_data[c]; ++c;
-////		vel_test[i].x = tmp_data[c]; ++c;
-////		vel_test[i].y = tmp_data[c]; ++c;
-////		vel_test[i].z = tmp_data[c]; ++c;
-////		acc_test[i].cluster_id = tmp_data[c]; ++c;
-////		acc_test[i].x = tmp_data[c]; ++c;
-////		acc_test[i].y = tmp_data[c]; ++c;
-////		acc_test[i].z = tmp_data[c]; ++c;
-////	}
-//////	showData(pos_test, node_data_tmp.size(), LABEL, true, false);
-////	//********************************************************[VISUALIZE NODES]
-//////	//[VISUALIZE EDGES]********************************************************
-//////	edge_data_tmp = Graph[1].getEdgeDataLabel(true,true,true);
-//////	free(pos_test); free(vel_test); free(acc_test);
-//////	pos_test = (point_t *)calloc(edge_data_tmp.size(), sizeof(point_t));
-//////	vel_test = (point_t *)calloc(edge_data_tmp.size(), sizeof(point_t));
-//////	acc_test = (point_t *)calloc(edge_data_tmp.size(), sizeof(point_t));
-//////	for(int i=0; i<edge_data_tmp.size();i++)
-//////	{
-//////		vector<double> tmp_data = edge_data_tmp[i];
-//////		c = 0;
-//////		pos_test[i].cluster_id = tmp_data[c]; ++c;
-//////		pos_test[i].x = tmp_data[c]; ++c;
-//////		pos_test[i].y = tmp_data[c]; ++c;
-//////		pos_test[i].z = tmp_data[c]; ++c;
-//////		vel_test[i].cluster_id = tmp_data[c]; ++c;
-//////		vel_test[i].x = tmp_data[c]; ++c;
-//////		vel_test[i].y = tmp_data[c]; ++c;
-//////		vel_test[i].z = tmp_data[c]; ++c;
-//////		acc_test[i].cluster_id = tmp_data[c]; ++c;
-//////		acc_test[i].x = tmp_data[c]; ++c;
-//////		acc_test[i].y = tmp_data[c]; ++c;
-//////		acc_test[i].z = tmp_data[c]; ++c;
-//////	}
-//////	showData(pos_test, edge_data_tmp.size(), true, false);
-//////	motionData2_test.resize(edge_data_tmp.size());
-//////	delete[]label;
-//////	label = new int[edge_data_tmp.size()];
-//////	for(int i=0;i<edge_data_tmp.size();i++)
-//////	{
-//////		label[i] = pos_test[i].cluster_id;
-//////		motionData2_test[i].pos = point2point3D(pos_test[i]);
-//////		motionData2_test[i].vel = point2point3D(vel_test[i]);
-//////		motionData2_test[i].acc = point2point3D(acc_test[i]);
-//////	}
-//////	//********************************************************[VISUALIZE EDGES]
-////	//********************************************************[GRAPH TEMPORARY]
-////	printf("Creating a graph to represent the clusters (action locations)......Complete\n");
-////
-////
-////
-////
-//////********************************************************************[TESTING]*/
-////
-////
-////
-////
-////
-////
-////
-////
-////
-////
-////
-////
-//////	//[CLASSIFIER TRAINNING]***************************************************
-//////	num_points = edge_data_tmp.size();
-//////	classifierSVM( motionData_train, label, num_points, location, num_locations, true );
-//////    argc = 11;
-//////    char* n_argv[] = {"svm-train", "-t", "0", "-b", "1", "-c", "0.5", "-g", "0.0078125","data/data_svm.svm", "model"};
-//////    argv = n_argv;
-//////    trainSVM(argc,argv);
-//////    //***************************************************[CLASSIFIER TRAINNING]
-//////	printf("Learning classifier from training data......Complete\n");
-//////
-//////
-//////
-//////
-//////
-//////
-//////
-//////
-//////
-////
-////
-//////	//[CLASSIFIER TESTING]*****************************************************
-//////	num_points = edge_data_tmp.size();
-//////	classifierSVM( motionData2_test, label, num_points, location, num_locations, false );
-//////    argc = 6;
-//////    char* n_argv2[] = {"svm-predict", "-b", "1", "data/data_svm2.svm", "model", "predict"};
-//////    argv = n_argv2;
-//////    predictSVM( argc, argv );
-//////    //*****************************************************[CLASSIFIER TESTING]
-//////	printf("Testing classifier using test data......Complete\n");
-//////
-//////	/*
-//////	vector<vector<string> > data_predict;
-//////	char *name = new char[256];
-//////	sprintf(name, "predict");
-//////	readFile( name, data_predict , ' ');
-//////	delete name;
-//////
-//////	num_points = data_predict.size();
-//////
-//////	parseData2Point( num_points, data_predict, points_test , true);
-//////
-//////	//showData(points_test, num_points, true, false);
-//////
-//////	printf("Prediction from test data......Complete\n");
-//////
-//////	/*
-////////	free(p1);
-////////	free(p4);
-////////	free(p5);
-//////*/
 
 
 	cout << "END" << endl;

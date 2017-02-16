@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <iterator>
+#include <dirent.h>
 
 #include <vtkVersion.h>
 #include <vtkSmartPointer.h>

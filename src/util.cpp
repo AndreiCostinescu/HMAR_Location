@@ -18,6 +18,9 @@ using namespace std;
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
 
+// For backward compatibility with new VTK generic data arrays
+#define InsertNextTypedTuple InsertNextTupleValue
+
 //---------------------------------------------------------------------------------------------------------------------
 // Basic algo
 double l2Norm(vector<double> A)
@@ -355,7 +358,7 @@ void checkSectorConstraint(
 			{
 				sector_constraint[i][ii][iii] =
 					(sector[i][ii][iii].max - sector[i][ii][iii].min > 0) &&
-					(0.05 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
+					(0.06 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
 						sector[i][ii][iii].max - sector[i][ii][iii].min : 0;
 				for(int iv=0;iv<5;iv++)
 					for(int v=0;v<5;v++)
@@ -500,6 +503,8 @@ void checkSector(
 		yy 		 = ceil(p_*num_location_intervals/tmp_norm[xx])  -1;
 		zz 		 = ceil(angle_tmp*num_sector_intervals/M_PI)     -1;
 
+		//cout << yy << " " << zz << " "; 
+
 		if(yy<num_location_intervals && yy>=0 &&
 		   zz<num_sector_intervals   && zz>=0)
 		{
@@ -518,6 +523,7 @@ void checkSector(
 						t_val[i] = l2Norm(t_) - sector[xx][yy][zz].max;
 					else
 						t_val[i] = sector[xx][yy][zz].min - l2Norm(t_);
+					//printf(" %.4f %.4f %.4f %.4f   ", l2Norm(t_), t_val[i], sector[xx][yy][zz].max, sector[xx][yy][zz].min);
 					sector[xx][yy][zz].max = max(l2Norm(t_),sector[xx][yy][zz].max);
 					sector[xx][yy][zz].min = min(l2Norm(t_),sector[xx][yy][zz].min);
 				}
@@ -646,7 +652,7 @@ void writeLocLabelFile(
 	point_t *location_,
 	unsigned int num_locations_)
 {
-	std::ofstream write_file("./Location/loc_data.txt", std::ios::app);
+	std::ofstream write_file("../Location/loc_data.txt", std::ios::app);
 	write_file << obj_;
 	for(unsigned int i=0;i<num_locations_;i++)
 	{
@@ -663,7 +669,7 @@ void writeObjLabelFile(
 	vector<string> label_,
 	unsigned int obj_)
 {
-	std::ofstream write_file("./Object/obj_mov_data.txt", std::ios::app);
+	std::ofstream write_file("../Object/obj_mov_data.txt", std::ios::app);
 	write_file << obj_;
 	for(unsigned int i=0;i<label_.size();i++)
 	{
@@ -817,9 +823,12 @@ void parseData2Point(
 		{
 			//if(atof(data_full[i][14].c_str())>0)
 			{
+				p[i].x = atof(data_full[i][2].c_str());
+				p[i].y = atof(data_full[i][3].c_str());
+				p[i].z = atof(data_full[i][4].c_str());/*
 				p[i].x = atof(data_full[i][15].c_str());
 				p[i].y = atof(data_full[i][16].c_str());
-				p[i].z = atof(data_full[i][17].c_str());
+				p[i].z = atof(data_full[i][17].c_str());*/
 				p[i].cluster_id = UNCLASSIFIED;
 			}
 		}
