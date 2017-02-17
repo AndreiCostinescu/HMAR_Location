@@ -13,35 +13,41 @@
 class Graph
 {
 public:
-	Graph(){};
-
-	node_tt getNode(unsigned int node_index){return nodes[node_index];}
-	vector<node_tt> getNodeList(){return nodes;}
-	vector<vector<edge_tt> > getEdgeList(){return edges;}
+	Graph(){}
 
 	void addNode(
 		string name_,
-		vector<data_t> data_,
 		unsigned int category_,
-		int surface_num_);
+		unsigned int surface_num_,
+		double boundary_,
+		vector<data_t> data_);
 	void extendNode(
 		vector<data_t> data_,
 		unsigned int node_num_);
 	bool checkNode(
 		unsigned int node_index_);
+	node_tt getNode(unsigned int node_index){return nodes[node_index];}
+	vector<node_tt> getNodeList(){return nodes;}
+
 	void addEdge(
-		unsigned int node_index1_,
-		unsigned int node_index2_,
-		vector<data_t> data_);
-	void extendEdge(
-		unsigned int node_index1_,
-		unsigned int node_index2_,
 		vector<data_t> data_,
-		unsigned int edge_num_);
+		unsigned int node_index1_,
+		unsigned int node_index2_,
+		unsigned int num_location_intervals_,
+		unsigned int num_sector_intervals_,
+		vector<vector<sector_t> > sector_map_);
+	void extendEdge(
+		vector<data_t> data_,
+		unsigned int node_index1_,
+		unsigned int node_index2_);
+	void checkEdgeList(
+		unsigned int node_index1_);
 	bool checkEdge(
 		unsigned int node_index1_,
 		unsigned int node_index2_,
 		unsigned int &edge_num_ );
+	vector<vector<edge_tt> > getEdgeList(){return edges;}
+
 	vector<vector<double> > getNodeDataLabel(
 		bool pos_=false,
 		bool vel_=false,
@@ -54,7 +60,6 @@ public:
 	virtual ~Graph(){}
 
 private:
-	bool check_flag;
 	node_tt node;
 	edge_tt edge;
 	vector<node_tt> nodes;

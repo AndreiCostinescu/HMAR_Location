@@ -1,8 +1,9 @@
 FILE(REMOVE_RECURSE
   "CMakeFiles/../HMAR.dir/src/Graph.cpp.o"
-  "CMakeFiles/../HMAR.dir/src/svm.cpp.o"
   "CMakeFiles/../HMAR.dir/src/dbscan.cpp.o"
   "CMakeFiles/../HMAR.dir/src/util.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/algo.cpp.o"
   "CMakeFiles/../HMAR.dir/src/main.cpp.o"
   "../HMAR.pdb"
   "../HMAR"

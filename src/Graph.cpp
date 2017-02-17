@@ -7,16 +7,23 @@
 
 #include "Graph.h"
 
+//=============================================================================
+// NODES
+//=============================================================================
 void Graph::addNode(
 	string name_,
-	vector<data_t> data_,
-	unsigned int category_,
-	int surface_num_)
+	unsigned int category_, //moving???
+	unsigned int surface_num_,
+	double boundary_,
+	vector<data_t> data_)
 {
+	node = {};
+
 	node.name     		= name_;
 	node.index    		= nodes.size();
 	node.category 		= category_;
 	node.surface_num	= surface_num_;
+	node.boundary 		= boundary_,
 	node.data    	 	= data_;
 	nodes.push_back(node);
 	edges.push_back(emptyEdgeList());
@@ -24,53 +31,74 @@ void Graph::addNode(
 
 void Graph::extendNode(
 	vector<data_t> data_,
-	unsigned int node_num)
+	unsigned int node_num_)
 {
 	if(data_.size()==0)
 		cout << "[WARNING] : Data used to extend node is empty." << endl;
 	else if(data_.size()==1)
-		nodes[node_num].data.push_back(data_[0]);
+		nodes[node_num_].data.push_back(data_[0]);
 	else
-		nodes[node_num].data.insert(nodes[node_num].data.end(),
-				                    data_.begin(), data_.end());
+		nodes[node_num_].data.insert(nodes[node_num_].data.end(),
+				                     data_.begin(), data_.end());
 }
 
 bool Graph::checkNode(
 	unsigned int node_index1_)
 {
-	check_flag = false;
+	bool check_flag = false;
 	if(nodes.size() > 0)
 		if(nodes.size()-1 >= node_index1_)
 			check_flag = true;
 	return check_flag;
 }
 
+//=============================================================================
+// EDGES
+//=============================================================================
 void Graph::addEdge(
+	vector<data_t> data_,
 	unsigned int node_index1_,
 	unsigned int node_index2_,
-	vector<data_t> data_)
+	unsigned int num_location_intervals_,
+	unsigned int num_sector_intervals_,
+	vector<vector<sector_t> > sector_map_)
 {
-	edge.begin_index = node_index1_;
-	edge.end_index   = node_index2_;
-	edge.cost 	     = 0;
-	edge.data        = data_;
+	edge = {};
+
+	edge.begin_index 			= node_index1_;
+	edge.end_index   			= node_index2_;
+	edge.data 					= data_;
+	edge.num_location_intervals = num_location_intervals_;
+	edge.num_sector_intervals 	= num_sector_intervals_;
+	edge.sector_map 			= sector_map_;
+
+	checkEdgeList(node_index1_);
 	edges[node_index1_].push_back(edge);
 }
 
 void Graph::extendEdge(
-	unsigned int node_index1_,
-	unsigned int node_index2_,
 	vector<data_t> data_,
-	unsigned int edge_num_)
+	unsigned int node_index1_,
+	unsigned int node_index2_)
 {
 	if(data_.size()==0)
 		cout << "[WARNING] : Data to extend edge is empty." << endl;
 	else if(data_.size()==1)
-		edges[node_index1_][edge_num_].data.push_back(data_[0]);
+		edges[node_index1_][node_index2_].data.push_back(data_[0]);
 	else
-		edges[node_index1_][edge_num_].data.insert(
-				edges[node_index1_][edge_num_].data.end(),
+		edges[node_index1_][node_index2_].data.insert(
+				edges[node_index1_][node_index2_].data.end(),
 				data_.begin(), data_.end());
+}
+
+void Graph::checkEdgeList(
+	unsigned int node_index1_)
+{
+	if(node_index1_ > edges.size())
+	{
+		cout << "[WARNING] : Edge does not exists in list. Resizing list." << endl;
+		edges.resize(node_index1_);
+	}
 }
 
 bool Graph::checkEdge(
@@ -78,7 +106,7 @@ bool Graph::checkEdge(
 	unsigned int node_index2_,
 	unsigned int &edge_num_ )
 {
-	check_flag = false;
+	bool check_flag = false;
 	if(edges[node_index1_].size()>0)
 		for(int i=0;i<edges[node_index1_].size();i++)
 			if(edges[node_index1_][i].end_index == node_index2_)
@@ -142,7 +170,7 @@ vector<vector<double> > Graph::getNodeDataLabel(
 	bool vel_,
 	bool acc_)
 {
-	vector<vector<double> > output;
+	vector<vector<double> > output; // length * XYZId
 	vector<node_tt> list = getNodeList();
 	vector<data_t> data;
 	// list of nodes

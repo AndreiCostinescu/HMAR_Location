@@ -15,7 +15,6 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
-#include <iostream>
 #include <semaphore.h>
 #include <fstream>
 #include <sstream>
@@ -61,6 +60,9 @@
 
 using namespace std;
 
+#define Sqr(x) ((x)*(x))
+#define Malloc(type,n) (type *)malloc((n)*sizeof(type))
+#define Calloc(type,n) (type *)calloc( n, sizeof(type))
 
 //******************** TAKEN FROM .....
 #define UNCLASSIFIED -1
@@ -97,20 +99,23 @@ struct data_s
 typedef struct node_ss node_tt;
 struct node_ss
 {
-	string name;
-	unsigned int index;
-	unsigned int category;
-	int surface_num;
-	vector<data_t> data;
+	string 			name;
+	unsigned int 	index;
+	unsigned int 	category; //moving???
+	unsigned int 	surface_num;
+	double 			boundary;
+	vector<data_t> 	data;
 };
 
 typedef struct edge_ss edge_tt;
 struct edge_ss
 {
-	unsigned int begin_index;
-	unsigned int end_index;
-	double cost;
-	vector<data_t> data;
+	unsigned int 				begin_index;
+	unsigned int 				end_index;
+	vector<data_t> 				data;
+	unsigned int 				num_location_intervals;
+	unsigned int 				num_sector_intervals;
+	vector<vector<sector_t> > 	sector_map; // locations * sectors
 };
 
 #endif /* DATADECLARATION_H_ */

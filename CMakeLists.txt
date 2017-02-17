@@ -7,12 +7,12 @@ add_compile_options(-std=c++11)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
  
-add_executable(HMAR ./src/Graph.cpp ./src/svm.cpp ./src/dbscan.cpp ./src/util.cpp ./src/main.cpp)
+add_executable(../HMAR ./src/Graph.cpp ./src/dbscan.cpp ./src/util.cpp ./ src/vtkExtra.cpp ./src/algo.cpp ./src/main.cpp)
  
 if(VTK_LIBRARIES)
-  target_link_libraries(HMAR ${VTK_LIBRARIES})
+  target_link_libraries(../HMAR ${VTK_LIBRARIES})
 else()
-  target_link_libraries(HMAR vtkHybrid vtkWidgets)
+  target_link_libraries(../HMAR vtkHybrid vtkWidgets)
 endif()
 
 
