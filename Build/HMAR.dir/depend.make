@@ -525,6 +525,7 @@ HMAR.dir/src/main.cpp.o: /home/chen/vtksrc/VTK/Utilities/KWIML/vtkkwiml/include/
 HMAR.dir/src/main.cpp.o: /home/chen/vtksrc/VTK/Utilities/KWIML/vtkkwiml/include/kwiml/int.h
 HMAR.dir/src/main.cpp.o: /home/chen/vtksrc/VTK/Utilities/KWIML/vtkkwiml/int.h
 
+HMAR.dir/src/util.cpp.o: ../src/Graph.h
 HMAR.dir/src/util.cpp.o: ../src/algo.h
 HMAR.dir/src/util.cpp.o: ../src/dataDeclaration.h
 HMAR.dir/src/util.cpp.o: ../src/dbscan.h

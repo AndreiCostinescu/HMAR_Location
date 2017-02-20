@@ -94,10 +94,10 @@ void Graph::extendEdge(
 void Graph::checkEdgeList(
 	unsigned int node_index1_)
 {
-	if(node_index1_ > edges.size())
+	if(node_index1_ + 1 > edges.size())
 	{
 		cout << "[WARNING] : Edge does not exists in list. Resizing list." << endl;
-		edges.resize(node_index1_);
+		edges.resize(node_index1_ + 1);
 	}
 }
 

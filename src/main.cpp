@@ -6,6 +6,7 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
+//#define LEARN
 #define SAVEDDATA
 //#define DBSCAN
 
@@ -34,11 +35,16 @@ vector<string> LABEL_LOC;
 //=============================================================================
 int main(int argc, char *argv[])
 {
-	//[VARIABLES]**************************************************************
 
+#ifdef LEARN
+
+	//[VARIABLES]**************************************************************
 	vector<unsigned char*> color_code(12);
 	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
+
+	string scene  = "Kitchen";
+	string object = "Cup";
 
 	int num_points 		= 0;
 	int num_locations	= 0;
@@ -118,6 +124,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	closedir(dir);
+	writeSurfaceFile(scene,surface);
 	//**************************************************************[READ FILE]
 	printf("Reading training data......Complete\n");
 
@@ -129,6 +136,7 @@ int main(int argc, char *argv[])
 	parseData2Point(data_full, points);
 	//*************************************************************[PARSE DATA]
 	printf("Parsing training data......Complete\n");
+
 
 	// LEARNING
 	//[PREPROCESS DATA]********************************************************
@@ -156,107 +164,126 @@ int main(int argc, char *argv[])
 	//********************************************************[PREPROCESS DATA]
 	printf("Preprocessing data......Complete\n");
 
-	//[LABELLING MOVEMENT]*****************************************************
-	labelingMovement(LABEL_MOV, num_mov, obj, num_objs);
-	//*****************************************************[LABELLING MOVEMENT]
 
+	//[LABELLING MOVEMENT]*****************************************************
+	labelMovement(scene, object, LABEL_MOV, num_mov);
+	//*****************************************************[LABELLING MOVEMENT]
 	//[LABELLING LOCATION]*****************************************************
-	labelingLocation(points, locations, location_boundary, LABEL_LOC,
-					 obj, epsilon, minpts);
+	vector<point_t> points_avg;
+	for(int i=0;i<pos_vel_acc_avg.size();i++)
+		points_avg.push_back(pos_vel_acc_avg[i][0]);
+
+	labelLocation(scene, object, points_avg,
+					 locations, location_boundary, LABEL_LOC,
+					 epsilon, minpts);
 	num_locations = locations.size();
+
+	for(int i=0;i<pos_vel_acc_avg.size();i++)
+		pos_vel_acc_avg[i][0].cluster_id = points_avg[i].cluster_id;
 	//*****************************************************[LABELLING LOCATION]
 	printf("Labeling of clusters (action locations)......Complete\n");
 
 
+////[GRAPH]**********************************************************************
 
-//[GRAPH]**********************************************************************
-	//[ADD NODES]**************************************************************
-	// Collecting data based on locations/nodes
-	node_data.clear();
-	node_data.resize(num_locations);
-	data_t motion_data;
-	for(int i=0;i<num_points;i++)
-		if (points[i].cluster_id >= 0)
-		{
-			motion_data.pos = pos_vel_acc_avg[i][0];
-			motion_data.vel = pos_vel_acc_avg[i][1];
-			motion_data.acc = pos_vel_acc_avg[i][2];
-			node_data[points[i].cluster_id].push_back(motion_data);
-		}
+//	//[ADD NODES]**************************************************************
+//	// Collecting data based on locations/nodes
+//	node_data.clear();
+//	node_data.resize(num_locations);
+//	data_t motion_data;
+//	for(int i=0;i<num_points;i++)
+//		if (pos_vel_acc_avg[i][0].cluster_id >= 0)
+//		{
+//			motion_data.pos = pos_vel_acc_avg[i][0];
+//			motion_data.vel = pos_vel_acc_avg[i][1];
+//			motion_data.acc = pos_vel_acc_avg[i][2];
+//			node_data[pos_vel_acc_avg[i][0].cluster_id].push_back(motion_data);
+//		}
+//
+//	// Adding nodes to the graph : nodes corresponds to the locations
+//	for(int i=0;i<num_locations;i++)
+//	{
+//		vector<double> tmp_vec(3);
+//		int surface_num  =    -1;
+//		double dist_tmp  = 	 0.0;
+//		double dist_tmp2 =  10.0; //### need improvement
+//		double tmp_spd 	 =   0.0;
+//		double tmp_dir 	 =   0.0;
+//		for(int ii=0;ii<node_data[i].size();ii++)
+//		{
+//			for(int iii=0;iii<num_surfaces;iii++)
+//			{
+//				dist_tmp = surfaceDistance(node_data[i][ii].pos,surface[iii]);
+//				if (dist_tmp < 0.1 && !max_(dist_tmp,dist_tmp2))
+//					surface_num = iii;
+//				dist_tmp2 = dist_tmp;
+//
+//				tmp_vec[0] = surface[iii][0];
+//				tmp_vec[1] = surface[iii][1];
+//				tmp_vec[2] = surface[iii][2];
+//			}
+//			tmp_spd += l2Norm(node_data[i][ii].vel);
+//			tmp_dir += l2Norm(crossProduct(tmp_vec,point2vector(node_data[i][ii].vel)))/
+//					   (l2Norm(tmp_vec) * l2Norm(point2vector(node_data[i][ii].vel)));
+//		}
+//
+//		if (surface_num >= 0 &&
+//			tmp_spd/node_data[i].size() > vel_limit &&
+//			tmp_dir/node_data[i].size() > 0.96) // sind(75)
+//		{
+//			if (Graph[0].checkNode(i))
+//				Graph[0].extendNode(node_data[i],i);
+//			else
+//				Graph[0].addNode(LABEL_LOC[i],1,surface_num,location_boundary[i],node_data[i]);
+//		}
+//		else
+//		{
+//			if (Graph[0].checkNode(i))
+//				Graph[0].extendNode(node_data[i],i);
+//			else
+//				Graph[0].addNode(LABEL_LOC[i],0,surface_num,location_boundary[i],node_data[i]);
+//		}
+//	}
+//	//**************************************************************[ADD NODES]
 
-	// Adding nodes to the graph : nodes corresponds to the locations
-	for(int i=0;i<num_locations;i++)
-	{
-		vector<double> tmp_vec(3);
-		int surface_num  =    -1;
-		double dist_tmp  = 	 0.0;
-		double dist_tmp2 =  10.0; //### need improvement
-		double tmp_spd 	 =   0.0;
-		double tmp_dir 	 =   0.0;
-		for(int ii=0;ii<node_data[i].size();ii++)
-		{
-			for(int iii=0;iii<num_surfaces;iii++)
-			{
-				dist_tmp = surfaceDistance(node_data[i][ii].pos,surface[iii]);
-				if (dist_tmp < 0.1 && !max_(dist_tmp,dist_tmp2))
-					surface_num = iii;
-				dist_tmp2 = dist_tmp;
-
-				tmp_vec[0] = surface[iii][0];
-				tmp_vec[1] = surface[iii][1];
-				tmp_vec[2] = surface[iii][2];
-			}
-			tmp_spd += l2Norm(node_data[i][ii].vel);
-			tmp_dir += l2Norm(crossProduct(tmp_vec,point2vector(node_data[i][ii].vel)))/
-					   (l2Norm(tmp_vec) * l2Norm(point2vector(node_data[i][ii].vel)));
-		}
-
-		if (surface_num >= 0 &&
-			tmp_spd/node_data[i].size() > vel_limit &&
-			tmp_dir/node_data[i].size() > 0.96) // sind(75)
-			Graph[0].addNode(LABEL_LOC[i],1,surface_num,location_boundary[i],node_data[i]);
-		else
-			Graph[0].addNode(LABEL_LOC[i],0,surface_num,location_boundary[i],node_data[i]);
-	}
-	//**************************************************************[ADD NODES]
-	//[VISUALIZE NODES]********************************************************
-	bool pos_flag = true;
-	bool vel_flag = false;
-	bool acc_flag = false;
-
-	node_data_tmp = Graph[0].getNodeDataLabel(pos_flag,vel_flag,acc_flag);
-
-	vector<point_t> pos_node(node_data_tmp.size());
-	vector<point_t> vel_node(node_data_tmp.size());
-	vector<point_t> acc_node(node_data_tmp.size());
-	for(int i=0; i<node_data_tmp.size();i++)
-	{
-		vector<double> tmp_data = node_data_tmp[i];
-		int c = 0;
-		if(pos_flag)
-		{
-			pos_node[i].x = tmp_data[c]; ++c;
-			pos_node[i].y = tmp_data[c]; ++c;
-			pos_node[i].z = tmp_data[c]; ++c;
-			pos_node[i].cluster_id = tmp_data[c]; ++c;
-		}
-		if(vel_flag)
-		{
-			vel_node[i].x = tmp_data[c]; ++c;
-			vel_node[i].y = tmp_data[c]; ++c;
-			vel_node[i].z = tmp_data[c]; ++c;
-			vel_node[i].cluster_id = tmp_data[c]; ++c;
-		}
-		if(acc_flag)
-		{
-			acc_node[i].x = tmp_data[c]; ++c;
-			acc_node[i].y = tmp_data[c]; ++c;
-			acc_node[i].z = tmp_data[c]; ++c;
-			acc_node[i].cluster_id = tmp_data[c]; ++c;
-		}
-	}
-	//********************************************************[VISUALIZE NODES]
-	printf("Creating nodes for clusters (action locations)......Complete\n");
+//	//[VISUALIZE NODES]********************************************************
+//	bool pos_flag = true;
+//	bool vel_flag = false;
+//	bool acc_flag = false;
+//
+//	node_data_tmp = Graph[0].getNodeDataLabel(pos_flag,vel_flag,acc_flag);
+//
+//	vector<point_t> pos_node(node_data_tmp.size());
+//	vector<point_t> vel_node(node_data_tmp.size());
+//	vector<point_t> acc_node(node_data_tmp.size());
+//	for(int i=0; i<node_data_tmp.size();i++)
+//	{
+//		vector<double> tmp_data = node_data_tmp[i];
+//		int c = 0;
+//		if(pos_flag)
+//		{
+//			pos_node[i].x = tmp_data[c]; ++c;
+//			pos_node[i].y = tmp_data[c]; ++c;
+//			pos_node[i].z = tmp_data[c]; ++c;
+//			pos_node[i].cluster_id = tmp_data[c]; ++c;
+//		}
+//		if(vel_flag)
+//		{
+//			vel_node[i].x = tmp_data[c]; ++c;
+//			vel_node[i].y = tmp_data[c]; ++c;
+//			vel_node[i].z = tmp_data[c]; ++c;
+//			vel_node[i].cluster_id = tmp_data[c]; ++c;
+//		}
+//		if(acc_flag)
+//		{
+//			acc_node[i].x = tmp_data[c]; ++c;
+//			acc_node[i].y = tmp_data[c]; ++c;
+//			acc_node[i].z = tmp_data[c]; ++c;
+//			acc_node[i].cluster_id = tmp_data[c]; ++c;
+//		}
+//	}
+//	//********************************************************[VISUALIZE NODES]
+//	printf("Creating nodes for clusters (action locations)......Complete\n");
 
 	//[EDGES]******************************************************************
 	// Initialize sector
@@ -285,39 +312,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	vector<point_t> norm_location_dir   (Sqr(num_locations));
-	vector<point_t> norm_location_normal(Sqr(num_locations));
-	vector<double>  distance_location   (Sqr(num_locations));
+	labelSector(scene, object,
+				Graph[0],
+				sector, sector_constraint,
+				locations, pos_vel_acc_avg,
+				num_location_intervals, num_sector_intervals,
+				file_eof, color_code);
 
-	for(int i=0;i<Sqr(num_locations);i++)
-	{
-		norm_location_dir   [i].cluster_id = UNCLASSIFIED;
-		norm_location_normal[i].cluster_id = UNCLASSIFIED;
-	}
-
-	// prepare the vectors from locations
-	prepareSector(norm_location_dir, norm_location_normal,
-				  distance_location, locations);
-
-	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
-	// However it is still possible to have like bumps because the sampling is just not enough.
-	int kernel_size = 5;
-	vector<vector<double> > kernel(kernel_size);
-	for(int i=0;i<kernel_size;i++) kernel[i].resize(kernel_size);
-	gaussKernel(kernel, kernel_size, kernel_size, 1.0);
-
-	generateSector(sector, points, locations,
-				   norm_location_dir, norm_location_normal, distance_location,
-			       num_location_intervals, num_sector_intervals,
-			       file_eof, kernel);
-
-	checkSectorConstraint(sector, sector_constraint, num_locations,
-						  num_location_intervals, num_sector_intervals);
-
-	showConnection(sector, sector_constraint,
-				   norm_location_dir, norm_location_normal, distance_location,
-				   locations,
-				   num_location_intervals, num_sector_intervals, color_code);
 	//******************************************************************[EDGES]
 	printf("Creating sectors for connection between the clusters (action locations)......Complete\n");
 
@@ -326,15 +327,65 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 
 
 
+#else
 
-
-
-//NEED : surface, sectormap, boundary, locations
 //[TESTING]********************************************************************
-	//Read file will be replaced later on
+
+	//[VARIABLES]**************************************************************
+	vector<unsigned char*> color_code(12);
+	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
+	colorCode(color_code);
+
+	string scene  = "Kitchen";
+	string object = "Cup";
+
+	int num_points 		= 0;
+	int num_locations	= 0;
+	int file_num 		= 0;
+
+	int num_surfaces 	= 1;
+	int num_mov 		= 2;
+	int obj 			= 3;
+	int num_objs 		= 4;
+
+	double epsilon 		= 0.015; 	// if datasets are merged these 2 values can be increased.
+	int minpts 			= 10;
+
+	double vel_limit 	= 0.01; //##### still need to validate
+
+	int num_location_intervals	= 20;
+	int num_sector_intervals 	= 36;
+
+	DIR *dir;
+	struct dirent *dent;
+	char *name;
+
+	vector<int> file_eof;
+
+	vector<vector<string> > data_test;
+
+	point_t *points_array;
+	vector<point_t> points_test;
+	vector<point_t> locations;
+
+	vector<double> location_boundary;
+
+	vector<double> 			surface_const(4);
+	vector<vector<double> > surface(num_surfaces);
+	for(int i=0;i<num_surfaces;i++) surface[i] = surface_const;
+
+	vector<point_t> 			pos_vel_acc_avg1(3);
+	vector<vector<point_t> > 	pos_vel_acc_avg;
+
+	Graph Graph[2];
+
+	vector<vector<data_t> > node_data;
+	vector<vector<double> > node_data_tmp;
+	//**************************************************************[VARIABLES]
+
 	//[READ FILE]**************************************************************
 	file_eof.clear();
-	dir_name = "../KINECT/data/test/";
+	string dir_name = "../KINECT/data/test/";
 	dir = opendir(dir_name.c_str());
 
 	if(dir!=NULL)
@@ -357,72 +408,52 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 			file_eof.push_back(data_test.size());
 			delete name;
 
-			//table
-			vector<string> last_line = data_full[data_full.size()-1];
-			surface[0][0] = atof(last_line[5].c_str());
-			surface[0][1] = atof(last_line[6].c_str());
-			surface[0][2] = atof(last_line[7].c_str());
-			surface[0][3] = atof(last_line[8].c_str());
+//			//table
+//			vector<string> last_line = data_full[data_full.size()-1];
+//			surface[0][0] = atof(last_line[5].c_str());
+//			surface[0][1] = atof(last_line[6].c_str());
+//			surface[0][2] = atof(last_line[7].c_str());
+//			surface[0][3] = atof(last_line[8].c_str());
 		}
 	}
 	closedir(dir);
+	readSurfaceFile(scene, surface);
 	//**************************************************************[READ FILE]
 	printf("Reading test data......Complete\n");
 
 	//[PARSE DATA]*************************************************************
 	num_points = data_test.size();
-	points_test.clear();
-	points_test.resize(num_points);
+	reshapeVector(points_test,num_points);
 	parseData2Point(data_test, points_test);
 	//*************************************************************[PARSE DATA]
 	printf("Parsing test data......Complete\n");
 
-//	//[PREPROCESS DATA]********************************************************
-//	pos_vel_acc_mem.clear();
-//	for(int i=0;i<3;i++) pos_vel_acc_mem.push_back(pos_vel_acc_mem1);
-//
-//	pos_vel_acc_avg.clear();
-//	pos_vel_acc_avg.resize(num_points);
-//	for(int i=0;i<num_points;i++)
-//	{
-//		if(i == file_eof[file_num])
-//		{
-//			file_num++;
-//			pos_vel_acc_mem.clear();
-//			for(int i=0;i<3;i++) pos_vel_acc_mem.push_back(pos_vel_acc_mem1);
-//		}
-//		pos_vel_acc_avg[i] = pos_vel_acc_avg1;
-//		preprocessDataLive(points_test[i], pos_vel_acc_mem,
-//						   pos_vel_acc_avg[i], window);
-//	}
-//	//********************************************************[PREPROCESS DATA]
-//	printf("Preprocessing data......Complete\n");
-
 	//[PREPROCESS DATA]********************************************************
-	pos_vel_acc_mem.clear();
+	vector<vector<double> > 		  	pos_vel_acc_mem1(3);
+	vector<vector< vector<double> > > 	pos_vel_acc_mem;
 	for(int i=0;i<3;i++) pos_vel_acc_mem.push_back(pos_vel_acc_mem1);
-	pos_vel_acc_avg.clear();
-	pos_vel_acc_avg.resize(num_points);
+
+	reshapeVector(pos_vel_acc_avg,num_points);
 	//********************************************************[PREPROCESS DATA]
 
-	//[GRAPH TEMPORARY]********************************************************
-	//[ADD NODES]**************************************************************
-	// Initialize sector backup
-	vector<vector<vector<sector_t> > > 	sector_mem(Sqr(num_locations));
+	//[PREDICTION]*************************************************************
 
-	for(int i=0;i<Sqr(num_locations);i++)
-	{
-		sector_mem[i] = sector1;
-		for(int ii=0;ii<num_location_intervals;ii++)
-		{
-			sector_mem[i][ii] = sector2;
-			for(int iii=0;iii<num_sector_intervals;iii++)
-			{
-				sector_mem[i][ii][iii].max = sector[i][ii][iii].max;
-				sector_mem[i][ii][iii].min = sector[i][ii][iii].min;
-			}
-		}
-	}
+	vector<vector<vector<sector_t> > > 	sector;
+	vector<vector<vector<double> > > 	sector_constraint;
+
+	string path;
+	path =  "./Scene/" + scene + "/" + object + "/loc_data.txt";
+	readLocation(path,LABEL_LOC,locations,location_boundary);
+	path =  "./Scene/" + scene + "/" + object + "/mov_data.txt";
+	readMovement(path,LABEL_MOV,num_mov);
+	path =  "./Scene/" + scene + "/" + object + "/sec_data_max.txt";
+	readSectorFile(path, sector, 0);
+	path =  "./Scene/" + scene + "/" + object + "/sec_data_min.txt";
+	readSectorFile(path, sector, 1);
+	path =  "./Scene/" + scene + "/" + object + "/sec_data_const.txt";
+	readSectorConstraintFile(path, sector_constraint);
+
+	num_locations = locations.size();
 
 	bool flag_predict = false;
 	double prediction1[num_locations];
@@ -441,17 +472,23 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	int last_location = 0;
 	int surface_num_tmp = 0;
 
-	node_data.clear();
-	node_data.resize(num_locations);
-	motion_data = {};
-	for(int i=0;i<num_points;i++)
-		if (points_test[i].cluster_id >= 0)
-		{
-			motion_data.pos = pos_vel_acc_avg[i][0];
-			motion_data.vel = pos_vel_acc_avg[i][1];
-			motion_data.acc = pos_vel_acc_avg[i][2];
-			node_data[points_test[i].cluster_id].push_back(motion_data);
-		}
+	// Initialize sector backup
+	vector<vector<vector<sector_t> > > 	sector_mem;
+	sector_mem = sector;
+
+	// prepare the vectors from locations
+	vector<point_t> norm_location_dir   (Sqr(num_locations));
+	vector<point_t> norm_location_normal(Sqr(num_locations));
+	vector<double>  distance_location   (Sqr(num_locations));
+	for(int i=0;i<Sqr(num_locations);i++)
+	{
+		norm_location_dir   [i].cluster_id = UNCLASSIFIED;
+		norm_location_normal[i].cluster_id = UNCLASSIFIED;
+	}
+	prepareSector(norm_location_dir, norm_location_normal,
+				  distance_location, locations);
+	printf("Preparing sectors......Complete\n");
+
 
 	for(int i=0;i<num_points;i++)
 	{
@@ -466,6 +503,8 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 		preprocessDataLive(points_test[i], pos_vel_acc_mem,
 						   pos_vel_acc_avg[i], window);
 		//********************************************************[PREPROCESS DATA]
+
+
 
 		slide = false;
 
@@ -667,15 +706,12 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 		}
 		cout << endl;
 	}
-	//********************************************************[GRAPH TEMPORARY]
+	//*************************************************************[PREDICTION]
 
 
+#endif
 
 	cout << "END" << endl;
-
-
-
-
 
 	return 0;
 }

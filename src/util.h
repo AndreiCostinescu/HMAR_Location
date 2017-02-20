@@ -11,6 +11,7 @@
 #include "dataDeclaration.h"
 #include "algo.h"
 #include "dbscan.h"
+#include "Graph.h"
 
 void writePointFile(
 	point_t *p,
@@ -49,43 +50,115 @@ double surfaceRange(
 	point_t pos_surface_,
 	vector<double> surface_);
 
-// data file ==================================================================
+
+// ============================================================================
+// Labels
+// ============================================================================
+
+void labelMovement(
+	string scene_,
+	string object_,
+	vector<string> &LABEL_MOV,
+	int num_mov);
+
+void labelLocation(
+	string scene_,
+	string object_,
+	vector<point_t> &points,
+	vector<point_t> &locations,
+	vector<double> &location_boundary,
+	vector<string> &LABEL_LOC,
+	double epsilon,
+	int minpts);
+
+void labelSector(
+	string scene_,
+	string object_,
+	Graph &Graph_,
+	vector<vector<vector<sector_t> > > &sector_,
+	vector<vector<vector<double> > > sector_constraint_,
+	vector<point_t> locations_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	int num_location_intervals_,
+	int num_sector_intervals_,
+	vector<int> file_eof_,
+	vector<unsigned char*> color_code_);
+
+void readingLocation(
+	vector<point_t> &locations,
+	vector<double> &location_boundary,
+	vector<string> &LABEL_LOC,
+	int obj);
+
+// ============================================================================
+// Files
+// ============================================================================
+
+void writeSurfaceFile(
+	string scene_,
+	vector<vector<double> > surface_);
+
+void writeMovLabelFile(
+	string path_,
+	vector<string> label_);
+
+void writeLocLabelFile(
+	string path_,
+	vector<string> label_,
+	vector<point_t> locations_,
+	vector<double> boundary_);
+
+void writeSectorFile(
+	string path_,
+	vector<vector<vector<sector_t> > > sector_,
+	int maxmin_,
+	int num_locations_,
+	int num_location_intervals_,
+	int num_sector_intervals_);
+
+void writeSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > sector_,
+	int num_locations_,
+	int num_location_intervals_,
+	int num_sector_intervals_);
+
 void readFile(
-	char *name,
+	const char *name,
 	vector<vector<string> > &data_full,
 	char delimiter);
 
-void rewriteFileLoc(
-	char *name_,
-	int line_,
-	vector<string> new_,
-	char delimiter_);
+void readSurfaceFile(
+	string scene_,
+	vector<vector<double> > &surface_);
 
-void rewriteFileObj(
-	char *name_,
-	int line_,
-	vector<string> new_,
-	char delimiter_);
+void readLocation(
+	string path_,
+	vector<string> &LABEL_LOC_,
+	vector<point_t> &locations_,
+	vector<double> &location_boundary_);
 
-void writeLocLabelFile(
-	vector<string> label_,
-	unsigned int obj_,
-	vector<point_t> locations_);
+void readMovement(
+	string path_,
+	vector<string> &LABEL_MOV_,
+	int num_mov_);
 
-void writeObjLabelFile(
-	vector<string> label_,
-	unsigned int obj_);
+void readSectorFile(
+	string path_,
+	vector<vector<vector<sector_t> > > &sector_,
+	int maxmin_);
+
+void readSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > &sector_);
+
+// ============================================================================
+// Data
+// ============================================================================
 
 void parseData2Point(
 	vector<vector<string> > data_full,
 	vector<point_t> &points);
-
-void preprocessData(
-	point_t *p1,
-	point_t **pos_vel_acc,
-	unsigned int num_points,
-	unsigned int *file_eof,
-	unsigned int window);
 
 void preprocessDataLive(
 	point_t pos,
@@ -93,7 +166,9 @@ void preprocessDataLive(
 	vector<point_t> &pos_vel_acc_avg,
 	unsigned int window);
 
-// dbscan =====================================================================
+// ============================================================================
+// dbscan
+// ============================================================================
 
 void dbscanCluster(
 	double epsilon,
@@ -105,34 +180,33 @@ void combineNearCluster(
 	vector<point_t> &points,
 	vector<point_t> &locations);
 
+void decideBoundary(
+	point_t &p,
+	vector<point_t> location,
+	vector<double> location_boundary);
+
 void contactBoundary(
 	vector<point_t> &p,
 	vector<point_t> locations,
 	vector<double> &location_boundary,
 	bool learn);
 
-void decideBoundary(
-	point_t &p,
-	vector<point_t> location,
-	vector<double> location_boundary);
+// ============================================================================
+// Sector
+// ============================================================================
 
-// SVM ========================================================================
-
-void classifierFeature(
-	data_t motionData,
-	point_t location,
-	double &location_distance,
-	double &location_angle);
-
-void classifierSVM(
-	vector<data_t> motionData,
-	int *label,
-	unsigned int num_points,
-	point_t *location,
-	unsigned int num_locations,
-	bool train=true);
-
-// Sector =====================================================================
+void generateSector(
+	Graph &Graph_,
+	vector<vector<vector<sector_t> > > 	&sector_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<point_t> locations_,
+	vector<point_t> tmp_dir_,
+	vector<point_t> tmp_dir_normal_,
+	vector<double> tmp_norm_,
+	int num_location_intervals_,
+	int num_sector_intervals_,
+	vector<int>file_eof_,
+	vector<vector<double> > kernel_);
 
 void prepareSector(
 	vector<point_t> &tmp_dir,
@@ -167,18 +241,6 @@ void checkSector(
 	int tmp_id,
 	bool learn=false);
 
-void generateSector(
-	vector<vector<vector<sector_t> > > 	&sector_,
-	vector<point_t> pos_,
-	vector<point_t> locations_,
-	vector<point_t> tmp_dir_,
-	vector<point_t> tmp_dir_normal_,
-	vector<double> tmp_norm_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
-	vector<int>file_eof_,
-	vector<vector<double> > kernel_);
-
 void checkSectorConstraint(
 	vector<vector<vector<sector_t> > > 	sector,
 	vector<vector<vector<double> > > &sector_constraint,
@@ -192,20 +254,30 @@ void checkSectorConstraint(
 
 
 
-void labelingMovement(
-	vector<string> &LABEL_MOV,
-	int num_mov,
-	int obj,
-	int num_objs);
 
-void labelingLocation(
-	vector<point_t> &points,
-	vector<point_t> &locations,
-	vector<double> &location_boundary,
-	vector<string> &LABEL_LOC,
-	int obj,
-	double epsilon,
-	int minpts);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #endif /* UTIL_H_ */

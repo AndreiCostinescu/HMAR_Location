@@ -119,9 +119,15 @@ template<typename T> void vector2array(vector<T> A, T *B)
 	for(int i=0;i<A.size();i++) B[i] = A[i];
 }
 
-template<typename T> void array2vector(T *A, int size, vector<T> B)
+template<typename T> void array2vector(T *A, int size, vector<T> &B)
 {
 	for(int i=0;i<size;i++) B[i] = A[i];
+}
+
+template<typename T> void reshapeVector(vector<T> &A, int size)
+{
+	A.clear();
+	A.resize(size);
 }
 
 #endif /* ALGO_H_ */

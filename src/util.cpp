@@ -11,395 +11,367 @@
 // For backward compatibility with new VTK generic data arrays
 //#define InsertNextTypedTuple InsertNextTupleValue
 
-//---------------------------------------------------------------------------------------------------------------------
-double surfaceRange(
-	point_t pos_,
-	point_t pos_surface_,
-	vector<double> surface_)
+// ============================================================================
+// Labels
+// ============================================================================
+
+void labelMovement(
+	string scene_,
+	string object_,
+	vector<string> &LABEL_MOV,
+	int num_mov)
 {
-	vector<double> surface_tmp(3);
-	vector<double> surface_parallel_tmp;
-	vector<double> p_tmp;
-	double norm_tmp = 0.0;
+	reshapeVector(LABEL_MOV,num_mov);
 
-	surface_tmp[0] = surface_[0];
-	surface_tmp[1] = surface_[1];
-	surface_tmp[2] = surface_[2];
+	vector<vector<string> > data;
+	string path;
+	path =  "./Scene/" + scene_ + "/" + object_ + "/mov_data.txt";
+	readFile(path.c_str(), data , ',');
 
-	p_tmp = point2vector(minusPoint(pos_, pos_surface_));
-
-	// surface_parallel_tmp can be obtained at the beginning by just taking the normalized vector between 2 points on the surface
+	if(data.empty())
 	{
-		surface_parallel_tmp = crossProduct(surface_tmp, p_tmp);
-
-		for(int i=0;i<3;i++)
-			norm_tmp += Sqr(surface_parallel_tmp[i]);
-		norm_tmp = sqrt(norm_tmp);
-
-		for(int i=0;i<3;i++)
-			surface_parallel_tmp[i] /= norm_tmp;
+		LABEL_MOV[0] = {"MOVE"};
+		LABEL_MOV[1] = {"SLIDE"};
+		writeMovLabelFile(path,LABEL_MOV);
 	}
-
-	return dotProduct(p_tmp, surface_parallel_tmp);
-}
-
-double surfaceDistance(
-	point_t pos_,
-	vector<double> surface_)
-{
-	return surface_[0]*pos_.x +
-		   surface_[1]*pos_.y +
-		   surface_[2]*pos_.z -
-		   surface_[3];
-}
-
-double surfaceAngle(
-	point_t vel_,
-	vector<double> surface_)
-{
-	vector<double> tmp(3);
-	tmp[0] = surface_[0];
-	tmp[1] = surface_[1];
-	tmp[2] = surface_[2];
-	return 	l2Norm(crossProduct(tmp,point2vector(vel_)))/
-			(l2Norm(tmp) * l2Norm(point2vector(vel_)));
-}
-
-
-//---------------------------------------------------------------------------------------------------------------------
-// General Functions
-
-void generateSector(
-	vector<vector<vector<sector_t> > > 	&sector_,
-	vector<point_t> pos_,
-	vector<point_t> locations_,
-	vector<point_t> tmp_dir_,
-	vector<point_t> tmp_dir_normal_,
-	vector<double> tmp_norm_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
-	vector<int>file_eof_,
-	vector<vector<double> > kernel_)
-{
-	int tmp_id1, tmp_id2, file_num;
-	tmp_id1 = tmp_id2 = file_num = 0;
-	bool flag_next = true;
-
-	for(int i=0;i<pos_.size();i++)
+	else
 	{
-		if(i==file_eof_[file_num]-1)
-		{
-			flag_next = true;
-			tmp_id1  = 0;
-			tmp_id2 = 0;
-			continue;
-		}
-
-		if (pos_[i].cluster_id >= 0)
-		{
-			flag_next = true;
-			tmp_id1 = pos_[i].cluster_id;
-			continue;
-		}
-
-		if(flag_next)
-		{
-			flag_next = false;
-			for(int ii=i;ii<pos_.size();ii++)
-			{
-				tmp_id2 = pos_[ii].cluster_id;
-				if(pos_[ii].cluster_id >= 0)
-					break;
-			}
-		}
-
-		if(tmp_id1 != tmp_id2)
-			updateSector(sector_, pos_[i], locations_,
-						 tmp_dir_, tmp_dir_normal_, tmp_norm_,
-						 num_location_intervals_, num_sector_intervals_,
-						 tmp_id1, tmp_id2, kernel_);
+		for(int ii=0;ii<data[0].size();ii++)
+			LABEL_MOV[ii] = data[0][ii];
 	}
-}
+	printf("Reviewing movement labels for OBJ...\n");
+	for(int i=0;i<num_mov;i++)
+		printf("MLabel %d : %s\n", i, LABEL_MOV[i].c_str());
 
-void prepareSector(
-	vector<point_t> &tmp_dir,
-	vector<point_t> &tmp_dir_normal,
-	vector<double> &tmp_norm,
-	vector<point_t> location)
-{
-	int c = 0;
-	int num_locations = location.size();
-	for(int i=0;i<num_locations;i++)
+	printf("Replace default labels? [Y/N]\n");
+	while(0)
 	{
-		for(int ii=0;ii<num_locations;ii++)
+		string mystr2; getline (cin, mystr2);
+		if(!strcmp(mystr2.c_str(),"Y"))
 		{
-			if(i == ii)
+			for(int i=0;i<num_mov;i++)
 			{
-				tmp_dir[c].x =
-				tmp_dir[c].y =
-				tmp_dir[c].z = 0.0;
-				tmp_norm[c] = 0.0;
-				tmp_dir_normal[c].x =
-				tmp_dir_normal[c].y =
-				tmp_dir_normal[c].z = 0.0;
-				++c;
-				continue;
-			}
-
-			tmp_dir[c] = minusPoint(location[ii],location[i]);
-			tmp_norm[c] = l2Norm(tmp_dir[c]);
-			tmp_dir[c].x /= tmp_norm[c];
-			tmp_dir[c].y /= tmp_norm[c];
-			tmp_dir[c].z /= tmp_norm[c];
-			vector<double> B(3);
-			B[0] = 0.0; B[1] = 1.0; B[2] = 0.0;
-			tmp_dir_normal[c] = vector2point(
-									crossProduct(
-										point2vector(tmp_dir[c]), B));
-			++c;
-		}
-	}
-}
-
-void checkSectorConstraint(
-	vector<vector<vector<sector_t> > > 	sector,
-	vector<vector<vector<double> > > &sector_constraint,
-	int num_locations,
-	int num_location_intervals,
-	int num_sector_intervals)
-{
-
-	for(int i=0;i<Sqr(num_locations);i++)
-		for(int ii=0;ii<num_location_intervals;ii++)
-			for(int iii=0;iii<num_sector_intervals;iii++)
-			{
-				sector_constraint[i][ii][iii] =
-					(sector[i][ii][iii].max - sector[i][ii][iii].min > 0) &&
-					(0.06 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
-						sector[i][ii][iii].max - sector[i][ii][iii].min : 0;
-				for(int iv=0;iv<5;iv++)
-					for(int v=0;v<5;v++)
-						if (sector[i]
-						          [(iv-(int)(5/2)+ii+num_location_intervals)%num_location_intervals]
-						          [(v-(int)(5/2)+iii+num_sector_intervals)%num_sector_intervals].max <= 0)
-							sector_constraint[i][ii][iii] = 0;
-//
-//						if ((sector[i][ii][(iii+(int)(5/2)+num_sector_intervals)%num_sector_intervals].max <= 0) ||
-//							(sector[i][ii][(iii-(int)(5/2)+num_sector_intervals)%num_sector_intervals].max <= 0))
-//							sector_constraint[i][ii][iii] = 0;
-			}
-}
-
-void updateSector(
-	vector<vector<vector<sector_t> > > 	&sector_,
-	point_t pos_,
-	vector<point_t> locations_,
-	vector<point_t> tmp_dir_,
-	vector<point_t> tmp_dir_normal_,
-	vector<double> tmp_norm_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
-	int tmp_id1_,
-	int tmp_id2_,
-	vector<vector<double> > kernel_)
-{
-	double angle_tmp = 0.0, p_ = 0.0;
-	int xx = 0, yy = 0, zz = 0;
-	point_t tmp_diff, p_dir, t_;
-
-	xx       = tmp_id1_*locations_.size()+tmp_id2_;
-
-	tmp_diff = minusPoint(pos_, locations_[tmp_id1_]);
-
-	p_       = dotProduct(point2vector(tmp_diff), point2vector(tmp_dir_[xx]));
-
-	p_dir    = tmp_dir_[xx]; // along the direction vector
-	p_dir.x *= p_;
-	p_dir.y *= p_;
-	p_dir.z *= p_;
-	t_       = minusPoint(tmp_diff,p_dir);
-
-	angle_tmp = atan2(l2Norm(crossProduct(point2vector(t_),
-											  point2vector(tmp_dir_normal_[xx]))),
-							   dotProduct(point2vector(t_),
-										  point2vector(tmp_dir_normal_[xx])));
-	//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
-
-	// the value of yy can be > or <  "num_location_intervals"
-	// > object moved further away from the location area
-	// < object is moving initially away from the intended goal location
-	yy 		 = ceil(p_*num_location_intervals_/tmp_norm_[xx])  -1;
-	zz 		 = ceil(angle_tmp*num_sector_intervals_/M_PI) -1;
-
-	if(yy<num_location_intervals_ &&
-	   zz<num_sector_intervals_ &&
-	   yy>=0 &&
-	   zz>=0)
-	{
-		sector_[xx][yy][zz].max = max(l2Norm(t_), sector_[xx][yy][zz].max);
-		sector_[xx][yy][zz].min = min(l2Norm(t_), sector_[xx][yy][zz].min);
-		double mid = (sector_[xx][yy][zz].max + sector_[xx][yy][zz].min)/2;
-		double tmp_ratio1 = (sector_[xx][yy][zz].max-mid) /
-				             kernel_[(kernel_.size()-1)/2]
-				                    [(kernel_[0].size()-1)/2];
-
-		for(int i=0;i<kernel_.size();i++)
-		{
-			for(int ii=0;ii<kernel_[0].size();ii++)
-			{
-				int tmp1 = i -(kernel_.size()/2)+zz;
-				int tmp2 = ii-(kernel_[0].size()/2)+yy;
-				if (tmp1<0)
-					tmp1 += num_sector_intervals_;
-				else if (tmp1>=num_sector_intervals_)
-					tmp1 %= num_sector_intervals_;
-				if (tmp2<0)
-					continue;
-				else if (tmp2>=num_location_intervals_)
-					continue;
-				sector_[xx][tmp2][tmp1].max =
-						max((kernel_[i][ii]*tmp_ratio1)+mid ,
-							sector_[xx][tmp2][tmp1].max);
-				sector_[xx][tmp2][tmp1].min =
-						min(mid-(kernel_[i][ii]*tmp_ratio1) ,
-							sector_[xx][tmp2][tmp1].min);
-			}
-		}
-	}
-}
-
-void checkSector(
-	vector<double> &prediction,
-	vector<double> &t_val,
-	vector<vector<vector<sector_t> > > 	&sector,
-	point_t pos_,
-	vector<point_t> location,
-	vector<point_t> tmp_dir,
-	vector<point_t> tmp_dir_normal,
-	vector<double> tmp_norm,
-	int num_location_intervals,
-	int num_sector_intervals,
-	int tmp_id,
-	bool learn)
-{
-	int num_locations = location.size();
-	double angle_tmp = 0.0, p_ = 0.0;
-	int xx, yy, zz;
-	xx = yy = zz = 0;
-	point_t tmp_diff, p_dir, t_;
-
-	for(int i=0;i<num_locations;i++)
-	{
-		prediction[i] = 0;
-		t_val[i]      = 0;
-
-		if(tmp_id == i) continue;
-
-		xx       = tmp_id*num_locations+i;
-
-		tmp_diff = minusPoint(pos_, location[tmp_id]);
-		p_       = dotProduct(point2vector(tmp_diff),
-				              point2vector(tmp_dir[xx]));
-		p_dir    = tmp_dir[xx]; // along the direction vector
-		p_dir.x *= p_;
-		p_dir.y *= p_;
-		p_dir.z *= p_;
-		t_       = minusPoint(tmp_diff,p_dir);
-
-		angle_tmp = atan2(l2Norm(crossProduct(point2vector(t_),
-											  point2vector(tmp_dir_normal[xx]))),
-						  dotProduct(point2vector(t_),
-									 point2vector(tmp_dir_normal[xx])));
-		//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
-
-		yy 		 = ceil(p_*num_location_intervals/tmp_norm[xx])  -1;
-		zz 		 = ceil(angle_tmp*num_sector_intervals/M_PI)     -1;
-
-		//cout << yy << " " << zz << " "; 
-
-		if(yy<num_location_intervals && yy>=0 &&
-		   zz<num_sector_intervals   && zz>=0)
-		{
-			if (l2Norm(t_)<=sector[xx][yy][zz].max &&
-				l2Norm(t_)>=sector[xx][yy][zz].min)
-			{
-				prediction[i] = 1;
-				t_val[i]      = l2Norm(t_);
-			}
-			else
-			{
-				if(learn)
-				{
-					prediction[i] = 3;
-					if(l2Norm(t_) - sector[xx][yy][zz].max > 0)
-						t_val[i] = l2Norm(t_) - sector[xx][yy][zz].max;
-					else
-						t_val[i] = sector[xx][yy][zz].min - l2Norm(t_);
-					//printf(" %.4f %.4f %.4f %.4f   ", l2Norm(t_), t_val[i], sector[xx][yy][zz].max, sector[xx][yy][zz].min);
-					sector[xx][yy][zz].max = max(l2Norm(t_),sector[xx][yy][zz].max);
-					sector[xx][yy][zz].min = min(l2Norm(t_),sector[xx][yy][zz].min);
-				}
+				printf("Enter new label for MLabel %d : ",i);
+				string mystr;
+				getline (cin, mystr);
+				if(!strcmp(mystr.c_str(),""))
+					cout << "[WARNING] : Label has not been overwritten."<< endl;
 				else
 				{
-					prediction[i] = 2;
-					t_val[i]      = l2Norm(t_);
+					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
+					LABEL_MOV[i] = mystr;
 				}
 			}
+			remove(path.c_str());
+			writeMovLabelFile(path,LABEL_MOV);
+			break;
+		}
+		if(!strcmp(mystr2.c_str(),"N"))
+		{
+			cout << "[WARNING] : Label has not been overwritten." << endl;
+			break;
 		}
 	}
 }
 
-void writePointFile(
-	point_t *p,
-	unsigned int num_points)
+void labelLocation(
+	string scene_,
+	string object_,
+	vector<point_t> &points_,
+	vector<point_t> &locations_,
+	vector<double> &location_boundary_,
+	vector<string> &LABEL_LOC_,
+	double epsilon_,
+	int minpts_)
 {
-	remove("data.txt");
-	for(unsigned int i=0;i<num_points;i++)
+	int num_points = points_.size();
+	int num_locations = locations_.size();
+
+	vector<unsigned char*> color_code(12);
+	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
+	colorCode(color_code);
+
+	point_t *points_array = Calloc(point_t,points_.size());
+	vector2array(points_, points_array);
+
+	vector<vector<string> > data;
+	string path;
+	path =  "./Scene/" + scene_ + "/" + object_ + "/loc_data.txt";
+	readFile(path.c_str(), data , ',');
+
+	if(data.empty())
 	{
-		// write values into data.txt
-		std::ofstream write_file("data.txt", std::ios::app);
-		write_file << p[i].x << ","
-				   << p[i].y << ","
-				   << p[i].z << ","
-				   << p[i].cluster_id
-				   << "\n";
+		//[CLUSTERING]*********************************************************
+		dbscanCluster(epsilon_, (unsigned int)minpts_, num_points, points_array);
+		printf("Clustering training data......Complete\n");
+		reshapeVector(points_, num_points);
+		array2vector(points_array, num_points, points_);
+		combineNearCluster(points_, locations_);
+		printf("Combining nearby clusters......Complete\n");
+		num_locations = locations_.size();
+		reshapeVector(location_boundary_, num_locations);
+		contactBoundary(points_, locations_, location_boundary_, true);
+		contactBoundary(points_, locations_, location_boundary_, false);
+		//*********************************************************[CLUSTERING]
+		reshapeVector(LABEL_LOC_, num_locations + 1);
+		LABEL_LOC_[0] = {"CONNECTION"};
+		showData(points_, LABEL_LOC_, color_code, true, true);
+		writeLocLabelFile(path, LABEL_LOC_, locations_, location_boundary_);
+	}
+	else
+	{
+		int data_tmp  = 5;
+		num_locations = data[0].size()/data_tmp;
+		reshapeVector(locations_,		  num_locations);
+		reshapeVector(location_boundary_, num_locations);
+		reshapeVector(LABEL_LOC_,		  num_locations+1);
+		LABEL_LOC_[0]  = {"CONNECTION"};
+		for(int ii=0;ii<num_locations;ii++)
+		{
+			LABEL_LOC_[ii+1] 		  =      data[0][ii*data_tmp+0];
+			locations_[ii].x 		  = atof(data[0][ii*data_tmp+1].c_str());
+			locations_[ii].y 		  = atof(data[0][ii*data_tmp+2].c_str());
+			locations_[ii].z 		  = atof(data[0][ii*data_tmp+3].c_str());
+			locations_[ii].cluster_id = UNCLASSIFIED;
+			location_boundary_[ii] 	  = atof(data[0][ii*data_tmp+4].c_str());
+		}
+		contactBoundary(points_, locations_, location_boundary_, false);
+		showData(points_, LABEL_LOC_, color_code, true, false);
+	}
+
+	printf("Reviewing location labels...\n");
+	for(int i=0;i<num_locations;i++)
+		printf("LLabel %d : %s\n", i+1, LABEL_LOC_[i+1].c_str());
+
+	printf("Replace default labels? [Y/N]\n");
+	while(0)
+	{
+		string mystr2; getline (cin, mystr2);
+		if(!strcmp(mystr2.c_str(),"Y"))
+		{
+			for(int i=0;i<num_locations;i++)
+			{
+				printf("Enter new label for LLabel %d : ",i);
+				string mystr;
+				getline (cin, mystr);
+				if(!strcmp(mystr.c_str(),""))
+					cout << "[WARNING] : Label has not been overwritten."<< endl;
+				else
+				{
+					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
+					LABEL_LOC_[i+1] = mystr;
+				}
+			}
+			remove(path.c_str());
+			writeLocLabelFile(path, LABEL_LOC_, locations_, location_boundary_);
+			break;
+		}
+		if(!strcmp(mystr2.c_str(),"N"))
+		{
+			cout << "[WARNING] : Label has not been overwritten." << endl;
+			break;
+		}
+	}
+}
+
+void labelSector(
+	string scene_,
+	string object_,
+	Graph &Graph_,
+	vector<vector<vector<sector_t> > > &sector_,
+	vector<vector<vector<double> > > sector_constraint_,
+	vector<point_t> locations_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	int num_location_intervals_,
+	int num_sector_intervals_,
+	vector<int> file_eof_,
+	vector<unsigned char*> color_code_)
+{
+	int num_locations = locations_.size();
+
+	vector<point_t> norm_location_dir   (Sqr(num_locations));
+	vector<point_t> norm_location_normal(Sqr(num_locations));
+	vector<double>  distance_location   (Sqr(num_locations));
+
+	for(int i=0;i<Sqr(num_locations);i++)
+	{
+		norm_location_dir   [i].cluster_id = UNCLASSIFIED;
+		norm_location_normal[i].cluster_id = UNCLASSIFIED;
+	}
+
+	// prepare the vectors from locations
+	prepareSector(norm_location_dir, norm_location_normal,
+				  distance_location, locations_);
+	printf("Preparing sectors......Complete\n");
+
+	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
+	// However it is still possible to have like bumps because the sampling is just not enough.
+	int kernel_size = 5;
+	vector<vector<double> > kernel(kernel_size);
+	for(int i=0;i<kernel_size;i++) kernel[i].resize(kernel_size);
+	gaussKernel(kernel, kernel_size, kernel_size, 1.0);
+
+	generateSector(Graph_, sector_, pos_vel_acc_avg_, locations_,
+			   	   norm_location_dir, norm_location_normal, distance_location,
+			       num_location_intervals_, num_sector_intervals_,
+			       file_eof_, kernel);
+	printf("Generating sectors......Complete\n");
+
+	checkSectorConstraint(sector_, sector_constraint_, num_locations,
+						  num_location_intervals_, num_sector_intervals_);
+	printf("Checking sector constraints......Complete\n");
+
+	showConnection(sector_, sector_constraint_,
+				   norm_location_dir, norm_location_normal, distance_location,
+				   locations_,
+				   num_location_intervals_, num_sector_intervals_,
+				   color_code_);
+	printf("Viewing sector......Complete\n");
+
+	string path;
+	path = 	"./Scene/" + scene_ + "/" + object_ + "/sec_data_max.txt";
+	writeSectorFile(path, sector_, 0, num_locations,
+			        num_location_intervals_, num_sector_intervals_);
+
+	path = 	"./Scene/" + scene_ + "/" + object_ + "/sec_data_min.txt";
+	writeSectorFile(path, sector_, 1, num_locations,
+			        num_location_intervals_, num_sector_intervals_);
+
+	path = 	"./Scene/" + scene_ + "/" + object_ + "/sec_data_const.txt";
+	writeSectorConstraintFile(path, sector_constraint_, num_locations,
+			        		  num_location_intervals_, num_sector_intervals_);
+}
+
+// ============================================================================
+// Files
+// ============================================================================
+
+void writeSurfaceFile(
+	string scene_,
+	vector<vector<double> > surface_)
+{
+	string path = "./Scene/" + scene_ + "/surface.txt";
+	if (!ifstream(path))
+	{
+		ofstream write_file(path, std::ios::app);
+		for(int i=0;i<surface_.size();i++)
+		{
+			write_file << i;
+			for(int ii=0;ii<4;ii++)
+			{
+				write_file << ",";
+				write_file << surface_[i][ii];
+			}
+		}
+		write_file << "\n";
 	}
 }
 
 void writeLocLabelFile(
+	string path_,
 	vector<string> label_,
-	unsigned int obj_,
-	vector<point_t> locations_)
+	vector<point_t> locations_,
+	vector<double> boundary_)
 {
-	std::ofstream write_file("../Location/loc_data.txt", std::ios::app);
-	write_file << obj_;
-	for(int i=0;i<locations_.size();i++)
+	if (!ifstream(path_))
 	{
-		write_file << ",";
-		write_file << label_[i+1]    << ","
-				   << locations_[i].x << ","
-				   << locations_[i].y << ","
-				   << locations_[i].z ;
+		ofstream write_file(path_, ios::app);
+		for(int i=0;i<locations_.size();i++)
+		{
+			write_file << label_[i+1]     << ","
+					   << locations_[i].x << ","
+					   << locations_[i].y << ","
+					   << locations_[i].z << ","
+					   << boundary_[i];
+			if (i<locations_.size()-1)
+				write_file << ",";
+		}
+		write_file << "\n";
 	}
-	write_file << "\n";
 }
 
-void writeObjLabelFile(
-	vector<string> label_,
-	unsigned int obj_)
+void writeMovLabelFile(
+	string path_,
+	vector<string> label_)
 {
-	std::ofstream write_file("../Object/obj_mov_data.txt", std::ios::app);
-	write_file << obj_;
-	for(int i=0;i<label_.size();i++)
+	if (!ifstream(path_))
 	{
-		write_file << ",";
-		write_file << label_[i];
+		ofstream write_file(path_, ios::app);
+		for(int i=0;i<label_.size();i++)
+		{
+			write_file << label_[i];
+			if (i<label_.size()-1)
+				write_file << ",";
+		}
+		write_file << "\n";
 	}
-	write_file << "\n";
+}
+
+void writeSectorFile(
+	string path_,
+	vector<vector<vector<sector_t> > > sector_,
+	int maxmin_,
+	int num_locations_,
+	int num_location_intervals_,
+	int num_sector_intervals_)
+{
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		write_file << num_locations_ 		  << "\n";
+		write_file << num_location_intervals_ << "\n";
+		write_file << num_sector_intervals_   << "\n";
+		for(int i=0;i<sector_.size();i++)
+		{
+			for(int ii=0;ii<sector_[i].size();ii++)
+			{
+				for(int iii=0;iii<sector_[i][ii].size();iii++)
+				{
+					if (maxmin_)
+						write_file << sector_[i][ii][iii].min;
+					else
+						write_file << sector_[i][ii][iii].max;
+
+					if (i<sector_[i][ii].size()-1)
+						write_file << ",";
+				}
+				write_file << "\n";
+			}
+		}
+	}
+}
+
+void writeSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > sector_,
+	int num_locations_,
+	int num_location_intervals_,
+	int num_sector_intervals_)
+{
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		write_file << num_locations_ 		  << "\n";
+		write_file << num_location_intervals_ << "\n";
+		write_file << num_sector_intervals_   << "\n";
+		for(int i=0;i<sector_.size();i++)
+		{
+			for(int ii=0;ii<sector_[i].size();ii++)
+			{
+				for(int iii=0;iii<sector_[i][ii].size();iii++)
+				{
+					write_file << sector_[i][ii][iii];
+					if (i<sector_[i][ii].size()-1)
+						write_file << ",";
+				}
+				write_file << "\n";
+			}
+		}
+	}
 }
 
 void readFile(
-	char *name,
+	const char *name,
 	vector<vector<string> > &data_full,
 	char delimiter)
 {
@@ -423,103 +395,252 @@ void readFile(
 		cerr << "FILE ERROR!!!\n";
 }
 
-void rewriteFileObj(
-	char *name_,
-	int line_,
-	vector<string> new_,
-	char delimiter_)
+void readSurfaceFile(
+	string scene_,
+	vector<vector<double> > &surface_)
 {
-	char name_2[] = "./Object/obj_data2.txt";
-	fstream src_file( name_ );
-	ofstream out_file( name_2 );
-	while (src_file)
+	string path;
+	vector<vector<string> > data;
+
+	path = "./Scene/" + scene_ + "/surface.txt";
+	readFile(path.c_str(), data, ',');
+
+	reshapeVector(surface_, data.size());
+	for(int i=0;i<data.size();i++)
 	{
-		string file_line;
-		if (!getline( src_file, file_line )) break;
-		istringstream lines_( file_line );
-		vector <string> data_line_;
-		int w = 0;
-		int tmp = file_line[0]-'0';
-		while (lines_)
-		{
-			string word;
-			if (!getline( lines_, word, delimiter_)) break;
-			if (w == 0)
-				if(tmp == line_)
-					out_file << line_;
-				else
-					out_file << word;
-			else
-			{
-				out_file << ",";
-				if(tmp == line_)
-					out_file << new_[w-1];
-				else
-					out_file << word;
-			}
-			w++;
-		}
-		out_file << "\n";
+		int tmp = atoi(data[i][0].c_str());
+		for(int ii=0;ii<4;ii++)
+			surface_[tmp].push_back(atof(data[i][ii+1].c_str()));
 	}
-
-	if (!src_file.eof())
-		cerr << "FILE ERROR!!!\n";
-
-	remove(name_);
-	rename(name_2, name_);
 }
 
-void rewriteFileLoc(
-	char *name_,
-	int line_,
-	vector<string> new_,
-	char delimiter_)
+void readLocation(
+	string path_,
+	vector<string> &LABEL_LOC_,
+	vector<point_t> &locations_,
+	vector<double> &location_boundary_)
 {
-	char name_2[] = "./Location/loc_data2.txt";
-	fstream src_file( name_ );
-	ofstream out_file( name_2 );
-	while (src_file)
+	int num_locations = locations_.size();
+
+	vector<vector<string> > data;
+	readFile(path_.c_str(), data , ',');
+
+	if(data.empty())
 	{
-		string file_line;
-		if (!getline( src_file, file_line )) break;
-		istringstream lines_( file_line );
-		vector <string> data_line_;
-		int c = 1;
-		int j = 0;
-		int k = 0;
-		int tmp = file_line[0]-'0';
-		while (lines_)
+		printf("[WARNING] : Location data is empty.");
+	}
+	else
+	{
+		int data_tmp  = 5;
+		num_locations = data[0].size()/data_tmp;
+		reshapeVector(locations_,		  num_locations);
+		reshapeVector(location_boundary_, num_locations);
+		reshapeVector(LABEL_LOC_,		  num_locations+1);
+		LABEL_LOC_[0]  = {"CONNECTION"};
+		for(int ii=0;ii<num_locations;ii++)
 		{
-			string word;
-			if (!getline( lines_, word, delimiter_)) break;
-			if (j == 0)
-				if(tmp == line_)
-					out_file << line_;
-				else
-					out_file << word;
-			else
+			LABEL_LOC_[ii+1] 		  =      data[0][ii*data_tmp+0];
+			locations_[ii].x 		  = atof(data[0][ii*data_tmp+1].c_str());
+			locations_[ii].y 		  = atof(data[0][ii*data_tmp+2].c_str());
+			locations_[ii].z 		  = atof(data[0][ii*data_tmp+3].c_str());
+			locations_[ii].cluster_id = UNCLASSIFIED;
+			location_boundary_[ii] 	  = atof(data[0][ii*data_tmp+4].c_str());
+		}
+	}
+
+	printf("Reviewing location labels...\n");
+	for(int i=0;i<num_locations;i++)
+		printf("LLabel %d : %s\n", i+1, LABEL_LOC_[i+1].c_str());
+
+	printf("Replace default labels? [Y/N]\n");
+	while(0)
+	{
+		string mystr2; getline (cin, mystr2);
+		if(!strcmp(mystr2.c_str(),"Y"))
+		{
+			for(int i=0;i<num_locations;i++)
 			{
-				out_file << ",";
-				if(tmp == line_ && j==c)
+				printf("Enter new label for LLabel %d : ",i);
+				string mystr;
+				getline (cin, mystr);
+				if(!strcmp(mystr.c_str(),""))
+					cout << "[WARNING] : Label has not been overwritten."<< endl;
+				else
 				{
-					out_file << new_[k+1];
-					k++;
-					c+=4;
+					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
+					LABEL_LOC_[i+1] = mystr;
 				}
-				else
-					out_file << word;
 			}
-			j++;
+			writeLocLabelFile(path_, LABEL_LOC_, locations_, location_boundary_);
+			break;
 		}
-		out_file << "\n";
+		if(!strcmp(mystr2.c_str(),"N"))
+		{
+			cout << "[WARNING] : Label has not been overwritten." << endl;
+			break;
+		}
 	}
-
-	if (!src_file.eof())
-		cerr << "FILE ERROR!!!\n";
-
-	remove(name_);
-	rename(name_2, name_);
 }
+
+void readMovement(
+	string path_,
+	vector<string> &LABEL_MOV_,
+	int num_mov_)
+{
+	vector<vector<string> > data;
+	readFile(path_.c_str(), data , ',');
+
+	if(data.empty())
+	{
+		printf("[WARNING] : Movement data is empty.");
+	}
+	else
+	{
+		reshapeVector(LABEL_MOV_, num_mov_);
+		for(int ii=0;ii<data[0].size();ii++)
+			LABEL_MOV_[ii] = data[0][ii];
+	}
+	printf("Reviewing movement labels for OBJ...\n");
+	for(int i=0;i<num_mov_;i++)
+		printf("MLabel %d : %s\n", i, LABEL_MOV_[i].c_str());
+
+	printf("Replace default labels? [Y/N]\n");
+	while(0)
+	{
+		string mystr2; getline (cin, mystr2);
+		if(!strcmp(mystr2.c_str(),"Y"))
+		{
+			for(int i=0;i<num_mov_;i++)
+			{
+				printf("Enter new label for MLabel %d : ",i);
+				string mystr;
+				getline (cin, mystr);
+				if(!strcmp(mystr.c_str(),""))
+					cout << "[WARNING] : Label has not been overwritten."<< endl;
+				else
+				{
+					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
+					LABEL_MOV_[i] = mystr;
+				}
+			}
+			writeMovLabelFile(path_,LABEL_MOV_);
+			break;
+		}
+		if(!strcmp(mystr2.c_str(),"N"))
+		{
+			cout << "[WARNING] : Label has not been overwritten." << endl;
+			break;
+		}
+	}
+}
+
+void readSectorFile(
+	string path_,
+	vector<vector<vector<sector_t> > > &sector_,
+	int maxmin_)
+{
+	vector<vector<string> > data;
+	readFile(path_.c_str(), data , ',');
+
+	if(data.empty())
+	{
+		printf("[WARNING] : Sector data is empty.");
+	}
+	else
+	{
+		int num_locations, num_location_intervals, num_sector_intervals;
+		num_locations 			= atoi(data[0][0].c_str());
+		num_location_intervals 	= atoi(data[1][0].c_str());
+		num_sector_intervals 	= atoi(data[2][0].c_str());
+
+		if (sector_.empty())
+		{
+			reshapeVector(sector_,Sqr(num_locations));
+			vector<vector<sector_t> > 	sector1(num_location_intervals);
+				   vector<sector_t> 	sector2(num_sector_intervals);
+
+			for(int i=0;i<Sqr(num_locations);i++)
+			{
+				sector_[i] = sector1;
+				for(int ii=0;ii<num_location_intervals;ii++)
+				{
+					sector_[i][ii] = sector2;
+					for(int iii=0;iii<num_sector_intervals;iii++)
+					{
+						sector_[i][ii][iii].min = INFINITY;
+						sector_[i][ii][iii].max = 0;
+					}
+				}
+			}
+		}
+
+		for(int i=0;i<Sqr(num_locations);i++)
+		{
+			for(int ii=0;ii<num_location_intervals;ii++)
+			{
+				int tmp = i*num_location_intervals+ii+3;
+				for(int iii=0;iii<num_sector_intervals;iii++)
+				{
+					if (maxmin_)
+						sector_[i][ii][iii].min = atof(data[tmp][iii].c_str());
+					else
+						sector_[i][ii][iii].max = atof(data[tmp][iii].c_str());
+				}
+			}
+		}
+	}
+	// Should we add the option to edit the data?
+}
+
+void readSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > &sector_)
+{
+	vector<vector<string> > data;
+	readFile(path_.c_str(), data , ',');
+
+	if(data.empty())
+	{
+		printf("[WARNING] : Sector data is empty.");
+	}
+	else
+	{
+		int num_locations, num_location_intervals, num_sector_intervals;
+		num_locations 			= atoi(data[0][0].c_str());
+		num_location_intervals 	= atoi(data[1][0].c_str());
+		num_sector_intervals 	= atoi(data[2][0].c_str());
+
+	    reshapeVector(sector_,Sqr(num_locations));
+	    vector<vector<double> > sector1(num_location_intervals);
+		       vector<double> 	sector2(num_sector_intervals);
+
+		for(int i=0;i<Sqr(num_locations);i++)
+		{
+			sector_[i] = sector1;
+			for(int ii=0;ii<num_location_intervals;ii++)
+			{
+				sector_[i][ii] = sector2;
+			}
+		}
+
+		for(int i=0;i<num_locations;i++)
+		{
+			for(int ii=0;ii<num_location_intervals;ii++)
+			{
+				int tmp = i*num_location_intervals+ii+3;
+				for(int iii=0;iii<num_sector_intervals;iii++)
+				{
+					sector_[i][ii][iii] = atof(data[tmp][iii].c_str());
+				}
+			}
+		}
+	}
+	// Should we add the option to edit the data?
+}
+
+// ============================================================================
+// Data
+// ============================================================================
 
 void parseData2Point(
 	vector<vector<string> > data_full,
@@ -534,113 +655,6 @@ void parseData2Point(
 	}
 }
 
-/*
-void preprocessData(
-	point_t point,
-	point_t **pos_vel_acc,
-	vector<int> file_eof,
-	unsigned int window)
-{
-	int data_boundary = 0, cluster_ = 0, tmp_id = 0, file_num = 0;
-	point_t pos, vel, acc;
-	point_t pos_avg, pos_avg_, vel_avg, vel_avg_, acc_avg;
-	vector<vector<double> > pos_tmp(3), vel_tmp(3), acc_tmp(3);
-
-	int c1 = 0, c2 = -1, c3 = -2;
-	for(int i=0;i<num_points;i++)
-	{
-		if(i==file_eof[file_num])
-		{
-			pos_tmp.clear();
-			vel_tmp.clear();
-			acc_tmp.clear();
-			pos_tmp.resize(3);
-			vel_tmp.resize(3);
-			acc_tmp.resize(3);
-			data_boundary = 0;
-			c1 = 0, c2 = -1, c3 = -2;
-			file_num++;
-		}
-
-		if(data_boundary != window+2)
-		{
-			data_boundary+=1;
-
-			if(c1<window)
-			{
-				averagePointIncrement( p1[i], pos_tmp, pos_avg);
-				memcpy(&pos_vel_acc[0][i], &pos_avg, sizeof(pos_avg));
-			}
-			else
-			{
-				averagePoint( p1[i], pos_tmp, pos_avg);
-				memcpy(&pos_vel_acc[0][i], &pos_avg, sizeof(pos_avg));
-			}
-
-			if(c2<0)
-			{
-				pos_vel_acc[1][i].x
-				= pos_vel_acc[1][i].y
-				= pos_vel_acc[1][i].z
-				= 0;
-			}
-			else if (c2<window)
-			{
-				vel = minusPoint( pos_avg, pos_avg_ );
-				averagePointIncrement( vel, vel_tmp, vel_avg);
-				memcpy(&pos_vel_acc[1][i], &vel_avg, sizeof(vel_avg));
-			}
-			else
-			{
-				vel = minusPoint( pos_avg, pos_avg_ );
-				averagePoint( vel, vel_tmp, vel_avg );
-				memcpy(&pos_vel_acc[1][i], &vel_avg, sizeof(vel_avg));
-			}
-
-			if(c3<0)
-			{
-				pos_vel_acc[2][i].x
-				= pos_vel_acc[2][i].y
-				= pos_vel_acc[2][i].z
-				= 0;
-			}
-			else if(c3<window)
-			{
-				acc = minusPoint( pos_avg, pos_avg_ );
-				averagePointIncrement( acc, acc_tmp, acc_avg);
-				memcpy(&pos_vel_acc[2][i], &acc_avg, sizeof(acc_avg));
-			}
-			else
-			{
-				acc = minusPoint( pos_avg, pos_avg_ );
-				averagePoint( acc, acc_tmp, acc_avg );
-				memcpy(&pos_vel_acc[2][i], &acc_avg, sizeof(acc_avg));
-			}
-
-			c1+=1; c2+=1; c3+=1;
-		}
-		else
-		{
-			pos = p1[i];
-			averagePoint( pos, pos_tmp, pos_avg );
-			vel = minusPoint( pos_avg, pos_avg_ );
-			averagePoint( vel, vel_tmp, vel_avg );
-			acc = minusPoint( pos_avg, pos_avg_ );
-			averagePoint( acc, acc_tmp, acc_avg );
-			memcpy(&pos_vel_acc[0][i], &pos_avg, sizeof(pos_avg));
-			memcpy(&pos_vel_acc[1][i], &vel_avg, sizeof(vel_avg));
-			memcpy(&pos_vel_acc[2][i], &acc_avg, sizeof(acc_avg));
-		}
-
-		pos_vel_acc[0][i].cluster_id = p1[i].cluster_id;
-		pos_vel_acc[1][i].cluster_id = p1[i].cluster_id;
-		pos_vel_acc[2][i].cluster_id = p1[i].cluster_id;
-		cluster_ = p1[i].cluster_id;
-		pos_avg_ = pos_avg;
-		vel_avg_ = vel_avg;
-	}
-}
-*/
 void preprocessDataLive(
 	point_t pos,
 	vector< vector< vector<double> > > &pos_vel_acc_mem, // motion,xyz,length
@@ -706,6 +720,10 @@ void preprocessDataLive(
 	pos_vel_acc_avg[1].cluster_id = UNCLASSIFIED;
 	pos_vel_acc_avg[2].cluster_id = UNCLASSIFIED;
 }
+
+// ============================================================================
+// dbscan
+// ============================================================================
 
 void dbscanCluster(
 	double epsilon,
@@ -925,6 +943,390 @@ void contactBoundary(
 	}
 }
 
+// ============================================================================
+// Sector
+// ============================================================================
+
+void generateSector(
+	Graph &Graph_,
+	vector<vector<vector<sector_t> > > 	&sector_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<point_t> locations_,
+	vector<point_t> tmp_dir_,
+	vector<point_t> tmp_dir_normal_,
+	vector<double> tmp_norm_,
+	int num_location_intervals_,
+	int num_sector_intervals_,
+	vector<int>file_eof_,
+	vector<vector<double> > kernel_)
+{
+	int tmp_id1, tmp_id2, file_num;
+	tmp_id1 = tmp_id2 = file_num = 0;
+	bool flag_next = true;
+	data_t motion_data;
+	vector<data_t> edge_data;
+
+	for(int i=0;i<pos_vel_acc_avg_.size();i++)
+	{
+		if(i==file_eof_[file_num]-1)
+		{
+			flag_next = true;
+			tmp_id1  = 0;
+			tmp_id2 = 0;
+			continue;
+		}
+
+		if (pos_vel_acc_avg_[i][0].cluster_id >= 0)
+		{
+			Graph_.addEdge(edge_data,tmp_id1,tmp_id2,
+							 num_location_intervals_,num_sector_intervals_,
+							 sector_[tmp_id1*locations_.size()+tmp_id2]);
+			flag_next = true;
+			tmp_id1 = pos_vel_acc_avg_[i][0].cluster_id;
+			edge_data.clear();
+			continue;
+		}
+
+		if(flag_next)
+		{
+			flag_next = false;
+			for(int ii=i;ii<pos_vel_acc_avg_.size();ii++)
+			{
+				tmp_id2 = pos_vel_acc_avg_[ii][0].cluster_id;
+				if(pos_vel_acc_avg_[ii][0].cluster_id >= 0)
+					break;
+			}
+		}
+
+		if(tmp_id1 != tmp_id2)
+		{
+			updateSector(sector_, pos_vel_acc_avg_[i][0], locations_,
+						 tmp_dir_, tmp_dir_normal_, tmp_norm_,
+						 num_location_intervals_, num_sector_intervals_,
+						 tmp_id1, tmp_id2, kernel_);
+			motion_data.pos = pos_vel_acc_avg_[i][0];
+			motion_data.vel = pos_vel_acc_avg_[i][1];
+			motion_data.acc = pos_vel_acc_avg_[i][2];
+			edge_data.push_back(motion_data);
+		}
+	}
+}
+
+void prepareSector(
+	vector<point_t> &tmp_dir,
+	vector<point_t> &tmp_dir_normal,
+	vector<double> &tmp_norm,
+	vector<point_t> location)
+{
+	int c = 0;
+	int num_locations = location.size();
+	for(int i=0;i<num_locations;i++)
+	{
+		for(int ii=0;ii<num_locations;ii++)
+		{
+			if(i == ii)
+			{
+				tmp_dir[c].x =
+				tmp_dir[c].y =
+				tmp_dir[c].z = 0.0;
+				tmp_norm[c] = 0.0;
+				tmp_dir_normal[c].x =
+				tmp_dir_normal[c].y =
+				tmp_dir_normal[c].z = 0.0;
+				++c;
+				continue;
+			}
+
+			tmp_dir[c] = minusPoint(location[ii],location[i]);
+			tmp_norm[c] = l2Norm(tmp_dir[c]);
+			tmp_dir[c].x /= tmp_norm[c];
+			tmp_dir[c].y /= tmp_norm[c];
+			tmp_dir[c].z /= tmp_norm[c];
+			vector<double> B(3);
+			B[0] = 0.0; B[1] = 1.0; B[2] = 0.0;
+			tmp_dir_normal[c] = vector2point(
+									crossProduct(
+										point2vector(tmp_dir[c]), B));
+			++c;
+		}
+	}
+}
+
+void updateSector(
+	vector<vector<vector<sector_t> > > 	&sector_,
+	point_t pos_,
+	vector<point_t> locations_,
+	vector<point_t> tmp_dir_,
+	vector<point_t> tmp_dir_normal_,
+	vector<double> tmp_norm_,
+	int num_location_intervals_,
+	int num_sector_intervals_,
+	int tmp_id1_,
+	int tmp_id2_,
+	vector<vector<double> > kernel_)
+{
+	double angle_tmp = 0.0, p_ = 0.0;
+	int xx = 0, yy = 0, zz = 0;
+	point_t tmp_diff, p_dir, t_;
+
+	xx       = tmp_id1_*locations_.size()+tmp_id2_;
+
+	tmp_diff = minusPoint(pos_, locations_[tmp_id1_]);
+
+	p_       = dotProduct(point2vector(tmp_diff), point2vector(tmp_dir_[xx]));
+
+	p_dir    = tmp_dir_[xx]; // along the direction vector
+	p_dir.x *= p_;
+	p_dir.y *= p_;
+	p_dir.z *= p_;
+	t_       = minusPoint(tmp_diff,p_dir);
+
+	angle_tmp = atan2(l2Norm(crossProduct(point2vector(t_),
+											  point2vector(tmp_dir_normal_[xx]))),
+							   dotProduct(point2vector(t_),
+										  point2vector(tmp_dir_normal_[xx])));
+	//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
+
+	// the value of yy can be > or <  "num_location_intervals"
+	// > object moved further away from the location area
+	// < object is moving initially away from the intended goal location
+	yy 		 = ceil(p_*num_location_intervals_/tmp_norm_[xx])  -1;
+	zz 		 = ceil(angle_tmp*num_sector_intervals_/M_PI) -1;
+
+	if(yy<num_location_intervals_ &&
+	   zz<num_sector_intervals_ &&
+	   yy>=0 &&
+	   zz>=0)
+	{
+		sector_[xx][yy][zz].max = max(l2Norm(t_), sector_[xx][yy][zz].max);
+		sector_[xx][yy][zz].min = min(l2Norm(t_), sector_[xx][yy][zz].min);
+		double mid = (sector_[xx][yy][zz].max + sector_[xx][yy][zz].min)/2;
+		double tmp_ratio1 = (sector_[xx][yy][zz].max-mid) /
+				             kernel_[(kernel_.size()-1)/2]
+				                    [(kernel_[0].size()-1)/2];
+
+		for(int i=0;i<kernel_.size();i++)
+		{
+			for(int ii=0;ii<kernel_[0].size();ii++)
+			{
+				int tmp1 = i -(kernel_.size()/2)+zz;
+				int tmp2 = ii-(kernel_[0].size()/2)+yy;
+				if (tmp1<0)
+					tmp1 += num_sector_intervals_;
+				else if (tmp1>=num_sector_intervals_)
+					tmp1 %= num_sector_intervals_;
+				if (tmp2<0)
+					continue;
+				else if (tmp2>=num_location_intervals_)
+					continue;
+				sector_[xx][tmp2][tmp1].max =
+						max((kernel_[i][ii]*tmp_ratio1)+mid ,
+							sector_[xx][tmp2][tmp1].max);
+				sector_[xx][tmp2][tmp1].min =
+						min(mid-(kernel_[i][ii]*tmp_ratio1) ,
+							sector_[xx][tmp2][tmp1].min);
+			}
+		}
+	}
+}
+
+void checkSector(
+	vector<double> &prediction,
+	vector<double> &t_val,
+	vector<vector<vector<sector_t> > > 	&sector,
+	point_t pos_,
+	vector<point_t> location,
+	vector<point_t> tmp_dir,
+	vector<point_t> tmp_dir_normal,
+	vector<double> tmp_norm,
+	int num_location_intervals,
+	int num_sector_intervals,
+	int tmp_id,
+	bool learn)
+{
+	int num_locations = location.size();
+	double angle_tmp = 0.0, p_ = 0.0;
+	int xx, yy, zz;
+	xx = yy = zz = 0;
+	point_t tmp_diff, p_dir, t_;
+
+	for(int i=0;i<num_locations;i++)
+	{
+		prediction[i] = 0;
+		t_val[i]      = 0;
+
+		if(tmp_id == i) continue;
+
+		xx       = tmp_id*num_locations+i;
+
+		tmp_diff = minusPoint(pos_, location[tmp_id]);
+		p_       = dotProduct(point2vector(tmp_diff),
+				              point2vector(tmp_dir[xx]));
+		p_dir    = tmp_dir[xx]; // along the direction vector
+		p_dir.x *= p_;
+		p_dir.y *= p_;
+		p_dir.z *= p_;
+		t_       = minusPoint(tmp_diff,p_dir);
+
+		angle_tmp = atan2(l2Norm(crossProduct(point2vector(t_),
+											  point2vector(tmp_dir_normal[xx]))),
+						  dotProduct(point2vector(t_),
+									 point2vector(tmp_dir_normal[xx])));
+		//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
+
+		yy 		 = ceil(p_*num_location_intervals/tmp_norm[xx])  -1;
+		zz 		 = ceil(angle_tmp*num_sector_intervals/M_PI)     -1;
+
+		//cout << yy << " " << zz << " ";
+
+		if(yy<num_location_intervals && yy>=0 &&
+		   zz<num_sector_intervals   && zz>=0)
+		{
+			if (l2Norm(t_)<=sector[xx][yy][zz].max &&
+				l2Norm(t_)>=sector[xx][yy][zz].min)
+			{
+				prediction[i] = 1;
+				t_val[i]      = l2Norm(t_);
+			}
+			else
+			{
+				if(learn)
+				{
+					prediction[i] = 3;
+					if(l2Norm(t_) - sector[xx][yy][zz].max > 0)
+						t_val[i] = l2Norm(t_) - sector[xx][yy][zz].max;
+					else
+						t_val[i] = sector[xx][yy][zz].min - l2Norm(t_);
+					//printf(" %.4f %.4f %.4f %.4f   ", l2Norm(t_), t_val[i], sector[xx][yy][zz].max, sector[xx][yy][zz].min);
+					sector[xx][yy][zz].max = max(l2Norm(t_),sector[xx][yy][zz].max);
+					sector[xx][yy][zz].min = min(l2Norm(t_),sector[xx][yy][zz].min);
+				}
+				else
+				{
+					prediction[i] = 2;
+					t_val[i]      = l2Norm(t_);
+				}
+			}
+		}
+	}
+}
+
+void checkSectorConstraint(
+	vector<vector<vector<sector_t> > > 	sector,
+	vector<vector<vector<double> > > &sector_constraint,
+	int num_locations,
+	int num_location_intervals,
+	int num_sector_intervals)
+{
+
+	for(int i=0;i<Sqr(num_locations);i++)
+		for(int ii=0;ii<num_location_intervals;ii++)
+			for(int iii=0;iii<num_sector_intervals;iii++)
+			{
+				sector_constraint[i][ii][iii] =
+					(sector[i][ii][iii].max - sector[i][ii][iii].min > 0) &&
+					(0.06 - (sector[i][ii][iii].max - sector[i][ii][iii].min) > 0) ?
+						sector[i][ii][iii].max - sector[i][ii][iii].min : 0;
+				for(int iv=0;iv<5;iv++)
+					for(int v=0;v<5;v++)
+						if (sector[i]
+						          [(iv-(int)(5/2)+ii+num_location_intervals)%num_location_intervals]
+						          [(v-(int)(5/2)+iii+num_sector_intervals)%num_sector_intervals].max <= 0)
+							sector_constraint[i][ii][iii] = 0;
+//
+//						if ((sector[i][ii][(iii+(int)(5/2)+num_sector_intervals)%num_sector_intervals].max <= 0) ||
+//							(sector[i][ii][(iii-(int)(5/2)+num_sector_intervals)%num_sector_intervals].max <= 0))
+//							sector_constraint[i][ii][iii] = 0;
+			}
+}
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------------------------------------
+double surfaceRange(
+	point_t pos_,
+	point_t pos_surface_,
+	vector<double> surface_)
+{
+	vector<double> surface_tmp(3);
+	vector<double> surface_parallel_tmp;
+	vector<double> p_tmp;
+	double norm_tmp = 0.0;
+
+	surface_tmp[0] = surface_[0];
+	surface_tmp[1] = surface_[1];
+	surface_tmp[2] = surface_[2];
+
+	p_tmp = point2vector(minusPoint(pos_, pos_surface_));
+
+	// surface_parallel_tmp can be obtained at the beginning by just taking the normalized vector between 2 points on the surface
+	{
+		surface_parallel_tmp = crossProduct(surface_tmp, p_tmp);
+
+		for(int i=0;i<3;i++)
+			norm_tmp += Sqr(surface_parallel_tmp[i]);
+		norm_tmp = sqrt(norm_tmp);
+
+		for(int i=0;i<3;i++)
+			surface_parallel_tmp[i] /= norm_tmp;
+	}
+
+	return dotProduct(p_tmp, surface_parallel_tmp);
+}
+
+double surfaceDistance(
+	point_t pos_,
+	vector<double> surface_)
+{
+	return surface_[0]*pos_.x +
+		   surface_[1]*pos_.y +
+		   surface_[2]*pos_.z -
+		   surface_[3];
+}
+
+double surfaceAngle(
+	point_t vel_,
+	vector<double> surface_)
+{
+	vector<double> tmp(3);
+	tmp[0] = surface_[0];
+	tmp[1] = surface_[1];
+	tmp[2] = surface_[2];
+	return 	l2Norm(crossProduct(tmp,point2vector(vel_)))/
+			(l2Norm(tmp) * l2Norm(point2vector(vel_)));
+}
+
+
+//---------------------------------------------------------------------------------------------------------------------
+// General Functions
+
+void writePointFile(
+	point_t *p,
+	unsigned int num_points)
+{
+	remove("data.txt");
+	for(unsigned int i=0;i<num_points;i++)
+	{
+		// write values into data.txt
+		std::ofstream write_file("data.txt", std::ios::app);
+		write_file << p[i].x << ","
+				   << p[i].y << ","
+				   << p[i].z << ","
+				   << p[i].cluster_id
+				   << "\n";
+	}
+}
+
+
+
 
 bool checkSurfaceRange(
 	point_t pos_,
@@ -990,224 +1392,6 @@ double checkMoveSlideOutside(
 
 
 
-
-
-
-
-
-
-
-
-void labelingMovement(
-	vector<string> &LABEL_MOV,
-	int num_mov,
-	int obj,
-	int num_objs)
-{
-	LABEL_MOV.clear();
-	LABEL_MOV.resize(num_mov);
-
-	vector<vector<string> > obj_data;
-	char name[256];
-	sprintf(name, "Object/obj_mov_data.txt");
-	readFile(name, obj_data , ',');
-
-	if(obj_data.empty())
-	{
-		LABEL_MOV[0] = {"MOVE"};
-		LABEL_MOV[1] = {"SLIDE"};
-		writeObjLabelFile(LABEL_MOV, obj);
-	}
-	else
-	{
-		bool flag = false;
-		for(int i=0;i<num_objs;i++)
-		{
-			if(obj_data.size() < num_objs) continue;
-			if(atoi(obj_data[i][0].c_str())==obj)
-			{
-				for(int ii=0;ii<obj_data[i].size()-1;ii++)
-					LABEL_MOV[ii] = obj_data[i][ii+1];
-				flag = true;
-			}
-		}
-		if(!flag)
-		{
-			LABEL_MOV[0] = {"MOVE"};
-			LABEL_MOV[1] = {"SLIDE"};
-			writeObjLabelFile(LABEL_MOV, obj);
-		}
-	}
-	printf("Reviewing movement labels for OBJ...\n");
-	for(int i=0;i<num_mov;i++) printf("MLabel %d : %s\n", i, LABEL_MOV[i].c_str());
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
-	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<num_mov;i++)
-			{
-				printf("Enter new label for MLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					LABEL_MOV[i] = mystr;
-				}
-			}
-			rewriteFileObj(name, obj, LABEL_MOV, ',');
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
-	}
-}
-
-
-
-void labelingLocation(
-	vector<point_t> &points,
-	vector<point_t> &locations,
-	vector<double> &location_boundary,
-	vector<string> &LABEL_LOC,
-	int obj,
-	double epsilon,
-	int minpts)
-{
-
-	int num_points = points.size();
-	int num_locations = locations.size();
-
-	vector<unsigned char*> color_code(12);
-	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
-	colorCode(color_code);
-
-	point_t *points_array = Calloc(point_t,points.size());
-	vector2array(points, points_array);
-
-	vector<vector<string> > loc_data;
-	char name[256];
-	sprintf(name, "Location/loc_data.txt");
-	readFile(name, loc_data , ',');
-
-	//cout << location_boundary[0] << endl;
-	if(loc_data.empty())
-	{
-		//[CLUSTERING]*********************************************************
-		dbscanCluster(epsilon, (unsigned int)minpts, num_points, points_array);
-		printf("Clustering training data......Complete\n");
-		points.clear();
-		points.resize(num_points);
-		array2vector(points_array, num_points, points);
-		combineNearCluster(points, locations);
-		printf("Combining nearby clusters......Complete\n");
-
-		num_locations = locations.size();
-		location_boundary.clear();
-		location_boundary.resize(num_locations);
-		contactBoundary(points, locations, location_boundary, true);
-		contactBoundary(points, locations, location_boundary, false);
-		//*********************************************************[CLUSTERING]
-		LABEL_LOC.clear();
-		LABEL_LOC.resize(num_locations + 1);
-		LABEL_LOC[0] = {"CONNECTION"};
-		showData(points, LABEL_LOC, color_code, true, true);
-		writeLocLabelFile(LABEL_LOC, obj, locations);
-	}
-	else
-	{
-		bool flag = false;
-		for(int i=0;i<loc_data.size();i++)
-		{
-			if (atoi(loc_data[i][0].c_str())==obj)
-			{
-				num_locations = (loc_data[i].size()-1)/4;
-				locations.clear();
-				locations.resize(num_locations);
-				location_boundary.clear();
-				location_boundary.resize(num_locations);
-				LABEL_LOC.clear();
-				LABEL_LOC.resize(num_locations + 1);
-				LABEL_LOC[0] = {"CONNECTION"};
-				for(int ii=0;ii<num_locations;ii++)
-				{
-					LABEL_LOC[ii+1] = loc_data[i][ii*4+1];
-					locations[ii].x = atof(loc_data[i][ii*4+2].c_str());
-					locations[ii].y = atof(loc_data[i][ii*4+3].c_str());
-					locations[ii].z = atof(loc_data[i][ii*4+4].c_str());
-					locations[ii].cluster_id = UNCLASSIFIED;
-				}
-				flag = true;
-				contactBoundary(points, locations, location_boundary, false);
-				showData(points, LABEL_LOC, color_code, true, false);
-			}
-		}
-		if(!flag)
-		{
-			//[CLUSTERING]*****************************************************
-			dbscanCluster(epsilon, (unsigned int)minpts, num_points, points_array);
-			printf("Clustering training data......Complete\n");
-			points.clear();
-			points.resize(num_points);
-			array2vector(points_array, num_points, points);
-			combineNearCluster(points, locations);
-			printf("Combining nearby clusters......Complete\n");
-
-			num_locations = locations.size();
-			location_boundary.clear();
-			location_boundary.resize(num_locations);
-			contactBoundary(points, locations, location_boundary, true);
-			contactBoundary(points, locations, location_boundary, false);
-			//*****************************************************[CLUSTERING]
-			LABEL_LOC.clear();
-			LABEL_LOC.resize(num_locations + 1);
-			LABEL_LOC[0] = {"CONNECTION"};
-			showData(points, LABEL_LOC, color_code, true, true);
-			writeLocLabelFile(LABEL_LOC, obj, locations);
-		}
-	}
-
-	printf("Reviewing location labels...\n");
-	for(int i=0;i<num_locations;i++)
-	{
-		printf("LLabel %d : %s\n", i+1, LABEL_LOC[i+1].c_str());
-	}
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
-	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<num_locations;i++)
-			{
-				printf("Enter new label for LLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					LABEL_LOC[i+1] = mystr;
-				}
-			}
-			rewriteFileLoc(name, obj, LABEL_LOC, ',');
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
-	}
-}
 
 
 
