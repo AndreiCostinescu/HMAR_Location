@@ -22,7 +22,13 @@ void showData(
 	bool cluster,
 	bool labeling);
 
+void showConnectionOnly(
+	Graph Graph_,
+	vector<unsigned char*> color_);
+
 void showConnection(
+	vector<point_t> p,
+	vector<string> &label,
 	Graph Graph_,
 	vector<unsigned char*> color_);
 

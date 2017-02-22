@@ -331,7 +331,7 @@ void labelSector(
 	checkSectorConstraint(Graph_, kernel_size_);
 	printf("Checking sector constraints......Complete\n");
 
-	showConnection(Graph_, color_code_);
+	showConnectionOnly(Graph_, color_code_);
 	printf("Viewing sector......Complete\n");
 
 	string path;

@@ -321,6 +321,14 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	reshapeVector(pos_vel_acc_avg, num_points);
 	reshapeVector(pos_vel_acc_mem, 3);
 
+	// JUST FOR VISUALIZING
+	vector<point_t> p_data;
+	vector<string> label_data;
+
+	for(int i=0;i<num_locations;i++) {label_data.push_back(Graph_.getNode(i).name);}
+
+
+
 	for(int i=0;i<num_points;i++)
 	{
 		//[PREPROCESS DATA]****************************************************
@@ -337,6 +345,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 
 		preprocessDataLive(points_test[i], pos_vel_acc_mem, pos_vel_acc_avg[i],
 						   window);
+		p_data.push_back(pos_vel_acc_avg[i][0]);
 		//****************************************************[PREPROCESS DATA]
 
 // ============================================================================
@@ -488,6 +497,10 @@ else
 	//*************************************************************[PREDICTION]
 
 #endif
+
+
+	//showConnection(p_data,label_data,Graph_,color_code);
+
 
 //		vector<double> x,y1,y2,y0;
 //		for(int i=0;i<num_points;i++)

@@ -203,7 +203,6 @@ void showData(
 		++line_;
 	}
 	++num_locations;
-	//cout << "Number of locations : " << num_locations << endl;
 
 	// Create the geometry of a point (the coordinate)
 	// add point to polydata to create the vertices for glyph
@@ -330,7 +329,7 @@ void showData(
 	label = style->getLabels();
 }
 
-void showConnection(
+void showConnectionOnly(
 	Graph Graph_,
 	vector<unsigned char*> color_)
 {
@@ -535,9 +534,7 @@ void showConnection(
 	renderWindowInteractor 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
 	for(int i=0;i<Sqr(num_locations);i++)
-//	for(int i=1;i<2;i++)
 	{
-//		int i = 6;
 		renderer->AddActor(lineActor[i]);
 
 		for(int ii=0;ii<sector_para.sec_int;ii++)
@@ -558,6 +555,302 @@ void showConnection(
 	renderWindowInteractor->Start();
 }
 
+void showConnection(
+	vector<point_t> p,
+	vector<string> &label,
+	Graph Graph_,
+	vector<unsigned char*> color_)
+{
+	vector<node_tt> nodes = Graph_.getNodeList();
+	int num_locations = nodes.size();
+	vector<point_t> locations(num_locations);
+	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].location;}
+
+	sector_para_t sector_para = Graph_.getSectorPara();
+
+	vtkSmartPointer<vtkLineSource> 			lineSource	[Sqr(num_locations)];
+	vtkSmartPointer<vtkPolyDataMapper> 		lineMapper	[Sqr(num_locations)];
+	vtkSmartPointer<vtkActor> 				lineActor 	[Sqr(num_locations)];
+	vtkSmartPointer<vtkPoints> 				points		[Sqr(num_locations)];
+	vtkSmartPointer<vtkCellArray> 			lines 	   	[Sqr(num_locations)];
+	vtkSmartPointer<vtkPolyData> 			polyData   	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkDoubleArray> 		tubeRadius 	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkTubeFilter> 			tubeFilter 	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper 	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkActor> 				tubeActor  	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkUnsignedCharArray> 	colors     	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkPolyData> 			polyData2  	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkDoubleArray> 		tubeRadius2	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkTubeFilter> 			tubeFilter2	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper2	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkActor> 				tubeActor2 	[Sqr(num_locations)][sector_para.sec_int];
+	vtkSmartPointer<vtkUnsignedCharArray> 	colors2    	[Sqr(num_locations)][sector_para.sec_int];
+
+	vtkSmartPointer<vtkRenderer> 				renderer;
+	vtkSmartPointer<vtkRenderWindow> 			renderWindow;
+	vtkSmartPointer<vtkRenderWindowInteractor> 	renderWindowInteractor;
+	vtkSmartPointer<customMouseInteractorStyle> style;
+
+	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
+
+	for(int i=0;i<Sqr(num_locations);i++)
+	{
+		lineSource[i] = vtkSmartPointer<vtkLineSource>::New();
+		lineMapper[i] = vtkSmartPointer<vtkPolyDataMapper>::New();
+		lineActor [i] = vtkSmartPointer<vtkActor>::New();
+
+		points[i] = vtkSmartPointer<vtkPoints>::New();
+		lines [i] = vtkSmartPointer<vtkCellArray>::New();
+
+		int c = i/num_locations;
+
+		if(i == c*num_locations+c) continue;
+
+		// Create a line between each location
+		lineSource[i]->SetPoint1(locations[c].x,
+				          	     locations[c].y,
+				          	     locations[c].z);
+		lineSource[i]->SetPoint2(locations[c].x + (sector_para.dir[i].x * sector_para.dist[i]),
+							     locations[c].y + (sector_para.dir[i].y * sector_para.dist[i]),
+							     locations[c].z + (sector_para.dir[i].z * sector_para.dist[i]));
+
+		lineMapper[i]->SetInputConnection(lineSource[i]->GetOutputPort());
+
+		lineActor[i]->GetProperty()->SetLineWidth(5); // Give some color to the line
+		lineActor[i]->GetProperty()->SetColor(0.0,0.0,1.0); // Give some color to the line
+		lineActor[i]->SetMapper(lineMapper[i]);
+
+		// Create points between each locations
+		lines[i]->InsertNextCell(sector_para.loc_int*2);
+
+		for(int ii=0;ii<sector_para.loc_int;ii++)
+		{
+			points[i]->InsertPoint(ii*2+0,
+				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
+				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
+				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+0)/sector_para.loc_int);
+			points[i]->InsertPoint(ii*2+1,
+				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
+				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
+				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99);
+			lines[i]->InsertCellPoint(ii*2+0);
+			lines[i]->InsertCellPoint(ii*2+1);
+		}
+
+		for(int ii=0;ii<sector_para.sec_int;ii++)
+		{
+			colors     [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
+			polyData   [i][ii] = vtkSmartPointer<vtkPolyData>::New();
+			tubeRadius [i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
+			tubeFilter [i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
+			colors2    [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
+			polyData2  [i][ii] = vtkSmartPointer<vtkPolyData>::New();
+			tubeRadius2[i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
+			tubeFilter2[i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
+
+			colors[i][ii]->SetNumberOfComponents(3);
+			colors[i][ii]->SetName ("Colors");
+			colors2[i][ii]->SetNumberOfComponents(3);
+			colors2[i][ii]->SetName ("Colors");
+
+			polyData[i][ii]->SetPoints(points[i]);
+			polyData[i][ii]->SetLines(lines[i]);
+			polyData2[i][ii]->SetPoints(points[i]);
+			polyData2[i][ii]->SetLines(lines[i]);
+
+			tubeRadius[i][ii]->SetName("TubeRadius");
+			tubeRadius[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
+			tubeRadius2[i][ii]->SetName("TubeRadius");
+			tubeRadius2[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
+
+			for (int iii=0;iii<sector_para.loc_int;iii++)
+			{
+				if (sector[i][0].sector_const[iii*sector_para.sec_int+ii]==0)
+				{
+					colors[i][ii]->InsertNextTypedTuple(color_[5]);
+					colors[i][ii]->InsertNextTypedTuple(color_[5]);
+				}
+				else
+				{
+					colors[i][ii]->InsertNextTypedTuple(color_[1]);
+					colors[i][ii]->InsertNextTypedTuple(color_[1]);
+				}
+
+				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
+				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
+
+				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min<0)
+				{
+					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
+					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
+				}
+				else if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min==INFINITY)
+				{
+					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
+					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
+				}
+				else
+				{
+					tubeRadius2[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
+					tubeRadius2[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
+				}
+
+				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].max<=0)
+				{
+					tubeRadius[i][ii]->SetTuple1(iii*2+0, 0.0);
+					tubeRadius[i][ii]->SetTuple1(iii*2+1, 0.0);
+				}
+				else
+				{
+					tubeRadius[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
+					tubeRadius[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
+				}
+			}
+
+			polyData[i][ii]->GetPointData()->AddArray(tubeRadius[i][ii]);
+			polyData[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
+			polyData[i][ii]->GetPointData()->AddArray(colors[i][ii]);
+			polyData2[i][ii]->GetPointData()->AddArray(tubeRadius2[i][ii]);
+			polyData2[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
+			polyData2[i][ii]->GetPointData()->AddArray(colors2[i][ii]);
+
+//#if VTK_MAJOR_VERSION <= 5
+//			tubeFilter[i][ii]->SetInputConnection(polyData[i][ii]->GetProducerPort());
+//#else
+//			tubeFilter[i][ii]->SetInputData(polyData[i][ii]);
+//#endif
+
+			tubeFilter[i][ii]->SetInputData(polyData[i][ii]);
+			tubeFilter[i][ii]->SetNumberOfSides(sector_para.sec_int);
+			tubeFilter[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
+			tubeFilter[i][ii]->SidesShareVerticesOff();
+			tubeFilter[i][ii]->SetOnRatio(sector_para.sec_int);
+			tubeFilter[i][ii]->SetOffset(ii);
+			tubeFilter[i][ii]->Update();
+			tubeFilter2[i][ii]->SetInputData(polyData2[i][ii]);
+			tubeFilter2[i][ii]->SetNumberOfSides(sector_para.sec_int);
+			tubeFilter2[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
+			tubeFilter2[i][ii]->SidesShareVerticesOff();
+			tubeFilter2[i][ii]->SetOnRatio(sector_para.sec_int);
+			tubeFilter2[i][ii]->SetOffset(ii);
+			//cout << num_sector_intervals << ii <<endl;
+			tubeFilter2[i][ii]->Update();
+
+			tubeMapper[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
+			tubeMapper[i][ii]->SetInputConnection(tubeFilter[i][ii]->GetOutputPort());
+			tubeMapper[i][ii]->ScalarVisibilityOn();
+			tubeMapper[i][ii]->SetScalarModeToUsePointFieldData();
+			tubeMapper[i][ii]->SelectColorArray("Colors");
+			tubeMapper2[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
+			tubeMapper2[i][ii]->SetInputConnection(tubeFilter2[i][ii]->GetOutputPort());
+			tubeMapper2[i][ii]->ScalarVisibilityOn();
+			tubeMapper2[i][ii]->SetScalarModeToUsePointFieldData();
+			tubeMapper2[i][ii]->SelectColorArray("Colors");
+
+			tubeActor[i][ii] = vtkSmartPointer<vtkActor>::New();
+			tubeActor[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
+			tubeActor[i][ii]->SetMapper(tubeMapper[i][ii]);
+			tubeActor2[i][ii] = vtkSmartPointer<vtkActor>::New();
+			tubeActor2[i][ii]->GetProperty()->SetOpacity(1.0); //Make the tube have some transparency.
+			tubeActor2[i][ii]->SetMapper(tubeMapper2[i][ii]);
+		}
+	}
+
+	style 				   	= vtkSmartPointer<customMouseInteractorStyle>::New();
+	renderer               	= vtkSmartPointer<vtkRenderer>::New();
+	renderWindow           	= vtkSmartPointer<vtkRenderWindow>::New();
+	renderWindowInteractor 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
+	for(int i=0;i<Sqr(num_locations);i++)
+	{
+		renderer->AddActor(lineActor[i]);
+
+		for(int ii=0;ii<sector_para.sec_int;ii++)
+		{
+			renderer->AddActor(tubeActor[i][ii]);
+			renderer->AddActor(tubeActor2[i][ii]);
+		}
+	}
+
+
+
+
+	int line_ = 0;
+	num_locations = 0;
+	while(line_<p.size())
+	{
+		num_locations = max(p[line_].cluster_id,num_locations);
+		++line_;
+	}
+	++num_locations;
+
+	vtkSmartPointer<vtkPoints> 					points_data;
+	vtkSmartPointer<vtkPolyData> 				pointsPolydata;
+	vtkSmartPointer<vtkVertexGlyphFilter>		vertexFilter;
+	vtkSmartPointer<vtkPolyData> 				polydata;
+	vtkSmartPointer<vtkPolyDataMapper>			mapper;
+	vtkSmartPointer<vtkActor> 					actor;
+	vtkSmartPointer<vtkUnsignedCharArray> 		colors_data;
+
+	colors_data 			= vtkSmartPointer<vtkUnsignedCharArray>::New();
+	points_data 			= vtkSmartPointer<vtkPoints>::New();
+	pointsPolydata 			= vtkSmartPointer<vtkPolyData>::New();
+	vertexFilter			= vtkSmartPointer<vtkVertexGlyphFilter>::New();
+	polydata 				= vtkSmartPointer<vtkPolyData>::New();
+	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
+	actor 					= vtkSmartPointer<vtkActor>::New();
+
+	for(int i=0;i<p.size();i++)
+		points_data->InsertNextPoint(p[i].x, p[i].y, p[i].z);
+
+	pointsPolydata->SetPoints(points_data);
+
+	vertexFilter->SetInputData(pointsPolydata);
+	vertexFilter->Update();
+
+	polydata->ShallowCopy(vertexFilter->GetOutput());
+
+//#if VTK_MAJOR_VERSION <= 5
+//	vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
+//#else
+//	vertexFilter->SetInputData(pointsPolydata);
+//#endif
+
+	colors_data->SetNumberOfComponents(3);
+	colors_data->SetName ("Colors");
+	for(int i=0;i<p.size();i++)
+	{
+		if(p[i].cluster_id < num_locations && p[i].cluster_id >= 0)
+			colors_data->InsertNextTypedTuple(color_[p[i].cluster_id+1]);
+		else
+			colors_data->InsertNextTypedTuple(color_[10]);
+	}
+	polydata->GetPointData()->SetScalars(colors_data);
+
+//	#if VTK_MAJOR_VERSION <= 5
+//	  mapper->SetInput(polydata);
+//	#else
+//	  mapper->SetInputData(polydata);
+//	#endif
+
+	mapper->SetInputData(polydata);
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetPointSize(10);
+	renderer->AddActor(actor);
+	style->setNumberOfLabels(num_locations);
+	style->setLabels(label);
+	style->setColors(color_);
+
+	style->SetDefaultRenderer(renderer);
+	style->setLeftButton(false);
+	renderer->SetBackground(1.0,1.0,1.0);
+	renderWindow->SetSize(1280,800); //(width, height)
+	renderWindow->AddRenderer(renderer);
+	renderWindowInteractor->SetRenderWindow(renderWindow);
+	renderWindowInteractor->SetInteractorStyle(style);
+	renderWindow->Render();
+	renderWindowInteractor->Start();
+}
 
 void plotData(
 	vector<double> x,
