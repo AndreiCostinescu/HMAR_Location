@@ -20,5 +20,7 @@
 - changed the way data is stored :  
   Scenes - [scene] - [object - [loc,mov,max,min,const], surface.txt]
 
-
-
+[05] Class Commit
+- 22/02/2017
+- rewritten all data to depend on class graph
+- added Verbose to show relevant ouput only

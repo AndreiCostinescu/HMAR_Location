@@ -9,6 +9,7 @@
 #define VTKEXTRA_H_
 
 #include "dataDeclaration.h"
+#include "Graph.h"
 
 //=============================================================================
 
@@ -22,15 +23,11 @@ void showData(
 	bool labeling);
 
 void showConnection(
-	vector<vector<vector<sector_t> > > 	sector,
-	vector<vector<vector<double> > > sector_constraint,
-	vector<point_t> loc_loc_vec,
-	vector<point_t> loc_loc_normal,
-	vector<double>  loc_loc_norm,
-	vector<point_t> location,
-	int num_location_intervals,
-	int num_sector_intervals,
+	Graph Graph_,
 	vector<unsigned char*> color_);
 
+void plotData(
+	vector<double> x,
+	vector<double> y);
 
 #endif /* VTKEXTRA_H_ */

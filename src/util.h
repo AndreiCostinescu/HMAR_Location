@@ -56,31 +56,28 @@ double surfaceRange(
 // ============================================================================
 
 void labelMovement(
-	string scene_,
-	string object_,
-	vector<string> &LABEL_MOV,
-	int num_mov);
+	Graph Graph_);
 
 void labelLocation(
-	string scene_,
-	string object_,
-	vector<point_t> &points,
-	vector<point_t> &locations,
-	vector<double> &location_boundary,
-	vector<string> &LABEL_LOC,
-	double epsilon,
-	int minpts);
+	string path_,
+	vector<point_t> &points_,
+	vector<point_t> &locations_,
+	vector<double> &location_boundary_,
+	vector<string> &label_,
+	vector<int> &surface_num_,
+	double epsilon_,
+	int minpts_);
+
+void labelLocation_(
+	Graph &Graph_,
+	vector<vector<point_t> > &pos_vel_acc_avg_,
+	double epsilon_,
+	int minpts_);
 
 void labelSector(
-	string scene_,
-	string object_,
 	Graph &Graph_,
-	vector<vector<vector<sector_t> > > &sector_,
-	vector<vector<vector<double> > > sector_constraint_,
-	vector<point_t> locations_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
+	int kernel_size_,
 	vector<int> file_eof_,
 	vector<unsigned char*> color_code_);
 
@@ -95,8 +92,7 @@ void readingLocation(
 // ============================================================================
 
 void writeSurfaceFile(
-	string scene_,
-	vector<vector<double> > surface_);
+	Graph Graph_);
 
 void writeMovLabelFile(
 	string path_,
@@ -106,15 +102,13 @@ void writeLocLabelFile(
 	string path_,
 	vector<string> label_,
 	vector<point_t> locations_,
-	vector<double> boundary_);
+	vector<double> boundary_,
+	vector<int> surface_num_container_);
 
 void writeSectorFile(
+	Graph Graph_,
 	string path_,
-	vector<vector<vector<sector_t> > > sector_,
-	int maxmin_,
-	int num_locations_,
-	int num_location_intervals_,
-	int num_sector_intervals_);
+	int maxminconst_);
 
 void writeSectorConstraintFile(
 	string path_,
@@ -129,24 +123,24 @@ void readFile(
 	char delimiter);
 
 void readSurfaceFile(
-	string scene_,
-	vector<vector<double> > &surface_);
+	Graph &Graph_);
 
 void readLocation(
 	string path_,
 	vector<string> &LABEL_LOC_,
 	vector<point_t> &locations_,
-	vector<double> &location_boundary_);
+	vector<double> &location_boundary_,
+	vector<int> &surface_num_);
+
+void readLocation_(
+	Graph &Graph_);
 
 void readMovement(
-	string path_,
-	vector<string> &LABEL_MOV_,
-	int num_mov_);
+	Graph &Graph_);
 
 void readSectorFile(
-	string path_,
-	vector<vector<vector<sector_t> > > &sector_,
-	int maxmin_);
+	Graph &Graph_,
+	int maxminconst_);
 
 void readSectorConstraintFile(
 	string path_,
@@ -161,10 +155,10 @@ void parseData2Point(
 	vector<point_t> &points);
 
 void preprocessDataLive(
-	point_t pos,
-	vector< vector< vector<double> > > &pos_vel_acc_mem, // motion,xyz,length
-	vector<point_t> &pos_vel_acc_avg,
-	unsigned int window);
+	point_t pos_,
+	vector< vector< point_t > > &pos_vel_acc_mem_, // motion -> length(empty at beginning)
+	vector<point_t> &pos_vel_acc_avg_, //motion
+	unsigned int window_);
 
 // ============================================================================
 // dbscan
@@ -197,68 +191,71 @@ void contactBoundary(
 
 void generateSector(
 	Graph &Graph_,
-	vector<vector<vector<sector_t> > > 	&sector_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	vector<point_t> locations_,
-	vector<point_t> tmp_dir_,
-	vector<point_t> tmp_dir_normal_,
-	vector<double> tmp_norm_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
 	vector<int>file_eof_,
 	vector<vector<double> > kernel_);
 
 void prepareSector(
-	vector<point_t> &tmp_dir,
-	vector<point_t> &tmp_dir_normal,
-	vector<double> &tmp_norm,
-	vector<point_t> location);
+	Graph &Graph_);
 
 void updateSector(
-	vector<vector<vector<sector_t> > > 	&sector_,
+	vector<sector_t> &sector_,
 	point_t pos_,
 	vector<point_t> locations_,
-	vector<point_t> tmp_dir_,
-	vector<point_t> tmp_dir_normal_,
-	vector<double> tmp_norm_,
-	int num_location_intervals_,
-	int num_sector_intervals_,
+	sector_para_t sector_para_,
 	int tmp_id1_,
 	int tmp_id2_,
 	vector<vector<double> > kernel_);
 
-void checkSector(
-	vector<double> &prediction,
-	vector<double> &t_val,
-	vector<vector<vector<sector_t> > > 	&sector,
-	point_t pos_,
-	vector<point_t> location,
-	vector<point_t> tmp_dir,
-	vector<point_t> tmp_dir_normal,
-	vector<double> tmp_norm,
-	int num_location_intervals,
-	int num_sector_intervals,
-	int tmp_id,
-	bool learn=false);
-
 void checkSectorConstraint(
-	vector<vector<vector<sector_t> > > 	sector,
-	vector<vector<vector<double> > > &sector_constraint,
-	int num_locations,
-	int num_location_intervals,
-	int num_sector_intervals);
+	Graph &Graph_,
+	int kernel_size_);
 
+// ============================================================================
+// Prediction
+// ============================================================================
 
+void triggerContact(
+	point_t &p_,
+	Graph Graph_);
 
+void checkMotion(
+	point_t pos_,
+	point_t vel_,
+	vector<string> label_,
+	vector<vector<double> > surface_,
+	double surface_limit_,
+	double angle_limit_,
+	double vel_limit_);
 
+void checkSector(
+	vector<int> &prediction_,
+	vector<double> &t_val_,
+	point_t pos_,
+	Graph &Graph_,
+	Graph Graph_mem_,
+	int tmp_id_,
+	bool learn_=false);
 
+void motionPrediction(
+	vector<int> &prediction_,
+	vector<double> &t_val_,
+	bool &flag_predict_,
+	bool &flag_predict_last_,
+	vector<double> &predict_in_,
+	vector<double> &predict_err_,
+	vector<double> &predict_in_last_,
+	double &pow_dec_,
+	Graph Graph_);
 
-
-
-
-
-
-
+void locationPrediction(
+	int location_num_,
+	point_t pos_,
+	point_t vel_,
+	Graph Graph_,
+	double surface_limit_,
+	double angle_limit_,
+	double vel_limit_);
 
 
 
