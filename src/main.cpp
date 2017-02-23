@@ -7,7 +7,6 @@
 //=============================================================================
 
 //#define LEARN
-#define SAVEDDATA
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -162,7 +161,7 @@ int main(int argc, char *argv[])
 
 	//[EDGES]******************************************************************
 	Graph.initEdge(num_location_intervals, num_sector_intervals);
-	labelSector(Graph, pos_vel_acc_avg,	5, file_eof, color_code);
+	labelSector(Graph, pos_vel_acc_avg,	0.05, 5, 5, file_eof, color_code);
 	printf("Creating sectors for connection between the clusters (action locations)......Complete\n");
 	//******************************************************************[EDGES]
 
@@ -278,7 +277,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	bool flag_motion      	= false;
 	bool flag_predict      	= false;
 	bool flag_predict_last 	= false;
-	bool learn 				= false;
+	bool learn 				= true;
 	bool slide 				= false;
 	int last_location 		= 0;
 	int surface_num_tmp 	= 0;
@@ -322,12 +321,11 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	reshapeVector(pos_vel_acc_mem, 3);
 
 	// JUST FOR VISUALIZING
-	vector<point_t> p_data;
-	vector<string> label_data;
-
+	vector<point_t> p_data; vector<string> label_data;
 	for(int i=0;i<num_locations;i++) {label_data.push_back(Graph_.getNode(i).name);}
 
 
+	printf("\n\n>>>>> SYSTEM START <<<<<\n\n");
 
 	for(int i=0;i<num_points;i++)
 	{
@@ -338,10 +336,9 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 			pos_vel_acc_mem.clear();
 			for(int i=0;i<3;i++) pos_vel_acc_mem.push_back(pos_vel_acc_mem1);
 		}
-		if(i>0)
-			pos_vel_acc_avg[i] = pos_vel_acc_avg[i-1];
-		else
-			pos_vel_acc_avg[i] = pos_vel_acc_avg1;
+
+		if (i>0) 	pos_vel_acc_avg[i] = pos_vel_acc_avg[i-1];
+		else 		pos_vel_acc_avg[i] = pos_vel_acc_avg1;
 
 		preprocessDataLive(points_test[i], pos_vel_acc_mem, pos_vel_acc_avg[i],
 						   window);
@@ -355,7 +352,6 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 // 1. Contact trigger
 // 1.1 Check if the object is within a sphere volume of the location areas
 triggerContact(pos_vel_acc_avg[i][0], Graph_);
-//printf("Nr:%04d,  ", i);
 
 slide = false;
 
@@ -422,7 +418,7 @@ else
 	}
 
 	// 3.3. Update sector map if learn flag is set
-	if (last_location != pos_vel_acc_avg[i][0].cluster_id)
+	if (last_location != pos_vel_acc_avg[i][0].cluster_id && flag_motion)
 	{
 		if (learn)
 		{
@@ -430,15 +426,11 @@ else
 			// updating the values in memory
 			int c = last_location * num_locations + pos_vel_acc_avg[i][0].cluster_id;
 			int tmp = Graph_.getEdgeList()[c].size();
-			for(int a=0;a<tmp;a++)
+			for(int iii=0;iii<tmp;iii++)
 			{
-				for(int b=0;b<Graph_.getSectorPara().loc_int*Graph_.getSectorPara().sec_int;b++)
-				{
-					Graph_mem.getEdgeList()[c][a].sector_map[b].max =
-							Graph_.getEdgeList()[c][a].sector_map[b].max;
-					Graph_mem.getEdgeList()[c][a].sector_map[b].min =
-							Graph_.getEdgeList()[c][a].sector_map[b].min;
-				}
+				Graph_mem.updateEdgeSector(
+						Graph_.getEdgeList()[c][iii].sector_map,
+						last_location, pos_vel_acc_avg[i][0].cluster_id, iii);
 			}
 			// update the sector using values from memory
 			// last location is used because only sector with last location was changed
@@ -446,35 +438,26 @@ else
 			{
 				int cc = last_location * num_locations + ii;
 				int tmp = Graph_.getEdgeList()[cc].size();
-				for(int a=0;a<tmp;a++)
+				for(int iii=0;iii<tmp;iii++)
 				{
-					for(int b=0;b<Graph_.getSectorPara().loc_int*Graph_.getSectorPara().sec_int;b++)
-					{
-						Graph_.getEdgeList()[cc][a].sector_map[b].max =
-								Graph_mem.getEdgeList()[cc][a].sector_map[b].max;
-						Graph_.getEdgeList()[cc][a].sector_map[b].min =
-								Graph_mem.getEdgeList()[cc][a].sector_map[b].min;
-					}
+					Graph_.updateEdgeSector(
+							Graph_mem.getEdgeList()[cc][iii].sector_map,
+							last_location, ii, iii);
 				}
 			}
-			learn = false;
 		}
 		else
 		{
 			// update the sector using values from memory
 			for(int ii=0;ii<num_locations;ii++)
 			{
-				int cc = last_location * num_locations + ii;
+				int cc  = last_location * num_locations + ii;
 				int tmp = Graph_.getEdgeList()[cc].size();
-				for(int a=0;a<tmp;a++)
+				for(int iii=0;iii<tmp;iii++)
 				{
-					for(int b=0;b<Graph_.getSectorPara().loc_int*Graph_.getSectorPara().sec_int;b++)
-					{
-						Graph_.getEdgeList()[cc][a].sector_map[b].max =
-								Graph_mem.getEdgeList()[cc][a].sector_map[b].max;
-						Graph_.getEdgeList()[cc][a].sector_map[b].min =
-								Graph_mem.getEdgeList()[cc][a].sector_map[b].min;
-					}
+					Graph_.updateEdgeSector(
+							Graph_mem.getEdgeList()[cc][iii].sector_map,
+							last_location, ii, iii);
 				}
 			}
 		}
@@ -487,19 +470,20 @@ else
 
 }
 
-//cout << endl;
-
 // ============================================================================
 // PREDICTION ENDS
 // ============================================================================
 
 	}
+
+	showConnection(p_data,label_data,Graph_,color_code,true);
+
 	//*************************************************************[PREDICTION]
 
 #endif
 
 
-	//showConnection(p_data,label_data,Graph_,color_code);
+
 
 
 //		vector<double> x,y1,y2,y0;

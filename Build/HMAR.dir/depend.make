@@ -755,6 +755,7 @@ HMAR.dir/src/util.cpp.o: /home/chen/vtksrc/VTK/Views/Core/vtkRenderViewBase.h
 HMAR.dir/src/util.cpp.o: /home/chen/vtksrc/VTK/Views/Core/vtkView.h
 
 HMAR.dir/src/vtkExtra.cpp.o: ../src/Graph.h
+HMAR.dir/src/vtkExtra.cpp.o: ../src/algo.h
 HMAR.dir/src/vtkExtra.cpp.o: ../src/dataDeclaration.h
 HMAR.dir/src/vtkExtra.cpp.o: ../src/vtkExtra.cpp
 HMAR.dir/src/vtkExtra.cpp.o: ../src/vtkExtra.h

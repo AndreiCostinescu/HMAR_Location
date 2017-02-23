@@ -77,7 +77,9 @@ void labelLocation_(
 void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	int kernel_size_,
+	double max_range_,
+	int kernel_size_x_,
+	int kernel_size_y_,
 	vector<int> file_eof_,
 	vector<unsigned char*> color_code_);
 
@@ -209,7 +211,9 @@ void updateSector(
 
 void checkSectorConstraint(
 	Graph &Graph_,
-	int kernel_size_);
+	double max_range_,
+	int kernel_size_x_,
+	int kernel_size_y_);
 
 // ============================================================================
 // Prediction
@@ -235,7 +239,7 @@ void checkSector(
 	Graph &Graph_,
 	Graph Graph_mem_,
 	int tmp_id_,
-	bool learn_=false);
+	bool learn_);
 
 void motionPrediction(
 	vector<int> &prediction_,

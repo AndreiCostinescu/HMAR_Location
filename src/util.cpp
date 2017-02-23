@@ -310,28 +310,32 @@ void labelLocation_(
 void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	int kernel_size_,
+	double max_range_,
+	int kernel_size_x_,
+	int kernel_size_y_,
 	vector<int> file_eof_,
 	vector<unsigned char*> color_code_)
 {
+	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
+	// However it is still possible to have like bumps because the sampling is just not enough.
+	vector<vector<double> > kernel(kernel_size_x_);
+	for(int i=0;i<kernel_size_x_;i++) kernel[i].resize(kernel_size_y_);
+	gaussKernel(kernel, kernel_size_x_, kernel_size_y_, 1.0);
+
+	// Graph_.getEdgeList() = [#loc*#loc -> #edges -> #loc*#sec]
+
 	prepareSector(Graph_);
 	printf("Preparing sectors......Complete\n");
 
-	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
-	// However it is still possible to have like bumps because the sampling is just not enough.
-	vector<vector<double> > kernel(kernel_size_);
-	for(int i=0;i<kernel_size_;i++) kernel[i].resize(kernel_size_);
-	gaussKernel(kernel, kernel_size_, kernel_size_, 1.0);
-
-	// #loc*#loc -> #edges -> #loc*#sec
-	//vector<vector<vector<sector_t> > > sector(Sqr(num_locations));
 	generateSector(Graph_, pos_vel_acc_avg_, file_eof_, kernel);
 	printf("Generating sectors......Complete\n");
 
-	checkSectorConstraint(Graph_, kernel_size_);
+	checkSectorConstraint(Graph_, max_range_, kernel_size_x_, kernel_size_y_);
 	printf("Checking sector constraints......Complete\n");
 
-	showConnectionOnly(Graph_, color_code_);
+	vector<point_t> point_zero; vector<string> label_zero;
+	for(int i = 0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
+	showConnection(point_zero, label_zero, Graph_, color_code_, false);
 	printf("Viewing sector......Complete\n");
 
 	string path;
@@ -1215,6 +1219,7 @@ void prepareSector(
 			sector_para.dir[c].z /= sector_para.dist[c];
 			vector<double> B(3);
 			B[0] = 0.0; B[1] = 1.0; B[2] = 0.0;
+
 			sector_para.dir_n[c] =
 					vector2point(
 							crossProduct(
@@ -1256,14 +1261,22 @@ void updateSector(
 										  point2vector(sector_para_.dir_n[xx]))),
 					  dotProduct(point2vector(delta_t),
 								 point2vector(sector_para_.dir_n[xx])));
+	angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
+
 	//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
 
 	// the value of yy can be > or <  "num_location_intervals"
 	// > object moved further away from the location area
 	// < object is moving initially away from the intended goal location
 	yy = ceil(proj*sector_para_.loc_int/sector_para_.dist[xx]) - 1;
-	zz = ceil(angle_tmp*sector_para_.sec_int/M_PI) - 1;
+	zz = ceil(angle_tmp*(sector_para_.sec_int/2)/M_PI) - 1;
 	yz = yy*sector_para_.sec_int + zz;
+
+//	if(xx==11)
+//	{
+//	cout << angle_tmp / M_PI * 180 << endl;
+//	cout << ceil(angle_tmp*sector_para_.sec_int/M_PI) << endl;
+//	}
 
 	//int tmp = sector_[xx].size()-1;
 
@@ -1287,17 +1300,17 @@ void updateSector(
 			{
 				// extra calculation due to roundness of sector
 				// ignoring kernel elements that go out of location area range
-				int tmp1 = i  - (kernel_.size()/2)    + zz;
-				int tmp2 = ii - (kernel_[0].size()/2) + yy;
-				int tmp3 = tmp2*sector_para_.sec_int + tmp1;
-				if (tmp1 < 0)
-					tmp1 += sector_para_.sec_int;
-				else if (tmp1 >= sector_para_.sec_int)
-					tmp1 %= sector_para_.sec_int;
-				if (tmp2 < 0)
+
+				int tmpl = ii - (kernel_[0].size()/2) + yy;
+
+				int tmps = ((i - (kernel_.size()/2) + zz) +
+							sector_para_.sec_int) % sector_para_.sec_int;
+
+				int tmp3 = tmpl*sector_para_.sec_int + tmps;
+
+				if (tmpl < 0 || tmpl >= sector_para_.loc_int)
 					continue;
-				else if (tmp2 >= sector_para_.loc_int)
-					continue;
+
 				sector_[tmp3].max =
 						max((kernel_[i][ii]*tmp_ratio1) + mid ,
 							sector_[tmp3].max);
@@ -1311,7 +1324,9 @@ void updateSector(
 
 void checkSectorConstraint(
 	Graph &Graph_,
-	int kernel_size_)
+	double max_range_,
+	int kernel_size_x_,
+	int kernel_size_y_)
 {
 	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
 	sector_para_t sector_para = Graph_.getSectorPara();
@@ -1327,17 +1342,18 @@ void checkSectorConstraint(
 			for(int iii=0;iii<sector_para.loc_int*sector_para.sec_int;iii++)
 			{
 				double range = sector_tmp[iii].max - sector_tmp[iii].min;
-				sector_const[iii] = (range > 0) && (0.06 - range > 0) ? range : 0;
+				sector_const[iii] =
+						(range > 0) && (range - max_range_ > 0) ? range : 0;
 
 				int loc_tmp = iii / sector_para.sec_int;
 				int sec_tmp = iii % sector_para.sec_int;
 
-				for(int l=0;l<kernel_size_;l++)
+				for(int l=0;l<kernel_size_x_;l++)
 				{
-					for(int s=0;s<kernel_size_;s++)
+					for(int s=0;s<kernel_size_y_;s++)
 					{
-						int tmpl =   l - (kernel_size_/2) + loc_tmp;
-						int tmps = ((s - (kernel_size_/2) + sec_tmp) +
+						int tmpl =   l - (kernel_size_x_/2) + loc_tmp;
+						int tmps = ((s - (kernel_size_y_/2) + sec_tmp) +
 									sector_para.sec_int) % sector_para.sec_int;
 
 						int tmp1 = tmpl*sector_para.sec_int + tmps;
@@ -1465,10 +1481,10 @@ void checkSector(
 											  point2vector(Graph_.getSectorPara().dir_n[xx]))),
 						  dotProduct(point2vector(delta_t),
 									 point2vector(Graph_.getSectorPara().dir_n[xx])));
-		//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
+		angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
 
 		yy = ceil(proj*Graph_.getSectorPara().loc_int/Graph_.getSectorPara().dist[xx]) - 1;
-		zz = ceil(angle_tmp*Graph_.getSectorPara().sec_int/M_PI) - 1;
+		zz = ceil(angle_tmp*(Graph_.getSectorPara().sec_int/2)/M_PI) - 1;
 		yz = yy*Graph_.getSectorPara().sec_int + zz;
 
 		vector<edge_tt> tmp_edge  = Graph_mem_.getEdgeList()[xx];
@@ -1479,7 +1495,6 @@ void checkSector(
 			if(yy<Graph_.getSectorPara().loc_int && yy>=0 &&
 			   zz<Graph_.getSectorPara().sec_int && zz>=0)
 			{
-				//cout << l2Norm(delta_t) - tmp_edge[ii].sector_map[yz].max << "  ";
 				if (l2Norm(delta_t) <= tmp_edge[ii].sector_map[yz].max &&
 					l2Norm(delta_t) >= tmp_edge[ii].sector_map[yz].min)
 				{
@@ -1488,7 +1503,7 @@ void checkSector(
 				}
 				else
 				{
-					if(learn_)
+					if(learn_ && i==3)
 					{
 						prediction_[i] = OUT_OF_RANGE;
 						if(l2Norm(delta_t) - tmp_edge[ii].sector_map[yz].max > 0)
@@ -1508,6 +1523,7 @@ void checkSector(
 					}
 				}
 			}
+			Graph_.updateEdgeSector(tmp_edge2[ii].sector_map, tmp_id_, i, ii);
 		}
 	}
 }
@@ -1539,7 +1555,7 @@ void motionPrediction(
 		else if ((int)prediction_[ii] == OUT_OF_RANGE)
 		{
 			predict_in_[ii]  = 0.0;
-			predict_err_[ii] = pdfExp(0.01, 0.0, t_val_[ii]); // NEED TO CHANGE ######
+			predict_err_[ii] = pdfExp(0.03, 0.0, t_val_[ii]); // NEED TO CHANGE ######
 		}
 		else
 		{

@@ -24,3 +24,9 @@
 - 22/02/2017
 - rewritten all data to depend on class graph
 - added Verbose to show relevant ouput only
+
+[06] Single Edge Commit
+- 23/02/2017
+- added function to show data with sectormap
+- corrected error in angle calculation
+- added VERBOSE to show the values independently for motion and nonmotion predictions

@@ -117,7 +117,7 @@ static inline point_t vector2point(vector<double> A)
 	B.x=A[0];
 	B.y=A[1];
 	B.z=A[2];
-	B.z=UNCLASSIFIED;
+	B.cluster_id=UNCLASSIFIED;
 	return B;
 }
 

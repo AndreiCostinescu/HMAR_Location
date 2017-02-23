@@ -35,10 +35,11 @@ void Graph::updateMovLabel(
 	movLabel = movLabel_;
 }
 
-sector_para_t Graph::updateSectorPara(
+void Graph::updateSectorPara(
 	sector_para_t sector_para_)
 {
-	return sector_para = sector_para_;
+	sector_para = {};
+	sector_para = sector_para_;
 }
 
 //=============================================================================
@@ -161,17 +162,6 @@ void Graph::addEdge(
 	}
 }
 
-//void Graph::updateEdgeConst(
-//	vector<vector<edge_tt> > edge_list_)
-//{
-//	for(int i=0;i<Sqr(nodes.size());i++)
-//		for(int ii=0;ii<edges[i].size();ii++)
-//			for(int iii=0;iii<edges[i][ii].sector_const.size();iii++)
-//				edges[i][ii].sector_const[iii] =
-//						edge_list_[i][ii].sector_const[iii];
-//}
-
-
 void Graph::updateEdgeConst(
 	vector<double> 	sector_map_,
 	unsigned int  	n1_,
@@ -181,6 +171,14 @@ void Graph::updateEdgeConst(
 	edges[n1_*nodes.size()+n2_][edge_num_].sector_const = sector_map_;
 }
 
+void Graph::updateEdgeSector(
+	vector<sector_t> 	sector_map_,
+	unsigned int  		n1_,
+	unsigned int  		n2_,
+	unsigned int 		edge_num_)
+{
+	edges[n1_*nodes.size()+n2_][edge_num_].sector_map = sector_map_;
+}
 
 void Graph::extendEdge(
 	vector<data_t> data_,

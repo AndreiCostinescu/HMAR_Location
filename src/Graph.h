@@ -56,6 +56,12 @@ public:
 		unsigned int  	n2_,
 		unsigned int 	edge_num_);
 
+	void updateEdgeSector(
+		vector<sector_t> sector_map_,
+		unsigned int  	 n1_,
+		unsigned int  	 n2_,
+		unsigned int 	 edge_num_);
+
 	void extendEdge(
 		vector<data_t> 	data_,
 		unsigned int 	node_index1_,
@@ -66,7 +72,7 @@ public:
 		unsigned int node_index1_,
 		unsigned int node_index2_);
 
-	sector_para_t updateSectorPara(
+	void updateSectorPara(
 		sector_para_t sector_para_);
 
 	node_tt getNode(

@@ -67,7 +67,7 @@
 
 using namespace std;
 
-#define VERBOSE 0
+#define VERBOSE 2
 
 
 #define Sqr(x) ((x)*(x))

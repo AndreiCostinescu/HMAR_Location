@@ -7,38 +7,10 @@
 
 #include "vtkExtra.h"
 
-//=============================================================================
+// ============================================================================
+// MOUSE
+// ============================================================================
 
-void colorCode(vector<unsigned char*> &container)
-{
-	// Setup colors
-	unsigned char cw[]   = {255, 255, 255};
-	unsigned char cy[]   = {255, 255, 0};
-	unsigned char co[]   = {255, 127, 0};
-	unsigned char cr[]   = {255, 0, 0};
-	unsigned char clg[]  = {127, 255, 0};
-	unsigned char cg[]   = {0, 255, 0};
-	unsigned char cgb[]  = {0, 255, 127};
-	unsigned char cc[]   = {0, 255, 255};
-	unsigned char clb[]  = {0, 127, 255};
-	unsigned char cb[]   = {0, 0, 255};
-	unsigned char cpb[]  = {127, 0, 255};
-	unsigned char cpr[]  = {255, 0, 127};
-	copy(cw, 	cw+3, 	container[0]);
-	copy(cy, 	cy+3, 	container[1]);
-	copy(co, 	co+3, 	container[2]);
-	copy(cr, 	cr+3, 	container[3]);
-	copy(clg, 	clg+3,	container[4]);
-	copy(cg, 	cg+3, 	container[5]);
-	copy(cgb, 	cgb+3, 	container[6]);
-	copy(cc, 	cc+3, 	container[7]);
-	copy(clb, 	clb+3, 	container[8]);
-	copy(cb, 	cb+3, 	container[9]);
-	copy(cpb, 	cpb+3, 	container[10]);
-	copy(cpr, 	cpr+3, 	container[11]);
-}
-
-// Define interaction style
 class customMouseInteractorStyle : public vtkInteractorStyleTrackballCamera
 {
 	public:
@@ -73,14 +45,18 @@ class customMouseInteractorStyle : public vtkInteractorStyleTrackballCamera
 //    }
 
 	private:
-		int num_locations;
-		bool pick_;
-		vector<string> LABEL;
-		vector<unsigned char*> color_;
-		void writeText(const char* text, double *rgb, int x, int y);
+		int 					num_locations;
+		bool 					pick_;
+		vector<string> 			LABEL;
+		vector<unsigned char*> 	color_;
+
+		void writeText(
+			const char* text,
+			double *rgb,
+			int x,
+			int y);
 };
 
-// Define interaction style
 void customMouseInteractorStyle::OnLeftButtonDown()
 {
 	if(pick_)
@@ -173,7 +149,11 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 }
 
-void customMouseInteractorStyle::writeText(const char* text, double *rgb, int x, int y)
+void customMouseInteractorStyle::writeText(
+	const char* text,
+	double *rgb,
+	int x,
+	int y)
 {
 	// Setup the text and add it to the renderer
 	vtkSmartPointer<vtkTextActor> textActor;
@@ -188,18 +168,50 @@ void customMouseInteractorStyle::writeText(const char* text, double *rgb, int x,
 
 vtkStandardNewMacro(customMouseInteractorStyle);
 
-void showData(
-	vector<point_t> p,
-	vector<string> &label,
+// ============================================================================
+// COLORCODE
+// ============================================================================
+
+void colorCode(
+	vector<unsigned char*> &container_)
+{
+	// Setup colors
+	unsigned char cw[]   = {255, 255, 255};
+	unsigned char cy[]   = {255, 255, 0};
+	unsigned char co[]   = {255, 127, 0};
+	unsigned char cr[]   = {255, 0, 0};
+	unsigned char clg[]  = {127, 255, 0};
+	unsigned char cg[]   = {0, 255, 0};
+	unsigned char cgb[]  = {0, 255, 127};
+	unsigned char cc[]   = {0, 255, 255};
+	unsigned char clb[]  = {0, 127, 255};
+	unsigned char cb[]   = {0, 0, 255};
+	unsigned char cpb[]  = {127, 0, 255};
+	unsigned char cpr[]  = {255, 0, 127};
+	copy(cw, 	cw+3, 	container_[0]);
+	copy(cy, 	cy+3, 	container_[1]);
+	copy(co, 	co+3, 	container_[2]);
+	copy(cr, 	cr+3, 	container_[3]);
+	copy(clg, 	clg+3,	container_[4]);
+	copy(cg, 	cg+3, 	container_[5]);
+	copy(cgb, 	cgb+3, 	container_[6]);
+	copy(cc, 	cc+3, 	container_[7]);
+	copy(clb, 	clb+3, 	container_[8]);
+	copy(cb, 	cb+3, 	container_[9]);
+	copy(cpb, 	cpb+3, 	container_[10]);
+	copy(cpr, 	cpr+3, 	container_[11]);
+}
+
+vtkSmartPointer<vtkPolyDataMapper> dataPoints(
+	vector<point_t> points_,
 	vector<unsigned char*> color_,
-	bool cluster,
-	bool labeling)
+	bool cluster_)
 {
 	int line_ = 0;
 	int num_locations = 0;
-	while(line_<p.size())
+	while(line_ < points_.size())
 	{
-		num_locations = max(p[line_].cluster_id,num_locations);
+		num_locations = max(points_[line_].cluster_id,num_locations);
 		++line_;
 	}
 	++num_locations;
@@ -219,6 +231,76 @@ void showData(
 	vtkSmartPointer<vtkPolyData> 				polydata;
 	vtkSmartPointer<vtkUnsignedCharArray> 		colors;
 	vtkSmartPointer<vtkPolyDataMapper>			mapper;
+//	vtkSmartPointer<vtkActor> 					actor;
+//	vtkSmartPointer<vtkRenderer> 				renderer;
+//	vtkSmartPointer<vtkRenderWindow> 			renderWindow;
+//	vtkSmartPointer<vtkRenderWindowInteractor> 	renderWindowInteractor;
+//	vtkSmartPointer<customMouseInteractorStyle> style;
+//	vtkSmartPointer<vtkTextActor> 				textActor;
+
+	points 					= vtkSmartPointer<vtkPoints>::New();
+	pointsPolydata 			= vtkSmartPointer<vtkPolyData>::New();
+	vertexFilter			= vtkSmartPointer<vtkVertexGlyphFilter>::New();
+	polydata 				= vtkSmartPointer<vtkPolyData>::New();
+	colors 					= vtkSmartPointer<vtkUnsignedCharArray>::New();
+	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
+
+	for(int i=0;i<points_.size();i++)
+		points->InsertNextPoint(points_[i].x, points_[i].y, points_[i].z);
+
+	pointsPolydata->SetPoints(points);
+
+#if VTK_MAJOR_VERSION <= 5
+	vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
+	vertexFilter->Update();
+#else
+	vertexFilter->SetInputData(pointsPolydata);
+	vertexFilter->Update();
+#endif
+
+	polydata->ShallowCopy(vertexFilter->GetOutput());
+
+	if(cluster_)
+	{
+		colors->SetNumberOfComponents(3);
+		colors->SetName ("Colors");
+		for(int i=0;i<points_.size();i++)
+		{
+			if (points_[i].cluster_id < num_locations &&
+				points_[i].cluster_id >= 0)
+				colors->InsertNextTypedTuple(color_[points_[i].cluster_id+1]);
+			else
+				colors->InsertNextTypedTuple(color_[0]);
+		}
+		polydata->GetPointData()->SetScalars(colors);
+	}
+
+#if VTK_MAJOR_VERSION <= 5
+	  mapper->SetInput(polydata);
+#else
+	  mapper->SetInputData(polydata);
+#endif
+
+	return mapper;
+}
+
+void showData(
+	vector<point_t> points_,
+	vector<string> &labels_,
+	vector<unsigned char*> color_,
+	bool cluster_,
+	bool labeling_)
+{
+	int line_ = 0;
+	int num_locations = 0;
+	while(line_<points_.size())
+	{
+		num_locations = max(points_[line_].cluster_id,num_locations);
+		++line_;
+	}
+	++num_locations;
+
+	vtkSmartPointer<vtkPolyDataMapper>			mapper;
 	vtkSmartPointer<vtkActor> 					actor;
 	vtkSmartPointer<vtkRenderer> 				renderer;
 	vtkSmartPointer<vtkRenderWindow> 			renderWindow;
@@ -226,11 +308,6 @@ void showData(
 	vtkSmartPointer<customMouseInteractorStyle> style;
 	vtkSmartPointer<vtkTextActor> 				textActor;
 
-	points 					= vtkSmartPointer<vtkPoints>::New();
-	pointsPolydata 			= vtkSmartPointer<vtkPolyData>::New();
-	vertexFilter			= vtkSmartPointer<vtkVertexGlyphFilter>::New();
-	polydata 				= vtkSmartPointer<vtkPolyData>::New();
-	colors 					= vtkSmartPointer<vtkUnsignedCharArray>::New();
 	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
 	actor 					= vtkSmartPointer<vtkActor>::New();
 	renderer 				= vtkSmartPointer<vtkRenderer>::New();
@@ -239,72 +316,36 @@ void showData(
 	style 					= vtkSmartPointer<customMouseInteractorStyle>::New();
 //	textActor 				= vtkSmartPointer<vtkTextActor>::New();
 
-	for(int i=0;i<p.size();i++)
-		points->InsertNextPoint(p[i].x, p[i].y, p[i].z);
-
-	pointsPolydata->SetPoints(points);
-
-	vertexFilter->SetInputData(pointsPolydata);
-	vertexFilter->Update();
-
-	polydata->ShallowCopy(vertexFilter->GetOutput());
-
-//#if VTK_MAJOR_VERSION <= 5
-//	vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
-//#else
-//	vertexFilter->SetInputData(pointsPolydata);
-//#endif
-
-	if(cluster)
-	{
-		colors->SetNumberOfComponents(3);
-		colors->SetName ("Colors");
-		for(int i=0;i<p.size();i++)
-		{
-			if(p[i].cluster_id < num_locations && p[i].cluster_id >= 0)
-				colors->InsertNextTypedTuple(color_[p[i].cluster_id+1]);
-			else
-				colors->InsertNextTypedTuple(color_[0]);
-		}
-		polydata->GetPointData()->SetScalars(colors);
-	}
-
-//	#if VTK_MAJOR_VERSION <= 5
-//	  mapper->SetInput(polydata);
-//	#else
-//	  mapper->SetInputData(polydata);
-//	#endif
-
-	mapper->SetInputData(polydata);
+	mapper =  dataPoints(points_, color_, cluster_);
 
 	actor->SetMapper(mapper);
 	actor->GetProperty()->SetPointSize(3);
 //	actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
 
-	renderWindow->SetSize(640,480); //(width, height)
+	renderWindow->SetSize(1280,800); //(width, height)
 	renderWindow->AddRenderer(renderer);
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
-	if(labeling)
+	if(labeling_)
 	{
 		style->setLeftButton(true);
 		textActor = vtkSmartPointer<vtkTextActor>::New();
 		printf(">>>>> Pick a location...\n");
-		if(!label.empty()) textActor->SetInput ( label[0].c_str() );
+		if(!labels_.empty()) textActor->SetInput (labels_[0].c_str());
 		textActor->SetPosition ( 10, 470 );
 		textActor->GetTextProperty()->SetFontSize ( 10 );
 		textActor->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
-		renderer->AddActor2D ( textActor );
+		renderer->AddActor2D (textActor);
 	}
 	else
 	{
 		style->setLeftButton(false);
 		for(int i=0;i<num_locations+1;i++)
 		{
-			if(label.empty()) continue;
-			if(label[i].empty()) continue;
+			if(labels_.empty()) continue;
+			if(labels_[i].empty()) continue;
 			textActor = vtkSmartPointer<vtkTextActor>::New();
-			textActor->SetInput(label[i].c_str());
+			textActor->SetInput(labels_[i].c_str());
 			textActor->SetPosition(10, 470-i*10);
 			textActor->GetTextProperty()->SetFontSize(10);
 			textActor->GetTextProperty()
@@ -320,13 +361,13 @@ void showData(
 	//renderer->SetBackground(nc->GetColor3d("MidnightBlue").GetData());
 	style->SetDefaultRenderer(renderer);
 	style->setNumberOfLabels(num_locations);
-	style->setLabels(label);
+	style->setLabels(labels_);
 	style->setColors(color_);
 	renderWindowInteractor->SetInteractorStyle( style );
 	renderWindow->Render();
 	renderWindowInteractor->Start();
 
-	label = style->getLabels();
+	labels_ = style->getLabels();
 }
 
 void showConnectionOnly(
@@ -505,7 +546,6 @@ void showConnectionOnly(
 			tubeFilter2[i][ii]->SidesShareVerticesOff();
 			tubeFilter2[i][ii]->SetOnRatio(sector_para.sec_int);
 			tubeFilter2[i][ii]->SetOffset(ii);
-			//cout << num_sector_intervals << ii <<endl;
 			tubeFilter2[i][ii]->Update();
 
 			tubeMapper[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -556,10 +596,11 @@ void showConnectionOnly(
 }
 
 void showConnection(
-	vector<point_t> p,
-	vector<string> &label,
+	vector<point_t> points_,
+	vector<string> &labels_,
 	Graph Graph_,
-	vector<unsigned char*> color_)
+	vector<unsigned char*> color_,
+	bool show_points)
 {
 	vector<node_tt> nodes = Graph_.getNodeList();
 	int num_locations = nodes.size();
@@ -592,6 +633,7 @@ void showConnection(
 	vtkSmartPointer<customMouseInteractorStyle> style;
 
 	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
+	double orientation[3];
 
 	for(int i=0;i<Sqr(num_locations);i++)
 	{
@@ -605,6 +647,10 @@ void showConnection(
 		int c = i/num_locations;
 
 		if(i == c*num_locations+c) continue;
+
+		orientation[0] = Graph_.getSectorPara().dir_n[i].x;
+		orientation[1] = Graph_.getSectorPara().dir_n[i].y;
+		orientation[2] = Graph_.getSectorPara().dir_n[i].z;
 
 		// Create a line between each location
 		lineSource[i]->SetPoint1(locations[c].x,
@@ -665,6 +711,7 @@ void showConnection(
 
 			for (int iii=0;iii<sector_para.loc_int;iii++)
 			{
+				// Adding different color based on constraint
 				if (sector[i][0].sector_const[iii*sector_para.sec_int+ii]==0)
 				{
 					colors[i][ii]->InsertNextTypedTuple(color_[5]);
@@ -725,15 +772,19 @@ void showConnection(
 			tubeFilter[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
 			tubeFilter[i][ii]->SidesShareVerticesOff();
 			tubeFilter[i][ii]->SetOnRatio(sector_para.sec_int);
-			tubeFilter[i][ii]->SetOffset(ii);
+			tubeFilter[i][ii]->SetOffset((ii+9)%sector_para.sec_int); //###quickfix need to turn it 90° anticlockwise
+			tubeFilter[i][ii]->SetDefaultNormal(orientation);
+			tubeFilter[i][ii]->UseDefaultNormalOn();
 			tubeFilter[i][ii]->Update();
+
 			tubeFilter2[i][ii]->SetInputData(polyData2[i][ii]);
 			tubeFilter2[i][ii]->SetNumberOfSides(sector_para.sec_int);
 			tubeFilter2[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
 			tubeFilter2[i][ii]->SidesShareVerticesOff();
 			tubeFilter2[i][ii]->SetOnRatio(sector_para.sec_int);
-			tubeFilter2[i][ii]->SetOffset(ii);
-			//cout << num_sector_intervals << ii <<endl;
+			tubeFilter2[i][ii]->SetOffset((ii+9)%sector_para.sec_int); //###quickfix need to turn it 90° anticlockwise
+			tubeFilter2[i][ii]->SetDefaultNormal(orientation);
+			tubeFilter2[i][ii]->UseDefaultNormalOn();
 			tubeFilter2[i][ii]->Update();
 
 			tubeMapper[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -748,10 +799,10 @@ void showConnection(
 			tubeMapper2[i][ii]->SelectColorArray("Colors");
 
 			tubeActor[i][ii] = vtkSmartPointer<vtkActor>::New();
-			tubeActor[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
+			tubeActor[i][ii]->GetProperty()->SetOpacity(0.50); //Make the tube have some transparency.
 			tubeActor[i][ii]->SetMapper(tubeMapper[i][ii]);
 			tubeActor2[i][ii] = vtkSmartPointer<vtkActor>::New();
-			tubeActor2[i][ii]->GetProperty()->SetOpacity(1.0); //Make the tube have some transparency.
+			tubeActor2[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
 			tubeActor2[i][ii]->SetMapper(tubeMapper2[i][ii]);
 		}
 	}
@@ -773,77 +824,47 @@ void showConnection(
 	}
 
 
+//	vtkSmartPointer<vtkLineSource> 			lineSource2;
+//	vtkSmartPointer<vtkPolyDataMapper> 		lineMapper2;
+//	vtkSmartPointer<vtkActor> 				lineActor2;
+//	vtkSmartPointer<vtkCellArray> 			lines2;
+//	lineSource2 = vtkSmartPointer<vtkLineSource>::New();
+//	lineMapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
+//	lineActor2 = vtkSmartPointer<vtkActor>::New();
+//	lines2 = vtkSmartPointer<vtkCellArray>::New();
+//	lineSource2->SetPoint1(locations[2].x + (sector_para.dir[11].x * sector_para.dist[11]*0.5),
+//						   locations[2].y + (sector_para.dir[11].y * sector_para.dist[11]*0.5),
+//						   locations[2].z + (sector_para.dir[11].z * sector_para.dist[11]*0.5));
+//	lineSource2->SetPoint2(locations[2].x + (sector_para.dir[11].x * sector_para.dist[11]*0.5) + sector_para.dir_n[11].x,
+//						   locations[2].y + (sector_para.dir[11].y * sector_para.dist[11]*0.5) + sector_para.dir_n[11].y,
+//						   locations[2].z + (sector_para.dir[11].z * sector_para.dist[11]*0.5) + sector_para.dir_n[11].z);
+//	lineMapper2->SetInputConnection(lineSource2->GetOutputPort());
+//	lineActor2->GetProperty()->SetLineWidth(5); // Give some color to the line
+//	lineActor2->GetProperty()->SetColor(0.0,1.0,0.0); // Give some color to the line
+//	lineActor2->SetMapper(lineMapper2);
+//	renderer->AddActor(lineActor2);
 
 
-	int line_ = 0;
-	num_locations = 0;
-	while(line_<p.size())
+	// [ADDING DATA]***********************************************************
+	if (show_points)
 	{
-		num_locations = max(p[line_].cluster_id,num_locations);
-		++line_;
+		vtkSmartPointer<vtkPolyDataMapper> 	mapper;
+		vtkSmartPointer<vtkActor> 			actor;
+		mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+		actor  = vtkSmartPointer<vtkActor>::New();
+		mapper =  dataPoints(points_, color_, true);
+		actor->SetMapper(mapper);
+		actor->GetProperty()->SetPointSize(5);
+		renderer->AddActor(actor);
+		style->setNumberOfLabels(num_locations);
+		style->setLabels(labels_);
+		style->setColors(color_);
 	}
-	++num_locations;
-
-	vtkSmartPointer<vtkPoints> 					points_data;
-	vtkSmartPointer<vtkPolyData> 				pointsPolydata;
-	vtkSmartPointer<vtkVertexGlyphFilter>		vertexFilter;
-	vtkSmartPointer<vtkPolyData> 				polydata;
-	vtkSmartPointer<vtkPolyDataMapper>			mapper;
-	vtkSmartPointer<vtkActor> 					actor;
-	vtkSmartPointer<vtkUnsignedCharArray> 		colors_data;
-
-	colors_data 			= vtkSmartPointer<vtkUnsignedCharArray>::New();
-	points_data 			= vtkSmartPointer<vtkPoints>::New();
-	pointsPolydata 			= vtkSmartPointer<vtkPolyData>::New();
-	vertexFilter			= vtkSmartPointer<vtkVertexGlyphFilter>::New();
-	polydata 				= vtkSmartPointer<vtkPolyData>::New();
-	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
-	actor 					= vtkSmartPointer<vtkActor>::New();
-
-	for(int i=0;i<p.size();i++)
-		points_data->InsertNextPoint(p[i].x, p[i].y, p[i].z);
-
-	pointsPolydata->SetPoints(points_data);
-
-	vertexFilter->SetInputData(pointsPolydata);
-	vertexFilter->Update();
-
-	polydata->ShallowCopy(vertexFilter->GetOutput());
-
-//#if VTK_MAJOR_VERSION <= 5
-//	vertexFilter->SetInputConnection(pointsPolydata->GetProducerPort());
-//#else
-//	vertexFilter->SetInputData(pointsPolydata);
-//#endif
-
-	colors_data->SetNumberOfComponents(3);
-	colors_data->SetName ("Colors");
-	for(int i=0;i<p.size();i++)
-	{
-		if(p[i].cluster_id < num_locations && p[i].cluster_id >= 0)
-			colors_data->InsertNextTypedTuple(color_[p[i].cluster_id+1]);
-		else
-			colors_data->InsertNextTypedTuple(color_[10]);
-	}
-	polydata->GetPointData()->SetScalars(colors_data);
-
-//	#if VTK_MAJOR_VERSION <= 5
-//	  mapper->SetInput(polydata);
-//	#else
-//	  mapper->SetInputData(polydata);
-//	#endif
-
-	mapper->SetInputData(polydata);
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetPointSize(10);
-	renderer->AddActor(actor);
-	style->setNumberOfLabels(num_locations);
-	style->setLabels(label);
-	style->setColors(color_);
+	// ***********************************************************[ADDING DATA]
 
 	style->SetDefaultRenderer(renderer);
 	style->setLeftButton(false);
-	renderer->SetBackground(1.0,1.0,1.0);
+	renderer->SetBackground(0.0,0.0,0.0);
 	renderWindow->SetSize(1280,800); //(width, height)
 	renderWindow->AddRenderer(renderer);
 	renderWindowInteractor->SetRenderWindow(renderWindow);
