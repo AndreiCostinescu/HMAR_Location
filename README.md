@@ -30,3 +30,7 @@
 - added function to show data with sectormap
 - corrected error in angle calculation
 - added VERBOSE to show the values independently for motion and nonmotion predictions
+
+[07] True Label Commit
+- 24/02/2017
+- added function to give label name based on highest prediction rate

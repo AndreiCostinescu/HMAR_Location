@@ -67,7 +67,11 @@
 
 using namespace std;
 
-#define VERBOSE 2
+//0 : all
+//1 : motion
+//2 : location
+//3 : label only
+#define VERBOSE 3
 
 
 #define Sqr(x) ((x)*(x))
@@ -141,6 +145,14 @@ struct edge_ss
 	vector<data_t> 	 data;
 	vector<sector_t> sector_map; // locations * sectors
 	vector<double> 	 sector_const;
+};
+
+typedef struct label_s label_t;
+struct label_s
+{
+	int 		mov;
+	vector<int> loc;
+	vector<int> surface;
 };
 
 #endif /* DATADECLARATION_H_ */

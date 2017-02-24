@@ -41,6 +41,7 @@ void plotData(
 
 vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 	vector<point_t> points_,
+	int num_locations_,
 	vector<unsigned char*> color_,
 	bool cluster_);
 
