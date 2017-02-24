@@ -36,26 +36,6 @@ double pdfExp(
 	return exp( - Sqr(x-mu)/(2*var) );
 }
 
-vector<double> addVector(
-	vector<double> A,
-	vector<double> B)
-{
-	vector<double> C;
-	for(int i=0;i<A.size();i++)
-		C.push_back(A[i]+B[i]);
-	return C;
-}
-
-vector<double> minusVector(
-	vector<double> A,
-	vector<double> B)
-{
-	vector<double> C;
-	for(int i=0;i<A.size();i++)
-		C.push_back(A[i]-B[i]);
-	return C;
-}
-
 point_t addPoint(
 	point_t A,
 	point_t B)
@@ -114,27 +94,6 @@ double dotProduct(
 	if(B[0] == 0 && B[1] == 0 && B[2] == 0)
 		printf("[WARNING] : DOT PRODUCT VECTOR 2 IS A ZERO VECTOR !!!\n");
 	return ans;
-}
-
-//template<typename T> void normalizeData(vector<T> &data_)
-//{
-//	T tmp;
-//	for(int i=0;i<data_.size();i++)
-//		tmp += data_[i];
-//	if (tmp>0)
-//		for(int i=0;i<data_.size();i++)
-//			data_[i]/=tmp;
-//	else
-//		printf("[WARNING] : Data is empty.\n");
-//}
-
-double average(vector<double> &A)
-{
-	double avg = 0.0;
-	for (int i=0;i<A.size();i++)
-		avg += A[i];
-	avg = avg / A.size();
-	return avg;
 }
 
 point_t movingAverage(

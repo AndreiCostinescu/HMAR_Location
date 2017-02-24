@@ -27,14 +27,6 @@ double normalPdf(
 	double mu,
 	double x);
 
-vector<double> addVector(
-	vector<double> A,
-	vector<double> B);
-
-vector<double> minusVector(
-	vector<double> A,
-	vector<double> B);
-
 point_t minusPoint(
 	point_t A,
 	point_t B);
@@ -50,21 +42,6 @@ vector<double> crossProduct(
 double dotProduct(
 	vector<double> A,
 	vector<double> B);
-
-// DATA IS ASSUMED TO BE POSITIVE ONLY
-template<typename T> void normalizeData(vector<T> &data_)
-{
-	T tmp = 0;
-	for(int i=0;i<data_.size();i++)
-		tmp += data_[i];
-	if (tmp>0)
-		for(int i=0;i<data_.size();i++)
-			data_[i]/=tmp;
-//	else
-//		printf("[WARNING] : Data is empty.\n");
-}
-
-double average(vector<double> &A);
 
 point_t movingAverage(
 	point_t a,
@@ -84,25 +61,6 @@ void gaussKernel(
 
 //=============================================================================
 // inline
-
-//static inline int min (int x,int y) { return (x<y)?x:y; }
-//
-//static inline int max (int x,int y) { return (x>y)?x:y; }
-//
-//static inline double min (double x,double y) { return (x<y)?x:y; }
-//
-//static inline double max (double x,double y) { return (x>y)?x:y; }
-
-template<typename T>
-static inline bool min_ (T x,T y) { return (x<y)?true:false; }
-
-template<typename T>
-static inline bool max_ (T x,T y) { return (x>y)?true:false; }
-
-//static inline point_t min (point_t x, point_t y)
-//{
-//	return (l2Norm(x)<l2Norm(y)) ? x:y;
-//}
 
 static inline vector<double> point2vector(point_t A)
 {
@@ -124,6 +82,15 @@ static inline point_t vector2point(vector<double> A)
 }
 
 template<typename T>
+static inline bool min_ (T x,T y) { return (x<y)?true:false; }
+
+template<typename T>
+static inline bool max_ (T x,T y) { return (x>y)?true:false; }
+
+//=============================================================================
+// template
+
+template<typename T>
 void vector2array(vector<T> A, T *B)
 {
 	for(int i=0;i<A.size();i++) B[i] = A[i];
@@ -140,6 +107,45 @@ void reshapeVector(vector<T> &A, int size)
 {
 	A.clear();
 	A.resize(size);
+}
+
+template<typename T>
+T average(vector<T> A)
+{
+	T avg = accumulate( A.begin(), A.end(), 0.0)/A.size();
+	return avg;
+}
+
+template<typename T>
+vector<T> addVector(vector<T> A, vector<T> B)
+{
+	vector<T> C;
+	for(int i=0;i<A.size();i++)
+		C.push_back(A[i]+B[i]);
+	return C;
+}
+
+template<typename T>
+vector<T> minusVector(vector<T> A, vector<T> B)
+{
+	vector<T> C;
+	for(int i=0;i<A.size();i++)
+		C.push_back(A[i]-B[i]);
+	return C;
+}
+
+// DATA IS ASSUMED TO BE POSITIVE ONLY
+template<typename T>
+void normalizeData(vector<T> &data_)
+{
+	T tmp = 0;
+	for(int i=0;i<data_.size();i++)
+		tmp += data_[i];
+	if (tmp>0)
+		for(int i=0;i<data_.size();i++)
+			data_[i]/=tmp;
+//	else
+//		printf("[WARNING] : Data is empty.\n");
 }
 
 #endif /* ALGO_H_ */
