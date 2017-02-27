@@ -6,7 +6,7 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-//#define LEARN
+#define LEARN
 
 #include "dataDeclaration.h"
 #include "algo.h"

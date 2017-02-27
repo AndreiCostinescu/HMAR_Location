@@ -34,3 +34,7 @@
 [07] True Label Commit
 - 24/02/2017
 - added function to give label name based on highest prediction rate
+
+[08] Sector direction check Commit
+- 27/02/2017
+- added a check for +/- as the equation for calculating angle does not give +/-

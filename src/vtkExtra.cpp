@@ -727,6 +727,7 @@ void showConnection(
 				{
 					tubeRadius2[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
 					tubeRadius2[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
+//					cout << i << "   " << ii << endl;
 				}
 
 				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].max<=0)
@@ -786,7 +787,7 @@ void showConnection(
 			tubeMapper2[i][ii]->SelectColorArray("Colors");
 
 			tubeActor[i][ii] = vtkSmartPointer<vtkActor>::New();
-			tubeActor[i][ii]->GetProperty()->SetOpacity(0.50); //Make the tube have some transparency.
+			tubeActor[i][ii]->GetProperty()->SetOpacity(1.00); //Make the tube have some transparency.
 			tubeActor[i][ii]->SetMapper(tubeMapper[i][ii]);
 			tubeActor2[i][ii] = vtkSmartPointer<vtkActor>::New();
 			tubeActor2[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
@@ -819,12 +820,12 @@ void showConnection(
 //	lineMapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
 //	lineActor2 = vtkSmartPointer<vtkActor>::New();
 //	lines2 = vtkSmartPointer<vtkCellArray>::New();
-//	lineSource2->SetPoint1(locations[2].x + (sector_para.dir[11].x * sector_para.dist[11]*0.5),
-//						   locations[2].y + (sector_para.dir[11].y * sector_para.dist[11]*0.5),
-//						   locations[2].z + (sector_para.dir[11].z * sector_para.dist[11]*0.5));
-//	lineSource2->SetPoint2(locations[2].x + (sector_para.dir[11].x * sector_para.dist[11]*0.5) + sector_para.dir_n[11].x,
-//						   locations[2].y + (sector_para.dir[11].y * sector_para.dist[11]*0.5) + sector_para.dir_n[11].y,
-//						   locations[2].z + (sector_para.dir[11].z * sector_para.dist[11]*0.5) + sector_para.dir_n[11].z);
+//	lineSource2->SetPoint1(locations[1].x + (sector_para.dir[6].x * sector_para.dist[6]*0.5),
+//						   locations[1].y + (sector_para.dir[6].y * sector_para.dist[6]*0.5),
+//						   locations[1].z + (sector_para.dir[6].z * sector_para.dist[6]*0.5));
+//	lineSource2->SetPoint2(locations[1].x + (sector_para.dir[6].x * sector_para.dist[6]*0.5) + (sector_para.dir_n[6].x*0.1),
+//						   locations[1].y + (sector_para.dir[6].y * sector_para.dist[6]*0.5) + (sector_para.dir_n[6].y*0.1),
+//						   locations[1].z + (sector_para.dir[6].z * sector_para.dist[6]*0.5) + (sector_para.dir_n[6].z*0.1));
 //	lineMapper2->SetInputConnection(lineSource2->GetOutputPort());
 //	lineActor2->GetProperty()->SetLineWidth(5); // Give some color to the line
 //	lineActor2->GetProperty()->SetColor(0.0,1.0,0.0); // Give some color to the line

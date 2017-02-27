@@ -215,6 +215,10 @@ void checkSectorConstraint(
 	int kernel_size_x_,
 	int kernel_size_y_);
 
+bool checkDirection(
+	vector<double> A,
+	vector<double> B);
+
 // ============================================================================
 // Prediction
 // ============================================================================

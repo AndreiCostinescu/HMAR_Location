@@ -334,8 +334,20 @@ void labelSector(
 	printf("Checking sector constraints......Complete\n");
 
 	vector<point_t> point_zero; vector<string> label_zero;
-	for(int i = 0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
-	showConnection(point_zero, label_zero, Graph_, color_code_, false);
+	for(int i=0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
+//	bool tmptmp = false;
+//	for(int i = 0;i<pos_vel_acc_avg_.size();i++)
+//	{
+//		if (pos_vel_acc_avg_[i][0].cluster_id == 1 || tmptmp)
+//		{
+//			point_zero.push_back(pos_vel_acc_avg_[i][0]);
+//			tmptmp = true;
+//		}
+//		if (pos_vel_acc_avg_[i][0].cluster_id == 2)
+//			tmptmp = false;
+//	}
+	//for(int i = 0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
+	showConnection(point_zero, label_zero, Graph_, color_code_, true);
 	printf("Viewing sector......Complete\n");
 
 	string path;
@@ -1261,22 +1273,22 @@ void updateSector(
 										  point2vector(sector_para_.dir_n[xx]))),
 					  dotProduct(point2vector(delta_t),
 								 point2vector(sector_para_.dir_n[xx])));
-	angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
 
-	//angle_tmp[ii] = angle_tmp[ii] / M_PI * 180;
+	if (!checkDirection(crossProduct(point2vector(delta_t),
+									 point2vector(sector_para_.dir_n[xx])),
+					    point2vector(minusPoint(locations_[tmp_id2_],
+					    						locations_[tmp_id1_]))))
+	{angle_tmp *= -1;}
+
+	angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
 
 	// the value of yy can be > or <  "num_location_intervals"
 	// > object moved further away from the location area
 	// < object is moving initially away from the intended goal location
 	yy = ceil(proj*sector_para_.loc_int/sector_para_.dist[xx]) - 1;
 	zz = ceil(angle_tmp*(sector_para_.sec_int/2)/M_PI) - 1;
-	yz = yy*sector_para_.sec_int + zz;
 
-//	if(xx==11)
-//	{
-//	cout << angle_tmp / M_PI * 180 << endl;
-//	cout << ceil(angle_tmp*sector_para_.sec_int/M_PI) << endl;
-//	}
+	yz = yy*sector_para_.sec_int + zz;
 
 	//int tmp = sector_[xx].size()-1;
 
@@ -1377,6 +1389,22 @@ void checkSectorConstraint(
 //							(sector[i][ii][(iii-(int)(5/2)+num_sector_intervals)%num_sector_intervals].max <= 0))
 //							sector_constraint[i][ii][iii] = 0;
 
+}
+
+bool checkDirection(
+	vector<double> A,
+	vector<double> B)
+{
+	bool out = true;
+	for(int i=0;i<A.size();i++)
+	{
+		if (((A[i] >= 0) && (B[i] < 0)) || ((A[i] < 0) && (B[i] >= 0)))
+		{
+			out = false;
+			break;
+		}
+	}
+	return out;
 }
 
 // ============================================================================
