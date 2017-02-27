@@ -309,7 +309,7 @@ void showData(
 	actor->GetProperty()->SetPointSize(3);
 //	actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
 
-	renderWindow->SetSize(1280,800); //(width, height)
+	renderWindow->SetSize(WIN_WIDTH, WIN_HEIGHT); //(width, height)
 	renderWindow->AddRenderer(renderer);
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
@@ -319,8 +319,8 @@ void showData(
 		textActor = vtkSmartPointer<vtkTextActor>::New();
 		printf(">>>>> Pick a location...\n");
 		if(!labels_.empty()) textActor->SetInput (labels_[0].c_str());
-		textActor->SetPosition ( 10, 470 );
-		textActor->GetTextProperty()->SetFontSize ( 10 );
+		textActor->SetPosition ( 10, (WIN_HEIGHT-20) );
+		textActor->GetTextProperty()->SetFontSize ( FONT_SIZE );
 		textActor->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
 		renderer->AddActor2D (textActor);
 	}
@@ -333,8 +333,8 @@ void showData(
 			if(labels_[i].empty()) continue;
 			textActor = vtkSmartPointer<vtkTextActor>::New();
 			textActor->SetInput(labels_[i].c_str());
-			textActor->SetPosition(10, 470-i*10);
-			textActor->GetTextProperty()->SetFontSize(10);
+			textActor->SetPosition(10, (WIN_HEIGHT-20)-i*FONT_SIZE);
+			textActor->GetTextProperty()->SetFontSize(FONT_SIZE);
 			textActor->GetTextProperty()
 					 ->SetColor((double)color_[i][0]/255,
 								(double)color_[i][1]/255,

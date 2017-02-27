@@ -82,6 +82,10 @@ using namespace std;
 #define	WITHIN_RANGE 0
 #define EXCEED_RANGE -1
 
+#define WIN_HEIGHT 800
+#define WIN_WIDTH 1200
+#define FONT_SIZE 10
+
 //******************** TAKEN FROM .....
 #define UNCLASSIFIED -1
 #define NOISE -2

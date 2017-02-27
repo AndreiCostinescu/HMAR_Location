@@ -6,14 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-
-/home/chen/HMAR/HMAR_Location/src/algo.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
 iostream
 -
@@ -126,17 +118,13 @@ vtkContextScene.h
 vtkPen.h
 -
 
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.cpp
-vtkExtra.h
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
+/home/chen/HMAR/HMAR_Location/src/dbscan.cpp
+dbscan.h
+/home/chen/HMAR/HMAR_Location/src/dbscan.h
 
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
+/home/chen/HMAR/HMAR_Location/src/dbscan.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
 
 /home/chen/vtksrc/VTK-build/Charts/Core/vtkChartsCoreModule.h
 vtkFiltersGeneralModule.h
