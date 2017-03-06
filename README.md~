@@ -38,8 +38,3 @@
 [08] Sector direction check Commit
 - 27/02/2017
 - added a check for +/- as the equation for calculating angle does not give +/-
-
-[09]
-- 06/03/2017
-- reworked sectormap to check for variation along curve
-- curve is updated based on averaging with previous ones
