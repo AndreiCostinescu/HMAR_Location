@@ -13,81 +13,76 @@
 #include "dbscan.h"
 #include "Graph.h"
 
-void writePointFile(
-	point_t *p,
-	unsigned int num_points);
-
-bool checkMoveSlide(
-	point_t pos_,
-	point_t vel_,
-	vector<double> surface_,
-	double surface_limit_,
-	double angle_limit_);
-
-double checkMoveSlideOutside(
-	point_t pos_,
-	point_t vel_,
-	double **surface_,
-	unsigned int num_surfaces_);
-
-bool checkSurfaceRange(
-	point_t pos_,
-	point_t pos_surface_,
-	vector<double> surface_,
-	double surface_limit_,
-	double surface_range_limit_);
-
-double surfaceDistance(
-	point_t pos_,
-	vector<double> surface_);
-
-double surfaceAngle(
-	point_t vel_,
-	vector<double> surface_);
-
-double surfaceRange(
-	point_t pos_,
-	point_t pos_surface_,
-	vector<double> surface_);
-
-
 // ============================================================================
-// Labels
+// dbscan
 // ============================================================================
 
-void labelMovement(
-	Graph Graph_);
+void dbscanCluster(
+	double epsilon,
+	unsigned int minpts,
+	unsigned int num_points,
+	point_t *p);
 
-void labelLocation(
-	string path_,
-	vector<point_t> &points_,
-	vector<point_t> &locations_,
-	vector<double> &location_boundary_,
-	vector<string> &label_,
-	vector<int> &surface_num_,
-	double epsilon_,
-	int minpts_);
+void combineNearCluster(
+	vector<point_t> &points,
+	vector<point_t> &locations);
 
-void labelLocation_(
-	Graph &Graph_,
-	vector<vector<point_t> > &pos_vel_acc_avg_,
-	double epsilon_,
-	int minpts_);
+void decideBoundary(
+	point_t &p,
+	vector<point_t> location,
+	vector<double> location_boundary);
 
-void labelSector(
-	Graph &Graph_,
-	vector<vector<point_t> > pos_vel_acc_avg_,
-	double max_range_,
-	int kernel_size_x_,
-	int kernel_size_y_,
-	vector<int> file_eof_,
-	vector<unsigned char*> color_code_);
-
-void readingLocation(
-	vector<point_t> &locations,
+void contactBoundary(
+	vector<point_t> &p,
+	vector<point_t> locations,
 	vector<double> &location_boundary,
-	vector<string> &LABEL_LOC,
-	int obj);
+	bool learn);
+
+// ============================================================================
+// B-spline
+// ============================================================================
+
+void curveFit(
+	vector<point_t> points_,
+	vector<point_t> &curves_);
+
+void polyCurveFit(
+	vector<double> points_,
+	vector<double> &coeff_,
+	vector<double> &cov_);
+
+void polyCurveFitPoint(
+	vector<point_t> points_,
+	vector<point_t> &points_est_,
+	vector<point_t> &coeffs_,
+	vector<point_t> &covs_,
+	bool est_);
+
+void polyCurveFitEst(
+	vector<double> &points_,
+	int num_points_,
+	vector<double> coeffs_,
+	vector<double> covs_);
+
+void polyCurveLength(
+	double &length_,
+	double a_,
+	double b_,
+	vector<point_t> coeffs_);
+
+// ============================================================================
+// Data
+// ============================================================================
+
+void parseData2Point(
+	vector<vector<string> > data_full,
+	vector<point_t> &points);
+
+void preprocessDataLive(
+	point_t pos_,
+	vector< vector< point_t > > &pos_vel_acc_mem_, // motion -> length(empty at beginning)
+	vector<point_t> &pos_vel_acc_avg_, //motion
+	unsigned int window_);
 
 // ============================================================================
 // Files
@@ -149,56 +144,17 @@ void readSectorConstraintFile(
 	vector<vector<vector<double> > > &sector_);
 
 // ============================================================================
-// Data
-// ============================================================================
-
-void parseData2Point(
-	vector<vector<string> > data_full,
-	vector<point_t> &points);
-
-void preprocessDataLive(
-	point_t pos_,
-	vector< vector< point_t > > &pos_vel_acc_mem_, // motion -> length(empty at beginning)
-	vector<point_t> &pos_vel_acc_avg_, //motion
-	unsigned int window_);
-
-// ============================================================================
-// dbscan
-// ============================================================================
-
-void dbscanCluster(
-	double epsilon,
-	unsigned int minpts,
-	unsigned int num_points,
-	point_t *p);
-
-void combineNearCluster(
-	vector<point_t> &points,
-	vector<point_t> &locations);
-
-void decideBoundary(
-	point_t &p,
-	vector<point_t> location,
-	vector<double> location_boundary);
-
-void contactBoundary(
-	vector<point_t> &p,
-	vector<point_t> locations,
-	vector<double> &location_boundary,
-	bool learn);
-
-// ============================================================================
 // Sector
 // ============================================================================
+
+void prepareSector(
+	Graph &Graph_);
 
 void generateSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	vector<int>file_eof_,
 	vector<vector<double> > kernel_);
-
-void prepareSector(
-	Graph &Graph_);
 
 void updateSector(
 	vector<sector_t> &sector_,
@@ -218,6 +174,104 @@ void checkSectorConstraint(
 bool checkDirection(
 	vector<double> A,
 	vector<double> B);
+
+// ============================================================================
+// Sector Curve
+// ============================================================================
+
+void determineLocationInterval(
+	int &ind_loc_,
+	int &ind_loc_last,
+	int total_loc_int_,
+	point_t point_,
+	vector<point_t> tangent_,
+	vector<point_t> beg_,
+	vector<point_t> mid_,
+	vector<point_t> end_);
+
+void determineSectorInterval(
+	int &ind_sec_,
+	int ind_loc_,
+	int total_sec_int_,
+	point_t &delta_t_,
+	point_t point_,
+	vector<point_t> tangent_,
+	vector<point_t> normal_,
+	vector<point_t> mid_);
+
+void checkSectorCurve(
+	Graph &Graph_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	int edge_xy_,
+	int curr_num_,
+	int tmp_id1_,
+	int tmp_id2_,
+	int tmp_id3_,
+	vector<vector<double> > kernel_);
+
+void adjustSectorCurve(
+	Graph &Graph_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	int edge_xy_,
+	int curr_num_,
+	int tmp_id1_,
+	int tmp_id2_,
+	int tmp_id3_,
+	vector<vector<double> > kernel_);
+
+void updateSectorCurve(
+	Graph &Graph_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<point_t> locations_,
+	int curr_num_,
+	int tmp_id1_,
+	int tmp_id2_,
+	int tmp_id3_,
+	vector<vector<double> > kernel_);
+
+void generateSectorCurve(
+	Graph &Graph_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<int> file_eof_,
+	vector<vector<double> > kernel_);
+
+// ============================================================================
+// Labels
+// ============================================================================
+
+void labelMovement(
+	Graph Graph_);
+
+void labelLocation(
+	string path_,
+	vector<point_t> &points_,
+	vector<point_t> &locations_,
+	vector<double> &location_boundary_,
+	vector<string> &label_,
+	vector<int> &surface_num_,
+	double epsilon_,
+	int minpts_);
+
+void labelLocation_(
+	Graph &Graph_,
+	vector<vector<point_t> > &pos_vel_acc_avg_,
+	double epsilon_,
+	int minpts_);
+
+void labelSector(
+	Graph &Graph_,
+	vector<vector<point_t> > pos_vel_acc_avg_,
+	double max_range_,
+	int kernel_size_x_,
+	int kernel_size_y_,
+	vector<int> file_eof_,
+	vector<unsigned char*> color_code_);
+
+void readingLocation(
+	vector<point_t> &locations,
+	vector<double> &location_boundary,
+	vector<string> &LABEL_LOC,
+	int obj);
 
 // ============================================================================
 // Prediction
@@ -279,6 +333,51 @@ void locationPrediction(
 
 
 
+
+
+
+
+
+
+
+
+
+void writePointFile(
+	point_t *p,
+	unsigned int num_points);
+
+bool checkMoveSlide(
+	point_t pos_,
+	point_t vel_,
+	vector<double> surface_,
+	double surface_limit_,
+	double angle_limit_);
+
+double checkMoveSlideOutside(
+	point_t pos_,
+	point_t vel_,
+	double **surface_,
+	unsigned int num_surfaces_);
+
+bool checkSurfaceRange(
+	point_t pos_,
+	point_t pos_surface_,
+	vector<double> surface_,
+	double surface_limit_,
+	double surface_range_limit_);
+
+double surfaceDistance(
+	point_t pos_,
+	vector<double> surface_);
+
+double surfaceAngle(
+	point_t vel_,
+	vector<double> surface_);
+
+double surfaceRange(
+	point_t pos_,
+	point_t pos_surface_,
+	vector<double> surface_);
 
 
 

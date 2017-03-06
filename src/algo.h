@@ -35,6 +35,10 @@ point_t addPoint(
 	point_t A,
 	point_t B);
 
+point_t multiPoint(
+	point_t A,
+	double B);
+
 vector<double> crossProduct(
 	vector<double> A,
 	vector<double> B);
@@ -58,6 +62,26 @@ void gaussKernel(
 	int numx_,
 	int numy_,
 	double var_);
+
+point_t rodriguezVec(
+	double angle_,
+	point_t axis_,
+	point_t vec_);
+
+vector<double> rodriguezRot(
+	point_t vec_1,
+	point_t vec_2);
+
+vector<double> transInv(
+		vector<double> A);
+
+void cal_tangent_normal(
+	double t_mid_,
+	point_t &p_tan_,
+	point_t &p_nor_,
+	vector<point_t> coeff,
+	int dim,
+	bool normal);
 
 //=============================================================================
 // inline

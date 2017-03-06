@@ -7,6 +7,7 @@
 //=============================================================================
 
 #define LEARN
+//#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -158,10 +159,9 @@ int main(int argc, char *argv[])
 	labelLocation_(Graph, pos_vel_acc_avg, epsilon, minpts);
 	printf("Creating nodes for clusters (action locations)......Complete\n");
 	// *************************************************************[ADD NODES]
-
 	//[EDGES]******************************************************************
 	Graph.initEdge(num_location_intervals, num_sector_intervals);
-	labelSector(Graph, pos_vel_acc_avg,	0.05, 5, 5, file_eof, color_code);
+	labelSector(Graph, pos_vel_acc_avg,	0.05, 1, 1, file_eof, color_code);
 	printf("Creating sectors for connection between the clusters (action locations)......Complete\n");
 	//******************************************************************[EDGES]
 
@@ -169,8 +169,9 @@ int main(int argc, char *argv[])
 printf("Creating a graph to represent the clusters (action locations)......Complete\n");
 
 
+#endif
 
-#else
+#ifdef TESTING
 
 // [TESTING]*******************************************************************
 
@@ -639,7 +640,17 @@ if (VERBOSE == 3)
 //		plotData(x, y1);
 //		plotData(x, y2);
 
+
+
+
+
+
+
 	cout << "END" << endl;
 
 	return 0;
 }
+
+
+
+

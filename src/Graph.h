@@ -50,6 +50,12 @@ public:
 		unsigned int 	 n2_,
 		unsigned int 	 edge_num_);
 
+	void updateEdgeData(
+		vector<data_t> 	 data_,
+		unsigned int 	 n1_,
+		unsigned int 	 n2_,
+		unsigned int 	 edge_num_);
+
 	void updateEdgeConst(
 		vector<double> 	sector_map_,
 		unsigned int  	n1_,
@@ -61,6 +67,32 @@ public:
 		unsigned int  	 n1_,
 		unsigned int  	 n2_,
 		unsigned int 	 edge_num_);
+
+	void updateEdgeNormal(
+		vector<point_t>  normal_,
+		unsigned int  	 n1_,
+		unsigned int  	 n2_,
+		unsigned int 	 edge_num_);
+
+	void updateEdgeTangent(
+		vector<point_t> 	tangent_,
+		unsigned int  		n1_,
+		unsigned int  		n2_,
+		unsigned int 		edge_num_);
+
+	void updateEdgeLocStartMidEnd(
+		vector<point_t> 	start_,
+		vector<point_t> 	mid_,
+		vector<point_t> 	end_,
+		unsigned int  		n1_,
+		unsigned int  		n2_,
+		unsigned int 		edge_num_);
+
+	void updateEdgeLocDist(
+		double 				total_,
+		unsigned int  		n1_,
+		unsigned int  		n2_,
+		unsigned int 		edge_num_);
 
 	void extendEdge(
 		vector<data_t> 	data_,
@@ -74,6 +106,11 @@ public:
 
 	void updateSectorPara(
 		sector_para_t sector_para_);
+
+	void incrementCounter(
+		int edge_,
+		int edge_num_)
+	{counter[edge_][edge_num_]++;}
 
 	node_tt getNode(
 		unsigned int node_index)
@@ -116,15 +153,27 @@ public:
 	vector<string> getMovLabel()
 	{return movLabel;}
 
+	int getCounter(
+		int edge_,
+		int edge_num_)
+	{return counter[edge_][edge_num_];}
+
 	virtual ~Graph(){}
 
 private:
+	vector<vector<int>>		    counter;
+
 	string 						scene;
 	string 						object;
 	vector<string>				movLabel;
 	vector<sector_t> 			sector;
 	vector<double> 				sector_const;
 	sector_para_t 				sector_para;
+	vector<point_t>				tangent_zero;
+	vector<point_t>				normal_zero;
+	vector<point_t>				loc_start_zero;
+	vector<point_t>				loc_mid_zero;
+	vector<point_t>				loc_end_zero;
 
 	node_tt 					node;
 	edge_tt 					edge;

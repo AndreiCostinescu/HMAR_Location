@@ -275,6 +275,7 @@ SET(CMAKE_C_TARGET_INCLUDE_PATH
   "/home/chen/vtksrc/VTK/Rendering/Image"
   "/home/chen/vtksrc/VTK-build/IO/Parallel"
   "/home/chen/vtksrc/VTK/IO/Parallel"
+  "/home/chen/gsl/include"
   "/home/chen/vtksrc/VTK-build/ThirdParty/hdf5/vtkhdf5/hl/src"
   "/home/chen/vtksrc/VTK-build/ThirdParty/hdf5/vtkhdf5/src"
   )
