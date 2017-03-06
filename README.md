@@ -43,3 +43,8 @@
 - 06/03/2017
 - reworked sectormap to check for variation along curve
 - curve is updated based on averaging with previous ones
+
+[09a]
+- 06/03/2017
+- nested all functions in main
+- updated the prediction functions

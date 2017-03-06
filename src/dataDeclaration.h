@@ -15,6 +15,7 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
+#include <stack>
 #include <semaphore.h>
 #include <fstream>
 #include <sstream>
@@ -102,6 +103,7 @@
 
 using namespace std;
 
+
 #define Sqr(x) ((x)*(x))
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
@@ -110,7 +112,7 @@ using namespace std;
 //1 : motion
 //2 : location
 //3 : label only
-#define VERBOSE 3
+#define VERBOSE 0
 
 // number of fit coefficients
 // nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4
@@ -183,18 +185,18 @@ struct node_ss
 typedef struct edge_ss edge_tt;
 struct edge_ss
 {
-	string 			 name;
-	unsigned int 	 begin_index;
-	unsigned int 	 end_index;
-	vector<data_t> 	 data;
-	vector<sector_t> sector_map; // locations int * sectors int
-	vector<double> 	 sector_const;
-	vector<point_t>  tangent; // locations int
-	vector<point_t>  normal; // locations int
-	vector<point_t>  loc_start; // locations int
-	vector<point_t>  loc_mid; // locations int
-	vector<point_t>  loc_end; // locations int
-	double 			 total_len;
+	string 			name;
+	unsigned int 	begin_index;
+	unsigned int 	end_index;
+	vector<data_t> 	data;
+	vector<double> 	sector_map; // locations int * sectors int
+	vector<double> 	sector_const;
+	vector<point_t> tangent; // locations int
+	vector<point_t> normal; // locations int
+	vector<point_t> loc_start; // locations int
+	vector<point_t> loc_mid; // locations int
+	vector<point_t> loc_end; // locations int
+	double 			total_len;
 };
 
 typedef struct label_s label_t;

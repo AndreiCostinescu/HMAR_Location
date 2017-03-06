@@ -100,8 +100,7 @@ void Graph::initEdge(
 	int sec_int)
 {
 	edges.clear();
-	sector.clear();
-	sector_const.clear();
+	sector_zero.clear();
 	tangent_zero.clear();
 	normal_zero.clear();
 	loc_start_zero.clear();
@@ -110,8 +109,7 @@ void Graph::initEdge(
 	counter.clear();
 
 	edges.resize(Sqr(nodes.size()));
-	sector.resize(loc_int*sec_int);
-	sector_const.resize(loc_int*sec_int);
+	sector_zero.resize(loc_int*sec_int);
 	tangent_zero.resize(loc_int);
 	normal_zero.resize(loc_int);
 	loc_start_zero.resize(loc_int);
@@ -119,19 +117,12 @@ void Graph::initEdge(
 	loc_end_zero.resize(loc_int);
 	counter.resize(Sqr(nodes.size()));
 
-	for(int i=0;i<loc_int*sec_int;i++)
-	{
-		sector[i].max 	= 0;
-		sector[i].min 	= INFINITY;
-		sector_const[i] = 0;
-	}
-
 	for(int i=0;i<Sqr(nodes.size());i++)
 	{
 		counter[i].resize(1);
 		edges[i].resize(1);
-		edges[i][0].sector_map   = sector;
-		edges[i][0].sector_const = sector_const;
+		edges[i][0].sector_map   = sector_zero;
+		edges[i][0].sector_const = sector_zero;
 		edges[i][0].normal 		 = normal_zero;
 		edges[i][0].tangent 	 = tangent_zero;
 		edges[i][0].loc_start 	 = loc_start_zero;
@@ -153,11 +144,11 @@ void Graph::initEdge(
 }
 
 void Graph::addEdge(
-	vector<data_t> 	 data_,
-	vector<sector_t> sector_map_,
-	unsigned int 	 n1_,
-	unsigned int 	 n2_,
-	unsigned int 	 edge_num_)
+	vector<data_t> data_,
+	vector<double> sector_map_,
+	unsigned int   n1_,
+	unsigned int   n2_,
+	unsigned int   edge_num_)
 {
 
 	edge = {};
@@ -176,7 +167,7 @@ void Graph::addEdge(
 	else
 	{
 		edges[n1_*nodes.size()+n2_].resize(edge_num_);
-		edge.sector_const = sector_const;
+		edge.sector_const = sector_zero;
 		edges[n1_*nodes.size()+n2_][edge_num_] = edge;
 	}
 }
@@ -200,10 +191,10 @@ void Graph::updateEdgeConst(
 }
 
 void Graph::updateEdgeSector(
-	vector<sector_t> 	sector_map_,
-	unsigned int  		n1_,
-	unsigned int  		n2_,
-	unsigned int 		edge_num_)
+	vector<double>	sector_map_,
+	unsigned int  	n1_,
+	unsigned int  	n2_,
+	unsigned int 	edge_num_)
 {
 	edges[n1_*nodes.size()+n2_][edge_num_].sector_map = sector_map_;
 }

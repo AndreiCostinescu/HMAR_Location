@@ -102,10 +102,15 @@ void writeLocLabelFile(
 	vector<double> boundary_,
 	vector<int> surface_num_container_);
 
+void writeLocationFile(
+	Graph Graph_,
+	string path_,
+	int type_);
+
 void writeSectorFile(
 	Graph Graph_,
 	string path_,
-	int maxminconst_);
+	int type_);
 
 void writeSectorConstraintFile(
 	string path_,
@@ -113,6 +118,11 @@ void writeSectorConstraintFile(
 	int num_locations_,
 	int num_location_intervals_,
 	int num_sector_intervals_);
+
+void writeCounterFile(
+	Graph Graph_,
+	string path_,
+	int type_);
 
 void readFile(
 	const char *name,
@@ -139,41 +149,17 @@ void readSectorFile(
 	Graph &Graph_,
 	int maxminconst_);
 
+void readLocationFile(
+	Graph &Graph_,
+	int type_);
+
 void readSectorConstraintFile(
 	string path_,
 	vector<vector<vector<double> > > &sector_);
 
-// ============================================================================
-// Sector
-// ============================================================================
-
-void prepareSector(
-	Graph &Graph_);
-
-void generateSector(
+void readCounterFile(
 	Graph &Graph_,
-	vector<vector<point_t> > pos_vel_acc_avg_,
-	vector<int>file_eof_,
-	vector<vector<double> > kernel_);
-
-void updateSector(
-	vector<sector_t> &sector_,
-	point_t pos_,
-	vector<point_t> locations_,
-	sector_para_t sector_para_,
-	int tmp_id1_,
-	int tmp_id2_,
-	vector<vector<double> > kernel_);
-
-void checkSectorConstraint(
-	Graph &Graph_,
-	double max_range_,
-	int kernel_size_x_,
-	int kernel_size_y_);
-
-bool checkDirection(
-	vector<double> A,
-	vector<double> B);
+	int type_);
 
 // ============================================================================
 // Sector Curve
@@ -199,9 +185,27 @@ void determineSectorInterval(
 	vector<point_t> normal_,
 	vector<point_t> mid_);
 
+void determineSectorMap(
+	vector<double> &sector_map_,
+	point_t delta_t_,
+	int ind_loc_,
+	int ind_sec_,
+	int loc_int_,
+	int sec_int_,
+	vector<vector<double> > kernel_);
+
 void checkSectorCurve(
 	Graph &Graph_,
-	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<point_t> &points_est,
+	int edge_xy_,
+	int tmp_id1_,
+	int tmp_id2_,
+	vector<vector<double> > kernel_);
+
+void adjustSectorCurve(
+	Graph &Graph_,
+	vector<point_t> &points_est,
+	vector<point_t> coeffs_,
 	int edge_xy_,
 	int curr_num_,
 	int tmp_id1_,
@@ -209,15 +213,16 @@ void checkSectorCurve(
 	int tmp_id3_,
 	vector<vector<double> > kernel_);
 
-void adjustSectorCurve(
+void fitSectorCurve(
 	Graph &Graph_,
-	vector<vector<point_t> > pos_vel_acc_avg_,
+	vector<vector<point_t> > pva_avg_,
+	vector<point_t> &points_est,
+	vector<point_t> &coeffs_,
 	int edge_xy_,
 	int curr_num_,
 	int tmp_id1_,
 	int tmp_id2_,
-	int tmp_id3_,
-	vector<vector<double> > kernel_);
+	int tmp_id3_);
 
 void updateSectorCurve(
 	Graph &Graph_,
@@ -234,6 +239,20 @@ void generateSectorCurve(
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	vector<int> file_eof_,
 	vector<vector<double> > kernel_);
+
+void checkSectorCurveConstraint(
+	Graph &Graph_,
+	double max_range_,
+	int edge_xy_,
+	int tmp_id1_,
+	int tmp_id2_);
+
+void fillLocationData(
+	Graph &Graph_);
+
+bool checkDirection(
+	vector<double> A,
+	vector<double> B);
 
 // ============================================================================
 // Labels
@@ -294,11 +313,10 @@ void checkMotion(
 void checkSector(
 	vector<int> &prediction_,
 	vector<double> &t_val_,
+	vector<int> &last_loc_,
 	point_t pos_,
 	Graph &Graph_,
-	Graph Graph_mem_,
-	int tmp_id_,
-	bool learn_);
+	int tmp_id_);
 
 void motionPrediction(
 	vector<int> &prediction_,
@@ -322,7 +340,56 @@ void locationPrediction(
 	label_t &LABEL_);
 
 
+void predictionEdge(
+	vector<int> &prediction_,
+	vector<double> &t_val_,
+	vector<int> &last_loc_,
+	point_t pos_,
+	point_t vel_,
+	Graph &Graph_,
+	int last_location_,
+	double surface_limit_,
+	double angle_limit_,
+	double vel_limit_,
+	label_t &LABEL_,
+	bool &flag_predict_,
+	bool &flag_predict_last_,
+	vector<double> &predict_in_,
+	vector<double> &predict_err_,
+	vector<double> &predict_in_last_,
+	double &pow_dec_);
 
+void predictionNode(
+	vector<vector<point_t> > pva_avg,
+	int location_,
+	int last_location_,
+	point_t pos_,
+	point_t vel_,
+	Graph &Graph_,
+	int num_locations_,
+	double surface_limit_,
+	double angle_limit_,
+	double vel_limit_,
+	label_t &LABEL_,
+	bool flag_motion_,
+	bool learn_,
+	vector<vector<double> > kernel_);
+
+// ============================================================================
+// EXTRAS
+// ============================================================================
+
+void outputMsg(
+	int msgnum_,
+	Graph Graph_,
+	int location_,
+	label_t LABEL_,
+	int num_locations_,
+	int num_surface_,
+	vector<int> prediction_,
+	vector<double> predict_in_,
+	vector<double> predict_err_,
+	int curr_num_);
 
 
 

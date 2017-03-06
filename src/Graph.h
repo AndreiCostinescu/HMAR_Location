@@ -44,17 +44,17 @@ public:
 		int sec_int);
 
 	void addEdge(
-		vector<data_t> 	 data_,
-		vector<sector_t> sector_map_,
-		unsigned int 	 n1_,
-		unsigned int 	 n2_,
-		unsigned int 	 edge_num_);
+		vector<data_t>	data_,
+		vector<double>	sector_map_,
+		unsigned int	n1_,
+		unsigned int	n2_,
+		unsigned int	edge_num_);
 
 	void updateEdgeData(
-		vector<data_t> 	 data_,
-		unsigned int 	 n1_,
-		unsigned int 	 n2_,
-		unsigned int 	 edge_num_);
+		vector<data_t>	data_,
+		unsigned int 	n1_,
+		unsigned int 	n2_,
+		unsigned int 	edge_num_);
 
 	void updateEdgeConst(
 		vector<double> 	sector_map_,
@@ -63,10 +63,10 @@ public:
 		unsigned int 	edge_num_);
 
 	void updateEdgeSector(
-		vector<sector_t> sector_map_,
-		unsigned int  	 n1_,
-		unsigned int  	 n2_,
-		unsigned int 	 edge_num_);
+		vector<double>	sector_map_,
+		unsigned int  	n1_,
+		unsigned int  	n2_,
+		unsigned int 	edge_num_);
 
 	void updateEdgeNormal(
 		vector<point_t>  normal_,
@@ -119,11 +119,11 @@ public:
 	vector<node_tt> getNodeList()
 	{return nodes;}
 
-	vector<sector_t> getInitSector()
-	{return sector;}
+	vector<double> getInitSector()
+	{return sector_zero;}
 
 	vector<double> getInitSectorConst()
-	{return sector_const;}
+	{return sector_zero;}
 
 	sector_para_t getSectorPara()
 	{return sector_para;}
@@ -166,8 +166,7 @@ private:
 	string 						scene;
 	string 						object;
 	vector<string>				movLabel;
-	vector<sector_t> 			sector;
-	vector<double> 				sector_const;
+	vector<double> 				sector_zero;
 	sector_para_t 				sector_para;
 	vector<point_t>				tangent_zero;
 	vector<point_t>				normal_zero;

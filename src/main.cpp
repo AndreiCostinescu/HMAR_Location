@@ -6,8 +6,8 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-#define LEARN
-//#define TESTING
+//#define LEARN
+#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -24,6 +24,18 @@ unsigned int window = 5;
 
 vector<string> LABEL_MOV;
 vector<string> LABEL_LOC;
+
+
+stack<clock_t> tictoc_stack;
+void tic()
+{tictoc_stack.push(clock());}
+void toc()
+{
+	cout << "Time elapsed: "
+       << ((double)(clock() - tictoc_stack.top())) / CLOCKS_PER_SEC
+       << std::endl;
+	tictoc_stack.pop();
+}
 
 
 //=============================================================================
@@ -207,6 +219,10 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	vector<unsigned char*> color_code(12);
 	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
+
+	vector<vector<double> > kernel(1);
+	for(int i=0;i<1;i++) kernel[i].resize(1);
+	gaussKernel(kernel, 1, 1, 2.0);
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
@@ -257,13 +273,18 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	// ************************************************************[PARSE DATA]
 
 	// [LEARNED DATA]**********************************************************
-	readLocation_ (Graph_   );
-	readMovement  (Graph_   );
-	readSectorFile(Graph_, 0);
-	readSectorFile(Graph_, 1);
-	readSectorFile(Graph_, 2);
+	readLocation_   (Graph_   );
+	readMovement    (Graph_   );
+	readSectorFile  (Graph_, 0);
+	readSectorFile  (Graph_, 1);
+	readLocationFile(Graph_, 0);
+	readLocationFile(Graph_, 1);
+	readLocationFile(Graph_, 2);
+	readLocationFile(Graph_, 3);
+	readLocationFile(Graph_, 4);
+	readCounterFile (Graph_, 0);
 	num_locations = Graph_.getNodeList().size();
-	num_surface	= Graph_.getSurface().size();
+	num_surface	  = Graph_.getSurface ().size();
 	// **********************************************************[LEARNED DATA]
 
 	// [PREDICTION VARIABLES]**************************************************
@@ -287,11 +308,6 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	reshapeVector(predict_err,		num_locations);
 	reshapeVector(predict_in_last,	num_locations);
 
-	prepareSector(Graph_);
-	printf("Preparing sectors......Complete\n");
-
-	Graph Graph_mem = Graph_;
-
 	vector<point_t> 			pos_vel_acc_avg1(3);
 	vector<point_t > 		  	pos_vel_acc_mem1(3);
 	vector<vector< point_t > > 	pos_vel_acc_mem; // motion->length
@@ -310,6 +326,9 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	// **************************************************[PREDICTION VARIABLES]
 
 	printf("\n\n>>>>> SYSTEM START <<<<<\n\n");
+
+	vector<int> ind_loc_last(num_locations);
+	vector<vector<point_t> > pva_avg;
 
 	for(int i=0;i<num_points;i++)
 	{
@@ -332,296 +351,67 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 // ============================================================================
 // PREDICTION STARTS
 // ============================================================================
-slide 	  = false;
-LABEL.mov = -1;
-reshapeVector(LABEL.loc, 		num_locations);
-reshapeVector(LABEL.surface, 	num_surface);
+		slide 	  = false;
+		LABEL.mov = -1;
+		reshapeVector(LABEL.loc, 		num_locations);
+		reshapeVector(LABEL.surface, 	num_surface);
 
-// 1. Contact trigger
-// 1.1 Check if the object is within a sphere volume of the location areas
-triggerContact(pos_vel_acc_avg[i][0], Graph_);
+		// 1. Contact trigger
+		// 1.1 Check if the object is within a sphere volume of the location areas
+		triggerContact(pos_vel_acc_avg[i][0], Graph_);
 
-// 2. Prediction during motion
-if (pos_vel_acc_avg[i][0].cluster_id < 0)
-{
-	flag_motion = true;
-
-	// 2.1. Set flag to allow online learning/updates of the knowledge base
-	// learn = true;
-
-	// 2.2. Check if the trajectory is within the range of sector map
-	checkSector(prediction, t_val,
-				pos_vel_acc_avg[i][0], Graph_, Graph_mem,
-				last_location, learn);
-
-	// 2.3. Check for motion (moving/null)
-	checkMotion(pos_vel_acc_avg[i][0], pos_vel_acc_avg[i][1],
-				Graph_.getMovLabel(), Graph_.getSurface(),
-				0.1, 0.97, vel_limit, LABEL);
-
-	// 2.4. Prediction based on the trajectory error from sector map
-	motionPrediction(prediction, t_val,
-					 flag_predict, flag_predict_last,
-					 predict_in, predict_err, predict_in_last,
-					 pow_dec, Graph_);
-
-	if (VERBOSE == 0 || VERBOSE == 1)
-	{
-		printf("Nr:%04d,  ", i);
-
-		if (LABEL.mov < 0)
+		// 2. Prediction during motion
+		if (pos_vel_acc_avg[i][0].cluster_id < 0)
 		{
-			printf("LABEL: NULL\n");
+			pva_avg.push_back(pos_vel_acc_avg[i]);
+			flag_motion = true;
+
+			predictionEdge(
+					prediction, t_val, ind_loc_last,
+					pos_vel_acc_avg[i][0], pos_vel_acc_avg[i][1],
+					Graph_, last_location, 0.1, 0.97, vel_limit, LABEL,
+					flag_predict, flag_predict_last,
+					predict_in, predict_err, predict_in_last, pow_dec);
+
+			outputMsg( 1,
+					Graph_, pos_vel_acc_avg[i][0].cluster_id,
+					LABEL, num_locations, num_surface,
+					prediction, predict_in, predict_err, i);
 		}
-		else if (LABEL.mov == 1)
-		{
-			for(int ii=0;ii<num_surface;ii++)
-			{
-				if (LABEL.surface[ii] > 0)
-				{
-					printf("LABEL: %s on surface %d  ",
-							Graph_.getMovLabel()[LABEL.mov].c_str(), ii);
-					break;
-				}
-			}
-		}
+		// 3. Prediction within location area
 		else
 		{
-			printf("LABEL: %s  ", Graph_.getMovLabel()[LABEL.mov].c_str());
+			flag_predict      = false;
+			flag_predict_last = false;
+			reshapeVector(ind_loc_last,num_locations);
+
+			predictionNode(
+					pva_avg, pos_vel_acc_avg[i][0].cluster_id, last_location,
+					pos_vel_acc_avg[i][0], pos_vel_acc_avg[i][1],
+					Graph_, num_locations, 0.1, 0.97, vel_limit, LABEL,
+					flag_motion, learn, kernel);
+
+			last_location = pos_vel_acc_avg[i][0].cluster_id;
+			flag_motion = false;
+
+			pva_avg.clear();
+
+			outputMsg( 2,
+					Graph_, pos_vel_acc_avg[i][0].cluster_id,
+					LABEL, num_locations, num_surface,
+					prediction, predict_in, predict_err, i);
 		}
 
-		for(int ii=0;ii<num_locations;ii++)
-		{
-			printf(" %.4f ", predict_err[ii]);
-		}
-
-		for(int ii=0;ii<num_locations;ii++)
-		{
-			if (prediction[ii] == WITHIN_RANGE)
-			{
-				printf(" %s %.4f ", Graph_.getNode(ii).name.c_str(), predict_in[ii]);
-			}
-		}
-
-		printf("\n");
-	}
-
-}
-// 3. Prediction within location area
-else
-{
-	flag_predict      = false;
-	flag_predict_last = false;
-
-	// 3.1. Location area prediction based on contact trigger
-	locationPrediction(pos_vel_acc_avg[i][0].cluster_id,
-					   pos_vel_acc_avg[i][0], pos_vel_acc_avg[i][1],
-					   Graph_, 0.1, 0.97, vel_limit, LABEL);
-
-	// 3.2. Check if it is moved back to the same location or not
-	if (last_location == pos_vel_acc_avg[i][0].cluster_id && flag_motion)
-	{
-		cout << " (same last location...)";
-		// update the sector using values from memory
-		for(int ii=0;ii<num_locations;ii++)
-		{
-			int cc = last_location * num_locations + ii;
-			int tmp = Graph_.getEdgeList()[cc].size();
-			for(int a=0;a<tmp;a++)
-			{
-				for(int b=0;b<Graph_.getSectorPara().loc_int*Graph_.getSectorPara().sec_int;b++)
-				{
-					Graph_.getEdgeList()[cc][a].sector_map[b].max =
-							Graph_mem.getEdgeList()[cc][a].sector_map[b].max;
-					Graph_.getEdgeList()[cc][a].sector_map[b].min =
-							Graph_mem.getEdgeList()[cc][a].sector_map[b].min;
-				}
-			}
-		}
-	}
-
-	// 3.3. Update sector map if learn flag is set
-	if (last_location != pos_vel_acc_avg[i][0].cluster_id && flag_motion)
-	{
-		if (learn)
-		{
-			// copy only the intended values for sectors
-			// updating the values in memory
-			int c = last_location * num_locations + pos_vel_acc_avg[i][0].cluster_id;
-			int tmp = Graph_.getEdgeList()[c].size();
-			for(int iii=0;iii<tmp;iii++)
-			{
-				Graph_mem.updateEdgeSector(
-						Graph_.getEdgeList()[c][iii].sector_map,
-						last_location, pos_vel_acc_avg[i][0].cluster_id, iii);
-			}
-			// update the sector using values from memory
-			// last location is used because only sector with last location was changed
-			for(int ii=0;ii<num_locations;ii++)
-			{
-				int cc = last_location * num_locations + ii;
-				int tmp = Graph_.getEdgeList()[cc].size();
-				for(int iii=0;iii<tmp;iii++)
-				{
-					Graph_.updateEdgeSector(
-							Graph_mem.getEdgeList()[cc][iii].sector_map,
-							last_location, ii, iii);
-				}
-			}
-		}
-		else
-		{
-			// update the sector using values from memory
-			for(int ii=0;ii<num_locations;ii++)
-			{
-				int cc  = last_location * num_locations + ii;
-				int tmp = Graph_.getEdgeList()[cc].size();
-				for(int iii=0;iii<tmp;iii++)
-				{
-					Graph_.updateEdgeSector(
-							Graph_mem.getEdgeList()[cc][iii].sector_map,
-							last_location, ii, iii);
-				}
-			}
-		}
-	}
-
-	last_location = pos_vel_acc_avg[i][0].cluster_id;
-	flag_motion = false;
-
-	if (VERBOSE == 0 || VERBOSE == 2)
-	{
-		printf("Nr:%04d,  ", i);
-
-		for(int ii=0;ii<num_locations;ii++)
-		{
-			if (LABEL.loc[ii] > 0)
-			{
-				printf("LABEL: %s  ", Graph_.getNode(ii).name.c_str());
-				break;
-			}
-			else if (LABEL.loc[ii] < 0)
-			{
-				printf("LABEL: Empty location Label.  ");
-				if (LABEL.mov < 0)
-				{
-					printf("LABEL: NULL\n");
-				}
-				else if (LABEL.mov < 0)
-				{
-					for(int ii=0;ii<num_surface;ii++)
-					{
-						if (LABEL.surface[ii] > 0)
-						{
-							printf("LABEL: %s on surface %d  ",
-									Graph_.getMovLabel()[LABEL.mov].c_str(), ii);
-							break;
-						}
-					}
-				}
-				else
-				{
-					printf("LABEL: %s  ", Graph_.getMovLabel()[LABEL.mov].c_str());
-				}
-				break;
-			}
-		}
-
-		printf("\n");
-	}
-}
-
-// LABEL ONLY
-if (VERBOSE == 3)
-{
-	if (pos_vel_acc_avg[i][0].cluster_id < 0)
-	{
-		printf("Nr:%04d,  ", i);
-
-		if (LABEL.mov < 0)
-		{
-			printf("LABEL: NULL\n");
-		}
-		else if (LABEL.mov == 1)
-		{
-			for(int ii=0;ii<num_surface;ii++)
-			{
-				if (LABEL.surface[ii] > 0)
-				{
-					printf("LABEL: %s on surface %d  ",
-							Graph_.getMovLabel()[LABEL.mov].c_str(), ii);
-					break;
-				}
-			}
-		}
-		else
-		{
-			printf("LABEL: %s  ", Graph_.getMovLabel()[LABEL.mov].c_str());
-		}
-
-		if (*max_element(predict_in.begin(), predict_in.end()) > 0)
-		{
-			unsigned int tmptmp = distance(predict_in.begin(), max_element(predict_in.begin(), predict_in.end()));
-			printf("%s  %.4f  ", Graph_.getNode(tmptmp).name.c_str(), *max_element(predict_in.begin(), predict_in.end()));
-		}
-		else
-		{
-			unsigned int tmptmp = distance(predict_err.begin(), max_element(predict_err.begin(), predict_err.end()));
-			printf("%s  %.4f  ", Graph_.getNode(tmptmp).name.c_str(), *max_element(predict_err.begin(), predict_err.end()));
-		}
-
-		printf("\n");
-
-	}
-	else
-	{
-		printf("Nr:%04d,  ", i);
-
-		for(int ii=0;ii<num_locations;ii++)
-		{
-			if (LABEL.loc[ii] > 0)
-			{
-				printf("LABEL: %s  ", Graph_.getNode(ii).name.c_str());
-				break;
-			}
-			else if (LABEL.loc[ii] < 0)
-			{
-				printf("LABEL: Empty location Label.  ");
-				if (LABEL.mov < 0)
-				{
-					printf("LABEL: NULL\n");
-				}
-				else if (LABEL.mov < 0)
-				{
-					for(int ii=0;ii<num_surface;ii++)
-					{
-						if (LABEL.surface[ii] > 0)
-						{
-							printf("LABEL: %s on surface %d  ",
-									Graph_.getMovLabel()[LABEL.mov].c_str(), ii);
-							break;
-						}
-					}
-				}
-				else
-				{
-					printf("LABEL: %s  ", Graph_.getMovLabel()[LABEL.mov].c_str());
-				}
-				break;
-			}
-		}
-
-		printf("\n");
-
-	}
-
-}
+		outputMsg( 3,
+				Graph_, pos_vel_acc_avg[i][0].cluster_id,
+				LABEL, num_locations, num_surface,
+				prediction, predict_in, predict_err, i);
 
 // ============================================================================
 // PREDICTION ENDS
 // ============================================================================
 
-	}
+	} // points
 
 	showConnection(p_data,label_data,Graph_,color_code,true);
 

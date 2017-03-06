@@ -29,6 +29,8 @@ algorithm
 -
 vector
 -
+stack
+-
 semaphore.h
 -
 fstream

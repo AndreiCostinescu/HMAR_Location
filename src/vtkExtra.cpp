@@ -357,230 +357,230 @@ void showData(
 	labels_ = style->getLabels();
 }
 
-void showConnectionOnly(
-	Graph Graph_,
-	vector<unsigned char*> color_)
-{
-	vector<node_tt> nodes = Graph_.getNodeList();
-	int num_locations = nodes.size();
-	vector<point_t> locations(num_locations);
-	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].location;}
-
-	sector_para_t sector_para = Graph_.getSectorPara();
-
-	vtkSmartPointer<vtkLineSource> 			lineSource	[Sqr(num_locations)];
-	vtkSmartPointer<vtkPolyDataMapper> 		lineMapper	[Sqr(num_locations)];
-	vtkSmartPointer<vtkActor> 				lineActor 	[Sqr(num_locations)];
-	vtkSmartPointer<vtkPoints> 				points		[Sqr(num_locations)];
-	vtkSmartPointer<vtkCellArray> 			lines 	   	[Sqr(num_locations)];
-	vtkSmartPointer<vtkPolyData> 			polyData   	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkDoubleArray> 		tubeRadius 	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkTubeFilter> 			tubeFilter 	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper 	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkActor> 				tubeActor  	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkUnsignedCharArray> 	colors     	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkPolyData> 			polyData2  	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkDoubleArray> 		tubeRadius2	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkTubeFilter> 			tubeFilter2	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper2	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkActor> 				tubeActor2 	[Sqr(num_locations)][sector_para.sec_int];
-	vtkSmartPointer<vtkUnsignedCharArray> 	colors2    	[Sqr(num_locations)][sector_para.sec_int];
-
-	vtkSmartPointer<vtkRenderer> 				renderer;
-	vtkSmartPointer<vtkRenderWindow> 			renWin;
-	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
-	vtkSmartPointer<customMouseInteractorStyle> style;
-
-	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
-
-	for(int i=0;i<Sqr(num_locations);i++)
-	{
-		lineSource[i] = vtkSmartPointer<vtkLineSource>::New();
-		lineMapper[i] = vtkSmartPointer<vtkPolyDataMapper>::New();
-		lineActor [i] = vtkSmartPointer<vtkActor>::New();
-
-		points[i] = vtkSmartPointer<vtkPoints>::New();
-		lines [i] = vtkSmartPointer<vtkCellArray>::New();
-
-		int c = i/num_locations;
-
-		if(i == c*num_locations+c) continue;
-
-		// Create a line between each location
-		lineSource[i]->SetPoint1(locations[c].x,
-				          	     locations[c].y,
-				          	     locations[c].z);
-		lineSource[i]->SetPoint2(locations[c].x + (sector_para.dir[i].x * sector_para.dist[i]),
-							     locations[c].y + (sector_para.dir[i].y * sector_para.dist[i]),
-							     locations[c].z + (sector_para.dir[i].z * sector_para.dist[i]));
-
-		lineMapper[i]->SetInputConnection(lineSource[i]->GetOutputPort());
-
-		lineActor[i]->GetProperty()->SetLineWidth(5); // Give some color to the line
-		lineActor[i]->GetProperty()->SetColor(0.0,0.0,1.0); // Give some color to the line
-		lineActor[i]->SetMapper(lineMapper[i]);
-
-		// Create points between each locations
-		lines[i]->InsertNextCell(sector_para.loc_int*2);
-
-		for(int ii=0;ii<sector_para.loc_int;ii++)
-		{
-			points[i]->InsertPoint(ii*2+0,
-				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
-				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
-				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+0)/sector_para.loc_int);
-			points[i]->InsertPoint(ii*2+1,
-				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
-				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
-				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99);
-			lines[i]->InsertCellPoint(ii*2+0);
-			lines[i]->InsertCellPoint(ii*2+1);
-		}
-
-		for(int ii=0;ii<sector_para.sec_int;ii++)
-		{
-			colors     [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
-			polyData   [i][ii] = vtkSmartPointer<vtkPolyData>::New();
-			tubeRadius [i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
-			tubeFilter [i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
-			colors2    [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
-			polyData2  [i][ii] = vtkSmartPointer<vtkPolyData>::New();
-			tubeRadius2[i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
-			tubeFilter2[i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
-
-			colors[i][ii]->SetNumberOfComponents(3);
-			colors[i][ii]->SetName ("Colors");
-			colors2[i][ii]->SetNumberOfComponents(3);
-			colors2[i][ii]->SetName ("Colors");
-
-			polyData[i][ii]->SetPoints(points[i]);
-			polyData[i][ii]->SetLines(lines[i]);
-			polyData2[i][ii]->SetPoints(points[i]);
-			polyData2[i][ii]->SetLines(lines[i]);
-
-			tubeRadius[i][ii]->SetName("TubeRadius");
-			tubeRadius[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
-			tubeRadius2[i][ii]->SetName("TubeRadius");
-			tubeRadius2[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
-
-			for (int iii=0;iii<sector_para.loc_int;iii++)
-			{
-				if (sector[i][0].sector_const[iii*sector_para.sec_int+ii]==0)
-				{
-					colors[i][ii]->InsertNextTypedTuple(color_[5]);
-					colors[i][ii]->InsertNextTypedTuple(color_[5]);
-				}
-				else
-				{
-					colors[i][ii]->InsertNextTypedTuple(color_[1]);
-					colors[i][ii]->InsertNextTypedTuple(color_[1]);
-				}
-
-				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
-				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
-
-				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min<0)
-				{
-					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
-					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
-				}
-				else if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min==INFINITY)
-				{
-					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
-					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
-				}
-				else
-				{
-					tubeRadius2[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
-					tubeRadius2[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
-				}
-
-				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].max<=0)
-				{
-					tubeRadius[i][ii]->SetTuple1(iii*2+0, 0.0);
-					tubeRadius[i][ii]->SetTuple1(iii*2+1, 0.0);
-				}
-				else
-				{
-					tubeRadius[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
-					tubeRadius[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
-				}
-			}
-
-			polyData[i][ii]->GetPointData()->AddArray(tubeRadius[i][ii]);
-			polyData[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
-			polyData[i][ii]->GetPointData()->AddArray(colors[i][ii]);
-			polyData2[i][ii]->GetPointData()->AddArray(tubeRadius2[i][ii]);
-			polyData2[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
-			polyData2[i][ii]->GetPointData()->AddArray(colors2[i][ii]);
-
-//#if VTK_MAJOR_VERSION <= 5
-//			tubeFilter[i][ii]->SetInputConnection(polyData[i][ii]->GetProducerPort());
-//#else
+//void showConnectionOnly(
+//	Graph Graph_,
+//	vector<unsigned char*> color_)
+//{
+//	vector<node_tt> nodes = Graph_.getNodeList();
+//	int num_locations = nodes.size();
+//	vector<point_t> locations(num_locations);
+//	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].location;}
+//
+//	sector_para_t sector_para = Graph_.getSectorPara();
+//
+//	vtkSmartPointer<vtkLineSource> 			lineSource	[Sqr(num_locations)];
+//	vtkSmartPointer<vtkPolyDataMapper> 		lineMapper	[Sqr(num_locations)];
+//	vtkSmartPointer<vtkActor> 				lineActor 	[Sqr(num_locations)];
+//	vtkSmartPointer<vtkPoints> 				points		[Sqr(num_locations)];
+//	vtkSmartPointer<vtkCellArray> 			lines 	   	[Sqr(num_locations)];
+//	vtkSmartPointer<vtkPolyData> 			polyData   	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkDoubleArray> 		tubeRadius 	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkTubeFilter> 			tubeFilter 	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper 	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkActor> 				tubeActor  	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkUnsignedCharArray> 	colors     	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkPolyData> 			polyData2  	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkDoubleArray> 		tubeRadius2	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkTubeFilter> 			tubeFilter2	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkPolyDataMapper> 		tubeMapper2	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkActor> 				tubeActor2 	[Sqr(num_locations)][sector_para.sec_int];
+//	vtkSmartPointer<vtkUnsignedCharArray> 	colors2    	[Sqr(num_locations)][sector_para.sec_int];
+//
+//	vtkSmartPointer<vtkRenderer> 				renderer;
+//	vtkSmartPointer<vtkRenderWindow> 			renWin;
+//	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
+//	vtkSmartPointer<customMouseInteractorStyle> style;
+//
+//	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
+//
+//	for(int i=0;i<Sqr(num_locations);i++)
+//	{
+//		lineSource[i] = vtkSmartPointer<vtkLineSource>::New();
+//		lineMapper[i] = vtkSmartPointer<vtkPolyDataMapper>::New();
+//		lineActor [i] = vtkSmartPointer<vtkActor>::New();
+//
+//		points[i] = vtkSmartPointer<vtkPoints>::New();
+//		lines [i] = vtkSmartPointer<vtkCellArray>::New();
+//
+//		int c = i/num_locations;
+//
+//		if(i == c*num_locations+c) continue;
+//
+//		// Create a line between each location
+//		lineSource[i]->SetPoint1(locations[c].x,
+//				          	     locations[c].y,
+//				          	     locations[c].z);
+//		lineSource[i]->SetPoint2(locations[c].x + (sector_para.dir[i].x * sector_para.dist[i]),
+//							     locations[c].y + (sector_para.dir[i].y * sector_para.dist[i]),
+//							     locations[c].z + (sector_para.dir[i].z * sector_para.dist[i]));
+//
+//		lineMapper[i]->SetInputConnection(lineSource[i]->GetOutputPort());
+//
+//		lineActor[i]->GetProperty()->SetLineWidth(5); // Give some color to the line
+//		lineActor[i]->GetProperty()->SetColor(0.0,0.0,1.0); // Give some color to the line
+//		lineActor[i]->SetMapper(lineMapper[i]);
+//
+//		// Create points between each locations
+//		lines[i]->InsertNextCell(sector_para.loc_int*2);
+//
+//		for(int ii=0;ii<sector_para.loc_int;ii++)
+//		{
+//			points[i]->InsertPoint(ii*2+0,
+//				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
+//				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+0)/sector_para.loc_int,
+//				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+0)/sector_para.loc_int);
+//			points[i]->InsertPoint(ii*2+1,
+//				locations[c].x + sector_para.dir[i].x * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
+//				locations[c].y + sector_para.dir[i].y * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99,
+//				locations[c].z + sector_para.dir[i].z * sector_para.dist[i] * (ii+1)/sector_para.loc_int * 0.99);
+//			lines[i]->InsertCellPoint(ii*2+0);
+//			lines[i]->InsertCellPoint(ii*2+1);
+//		}
+//
+//		for(int ii=0;ii<sector_para.sec_int;ii++)
+//		{
+//			colors     [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
+//			polyData   [i][ii] = vtkSmartPointer<vtkPolyData>::New();
+//			tubeRadius [i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
+//			tubeFilter [i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
+//			colors2    [i][ii] = vtkSmartPointer<vtkUnsignedCharArray>::New();
+//			polyData2  [i][ii] = vtkSmartPointer<vtkPolyData>::New();
+//			tubeRadius2[i][ii] = vtkSmartPointer<vtkDoubleArray>::New();
+//			tubeFilter2[i][ii] = vtkSmartPointer<vtkTubeFilter>::New();
+//
+//			colors[i][ii]->SetNumberOfComponents(3);
+//			colors[i][ii]->SetName ("Colors");
+//			colors2[i][ii]->SetNumberOfComponents(3);
+//			colors2[i][ii]->SetName ("Colors");
+//
+//			polyData[i][ii]->SetPoints(points[i]);
+//			polyData[i][ii]->SetLines(lines[i]);
+//			polyData2[i][ii]->SetPoints(points[i]);
+//			polyData2[i][ii]->SetLines(lines[i]);
+//
+//			tubeRadius[i][ii]->SetName("TubeRadius");
+//			tubeRadius[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
+//			tubeRadius2[i][ii]->SetName("TubeRadius");
+//			tubeRadius2[i][ii]->SetNumberOfTuples(sector_para.loc_int*2); //to create the small gap to line between sectors
+//
+//			for (int iii=0;iii<sector_para.loc_int;iii++)
+//			{
+//				if (sector[i][0].sector_const[iii*sector_para.sec_int+ii]==0)
+//				{
+//					colors[i][ii]->InsertNextTypedTuple(color_[5]);
+//					colors[i][ii]->InsertNextTypedTuple(color_[5]);
+//				}
+//				else
+//				{
+//					colors[i][ii]->InsertNextTypedTuple(color_[1]);
+//					colors[i][ii]->InsertNextTypedTuple(color_[1]);
+//				}
+//
+//				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
+//				colors2[i][ii]->InsertNextTypedTuple(color_[3]);
+//
+//				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min<0)
+//				{
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
+//				}
+//				else if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].min==INFINITY)
+//				{
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+0, 0.0);
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+1, 0.0);
+//				}
+//				else
+//				{
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
+//					tubeRadius2[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].min);
+//				}
+//
+//				if(sector[i][0].sector_map[iii*sector_para.sec_int+ii].max<=0)
+//				{
+//					tubeRadius[i][ii]->SetTuple1(iii*2+0, 0.0);
+//					tubeRadius[i][ii]->SetTuple1(iii*2+1, 0.0);
+//				}
+//				else
+//				{
+//					tubeRadius[i][ii]->SetTuple1(iii*2+0, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
+//					tubeRadius[i][ii]->SetTuple1(iii*2+1, sector[i][0].sector_map[iii*sector_para.sec_int+ii].max);
+//				}
+//			}
+//
+//			polyData[i][ii]->GetPointData()->AddArray(tubeRadius[i][ii]);
+//			polyData[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
+//			polyData[i][ii]->GetPointData()->AddArray(colors[i][ii]);
+//			polyData2[i][ii]->GetPointData()->AddArray(tubeRadius2[i][ii]);
+//			polyData2[i][ii]->GetPointData()->SetActiveScalars("TubeRadius");
+//			polyData2[i][ii]->GetPointData()->AddArray(colors2[i][ii]);
+//
+////#if VTK_MAJOR_VERSION <= 5
+////			tubeFilter[i][ii]->SetInputConnection(polyData[i][ii]->GetProducerPort());
+////#else
+////			tubeFilter[i][ii]->SetInputData(polyData[i][ii]);
+////#endif
+//
 //			tubeFilter[i][ii]->SetInputData(polyData[i][ii]);
-//#endif
-
-			tubeFilter[i][ii]->SetInputData(polyData[i][ii]);
-			tubeFilter[i][ii]->SetNumberOfSides(sector_para.sec_int);
-			tubeFilter[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
-			tubeFilter[i][ii]->SidesShareVerticesOff();
-			tubeFilter[i][ii]->SetOnRatio(sector_para.sec_int);
-			tubeFilter[i][ii]->SetOffset(ii);
-			tubeFilter[i][ii]->Update();
-			tubeFilter2[i][ii]->SetInputData(polyData2[i][ii]);
-			tubeFilter2[i][ii]->SetNumberOfSides(sector_para.sec_int);
-			tubeFilter2[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
-			tubeFilter2[i][ii]->SidesShareVerticesOff();
-			tubeFilter2[i][ii]->SetOnRatio(sector_para.sec_int);
-			tubeFilter2[i][ii]->SetOffset(ii);
-			tubeFilter2[i][ii]->Update();
-
-			tubeMapper[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
-			tubeMapper[i][ii]->SetInputConnection(tubeFilter[i][ii]->GetOutputPort());
-			tubeMapper[i][ii]->ScalarVisibilityOn();
-			tubeMapper[i][ii]->SetScalarModeToUsePointFieldData();
-			tubeMapper[i][ii]->SelectColorArray("Colors");
-			tubeMapper2[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
-			tubeMapper2[i][ii]->SetInputConnection(tubeFilter2[i][ii]->GetOutputPort());
-			tubeMapper2[i][ii]->ScalarVisibilityOn();
-			tubeMapper2[i][ii]->SetScalarModeToUsePointFieldData();
-			tubeMapper2[i][ii]->SelectColorArray("Colors");
-
-			tubeActor[i][ii] = vtkSmartPointer<vtkActor>::New();
-			tubeActor[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
-			tubeActor[i][ii]->SetMapper(tubeMapper[i][ii]);
-			tubeActor2[i][ii] = vtkSmartPointer<vtkActor>::New();
-			tubeActor2[i][ii]->GetProperty()->SetOpacity(1.0); //Make the tube have some transparency.
-			tubeActor2[i][ii]->SetMapper(tubeMapper2[i][ii]);
-		}
-	}
-
-	style 				   	= vtkSmartPointer<customMouseInteractorStyle>::New();
-	renderer               	= vtkSmartPointer<vtkRenderer>::New();
-	renWin           	= vtkSmartPointer<vtkRenderWindow>::New();
-	renWinInter 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
-
-	for(int i=0;i<Sqr(num_locations);i++)
-	{
-		renderer->AddActor(lineActor[i]);
-
-		for(int ii=0;ii<sector_para.sec_int;ii++)
-		{
-			renderer->AddActor(tubeActor[i][ii]);
-			renderer->AddActor(tubeActor2[i][ii]);
-		}
-	}
-
-	style->SetDefaultRenderer(renderer);
-	style->setLeftButton(false);
-	renderer->SetBackground(1.0,1.0,1.0);
-	renWin->SetSize(1280,800); //(width, height)
-	renWin->AddRenderer(renderer);
-	renWinInter->SetRenderWindow(renWin);
-	renWinInter->SetInteractorStyle(style);
-	renWin->Render();
-	renWinInter->Start();
-}
+//			tubeFilter[i][ii]->SetNumberOfSides(sector_para.sec_int);
+//			tubeFilter[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
+//			tubeFilter[i][ii]->SidesShareVerticesOff();
+//			tubeFilter[i][ii]->SetOnRatio(sector_para.sec_int);
+//			tubeFilter[i][ii]->SetOffset(ii);
+//			tubeFilter[i][ii]->Update();
+//			tubeFilter2[i][ii]->SetInputData(polyData2[i][ii]);
+//			tubeFilter2[i][ii]->SetNumberOfSides(sector_para.sec_int);
+//			tubeFilter2[i][ii]->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
+//			tubeFilter2[i][ii]->SidesShareVerticesOff();
+//			tubeFilter2[i][ii]->SetOnRatio(sector_para.sec_int);
+//			tubeFilter2[i][ii]->SetOffset(ii);
+//			tubeFilter2[i][ii]->Update();
+//
+//			tubeMapper[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
+//			tubeMapper[i][ii]->SetInputConnection(tubeFilter[i][ii]->GetOutputPort());
+//			tubeMapper[i][ii]->ScalarVisibilityOn();
+//			tubeMapper[i][ii]->SetScalarModeToUsePointFieldData();
+//			tubeMapper[i][ii]->SelectColorArray("Colors");
+//			tubeMapper2[i][ii] = vtkSmartPointer<vtkPolyDataMapper>::New();
+//			tubeMapper2[i][ii]->SetInputConnection(tubeFilter2[i][ii]->GetOutputPort());
+//			tubeMapper2[i][ii]->ScalarVisibilityOn();
+//			tubeMapper2[i][ii]->SetScalarModeToUsePointFieldData();
+//			tubeMapper2[i][ii]->SelectColorArray("Colors");
+//
+//			tubeActor[i][ii] = vtkSmartPointer<vtkActor>::New();
+//			tubeActor[i][ii]->GetProperty()->SetOpacity(0.75); //Make the tube have some transparency.
+//			tubeActor[i][ii]->SetMapper(tubeMapper[i][ii]);
+//			tubeActor2[i][ii] = vtkSmartPointer<vtkActor>::New();
+//			tubeActor2[i][ii]->GetProperty()->SetOpacity(1.0); //Make the tube have some transparency.
+//			tubeActor2[i][ii]->SetMapper(tubeMapper2[i][ii]);
+//		}
+//	}
+//
+//	style 				   	= vtkSmartPointer<customMouseInteractorStyle>::New();
+//	renderer               	= vtkSmartPointer<vtkRenderer>::New();
+//	renWin           	= vtkSmartPointer<vtkRenderWindow>::New();
+//	renWinInter 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
+//
+//	for(int i=0;i<Sqr(num_locations);i++)
+//	{
+//		renderer->AddActor(lineActor[i]);
+//
+//		for(int ii=0;ii<sector_para.sec_int;ii++)
+//		{
+//			renderer->AddActor(tubeActor[i][ii]);
+//			renderer->AddActor(tubeActor2[i][ii]);
+//		}
+//	}
+//
+//	style->SetDefaultRenderer(renderer);
+//	style->setLeftButton(false);
+//	renderer->SetBackground(1.0,1.0,1.0);
+//	renWin->SetSize(1280,800); //(width, height)
+//	renWin->AddRenderer(renderer);
+//	renWinInter->SetRenderWindow(renWin);
+//	renWinInter->SetInteractorStyle(style);
+//	renWin->Render();
+//	renWinInter->Start();
+//}
 
 void showConnection(
 	vector<point_t> points_,
@@ -594,14 +594,6 @@ void showConnection(
 	vector<node_tt> nodes 			= Graph_.getNodeList();
 	sector_para_t sector_para 		= Graph_.getSectorPara();
 	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
-
-
-	vector<point_t> loc_beg 	= Graph_.getEdgeList()[1][0].loc_start;
-	vector<point_t> loc_mid		= Graph_.getEdgeList()[1][0].loc_mid;
-	vector<point_t> loc_end		= Graph_.getEdgeList()[1][0].loc_end;
-	vector<point_t> tangent 	= Graph_.getEdgeList()[1][0].tangent;
-	vector<point_t> normal 		= Graph_.getEdgeList()[1][0].normal;
-	vector<sector_t> sector_map = Graph_.getEdgeList()[1][0].sector_map;
 
 	double orientation[3];
 
@@ -706,7 +698,7 @@ void showConnection(
 								sector[i][0].tangent[l],
 								sector[i][0].normal [l]);
 			Nmax[0] = multiPoint(tmpN[0],
-								 sector[i][0].sector_map[l*sec+0].max);
+								 sector[i][0].sector_map[l*sec+0]);
 			for (int s=0;s<sec;s++)
 			{
 				int s_tmp = (s+1)%sec;
@@ -716,7 +708,7 @@ void showConnection(
 				Nmax[s_tmp%2] =
 						multiPoint(
 								tmpN[s_tmp%2],
-								sector[i][0].sector_map[l*sec+s].max);
+								sector[i][0].sector_map[l*sec+s]);
 
 //				// [TANGENT NORMAL LINES PER SECTOR]***************************
 //				if(Graph_.getCounter(11,0)>0 && (l==19 || l==18 || l==17) && i==11)
@@ -797,7 +789,7 @@ void showConnection(
 				Nmax[s_tmp%2] =
 						multiPoint(
 								tmpN[s_tmp%2],
-								sector[i][0].sector_map[l*sec+s_tmp].max);
+								sector[i][0].sector_map[l*sec+s_tmp]);
 				pointspoly->InsertPoint((l*sec+s)*8+6,
 					sector[i][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
 					sector[i][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
@@ -829,118 +821,97 @@ void showConnection(
 		renderer->AddActor(actorpoly);
 		// ****************************************************[SECTOR POLYGON]
 
-/*		// [SECTOR TUBES]******************************************************
-		// Insert start end points for each tube interval
-		for(int l=0;l<2;l++)
+		// [SECTOR POLYGON]****************************************************
+		pointspoly = vtkSmartPointer<vtkPoints>::New();
+		polygons = vtkSmartPointer<vtkCellArray>::New();
+		polygonPolyData = vtkSmartPointer<vtkPolyData>::New();
+		mapperpoly = vtkSmartPointer<vtkPolyDataMapper>::New();
+		actorpoly = vtkSmartPointer<vtkActor>::New();
+
+		for(int l=0;l<loc;l++)
 		{
-			// Builds a tube for each sector
-			for (int s=0;s<sector_para.sec_int;s++)
+			tmpN[0] = rodriguezVec((double)(2*M_PI*(0)/sec),
+								sector[i][0].tangent[l],
+								sector[i][0].normal [l]);
+			Nmax[0] = multiPoint(tmpN[0],
+								 sector[i][0].sector_const[l*sec+0]);
+			for (int s=0;s<sec;s++)
 			{
-				double N[3];
-				N[0] = sector[i][0].normal[l].x;
-				N[1] = sector[i][0].normal[l].y;
-				N[2] = sector[i][0].normal[l].z;
+				int s_tmp = (s+1)%sec;
+				tmpN[s_tmp%2] = rodriguezVec((double)(2*M_PI*(s_tmp)/sec),
+										  sector[i][0].tangent[l],
+										  sector[i][0].normal [l]);
+				Nmax[s_tmp%2] =
+						multiPoint(
+								tmpN[s_tmp%2],
+								sector[i][0].sector_const[l*sec+s]);
 
-//				lineSource = vtkSmartPointer<vtkLineSource>::New();
-//				lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//				lineActor  = vtkSmartPointer<vtkActor>::New();
-//				lineSource->SetPoint1(sector[i][0].loc_start[l].x,
-//										sector[i][0].loc_start[l].y,
-//										sector[i][0].loc_start[l].z);
-//				lineSource->SetPoint2(sector[i][0].loc_end[l].x,
-//										sector[i][0].loc_end[l].y,
-//										sector[i][0].loc_end[l].z);
-//				lineMapper->SetInputConnection(lineSource->GetOutputPort());
-//				lineActor->GetProperty()->SetLineWidth(5);
-//				lineActor->GetProperty()->SetColor(1.0,0.0,1.0);
-//				lineActor->SetMapper(lineMapper);
-//				renderer->AddActor(lineActor);
-//
-//				lineSource = vtkSmartPointer<vtkLineSource>::New();
-//				lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//				lineActor  = vtkSmartPointer<vtkActor>::New();
-//				lineSource->SetPoint1(sector[i][0].loc_mid[l].x,
-//										sector[i][0].loc_mid[l].y,
-//										sector[i][0].loc_mid[l].z);
-//				lineSource->SetPoint2(sector[i][0].loc_mid[l].x + sector[i][0].normal[l].x*0.01,
-//										sector[i][0].loc_mid[l].y + sector[i][0].normal[l].y*0.01,
-//										sector[i][0].loc_mid[l].z + sector[i][0].normal[l].z*0.01);
-//				lineMapper->SetInputConnection(lineSource->GetOutputPort());
-//				lineActor->GetProperty()->SetLineWidth(5);
-//				lineActor->GetProperty()->SetColor(1.0,0.0,1.0);
-//				lineActor->SetMapper(lineMapper);
-//				renderer->AddActor(lineActor);
+				pointspoly->InsertPoint((l*sec+s)*8+0,
+					sector[i][0].loc_start[l].x + Nmax[s%2].x - init.x,
+					sector[i][0].loc_start[l].y + Nmax[s%2].y - init.y,
+					sector[i][0].loc_start[l].z + Nmax[s%2].z - init.z);
+				pointspoly->InsertPoint((l*sec+s)*8+1,
+					sector[i][0].loc_end  [l].x + Nmax[s%2].x - init.x,
+					sector[i][0].loc_end  [l].y + Nmax[s%2].y - init.y,
+					sector[i][0].loc_end  [l].z + Nmax[s%2].z - init.z);
+				pointspoly->InsertPoint((l*sec+s)*8+2,
+					sector[i][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint((l*sec+s)*8+3,
+					sector[i][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+				ID[0] = (l*sec+s)*8+0;
+				ID[1] = (l*sec+s)*8+1;
+				ID[2] = (l*sec+s)*8+3;
+				ID[3] = (l*sec+s)*8+2;
+				polygons->InsertNextCell(4,ID);
 
-				points  	= vtkSmartPointer<vtkPoints>::New();
-				lines   	= vtkSmartPointer<vtkCellArray>::New();
-				colors     	= vtkSmartPointer<vtkUnsignedCharArray>::New();
-				polyData   	= vtkSmartPointer<vtkPolyData>::New();
-				tubeRadius 	= vtkSmartPointer<vtkDoubleArray>::New();
-				tubeFilter	= vtkSmartPointer<vtkTubeFilter>::New();
-				tubeMapper 	= vtkSmartPointer<vtkPolyDataMapper>::New();
-				tubeActor  	= vtkSmartPointer<vtkActor>::New();
+				pointspoly->InsertPoint((l*sec+s)*8+4,
+					sector[i][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint((l*sec+s)*8+5,
+					sector[i][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+				Nmax[s_tmp%2] =
+						multiPoint(
+								tmpN[s_tmp%2],
+								sector[i][0].sector_const[l*sec+s_tmp]);
+				pointspoly->InsertPoint((l*sec+s)*8+6,
+					sector[i][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint((l*sec+s)*8+7,
+					sector[i][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+					sector[i][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+					sector[i][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
 
-				points->InsertPoint(0,
-					sector[i][0].loc_start[l].x,
-					sector[i][0].loc_start[l].y,
-					sector[i][0].loc_start[l].z);
-				points->InsertPoint(1,
-					sector[i][0].loc_end[l].x,
-					sector[i][0].loc_end[l].y,
-					sector[i][0].loc_end[l].z);
+				ID[0] = (l*sec+s)*8+4;
+				ID[1] = (l*sec+s)*8+5;
+				ID[2] = (l*sec+s)*8+7;
+				ID[3] = (l*sec+s)*8+6;
 
-				lines->InsertNextCell(2);
-				lines->InsertCellPoint(0);
-				lines->InsertCellPoint(1);
-
-				colors->SetNumberOfComponents(3);
-				colors->SetName ("Colors");
-				colors->InsertNextTypedTuple(color_[5]);
-				colors->InsertNextTypedTuple(color_[5]);
-
-				polyData->SetPoints(points);
-				polyData->SetLines(lines);
-
-				tubeRadius->SetName("TubeRadius");
-				tubeRadius->SetNumberOfTuples(2); //to create the small gap to line between sectors
-				if(sector[i][0].sector_map[l*sector_para.sec_int+s].max<=0)
-				{
-					tubeRadius->SetTuple1(0, 0.0);
-					tubeRadius->SetTuple1(1, 0.0);
-				}
-				else
-				{
-					tubeRadius->SetTuple1(0, sector[i][0].sector_map[l*sector_para.sec_int+s].max);
-					tubeRadius->SetTuple1(1, sector[i][0].sector_map[l*sector_para.sec_int+s].max);
-				}
-
-				polyData->GetPointData()->AddArray(tubeRadius);
-				polyData->GetPointData()->SetActiveScalars("TubeRadius");
-				polyData->GetPointData()->AddArray(colors);
-
-				tubeFilter->SetInputData(polyData);
-				tubeFilter->SetNumberOfSides(sector_para.sec_int);
-				tubeFilter->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
-				tubeFilter->SidesShareVerticesOff();
-				tubeFilter->SetOnRatio(sector_para.sec_int);
-				tubeFilter->SetOffset(s+0);
-				tubeFilter->SetDefaultNormal(N);
-				tubeFilter->UseDefaultNormalOn();
-				tubeFilter->Update();
-
-				tubeMapper->SetInputConnection(tubeFilter->GetOutputPort());
-				tubeMapper->ScalarVisibilityOn();
-				tubeMapper->SetScalarModeToUsePointFieldData();
-				tubeMapper->SelectColorArray("Colors");
-
-				tubeActor->GetProperty()->SetOpacity(1.00); //Make the tube have some transparency.
-				tubeActor->SetMapper(tubeMapper);
-				renderer->AddActor(tubeActor);
+				polygons->InsertNextCell(4,ID);
 			}
 		}
-		// ******************************************************[SECTOR TUBES]
-*/
 
+		polygonPolyData->SetPoints(pointspoly);
+		polygonPolyData->SetPolys(polygons);
+
+#if VTK_MAJOR_VERSION <= 5
+		mapperpoly->SetInput(polygonPolyData);
+#else
+		mapperpoly->SetInputData(polygonPolyData);
+#endif
+
+		actorpoly->SetMapper(mapperpoly);
+		actorpoly->GetProperty()->SetColor(1.0,1.0,0.0);
+//		actorpoly->GetProperty()->LightingOff();
+		renderer->AddActor(actorpoly);
+		// ****************************************************[SECTOR POLYGON]
 	}
 
 //	// [CUSTOM LINES]**********************************************************
