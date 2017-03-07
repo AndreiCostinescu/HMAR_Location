@@ -822,6 +822,18 @@ void writeCounterFile(
 	}
 }
 
+int fileSelect(
+	const struct dirent *entry)
+{
+	int n;
+	size_t found_extension = string(entry->d_name).find(".txt");
+	if ((int)found_extension == -1)
+		n = 0;
+	else
+		n = 1;
+	return n;
+}
+
 void readFile(
 	const char *name,
 	vector<vector<string> > &data_full,
@@ -1057,15 +1069,18 @@ void readSectorFile(
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
+		int c = 0;
+
 		for(int i=0;i<Sqr(num_locations);i++)
 		{
 			for(int ii=0;ii<edges[i].size();ii++)
 			{
 				vector<double> sector_map   = edges[i][ii].sector_map;
 				vector<double> sector_const = edges[i][ii].sector_const;
+				c+=2;
+				int tmp = c+2;
 				for(int iii=0;iii<num_location_intervals*num_sector_intervals;iii++)
 				{
-					int tmp = 3 + (2*i) + 1;
 					switch(type_)
 					{
 						case 0:
@@ -1136,15 +1151,16 @@ void readLocationFile(
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
-//		for(int i=0;i<20;i++)
+		int c = 0;
 
 		for(int i=0;i<Sqr(num_locations);i++)
 		{
 			for(int ii=0;ii<edges[i].size();ii++)
 			{
+				c+=2;
+				int tmp = c+2;
 				for(int iii=0;iii<num_location_intervals;iii++)
 				{
-					int tmp = 3 + (2*i) + 1;
 					switch(type_)
 					{
 						case 0:
@@ -1285,10 +1301,17 @@ void readCounterFile(
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
+		int c = 0;
 		for(int i=0;i<edges.size();i++)
+		{
 			for(int ii=0;ii<edges[i].size();ii++)
-				for(int iii=0;iii<Graph_.getCounter(i,ii);iii++)
+			{
+				c+=2;
+				int tmp = c+2;
+				for(int iii=0;iii<atoi(data[tmp][0].c_str());iii++)
 					Graph_.incrementCounter(i,ii);
+			}
+		}
 	}
 }
 

@@ -6,8 +6,8 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-//#define LEARN
-#define TESTING
+#define LEARN
+//#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -88,41 +88,24 @@ int main(int argc, char *argv[])
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
-	DIR *dir;
-	struct dirent *dent;
+	struct dirent **namelist;
 	string name;
 	string dir_name;
-
 	dir_name = "./../KINECT/data/";
-	dir		 = opendir(dir_name.c_str());
-
-	if(dir!=NULL)
+	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
+	for(int i=0;i<n;i++)
 	{
-		while((dent=readdir(dir))!=NULL)
-		{
-			if (strcmp(dent->d_name,".")==0 ||
-				strcmp(dent->d_name,"..")==0 ||
-				(*dent->d_name) == '.' )
-				continue;
+		name = dir_name + namelist[i]->d_name;
+		readFile(name.c_str(), data_full , ',');
+		file_eof.push_back(data_full.size());
 
-			string fn = string(dent->d_name);
-			size_t found_extension = fn.find(".txt");
-			if(found_extension==std::string::npos)
-				continue;
-
-			name = dir_name + dent->d_name;
-			readFile(name.c_str(), data_full , ',');
-			file_eof.push_back(data_full.size());
-
-			//table
-			vector<string> last_line = data_full[data_full.size()-1];
-			surface[0][0] = atof(last_line[5].c_str());
-			surface[0][1] = atof(last_line[6].c_str());
-			surface[0][2] = atof(last_line[7].c_str());
-			surface[0][3] = atof(last_line[8].c_str());
-		}
+		//table
+		vector<string> last_line = data_full[data_full.size()-1];
+		surface[0][0] = atof(last_line[5].c_str());
+		surface[0][1] = atof(last_line[6].c_str());
+		surface[0][2] = atof(last_line[7].c_str());
+		surface[0][3] = atof(last_line[8].c_str());
 	}
-	closedir(dir);
 	Graph.addSurface(surface);
 	writeSurfaceFile(Graph);
 	printf("Reading training data......Complete\n");
@@ -226,41 +209,24 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
-	DIR *dir;
-	struct dirent *dent;
+	struct dirent **namelist;
 	string name;
 	string dir_name;
-
 	dir_name = "../KINECT/data/test/";
-	dir		 = opendir(dir_name.c_str());
-
-	if(dir!=NULL)
+	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
+	for(int i=0;i<n;i++)
 	{
-		while((dent=readdir(dir))!=NULL)
-		{
-			if (strcmp(dent->d_name,".")==0 ||
-				strcmp(dent->d_name,"..")==0 ||
-				(*dent->d_name) == '.' )
-				continue;
+		name = dir_name + namelist[i]->d_name;
+		readFile(name.c_str(), data_test , ',');
+		file_eof.push_back(data_test.size());
 
-			string fn = string(dent->d_name);
-			size_t found_extension = fn.find(".txt");
-			if(found_extension==std::string::npos)
-				continue;
-
-			name = dir_name + dent->d_name;
-			readFile(name.c_str(), data_test , ',');
-			file_eof.push_back(data_test.size());
-
-//			//table
-//			vector<string> last_line = data_full[data_full.size()-1];
-//			surface[0][0] = atof(last_line[5].c_str());
-//			surface[0][1] = atof(last_line[6].c_str());
-//			surface[0][2] = atof(last_line[7].c_str());
-//			surface[0][3] = atof(last_line[8].c_str());
-		}
+//		//table
+//		vector<string> last_line = data_full[data_full.size()-1];
+//		surface[0][0] = atof(last_line[5].c_str());
+//		surface[0][1] = atof(last_line[6].c_str());
+//		surface[0][2] = atof(last_line[7].c_str());
+//		surface[0][3] = atof(last_line[8].c_str());
 	}
-	closedir(dir);
 	readSurfaceFile(Graph_);
 	printf("Reading test data......Complete\n");
 	// *************************************************************[READ FILE]
@@ -291,7 +257,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	bool flag_motion      	= false;
 	bool flag_predict      	= false;
 	bool flag_predict_last 	= false;
-	bool learn 				= false;
+	bool learn 				= true;
 	bool slide 				= false;
 	int last_location 		= 0;
 	int surface_num_tmp 	= 0;

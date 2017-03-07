@@ -48,3 +48,13 @@
 - 06/03/2017
 - nested all functions in main
 - updated the prediction functions
+
+[09b]
+- 07/03/2017
+- minor updates
+- changed read file to read alphabetically
+- minor modification to the prediction functions
+
+
+
+

@@ -124,6 +124,9 @@ void writeCounterFile(
 	string path_,
 	int type_);
 
+int fileSelect(
+	const struct dirent *entry);
+
 void readFile(
 	const char *name,
 	vector<vector<string> > &data_full,
