@@ -8,10 +8,12 @@
 //#define DBSCAN
 
 #include "util.h"
-#include "vtkExtra.h"
 
-// For backward compatibility with new VTK generic data arrays
-//#define InsertNextTypedTuple InsertNextTupleValue
+#ifdef PC
+	string SCENE = "../Scene/";
+#else
+	string SCENE = "./Scene/";
+#endif
 
 // ============================================================================
 // dbscan
@@ -592,11 +594,31 @@ void preprocessDataLive(
 // ============================================================================
 // Files
 // ============================================================================
+void writeSurfaceFile(
+	vector<vector<double> > surface_)
+{
+	string path = SCENE + "Kitchen/surface.txt";
+
+	if (!ifstream(path))
+	{
+		ofstream write_file(path, std::ios::app);
+		for(int i=0;i<surface_.size();i++)
+		{
+			write_file << i;
+			for(int ii=0;ii<4;ii++)
+			{
+				write_file << ",";
+				write_file << surface_[i][ii];
+			}
+			write_file << "\n";
+		}
+	}
+}
 
 void writeSurfaceFile(
 	Graph Graph_)
 {
-	string path = "./Scene/" + Graph_.getScene() + "/surface.txt";
+	string path = SCENE + Graph_.getScene() + "/surface.txt";
 
 	vector<vector<double> > surface = Graph_.getSurface();
 
@@ -865,7 +887,7 @@ void readSurfaceFile(
 	string path;
 	vector<vector<string> > data;
 
-	path = "./Scene/" + Graph_.getScene() + "/surface.txt";
+	path = SCENE + Graph_.getScene() + "/surface.txt";
 	readFile(path.c_str(), data, ',');
 
 	vector<vector<double> > surface_;
@@ -955,7 +977,7 @@ void readLocation_(
 	Graph &Graph_)
 {
 	string path;
-	path =  "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
+	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
 
 	vector<string> 	label;
 	vector<point_t> locations;
@@ -980,7 +1002,7 @@ void readMovement(
 	vector<string> label;
 
 	string path;
-	path =  "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/mov_data.txt";
+	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/mov_data.txt";
 
 	vector<vector<string> > data;
 	readFile(path.c_str(), data , ',');
@@ -1043,10 +1065,10 @@ void readSectorFile(
 	switch(type_)
 	{
 		case 0:
-			path =  "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
+			path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
 			break;
 		case 1:
-			path =  "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
+			path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
 			break;
 	}
 
@@ -1116,19 +1138,19 @@ void readLocationFile(
 	switch(type_)
 	{
 		case 0:
-			path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_beg.txt";
+			path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_beg.txt";
 			break;
 		case 1:
-			path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_mid.txt";
+			path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_mid.txt";
 			break;
 		case 2:
-			path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_end.txt";
+			path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_end.txt";
 			break;
 		case 3:
-			path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_tangent.txt";
+			path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_tangent.txt";
 			break;
 		case 4:
-			path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_normal.txt";
+			path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_normal.txt";
 			break;
 	}
 
@@ -1280,7 +1302,7 @@ void readCounterFile(
 {
 	vector<data_t> data_zero;
 
-	string path = "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/counter.txt";;
+	string path = SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/counter.txt";;
 
 	vector<vector<string> > data;
 	readFile(path.c_str(), data , ',');
@@ -1953,7 +1975,7 @@ void labelMovement(
 
 	vector<vector<string> > data;
 	string path;
-	path =  "./Scene/" + Graph_.getScene()  + "/"
+	path =  SCENE + Graph_.getScene()  + "/"
 			           + Graph_.getObject() + "/mov_data.txt";
 	readFile(path.c_str(), data , ',');
 
@@ -2130,7 +2152,7 @@ void labelLocation_(
 		points_avg.push_back(pos_vel_acc_[i][0]);
 
 	string path;
-	path =  "./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
+	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
 
 	labelLocation(path, points_avg,
 				  locations, location_boundary, label, surface_num1,
@@ -2263,30 +2285,30 @@ void labelSector(
 //	printf("Viewing sector......Complete\n");
 
 	string path;
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
 	writeSectorFile(Graph_, path, 0);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
 	writeSectorFile(Graph_, path, 1);
 
 	fillLocationData(Graph_);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_beg.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_beg.txt";
 	writeLocationFile(Graph_, path, 0);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_mid.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_mid.txt";
 	writeLocationFile(Graph_, path, 1);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_end.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_end.txt";
 	writeLocationFile(Graph_, path, 2);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_tangent.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_tangent.txt";
 	writeLocationFile(Graph_, path, 3);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_normal.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_normal.txt";
 	writeLocationFile(Graph_, path, 4);
 
-	path = 	"./Scene/" + Graph_.getScene() + "/" + Graph_.getObject() + "/counter.txt";
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/counter.txt";
 	writeCounterFile(Graph_, path, 0);
 }
 

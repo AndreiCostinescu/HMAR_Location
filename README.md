@@ -55,6 +55,7 @@
 - changed read file to read alphabetically
 - minor modification to the prediction functions
 
-
-
+[09c]
+- 07/03/2017
+- rectify change between pc
 

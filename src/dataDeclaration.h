@@ -8,6 +8,13 @@
 #ifndef DATADECLARATION_H_
 #define DATADECLARATION_H_
 
+#define PC
+
+#ifdef PC
+	// For backward compatibility with new VTK generic data arrays
+	#define InsertNextTypedTuple InsertNextTupleValue
+#endif
+
 #include <iostream>
 #include <pthread.h>
 #include <signal.h>
@@ -92,7 +99,6 @@
 #include <vtkSmoothPolyDataFilter.h>
 #include <vtkLight.h>
 
-
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_bspline.h>
 #include <gsl/gsl_multifit.h>
@@ -102,7 +108,6 @@
 #include <gsl/gsl_statistics.h>
 
 using namespace std;
-
 
 #define Sqr(x) ((x)*(x))
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))

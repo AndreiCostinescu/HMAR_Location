@@ -12,6 +12,7 @@
 #include "algo.h"
 #include "dbscan.h"
 #include "Graph.h"
+#include "vtkExtra.h"
 
 // ============================================================================
 // dbscan

@@ -6,8 +6,8 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-#define LEARN
-//#define TESTING
+//#define LEARN
+#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -16,6 +16,13 @@
 #include "Graph.h"
 #include "vtkExtra.h"
 
+#ifdef PC
+	string DATADIR = "../../KINECT/data/";
+	string TESTDIR = "../../KINECT/data/test/";
+#else
+	string DATADIR = "./../KINECT/data/";
+	string TESTDIR = "./../KINECT/data/test/";
+#endif
 
 //=============================================================================
 // Global
@@ -91,7 +98,7 @@ int main(int argc, char *argv[])
 	struct dirent **namelist;
 	string name;
 	string dir_name;
-	dir_name = "./../KINECT/data/";
+	dir_name = DATADIR;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
 	for(int i=0;i<n;i++)
 	{
@@ -212,7 +219,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	struct dirent **namelist;
 	string name;
 	string dir_name;
-	dir_name = "../KINECT/data/test/";
+	dir_name = TESTDIR;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
 	for(int i=0;i<n;i++)
 	{
