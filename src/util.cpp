@@ -389,6 +389,8 @@ void polyCurveFit(
 		gsl_vector_set(y, i, points_[i]);
 	}
 
+	cout << num_points << endl;
+
 	ws = gsl_multifit_linear_alloc(num_points, DEGREE);
 	gsl_multifit_linear(X, y, c, cov, &chisq, ws);
 
@@ -945,7 +947,7 @@ void readLocation(
 		printf("LLabel %d : %s\n", i+1, label_[i+1].c_str());
 
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(1)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -1022,7 +1024,7 @@ void readMovement(
 		printf("MLabel %d : %s\n", i, label[i].c_str());
 
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(1)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -1995,7 +1997,7 @@ void labelMovement(
 		printf("MLabel %d : %s\n", i, label[i].c_str());
 
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(1)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -2068,7 +2070,7 @@ void labelLocation(
 		//*********************************************************[CLUSTERING]
 		reshapeVector(label_, num_locations + 1);
 		label_[0] = {"CONNECTION"};
-//		showData(points_, label_, color_code, true, true);
+		showData(points_, label_, color_code, true, true);
 	}
 	else
 	{
@@ -2090,7 +2092,7 @@ void labelLocation(
 			surface_num_[ii] 	      = atof(data[0][ii*data_tmp+5].c_str());
 		}
 		contactBoundary(points_, locations_, location_boundary_, false);
-//		showData(points_, label_, color_code, true, false);
+		showData(points_, label_, color_code, true, false);
 	}
 
 	printf("Reviewing location labels...\n");
@@ -2098,7 +2100,7 @@ void labelLocation(
 		printf("LLabel %d : %s\n", i+1, label_[i+1].c_str());
 
 	printf("Replace default labels? [Y/N]\n");
-	while(0)
+	while(1)
 	{
 		string mystr2; getline (cin, mystr2);
 		if(!strcmp(mystr2.c_str(),"Y"))
@@ -2278,11 +2280,11 @@ void labelSector(
 	generateSectorCurve(Graph_, pos_vel_acc_avg_, file_eof_, kernel);
 	printf("Generating sectors......Complete\n");
 
-//	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
-//	for(int i=0;i<pos_vel_acc_avg_.size();i++)
-//		point_zero.push_back(pos_vel_acc_avg_[i][0]);
-//	showConnection(point_zero, label_zero, Graph_, color_code_, true);
-//	printf("Viewing sector......Complete\n");
+	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
+	//for(int i=0;i<pos_vel_acc_avg_.size();i++)
+	//	point_zero.push_back(pos_vel_acc_avg_[i][0]);
+	showConnection(point_zero, label_zero, Graph_, color_code_, true);
+	printf("Viewing sector......Complete\n");
 
 	string path;
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";

@@ -6,8 +6,8 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-//#define LEARN
-#define TESTING
+#define LEARN
+//#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -105,16 +105,9 @@ int main(int argc, char *argv[])
 		name = dir_name + namelist[i]->d_name;
 		readFile(name.c_str(), data_full , ',');
 		file_eof.push_back(data_full.size());
-
-		//table
 		vector<string> last_line = data_full[data_full.size()-1];
-		surface[0][0] = atof(last_line[5].c_str());
-		surface[0][1] = atof(last_line[6].c_str());
-		surface[0][2] = atof(last_line[7].c_str());
-		surface[0][3] = atof(last_line[8].c_str());
 	}
 	Graph.addSurface(surface);
-	writeSurfaceFile(Graph);
 	printf("Reading training data......Complete\n");
 	// *************************************************************[READ FILE]
 

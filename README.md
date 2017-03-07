@@ -59,3 +59,12 @@
 - 07/03/2017
 - rectify change between pc
 
+[10]
+- 07/03/2017
+- started data recording with 3 scenarios:  
+  * cup direct drink
+  * cup rest drink
+  * sponge clean
+
+
+
