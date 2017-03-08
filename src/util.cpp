@@ -218,18 +218,18 @@ void contactBoundary(
 	bool learn)
 {
 	//if (learn)
-		for(int i=0;i<locations.size();i++)
-			location_boundary[i] = 0.95; //1.0 is the max
+//		for(int i=0;i<locations.size();i++)
+//			location_boundary[i] = 0.95; //1.0 is the max
 
 	for (int i=0;i<p.size();i++)
 	{
 		if (learn)
 		{
-//			if (p[i].cluster_id<0) continue;
-//			point_t tmp_diff = minusPoint(point2point3D(p[i]), location[p[i].cluster_id]);
-//			location_boundary[p[i].cluster_id] =
-//					min( pdfExp( 0.05, 0.0, l2Norm(tmp_diff) ),
-//					     location_boundary[p[i].cluster_id]);
+			if (p[i].cluster_id<0) continue;
+			point_t tmp_diff = minusPoint(p[i], locations[p[i].cluster_id]);
+			location_boundary[p[i].cluster_id] =
+					min( pdfExp( 0.05, 0.0, l2Norm(tmp_diff) ),
+					     location_boundary[p[i].cluster_id]);
 			continue;
 		}
 		else
@@ -388,8 +388,6 @@ void polyCurveFit(
 		}
 		gsl_vector_set(y, i, points_[i]);
 	}
-
-	cout << num_points << endl;
 
 	ws = gsl_multifit_linear_alloc(num_points, DEGREE);
 	gsl_multifit_linear(X, y, c, cov, &chisq, ws);
