@@ -199,9 +199,11 @@ void decideBoundary(
 	for(int ii=0;ii<location.size();ii++)
 	{
 		tmp_diff = minusPoint(p, location[ii]);
-		if (max_( pdfExp( 0.05, 0.0, l2Norm(tmp_diff) ), location_contact ) )
+		if (max_(
+				pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
+				location_contact ))
 		{
-			location_contact = pdfExp( 0.05, 0.0, l2Norm(tmp_diff) );
+			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
 			if(max_(location_contact,location_boundary[ii]))
 				p.cluster_id = ii;
 		}
@@ -228,12 +230,16 @@ void contactBoundary(
 			if (p[i].cluster_id<0) continue;
 			point_t tmp_diff = minusPoint(p[i], locations[p[i].cluster_id]);
 			location_boundary[p[i].cluster_id] =
-					min( pdfExp( 0.05, 0.0, l2Norm(tmp_diff) ),
-					     location_boundary[p[i].cluster_id]);
-			continue;
+					min(
+							pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
+							location_boundary[p[i].cluster_id]);
+			location_boundary[p[i].cluster_id] =
+					max(0.60, location_boundary[p[i].cluster_id]);
 		}
 		else
+		{
 			decideBoundary(p[i], locations, location_boundary);
+		}
 	}
 }
 
@@ -388,6 +394,8 @@ void polyCurveFit(
 		}
 		gsl_vector_set(y, i, points_[i]);
 	}
+
+//	cout << num_points << endl;
 
 	ws = gsl_multifit_linear_alloc(num_points, DEGREE);
 	gsl_multifit_linear(X, y, c, cov, &chisq, ws);
@@ -1371,7 +1379,7 @@ void cal_inverse_intergal(
 }
 
 void determineLocationInterval(
-	int &ind_loc_,
+	vector<int> &ind_loc_,
 	int &ind_loc_last,
 	int total_loc_int_,
 	point_t point_,
@@ -1380,6 +1388,7 @@ void determineLocationInterval(
 	vector<point_t> mid_,
 	vector<point_t> end_)
 {
+	ind_loc_.clear();
 	double d1,d2,d3,d4,d5;
 	point_t proj_dir_tmp;
 	for(int l=(ind_loc_last<0?0:ind_loc_last);l<total_loc_int_;l++)
@@ -1405,11 +1414,21 @@ void determineLocationInterval(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
 		{
-			if (d4<=d2 && (d3-d5)<0.001) {ind_loc_ = l;break;} //### small error deviation (deadzone)
+			if (d4<=d2 && (d3-d5)<0.001)
+			{
+				ind_loc_.push_back(l);
+//				ind_loc_ = l;
+//				break;
+			} //### small error deviation (deadzone)
 		}
 		else
 		{
-			if (d3<=d1 && (d4-d5)<0.001) {ind_loc_ = l;break;}
+			if (d3<=d1 && (d4-d5)<0.001)
+			{
+				ind_loc_.push_back(l);
+//				ind_loc_ = l;
+//				break;
+			}
 		}
 //		if (l==0||l==1)
 //		cout << l2Norm(tangent_[l]) << endl;
@@ -1420,7 +1439,7 @@ void determineLocationInterval(
 //		if (l==0||l==1)
 	}
 	// to prevent unknown locations at start and end
-	if (ind_loc_<0) ind_loc_ = ind_loc_last; ind_loc_last = ind_loc_;
+	if (ind_loc_.size()==0) ind_loc_.push_back(ind_loc_last); ind_loc_last = ind_loc_[0];
 }
 
 void determineSectorInterval(
@@ -1494,10 +1513,10 @@ void determineSectorMap(
 				int tmps = ((i - (kernel_.size()/2) + ind_sec_) +
 							sec_int_) % sec_int_;
 				int tmp3 = tmpl*sec_int_ + tmps;
-				if (tmpl < 0 || tmpl >= loc_int_)
+				if (tmpl < 0 || tmpl >= loc_int_ || tmp3 == ind_ls)
 					continue;
-				sector_map_[tmp3] =
-						max(kernel_[i][ii]*ratio, sector_map_[tmp3]);
+				sector_map_[tmp3] = max(sector_map_[tmp3],sector_map_[ind_ls]*0.5);
+						//max(kernel_[i][ii]*ratio, sector_map_[tmp3]);
 			}
 		}
 	}
@@ -1608,7 +1627,7 @@ void adjustSectorCurve(
 		{
 			for(int s=0;s<sec_int;s++)
 			{
-				int ind_loc = -1;
+				vector<int> ind_loc;
 				int ind_sec = -1;
 				point_t delta_t, tmpN, p_old;
 				// [OLD POINT]*************************************************
@@ -1627,18 +1646,56 @@ void adjustSectorCurve(
 						ind_loc, loc_last, loc_int, p_old, tangent,
 						loc_beg, loc_mid, loc_end);
 				// *****************************************[LOCATION INTERVAL]
-				// [SECTOR INTERVAL]*******************************************
-				determineSectorInterval(
-						ind_sec, ind_loc, sec_int, delta_t, p_old,
-						tangent, normal, loc_mid);
-				// *******************************************[SECTOR INTERVAL]
-				// [SECTOR MAP]************************************************
-				determineSectorMap(
-						sector_map_new, delta_t,
-						ind_loc, ind_sec, loc_int, sec_int, kernel_);
-				// ************************************************[SECTOR MAP]
-			} //s
-		} //l
+				for(int ll=0;ll<ind_loc.size();ll++)
+				{
+					// [SECTOR INTERVAL]*******************************************
+					determineSectorInterval(
+							ind_sec, ind_loc[ll], sec_int, delta_t, p_old,
+							tangent, normal, loc_mid);
+					// *******************************************[SECTOR INTERVAL]
+					// [SECTOR MAP]************************************************
+					determineSectorMap(
+							sector_map_new, delta_t,
+							ind_loc[ll], ind_sec, loc_int, sec_int, kernel_);
+					// ************************************************[SECTOR MAP]
+				}
+//				int ind_ls  = ind_loc*sec_int + ind_sec;
+//				if (ind_loc < loc_int &&
+//					ind_sec < sec_int)
+//				{
+//					sector_map_new[ind_ls] =
+//							max(sector_map_new[ind_ls], l2Norm(delta_t));
+////					double ratio =
+////							(sector_map_new[ind_ls]) /
+////							kernel_[(kernel_.size()-1)/2][(kernel_[0].size()-1)/2];
+////					for(int i=0;i<kernel_.size();i++)
+////					{
+////						for(int ii=0;ii<kernel_[0].size();ii++)
+////						{
+////							// extra calculation due to roundness of sector
+////							// ignoring kernel elements that go out of location areas
+////							int tmpl = ii - (kernel_[0].size()/2) + ind_loc;
+////							int tmps = ((i - (kernel_.size()/2) + ind_sec) +
+////										sec_int) % sec_int;
+////							int tmp3 = tmpl*sec_int + tmps;
+////							if (tmpl < 0 || tmpl >= loc_int || tmp3 == ind_ls)
+////								continue;
+////							sector_map_new[tmp3] = max(sector_map_new[tmp3],sector_map_new[ind_ls]*0.5);
+////									//max(kernel_[i][ii]*ratio, sector_map_[tmp3]);
+////						}
+////					}
+//				}
+//			} //s
+//		} //l
+//		for(int l=1;l<loc_int;l++)
+//		{
+//			for(int s=0;s<sec_int;s++)
+//			{
+//				int ind_ls  = l*sec_int + s;
+//				if(sector_map_new[ind_ls]==0)
+//				sector_map_new[ind_ls] = max(sector_map_new[ind_ls],sector_map_new[(l-1)*sec_int + s]);
+			}
+		}
 	}
 	// ************************************************************[ADJUSTMENT]
 
@@ -1683,7 +1740,7 @@ void fitSectorCurve(
 					data_old.end(), edge_data.begin(), edge_data.end());
 		Graph_.updateEdgeData(data_old, tmp_id1_, tmp_id2_, 0);
 	}
-	reshapeVector(points_est,(points_tmp.size())*2);
+	reshapeVector(points_est,(points_tmp.size())*10);
 	reshapeVector(coeffs_,DEGREE);
 	polyCurveFitPoint(points_tmp, points_est, coeffs_, covs, true);
 }
@@ -1710,23 +1767,26 @@ void checkSectorCurve(
 
 	for(int ii=0;ii<points_est.size();ii++)
 	{
-		int ind_loc = -1;
+		vector<int> ind_loc;
 		int ind_sec = -1;
 		// [LOCATION INTERVAL]*************************************************
 		determineLocationInterval(
 				ind_loc, loc_last, loc_int, points_est[ii], tangent,
 				loc_beg, loc_mid, loc_end);
 		// *************************************************[LOCATION INTERVAL]
-		// [SECTOR INTERVAL]***************************************************
-		determineSectorInterval(
-				ind_sec, ind_loc, sec_int, delta_t, points_est[ii],
-				tangent, normal, loc_mid);
-		// ***************************************************[SECTOR INTERVAL]
-		// [SECTOR MAP]********************************************************
-		determineSectorMap(
-				sector_map, delta_t,
-				ind_loc, ind_sec, loc_int, sec_int, kernel_);
-		// ********************************************************[SECTOR MAP]
+		for(int ll=0;ll<ind_loc.size();ll++)
+		{
+			// [SECTOR INTERVAL]***************************************************
+			determineSectorInterval(
+					ind_sec, ind_loc[ll], sec_int, delta_t, points_est[ii],
+					tangent, normal, loc_mid);
+			// ***************************************************[SECTOR INTERVAL]
+			// [SECTOR MAP]********************************************************
+			determineSectorMap(
+					sector_map, delta_t,
+					ind_loc[ll], ind_sec, loc_int, sec_int, kernel_);
+			// ********************************************************[SECTOR MAP]
+		}
 //		motion_data.pos = pos_vel_acc_avg_[curr_num_][0];
 //		motion_data.vel = pos_vel_acc_avg_[curr_num_][1];
 //		motion_data.acc = pos_vel_acc_avg_[curr_num_][2];
@@ -1799,6 +1859,13 @@ void updateSectorCurve(
 		checkSectorCurveConstraint(
 				Graph_, max_range, edge_xy, tmp_id1_, tmp_id2_);
 	}
+	vector<unsigned char*> color_code(12);
+	for(int j=0;j<12;j++) color_code[j] = Calloc(unsigned char,3);
+	colorCode(color_code);
+	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
+	for(int i=tmp_id3_;i<curr_num_;i++) point_zero.push_back(pva_avg_[i][0]);
+	showConnection(point_zero, label_zero, Graph_, color_code, true);
+	printf("Viewing sector......Complete\n");
 }
 
 void generateSectorCurve(
@@ -1840,9 +1907,10 @@ void generateSectorCurve(
 				if (flag_next)
 				{
 					tmp_id2 = pva_avg[i][0].cluster_id;
-					updateSectorCurve(
-							Graph_, pva_avg, locations,
-							i, tmp_id1, tmp_id2, tmp_id3, kernel_);
+					if (i - tmp_id3 > 5) // to prevent only a few points evaluated for curve
+						updateSectorCurve(
+								Graph_, pva_avg, locations,
+								i, tmp_id1, tmp_id2, tmp_id3, kernel_);
 					flag_next = false;
 					tmp_id1 = tmp_id2;
 					tmp_id2 = -1;
@@ -2053,7 +2121,6 @@ void labelLocation(
 	if(data.empty())
 	{
 		locations_.clear();
-		location_boundary_.clear();
 		//[CLUSTERING]*********************************************************
 		dbscanCluster(epsilon_, (unsigned int)minpts_, num_points, points_array);
 		printf("Clustering training data......Complete\n");
@@ -2063,6 +2130,7 @@ void labelLocation(
 		printf("Combining nearby clusters......Complete\n");
 		num_locations = locations_.size();
 		reshapeVector(location_boundary_, num_locations);
+		for(int i=0;i<num_locations;i++) location_boundary_[i] = 1.0;
 		contactBoundary(points_, locations_, location_boundary_, true);
 		contactBoundary(points_, locations_, location_boundary_, false);
 		//*********************************************************[CLUSTERING]
@@ -2253,9 +2321,7 @@ void labelLocation_(
 	}
 	// *****************************************************************[NODES]
 
-	remove(path.c_str());
 	writeLocLabelFile(path, label, locations, location_boundary, surface_num1);
-
 }
 
 void labelSector(
@@ -2279,8 +2345,7 @@ void labelSector(
 	printf("Generating sectors......Complete\n");
 
 	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
-	//for(int i=0;i<pos_vel_acc_avg_.size();i++)
-	//	point_zero.push_back(pos_vel_acc_avg_[i][0]);
+	for(int i=0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
 	showConnection(point_zero, label_zero, Graph_, color_code_, true);
 	printf("Viewing sector......Complete\n");
 
@@ -2398,7 +2463,7 @@ void checkSector(
 		if(tmp_id_ == i) continue;
 
 		int edge_xy = tmp_id_*num_locations+i;
-		int ind_loc = -1;
+		vector<int> ind_loc;
 		int ind_sec = -1;
 		int ind_loc_last = 0;
 		vector<double> sector_map 	= Graph_.getEdgeList()[edge_xy][0].sector_map;
@@ -2418,12 +2483,12 @@ void checkSector(
 		// *************************************************[LOCATION INTERVAL]
 		// [SECTOR INTERVAL]***************************************************
 		determineSectorInterval(
-				ind_sec, ind_loc, sec_int, delta_t, pos_,
+				ind_sec, ind_loc[0], sec_int, delta_t, pos_,
 				tangent, normal, loc_mid);
 		// ***************************************************[SECTOR INTERVAL]
 		// [SECTOR MAP]********************************************************
-		int ind_ls  = ind_loc*sec_int + ind_sec;
-		if (ind_loc < loc_int &&
+		int ind_ls  = ind_loc[0]*sec_int + ind_sec;
+		if (ind_loc[0] < loc_int &&
 			ind_sec < sec_int)
 		{
 			if (l2Norm(delta_t) <= sector_map[ind_ls])

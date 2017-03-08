@@ -294,18 +294,18 @@ void showData(
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
 	vtkSmartPointer<vtkTextActor> 				textActor;
+	vtkSmartPointer<vtkCamera>					camera;
 
-	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
-	actor 					= vtkSmartPointer<vtkActor>::New();
-	renderer 				= vtkSmartPointer<vtkRenderer>::New();
+//	mapper 			= vtkSmartPointer<vtkPolyDataMapper>::New();
+	actor 			= vtkSmartPointer<vtkActor>::New();
+	renderer 		= vtkSmartPointer<vtkRenderer>::New();
 	renWin 			= vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	style 					= vtkSmartPointer<customMouseInteractorStyle>::New();
-//	textActor 				= vtkSmartPointer<vtkTextActor>::New();
+	style 			= vtkSmartPointer<customMouseInteractorStyle>::New();
+//	textActor 		= vtkSmartPointer<vtkTextActor>::New();
+	camera 			= vtkSmartPointer<vtkCamera>::New();
 
-	mapper =  dataPoints(points_, num_locations, color_, cluster_);
-
-	actor->SetMapper(mapper);
+	actor->SetMapper(dataPoints(points_, num_locations, color_, cluster_));
 	actor->GetProperty()->SetPointSize(3);
 //	actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
 
@@ -343,7 +343,6 @@ void showData(
 		}
 	}
 
-	// Add the actor to the scene
 	renderer->AddActor(actor);
 	//renderer->SetBackground(nc->GetColor3d("MidnightBlue").GetData());
 	style->SetDefaultRenderer(renderer);
@@ -599,8 +598,15 @@ void showConnection(
 
 	int num_locations = nodes.size();
 
+	point_t p_mid_tmp;
+
 	vector<point_t> locations(num_locations);
-	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].location;}
+	for(int i=0;i<num_locations;i++)
+	{
+		locations[i] = nodes[i].location;
+		p_mid_tmp = addPoint(p_mid_tmp,locations[i]);
+	}
+	p_mid_tmp = multiPoint(p_mid_tmp,1/num_locations);
 
 	vtkSmartPointer<vtkLineSource> 				lineSource;
 	vtkSmartPointer<vtkPolyDataMapper> 			lineMapper;
@@ -617,13 +623,19 @@ void showConnection(
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
+	vtkSmartPointer<vtkCamera>					camera;
 
 	// *************************************************************[VARIABLES]
 
+	camera 		= vtkSmartPointer<vtkCamera>::New();
 	style 		= vtkSmartPointer<customMouseInteractorStyle>::New();
 	renderer    = vtkSmartPointer<vtkRenderer>::New();
 	renWin      = vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
+	renWin->SetSize(1280,800); //(width, height)
+	renWin->AddRenderer(renderer);
+	renWinInter->SetRenderWindow(renWin);
 
 	vtkSmartPointer<vtkPoints> pointspoly;
 	vtkSmartPointer<vtkPolygon> polygon;
@@ -711,10 +723,8 @@ void showConnection(
 								sector[i][0].sector_map[l*sec+s]);
 
 //				// [TANGENT NORMAL LINES PER SECTOR]***************************
-//				if(Graph_.getCounter(11,0)>0 && (l==19 || l==18 || l==17) && i==11)
+//				if(Graph_.getCounter(i,0)>0)
 //				{
-////					cout << l << " " << s << " " <<  sector[i][0].loc_start[l].x + Nmax[s_tmp%2].x << sector[i][0].loc_start[l].y + Nmax[s_tmp%2].y << sector[i][0].loc_start[l].z + Nmax[s_tmp%2].z << endl;
-//
 //				lineSource = vtkSmartPointer<vtkLineSource>::New();
 //				lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 //				lineActor  = vtkSmartPointer<vtkActor>::New();
@@ -818,6 +828,7 @@ void showConnection(
 		actorpoly->SetMapper(mapperpoly);
 		actorpoly->GetProperty()->SetColor(0.0,1.0,0.0);
 //		actorpoly->GetProperty()->LightingOff();
+//		actorpoly->SetOrigin(p_mid_tmp.x,p_mid_tmp.y,p_mid_tmp.z);
 		renderer->AddActor(actorpoly);
 		// ****************************************************[SECTOR POLYGON]
 
@@ -910,6 +921,7 @@ void showConnection(
 		actorpoly->SetMapper(mapperpoly);
 		actorpoly->GetProperty()->SetColor(1.0,1.0,0.0);
 //		actorpoly->GetProperty()->LightingOff();
+//		actorpoly->SetOrigin(p_mid_tmp.x,p_mid_tmp.y,p_mid_tmp.z);
 		renderer->AddActor(actorpoly);
 		// ****************************************************[SECTOR POLYGON]
 	}
@@ -971,12 +983,14 @@ void showConnection(
 	}
 	// ***********************************************************[ADDING DATA]
 
+//	camera->SetPosition(1,0,0);
+//	camera->SetViewUp(0,0,1);
+//	camera->SetFocalPoint(-p_mid_tmp.x,-p_mid_tmp.y,-p_mid_tmp.z);
+//	renderer->SetActiveCamera(camera);
+//	renderer->ResetCamera();
 	style->SetDefaultRenderer(renderer);
 	style->setLeftButton(false);
 	renderer->SetBackground(0.0,0.0,0.0);
-	renWin->SetSize(1280,800); //(width, height)
-	renWin->AddRenderer(renderer);
-	renWinInter->SetRenderWindow(renWin);
 	renWinInter->SetInteractorStyle(style);
 	renWin->Render();
 	renWinInter->Start();

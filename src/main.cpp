@@ -20,9 +20,18 @@
 	string DATADIR = "../../KINECT/data/";
 	string TESTDIR = "../../KINECT/data/test/";
 #else
-	string DATADIR = "./../KINECT/data/";
+//	string DATADIR = "./../KINECT/recording/01_coffee_drink_sink/";
+//	string DATADIR = "./../KINECT/recording/02_coffee_drink_rest_drink_rest_drink_sink/";
+	string DATADIR = "./../KINECT/recording/03_shelf_clean_throw/";
+//	string DATADIR = "./../KINECT/recording/04_shelf_cut_sink/";
 	string TESTDIR = "./../KINECT/data/test/";
 #endif
+
+	string scene  = "Kitchen";
+//	string object = "01";
+//	string object = "02";
+	string object = "03";
+//	string object = "04";
 
 //=============================================================================
 // Global
@@ -73,9 +82,6 @@ int main(int argc, char *argv[])
 	int minpts 			= 10;
 	double epsilon 		= 0.015; 	// if datasets are merged these 2 values can be increased.
 
-	string scene  = "Kitchen";
-	string object = "Cup";
-
 	vector<int> 				file_eof;
 	vector<point_t> 			points;
 	vector<point_t> 			locations;
@@ -100,6 +106,7 @@ int main(int argc, char *argv[])
 	string dir_name;
 	dir_name = DATADIR;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
+	if (n == 0) return 0;
 	for(int i=0;i<n;i++)
 	{
 		name = dir_name + namelist[i]->d_name;
@@ -214,6 +221,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	string dir_name;
 	dir_name = TESTDIR;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
+	if (n == 0) return 0;
 	for(int i=0;i<n;i++)
 	{
 		name = dir_name + namelist[i]->d_name;

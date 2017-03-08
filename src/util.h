@@ -170,7 +170,7 @@ void readCounterFile(
 // ============================================================================
 
 void determineLocationInterval(
-	int &ind_loc_,
+	vector<int> &ind_loc_,
 	int &ind_loc_last,
 	int total_loc_int_,
 	point_t point_,

@@ -8,7 +8,7 @@
 #ifndef DATADECLARATION_H_
 #define DATADECLARATION_H_
 
-#define PC
+//#define PC
 
 #ifdef PC
 	// For backward compatibility with new VTK generic data arrays
@@ -118,6 +118,8 @@ using namespace std;
 //2 : location
 //3 : label only
 #define VERBOSE 0
+
+#define BOUNDARY_VAR 0.01
 
 // number of fit coefficients
 // nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4

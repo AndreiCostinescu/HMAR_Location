@@ -12,7 +12,7 @@ include_directories(/home/chen/gsl/include)
 link_directories(/home/chen/gsl/lib)
 
 # FALSE for PC
-if(FALSE)
+if(TRUE)
   add_executable(../HMAR ./src/Graph.cpp ./src/dbscan.cpp ./src/util.cpp ./src/vtkExtra.cpp ./src/algo.cpp ./src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(../HMAR ${VTK_LIBRARIES} gsl gslcblas)
