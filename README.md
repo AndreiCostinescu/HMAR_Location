@@ -71,5 +71,19 @@
 - updates for boundary condition.
 
 [11a]
--08/03/2017
+- 08/03/2017
 - evaluations for a few scenarios.
+
+[12]
+- 09/03/2017
+- updated function and variable names.
+- added function to fill up the holes in sectormap by allowing multiple loc_pred during adjustment.
+
+[13]
+- 10/03/2017
+- added a new location.
+- updated to show movement (sliding) for both in and outside the location areas.
+
+
+
+
