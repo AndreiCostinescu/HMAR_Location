@@ -1401,7 +1401,7 @@ double determineLocationInterval(
 	vector<point_t> end_,
 	vector<point_t> tangent_)
 {
-	double d1,d2,d3,d4,d5,d6; d6 = 0.0;
+	double d1,d2,d3,d4,d5,d6,d7; d6 = d7 = 0.0;
 	point_t proj_dir_tmp;
 	int idx = (loc_last_idx_<0?0:loc_last_idx_);
 	for(int l=idx;l<loc_int_;l++)
@@ -1422,6 +1422,7 @@ double determineLocationInterval(
 				point2vector(tangent_[l])))
 		{
 			if (l == 0)	d6 = d3-d5;
+			d7 = d3-d5;
 			if (d4<=d2 && (d3-d5)<0.001)
 			{
 				loc_idx_ = l; d6 = 0.0; break;
@@ -1429,7 +1430,8 @@ double determineLocationInterval(
 		}
 		else
 		{
-			if (l == 0)	d6 = d3-d5;
+			if (l == 0)	d6 = d4-d5;
+			d7 = d4-d5;
 			if (d3<=d1 && (d4-d5)<0.001)
 			{
 				loc_idx_ = l; d6 = 0.0; break;
@@ -1438,7 +1440,8 @@ double determineLocationInterval(
 	}
 	// to prevent unknown locations at start and end
 	if (loc_idx_<0) loc_idx_ = loc_last_idx_; loc_last_idx_ = loc_idx_;
-	return d6;
+	if (loc_idx_<0) return d6;
+	else 			return d7;
 }
 
 
@@ -2429,6 +2432,8 @@ void checkSector(
 	vector<node_tt> nodes = Graph_.getNodeList();
 	int num_locations = nodes.size();
 
+	bool flag=false;
+
 	for(int i=0;i<num_locations;i++)
 	{
 		prediction_.pred[i] = EXCEED_RANGE;
@@ -2461,7 +2466,9 @@ void checkSector(
 				sec_idx, loc_idx, sec_int, delta_t, point_,
 				loc_mid, tan, nor);
 
-//		cout << tmp_dis << endl;
+		cout << loc_idx << "  " << sec_idx << "  " << tmp_dis << endl;
+
+		if (tmp_dis > 0.1) {flag=true; continue;}
 
 		ind_ls  = loc_idx*sec_int + sec_idx;
 		if (loc_idx < loc_int && sec_idx < sec_int)
@@ -2479,6 +2486,9 @@ void checkSector(
 		}
 		// ********************************************************[SECTOR MAP]
 	}
+
+	//if(flag) cout << "OUT OF BOUNDS DETECTED" << endl;
+
 }
 
 void motionPrediction(

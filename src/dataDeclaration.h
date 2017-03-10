@@ -8,7 +8,7 @@
 #ifndef DATADECLARATION_H_
 #define DATADECLARATION_H_
 
-//#define PC
+#define PC
 
 #ifdef PC
 	// For backward compatibility with new VTK generic data arrays

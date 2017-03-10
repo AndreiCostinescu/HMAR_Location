@@ -17,15 +17,15 @@
 #include "vtkExtra.h"
 
 #ifdef PC
-	string DATADIR_ = "../../KINECT/data/";
-	string TESTDIR_ = "../../KINECT/data/test/";
+	string DATADIR_ = "../../KINECT/recording/";
+	string TESTDIR_ = "../../KINECT/recording/";
 #else
 	string DATADIR_ = "./../KINECT/recording/";
 	string TESTDIR_ = "./../KINECT/recording/";
 #endif
 
 	string scene  = "Kitchen";
-	string object = "04";
+	string object = "03";
 	string DATADIR = DATADIR_ + object + string("/");
 	string TESTDIR = DATADIR_ + object + string("/test/");
 
@@ -201,7 +201,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	bool flag_motion      	= false;
 	bool flag_predict      	= false;
 	bool flag_predict_last 	= false;
-	bool learn 				= true;
+	bool learn 				= false;
 	bool slide 				= false;
 	int loc_last 			= 0;
 	int surface_num_tmp 	= 0;
@@ -283,7 +283,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 
 	printf("\n\n>>>>> SYSTEM START <<<<<\n\n");
 
-	for(int i=0;i<num_points;i++)
+	for(int i=0;i<600;i++)
 	{
 		//[PREPROCESS DATA]****************************************************
 		if(i == file_eof[file_num])
