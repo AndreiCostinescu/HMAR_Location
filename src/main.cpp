@@ -6,8 +6,8 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-//#define LEARN
-#define TESTING
+#define LEARN
+//#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -25,7 +25,7 @@
 #endif
 
 	string scene  = "Kitchen";
-	string object = "03";
+	string object = "05";
 	string DATADIR = DATADIR_ + object + string("/");
 	string TESTDIR = DATADIR_ + object + string("/test/");
 
@@ -283,7 +283,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 
 	printf("\n\n>>>>> SYSTEM START <<<<<\n\n");
 
-	for(int i=0;i<600;i++)
+	for(int i=0;i<num_points;i++)
 	{
 		//[PREPROCESS DATA]****************************************************
 		if(i == file_eof[file_num])

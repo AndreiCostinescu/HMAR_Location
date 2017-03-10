@@ -85,7 +85,7 @@ void combineNearCluster(
 				if(p[ii].cluster_id == i && !limit)
 					for(int jj=0;jj<num_points;jj++)
 						if(p[jj].cluster_id == j)
-							if(l2Norm(minusPoint(p[ii],p[jj]))<0.05)
+							if(l2Norm(minusPoint(p[ii],p[jj]))<0.1)
 								limit = true;
 
 			if(limit)
@@ -1403,7 +1403,8 @@ double determineLocationInterval(
 {
 	double d1,d2,d3,d4,d5,d6,d7; d6 = d7 = 0.0;
 	point_t proj_dir_tmp;
-	int idx = (loc_last_idx_<0?0:loc_last_idx_);
+	//int idx = (loc_last_idx_<0?0:loc_last_idx_);
+	int idx = 0;
 	for(int l=idx;l<loc_int_;l++)
 	{
 		proj_dir_tmp =
@@ -2466,9 +2467,11 @@ void checkSector(
 				sec_idx, loc_idx, sec_int, delta_t, point_,
 				loc_mid, tan, nor);
 
-		cout << loc_idx << "  " << sec_idx << "  " << tmp_dis << endl;
-
-		if (tmp_dis > 0.1) {flag=true; continue;}
+		if (tmp_dis > 0.075)
+		{
+			prediction_.pred[i] = OUT_OF_BOUND;
+			continue;
+		}
 
 		ind_ls  = loc_idx*sec_int + sec_idx;
 		if (loc_idx < loc_int && sec_idx < sec_int)
@@ -2486,9 +2489,6 @@ void checkSector(
 		}
 		// ********************************************************[SECTOR MAP]
 	}
-
-	//if(flag) cout << "OUT OF BOUNDS DETECTED" << endl;
-
 }
 
 void motionPrediction(
@@ -2786,9 +2786,10 @@ void outputMsg(
 				if (MSG_.loc_idx < 0)
 				{
 					printf("Nr:%04d,  ", MSG_.idx);
+					printf("LABEL : ");
 					if (MSG_.label.mov < 0)
 					{
-						printf("LABEL: NULL ");
+						printf("NULL ");
 					}
 					else if (MSG_.label.mov == 1)
 					{
@@ -2796,7 +2797,7 @@ void outputMsg(
 						{
 							if (MSG_.label.sur[ii] > 0)
 							{
-								printf("LABEL: %s on surface %d ",
+								printf("%s on surface %d ",
 										Graph_.getMovLabel()
 											[MSG_.label.mov].c_str(),
 										ii);
@@ -2806,7 +2807,7 @@ void outputMsg(
 					}
 					else
 					{
-						printf("LABEL: %s ",
+						printf("%s ",
 								Graph_.getMovLabel()[MSG_.label.mov].c_str());
 					}
 					if (*max_element(
@@ -2844,28 +2845,22 @@ void outputMsg(
 				else
 				{
 					printf("Nr:%04d,  ", MSG_.idx);
+					printf("LABEL : ");
 					for(int ii=0;ii<MSG_.num_loc;ii++)
 					{
 						if (MSG_.label.loc[ii] > 0)
 						{
-							printf("LABEL: %s ",
-									Graph_.getNode(ii).name.c_str());
-							break;
-						}
-						else if (MSG_.label.loc[ii] < 0)
-						{
-							printf("LABEL: Empty location Label.  ");
 							if (MSG_.label.mov < 0)
 							{
-								printf("LABEL: NULL ");
+								printf("NULL ");
 							}
-							else if (MSG_.label.mov < 0)
+							else if (MSG_.label.mov == 1)
 							{
 								for(int ii=0;ii<MSG_.num_sur;ii++)
 								{
 									if (MSG_.label.sur[ii] > 0)
 									{
-										printf("LABEL: %s on surface %d ",
+										printf("%s on surface %d ",
 												Graph_.getMovLabel()
 													[MSG_.label.mov].c_str(),
 												ii);
@@ -2875,7 +2870,39 @@ void outputMsg(
 							}
 							else
 							{
-								printf("LABEL: %s ",
+								printf("%s ",
+										Graph_.getMovLabel()
+											[MSG_.label.mov].c_str());
+							}
+
+							printf("%s ",
+									Graph_.getNode(ii).name.c_str());
+							break;
+						}
+						else if (MSG_.label.loc[ii] < 0)
+						{
+							printf("Empty location Label.  ");
+							if (MSG_.label.mov < 0)
+							{
+								printf("NULL ");
+							}
+							else if (MSG_.label.mov < 0)
+							{
+								for(int ii=0;ii<MSG_.num_sur;ii++)
+								{
+									if (MSG_.label.sur[ii] > 0)
+									{
+										printf("%s on surface %d ",
+												Graph_.getMovLabel()
+													[MSG_.label.mov].c_str(),
+												ii);
+										break;
+									}
+								}
+							}
+							else
+							{
+								printf("%s ",
 										Graph_.getMovLabel()
 											[MSG_.label.mov].c_str());
 							}

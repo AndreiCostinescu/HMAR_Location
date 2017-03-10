@@ -8,7 +8,7 @@
 #ifndef DATADECLARATION_H_
 #define DATADECLARATION_H_
 
-#define PC
+//#define PC
 
 #ifdef PC
 	// For backward compatibility with new VTK generic data arrays
@@ -129,6 +129,7 @@ using namespace std;
 #define NBREAK 	(NCOEFFS - 2)
 #define DEGREE 5 //k+1
 
+#define OUT_OF_BOUND 2
 #define OUT_OF_RANGE 1
 #define	WITHIN_RANGE 0
 #define EXCEED_RANGE -1
