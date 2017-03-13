@@ -9,6 +9,8 @@
 
 #include "util.h"
 
+int TMPPP = 0;
+
 #ifdef PC
 	string SCENE = "../Scene/";
 #else
@@ -41,27 +43,30 @@ void dbscanCluster(
 }
 
 void combineNearCluster(
-	vector<point_t> &p,
-	vector<point_t> &locations)
+	vector<point_t> 		&points_,
+	vector<point_t> 		&locations_)
 {
-	int num_locations = 0;
-	for(int i=0;i<p.size();i++)
-		num_locations = max(p[i].cluster_id,num_locations);
-	num_locations += 1;
+	int num_points 		= points_.size();
+	int num_locations 	= locations_.size();
 
-	int num_points = p.size();
+	if (num_locations < 1)
+	{
+		for(int i=0;i<num_points;i++)
+			num_locations = max(points_[i].cluster_id,num_locations);
+		num_locations += 1;
+	}
 
 	// calculating the centroid of cluster
 	vector<point_t> p_tmp0(num_locations);
 	vector<point_t> p_tmp1(num_locations);
 	for(int i=0;i<num_points;i++)
 	{
-		if(p[i].cluster_id >= 0)
+		if(points_[i].cluster_id >= 0)
 		{
-			p_tmp1[p[i].cluster_id].cluster_id += 1;
-			p_tmp0[p[i].cluster_id].x += p[i].x;
-			p_tmp0[p[i].cluster_id].y += p[i].y;
-			p_tmp0[p[i].cluster_id].z += p[i].z;
+			p_tmp1[points_[i].cluster_id].cluster_id += 1;
+			p_tmp0[points_[i].cluster_id].x += points_[i].x;
+			p_tmp0[points_[i].cluster_id].y += points_[i].y;
+			p_tmp0[points_[i].cluster_id].z += points_[i].z;
 		}
 	}
 
@@ -82,10 +87,10 @@ void combineNearCluster(
 			if(j<=i) continue;
 
 			for(int ii=0;ii<num_points;ii++)
-				if(p[ii].cluster_id == i && !limit)
+				if(points_[ii].cluster_id == i && !limit)
 					for(int jj=0;jj<num_points;jj++)
-						if(p[jj].cluster_id == j)
-							if(l2Norm(minusPoint(p[ii],p[jj]))<0.1)
+						if(points_[jj].cluster_id == j)
+							if(l2Norm(minusPoint(points_[ii],points_[jj]))<0.1)
 								limit = true;
 
 			if(limit)
@@ -95,9 +100,9 @@ void combineNearCluster(
 				if(p_tmp1[i].cluster_id>=0 && p_tmp1[j].cluster_id>=0)
 				{
 					int big   = max(p_tmp1[i].cluster_id,
-							        p_tmp1[j].cluster_id);
+									p_tmp1[j].cluster_id);
 					int small = min(p_tmp1[i].cluster_id,
-							        p_tmp1[j].cluster_id);
+									p_tmp1[j].cluster_id);
 					for(int ii=0;ii<num_locations;ii++)
 					{
 						if(p_tmp1[ii].cluster_id == big)
@@ -105,9 +110,9 @@ void combineNearCluster(
 					}
 				}
 				else if(p_tmp1[i].cluster_id>=0)
-					    p_tmp1[j].cluster_id = p_tmp1[i].cluster_id;
+						p_tmp1[j].cluster_id = p_tmp1[i].cluster_id;
 				else if(p_tmp1[j].cluster_id>=0)
-					    p_tmp1[i].cluster_id = p_tmp1[j].cluster_id;
+						p_tmp1[i].cluster_id = p_tmp1[j].cluster_id;
 				else
 				{
 					if(i<j)
@@ -152,9 +157,9 @@ void combineNearCluster(
 	// updating cluster label
 	for(int i=0;i<num_points;i++)
 	{
-		if (p[i].cluster_id >= 0)
-			p[i].cluster_id = p_tmp1[p[i].cluster_id].cluster_id;
-		//printf("Location %02d: %02d\n", line_, p[i].cluster_id );
+		if (points_[i].cluster_id >= 0)
+			points_[i].cluster_id = p_tmp1[points_[i].cluster_id].cluster_id;
+		//printf("Location %02d: %02d\n", i, points_[i].cluster_id );
 	}
 
 	// calculate the centroid of combined clusters
@@ -163,14 +168,14 @@ void combineNearCluster(
 
 	for(int i=0;i<num_points;i++)
 	{
-		if(p[i].cluster_id >= 0)
+		if(points_[i].cluster_id >= 0)
 		{
-			p_center[p[i].cluster_id].cluster_id += 1;
-			p_tmp2  [p[i].cluster_id].x += p[i].x;
-			p_tmp2  [p[i].cluster_id].y += p[i].y;
-			p_tmp2  [p[i].cluster_id].z += p[i].z;
+			p_center[points_[i].cluster_id].cluster_id += 1;
+			p_tmp2  [points_[i].cluster_id].x += points_[i].x;
+			p_tmp2  [points_[i].cluster_id].y += points_[i].y;
+			p_tmp2  [points_[i].cluster_id].z += points_[i].z;
 		}
-		//printf("Location %02d: %02d %02d\n", i, p[i].cluster_id, p_center  [p[i].cluster_id].cluster_id );
+		//printf("Location %02d: %02d %02d\n", i, points_[i].cluster_id, p_center  [p[i].cluster_id].cluster_id );
 	}
 
 	for(int i=0;i<c;i++)
@@ -184,58 +189,89 @@ void combineNearCluster(
 
 	//cout << num_locations << c << endl;
 
-	locations.clear(); locations = p_center;
+	locations_.clear(); locations_ = p_center;
 }
 
 void decideBoundary(
-	point_t &p,
-	vector<point_t> location,
-	vector<double> location_boundary)
+	point_t 				&point_,
+	vector<point_t> 		locations_,
+	vector<double> 			locations_boundary_,
+	vector<vector<double> > surfaces_,
+	vector<int>     		surfaces_num_,
+	vector<double> 			surfaces_boundary_)
 {
 	double location_contact = 0.0;
 	point_t tmp_diff;
 	location_contact = 0.0;
-	p.cluster_id = UNCLASSIFIED;
-	for(int ii=0;ii<location.size();ii++)
+	point_.cluster_id = UNCLASSIFIED;
+	for(int ii=0;ii<locations_.size();ii++)
 	{
-		tmp_diff = minusPoint(p, location[ii]);
+		tmp_diff = minusPoint(point_, locations_[ii]);
 		if (max_(
 				pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
 				location_contact ))
 		{
 			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
-			if(max_(location_contact,location_boundary[ii]))
-				p.cluster_id = ii;
+			if (max_(location_contact, locations_boundary_[ii]))
+			{
+				if (surfaces_num_[ii] < 0)
+					point_.cluster_id = ii;
+				else
+				{
+					if (surfaceDistance(
+							point_, surfaces_[surfaces_num_[ii]])
+						<= surfaces_boundary_[ii])
+						point_.cluster_id = ii;
+				}
+			}
 		}
 	}
 }
 
 void contactBoundary(
-	vector<point_t> &p,
-	vector<point_t> locations,
-	vector<double> &location_boundary,
-	bool learn)
+	vector<point_t> 		&points_,
+	vector<point_t> 		locations_,
+	vector<double> 			&locations_boundary_,
+	vector<vector<double> > surfaces_,
+	vector<int>     		surfaces_num_,
+	vector<double> 			&surfaces_boundary_,
+	bool 					learn_)
 {
-	//if (learn)
+//	if (learn)
 //		for(int i=0;i<locations.size();i++)
 //			location_boundary[i] = 0.95; //1.0 is the max
 
-	for (int i=0;i<p.size();i++)
+	for (int i=0;i<points_.size();i++)
 	{
-		if (learn)
+		if (learn_)
 		{
-			if (p[i].cluster_id<0) continue;
-			point_t tmp_diff = minusPoint(p[i], locations[p[i].cluster_id]);
-			location_boundary[p[i].cluster_id] =
+			if (points_[i].cluster_id<0) continue;
+			point_t tmp_diff =
+					minusPoint(points_[i], locations_[points_[i].cluster_id]);
+			locations_boundary_[points_[i].cluster_id] =
 					min(
 							pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
-							location_boundary[p[i].cluster_id]);
-			location_boundary[p[i].cluster_id] =
-					max(0.60, location_boundary[p[i].cluster_id]);
+							locations_boundary_[points_[i].cluster_id]);
+			if (surfaces_num_[points_[i].cluster_id]<0)
+			{
+				locations_boundary_[points_[i].cluster_id] =
+						max(0.60, locations_boundary_[points_[i].cluster_id]);
+			}
+			else
+			{
+				surfaces_boundary_[points_[i].cluster_id] =
+						max(
+								surfaces_boundary_[points_[i].cluster_id],
+								surfaceDistance(
+										points_[i],
+										surfaces_[points_[i].cluster_id]));
+			}
 		}
 		else
 		{
-			decideBoundary(p[i], locations, location_boundary);
+			decideBoundary(
+					points_[i], locations_, locations_boundary_,
+					surfaces_, surfaces_num_, surfaces_boundary_);
 		}
 	}
 }
@@ -602,8 +638,8 @@ void preprocessDataLive(
 void writeSurfaceFile(
 	vector<vector<double> > surface_)
 {
+	directoryCheck(SCENE + string("Kitchen"));
 	string path = SCENE + "Kitchen/surface.txt";
-
 	if (!ifstream(path))
 	{
 		ofstream write_file(path, std::ios::app);
@@ -623,10 +659,9 @@ void writeSurfaceFile(
 void writeSurfaceFile(
 	Graph Graph_)
 {
+	directoryCheck(SCENE + Graph_.getScene());
 	string path = SCENE + Graph_.getScene() + "/surface.txt";
-
 	vector<vector<double> > surface = Graph_.getSurface();
-
 	if (!ifstream(path))
 	{
 		ofstream write_file(path, std::ios::app);
@@ -643,49 +678,49 @@ void writeSurfaceFile(
 	}
 }
 
-void writeLocLabelFile(
+void writeLabelFile(
+	Graph Graph_,
 	string path_,
-	vector<string> label_,
-	vector<point_t> locations_,
-	vector<double> boundary_,
-	vector<int> surface_num_container_)
+	int movloc_)
 {
-	if (!ifstream(path_))
+	switch(movloc_)
 	{
-		ofstream write_file(path_, ios::app);
-		for(int i=0;i<locations_.size();i++)
-		{
-			write_file << label_[i+1]     << ","
-					   << locations_[i].x << ","
-					   << locations_[i].y << ","
-					   << locations_[i].z << ","
-					   << boundary_[i]    << ","
-					   << surface_num_container_[i];
-			if (i<locations_.size()-1)
-				write_file << ",";
-		}
-		write_file << "\n";
+		case 0:
+			if (!ifstream(path_))
+			{
+				vector<node_tt> node_tmp = Graph_.getNodeList();
+				ofstream write_file(path_, ios::app);
+				for(int i=0;i<node_tmp.size();i++)
+				{
+					write_file << node_tmp[i].name       << ","
+							   << node_tmp[i].location.x << ","
+							   << node_tmp[i].location.y << ","
+							   << node_tmp[i].location.z << ","
+							   << node_tmp[i].boundary   << ","
+							   << node_tmp[i].surface	 << ","
+							   << node_tmp[i].surface_boundary;
+					write_file << "\n";
+				}
+			}
+			break;
+		case 1:
+			if (!ifstream(path_))
+			{
+				vector<string> label_tmp = Graph_.getMovLabel();
+				ofstream write_file(path_, ios::app);
+				for(int i=0;i<label_tmp.size();i++)
+				{
+					write_file << label_tmp[i];
+					if (i<label_tmp.size()-1)
+						write_file << ",";
+				}
+				write_file << "\n";
+			}
+			break;
 	}
 }
 
-void writeMovLabelFile(
-	string path_,
-	vector<string> label_)
-{
-	if (!ifstream(path_))
-	{
-		ofstream write_file(path_, ios::app);
-		for(int i=0;i<label_.size();i++)
-		{
-			write_file << label_[i];
-			if (i<label_.size()-1)
-				write_file << ",";
-		}
-		write_file << "\n";
-	}
-}
-
-void writeLocationFile(
+void writeLearnedDataFile(
 	Graph Graph_,
 	string path_,
 	int type_)
@@ -697,6 +732,7 @@ void writeLocationFile(
 	sector_para_t para = Graph_.getSectorPara();
 
 	vector<point_t> data;
+	vector<double> 	sec;
 
 	if (!ifstream(path_))
 	{
@@ -708,7 +744,7 @@ void writeLocationFile(
 		{
 			for(int ii=0;ii<edges[i].size();ii++)
 			{
-				data.clear();
+				data.clear(); sec.clear();
 				write_file << "Edge,"    << i
 						   << ",Number," << ii << "\n";
 				switch (type_)
@@ -728,122 +764,38 @@ void writeLocationFile(
 					case 4:
 						data = edges[i][ii].nor;
 						break;
+					case 5:
+						write_file << Graph_.getCounter(i,ii)
+								   << "\n";
+						break;
+					case 6:
+						sec = edges[i][ii].sector_map;
+						for(int iii=0;iii<sec.size();iii++)
+						{
+							write_file << sec[iii];
+							if (iii<sec.size()-1) 	{ write_file << ",";  }
+							else 					{ write_file << "\n"; }
+						}
+						break;
+					case 7:
+						sec = edges[i][ii].sector_const;
+						for(int iii=0;iii<sec.size();iii++)
+						{
+							write_file << sec[iii];
+							if (iii<sec.size()-1) 	{ write_file << ",";  }
+							else 					{ write_file << "\n"; }
+						}
+						break;
 				}
+				if (type_ > 4) {continue;}
 				for(int iii=0;iii<para.loc_int;iii++)
 				{
 					write_file << data[iii].x << ",";
 					write_file << data[iii].y << ",";
 					write_file << data[iii].z;
-					if (iii<para.loc_int-1)
-						write_file << ",";
-					else
-						write_file << "\n";
+					if (iii<data.size()-1) 	{ write_file << ",";  }
+					else 					{ write_file << "\n"; }
 				}
-			}
-		}
-	}
-}
-
-void writeSectorFile(
-	Graph Graph_,
-	string path_,
-	int type_)
-{
-	vector<node_tt> nodes = Graph_.getNodeList();
-	int num_locations = nodes.size();
-	vector<vector<edge_tt> > edges = Graph_.getEdgeList();
-
-	sector_para_t para = Graph_.getSectorPara();
-
-	if (!ifstream(path_))
-	{
-		ofstream write_file(path_, ios::app);
-		write_file << "Locations," 			<< num_locations 	<< "\n";
-		write_file << "Location Intervals," << para.loc_int 	<< "\n";
-		write_file << "Sector Intervals," 	<< para.sec_int 	<< "\n";
-		for(int i=0;i<edges.size();i++)
-		{
-			for(int ii=0;ii<edges[i].size();ii++)
-			{
-				vector<double> sector       = edges[i][ii].sector_map;
-				vector<double> sector_const = edges[i][ii].sector_const;
-				write_file << "Edge,"    << i
-						   << ",Number," << ii << "\n";
-				for(int iii=0;iii<sector.size();iii++)
-				{
-					switch(type_)
-					{
-						case 0:
-							write_file << sector[iii];
-							break;
-						case 1:
-							write_file << sector_const[iii];
-							break;
-					}
-					if (iii<sector.size()-1)
-						write_file << ",";
-					else
-						write_file << "\n";
-				}
-			}
-		}
-	}
-}
-
-void writeSectorConstraintFile(
-	string path_,
-	vector<vector<vector<double> > > sector_,
-	int num_locations_,
-	int num_location_intervals_,
-	int num_sector_intervals_)
-{
-	if (!ifstream(path_))
-	{
-		ofstream write_file(path_, ios::app);
-		write_file << num_locations_ 		  << "\n";
-		write_file << num_location_intervals_ << "\n";
-		write_file << num_sector_intervals_   << "\n";
-		for(int i=0;i<sector_.size();i++)
-		{
-			for(int ii=0;ii<sector_[i].size();ii++)
-			{
-				for(int iii=0;iii<sector_[i][ii].size();iii++)
-				{
-					write_file << sector_[i][ii][iii];
-					if (i<sector_[i][ii].size()-1)
-						write_file << ",";
-				}
-				write_file << "\n";
-			}
-		}
-	}
-}
-
-void writeCounterFile(
-	Graph Graph_,
-	string path_,
-	int type_)
-{
-	vector<node_tt> nodes = Graph_.getNodeList();
-	int num_locations = nodes.size();
-	vector<vector<edge_tt> > edges = Graph_.getEdgeList();
-
-	sector_para_t para = Graph_.getSectorPara();
-
-	if (!ifstream(path_))
-	{
-		ofstream write_file(path_, ios::app);
-		write_file << "Locations," 			<< num_locations 	<< "\n";
-		write_file << "Location Intervals," << para.loc_int 	<< "\n";
-		write_file << "Sector Intervals," 	<< para.sec_int 	<< "\n";
-		for(int i=0;i<edges.size();i++)
-		{
-			for(int ii=0;ii<edges[i].size();ii++)
-			{
-				write_file << "Edge,"    << i
-						   << ",Number," << ii << "\n";
-				write_file << Graph_.getCounter(i,ii)
-						   << "\n";
 			}
 		}
 	}
@@ -909,16 +861,16 @@ void readSurfaceFile(
 }
 
 void readLocation(
-	string path_,
-	vector<string> &label_,
+	string 			path_,
+	vector<string> 	&label_,
 	vector<point_t> &locations_,
-	vector<double> &location_boundary_,
-	vector<int> &surface_num_)
+	vector<double> 	&locations_boundary_,
+	vector<int> 	&surfaces_num_,
+	vector<double> 	&surfaces_boundary_)
 {
-	int num_locations = locations_.size();
-
 	vector<vector<string> > data;
 	readFile(path_.c_str(), data , ',');
+	int num_locations = data.size();
 
 	if(data.empty())
 	{
@@ -926,92 +878,62 @@ void readLocation(
 	}
 	else
 	{
-		int data_tmp  = 6;
-		num_locations = data[0].size()/data_tmp;
-		reshapeVector(surface_num_,		  num_locations);
-		reshapeVector(locations_,		  num_locations);
-		reshapeVector(location_boundary_, num_locations);
-		reshapeVector(label_,		      num_locations+1);
-		label_[0]  = {"CONNECTION"};
-		for(int ii=0;ii<num_locations;ii++)
+		reshapeVector(locations_,		  	num_locations);
+		reshapeVector(locations_boundary_,	num_locations);
+		reshapeVector(surfaces_num_,		num_locations);
+		reshapeVector(surfaces_boundary_,	num_locations);
+		reshapeVector(label_,		     	num_locations+1);
+		for(int i=0;i<data.size();i++)
 		{
-			label_[ii+1] 		  =      data[0][ii*data_tmp+0];
-			locations_[ii].x 		  = atof(data[0][ii*data_tmp+1].c_str());
-			locations_[ii].y 		  = atof(data[0][ii*data_tmp+2].c_str());
-			locations_[ii].z 		  = atof(data[0][ii*data_tmp+3].c_str());
-			locations_[ii].cluster_id = UNCLASSIFIED;
-			location_boundary_[ii] 	  = atof(data[0][ii*data_tmp+4].c_str());
-			surface_num_[ii] 	  	  = atof(data[0][ii*data_tmp+5].c_str());
+			label_[i] 		  	  		=      data[i][0];
+			locations_[i].x 		  	= atof(data[i][1].c_str());
+			locations_[i].y 		  	= atof(data[i][2].c_str());
+			locations_[i].z 		  	= atof(data[i][3].c_str());
+			locations_[i].cluster_id	= UNCLASSIFIED;
+			locations_boundary_[i] 	  	= atof(data[i][4].c_str());
+			surfaces_num_[i] 	  	  	= atof(data[i][5].c_str());
+			surfaces_boundary_[i] 	   	= atof(data[i][6].c_str());
 		}
 	}
 
 	printf("Reviewing location labels...\n");
 	for(int i=0;i<num_locations;i++)
-		printf("LLabel %d : %s\n", i+1, label_[i+1].c_str());
+		printf("LLabel %d : %s\n", i, label_[i].c_str());
 
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
-	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<num_locations;i++)
-			{
-				printf("Enter new label for LLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					label_[i+1] = mystr;
-				}
-			}
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
-	}
+	bool replace = false;
+	replaceLabel(label_,replace); if (replace) {remove(path_.c_str());}
 }
 
 void readLocation_(
 	Graph &Graph_)
 {
-	string path;
-	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
-
+	string path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/data_loc.txt";
 	vector<string> 	label;
 	vector<point_t> locations;
-	vector<double> 	location_boundary;
-	vector<int> 	surface_num;
+	vector<double> 	locations_boundary;
+	vector<int> 	surfaces_num;
+	vector<double> 	surfaces_boundary;
 	vector<data_t> 	data_;
 
-	readLocation(path, label, locations, location_boundary, surface_num);
+	readLocation(
+			path, label, locations, locations_boundary,
+			surfaces_num, surfaces_boundary);
 
 	for(int i=0;i<locations.size();i++)
-		Graph_.addNode(label[i+1], i, -1,
-					   locations[i], location_boundary[i],
-					   surface_num[i], data_);
+		Graph_.addNode(label[i], i, -1,
+					   locations[i], locations_boundary[i],
+					   surfaces_num[i], surfaces_boundary[i], data_);
 
-	remove(path.c_str());
-	writeLocLabelFile(path, label, locations, location_boundary, surface_num);
+	writeLabelFile(Graph_, path, 0);
 }
 
 void readMovement(
 	Graph &Graph_)
 {
+	string path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/data_mov.txt";
 	vector<string> label;
-
-	string path;
-	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/mov_data.txt";
-
 	vector<vector<string> > data;
 	readFile(path.c_str(), data , ',');
-
 	if(data.empty())
 	{
 		printf("[WARNING] : Movement data is empty.");
@@ -1024,40 +946,14 @@ void readMovement(
 	}
 	printf("Reviewing movement labels for OBJ...\n");
 	for(int i=0;i<data[0].size();i++)
-		printf("MLabel %d : %s\n", i, label[i].c_str());
-
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
 	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<data[0].size();i++)
-			{
-				printf("Enter new label for MLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					label[i] = mystr;
-				}
-			}
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
+		printf("MLabel %d : %s\n", i, label[i].c_str());
 	}
 
+	bool replace = false;
+	replaceLabel(label,replace); if (replace) {remove(path.c_str());}
 	Graph_.updateMovLabel(label);
-
-	remove(path.c_str());
-	writeMovLabelFile(path,label);
+	writeLabelFile(Graph_, path, 1);
 }
 
 void readSectorFile(
@@ -1255,52 +1151,6 @@ void readLocationFile(
 
 }
 
-void readSectorConstraintFile(
-	string path_,
-	vector<vector<vector<double> > > &sector_)
-{
-	vector<vector<string> > data;
-	readFile(path_.c_str(), data , ',');
-
-	if(data.empty())
-	{
-		printf("[WARNING] : Sector data is empty.");
-	}
-	else
-	{
-		int num_locations, num_location_intervals, num_sector_intervals;
-		num_locations 			= atoi(data[0][0].c_str());
-		num_location_intervals 	= atoi(data[1][0].c_str());
-		num_sector_intervals 	= atoi(data[2][0].c_str());
-
-	    reshapeVector(sector_,Sqr(num_locations));
-	    vector<vector<double> > sector1(num_location_intervals);
-		       vector<double> 	sector2(num_sector_intervals);
-
-		for(int i=0;i<Sqr(num_locations);i++)
-		{
-			sector_[i] = sector1;
-			for(int ii=0;ii<num_location_intervals;ii++)
-			{
-				sector_[i][ii] = sector2;
-			}
-		}
-
-		for(int i=0;i<num_locations;i++)
-		{
-			for(int ii=0;ii<num_location_intervals;ii++)
-			{
-				int tmp = i*num_location_intervals+ii+3;
-				for(int iii=0;iii<num_sector_intervals;iii++)
-				{
-					sector_[i][ii][iii] = atof(data[tmp][iii].c_str());
-				}
-			}
-		}
-	}
-	// Should we add the option to edit the data?
-}
-
 void readCounterFile(
 	Graph &Graph_,
 	int type_)
@@ -1401,10 +1251,11 @@ double determineLocationInterval(
 	vector<point_t> end_,
 	vector<point_t> tangent_)
 {
-	double d1,d2,d3,d4,d5,d6,d7; d6 = d7 = 0.0;
+	double d1,d2,d3,d4,d5,d6,d7,d66,d77; d6 = d7 = d66 = d77 = 0.0;
 	point_t proj_dir_tmp;
 	//int idx = (loc_last_idx_<0?0:loc_last_idx_);
 	int idx = 0;
+	bool mem = false;
 	for(int l=idx;l<loc_int_;l++)
 	{
 		proj_dir_tmp =
@@ -1422,8 +1273,10 @@ double determineLocationInterval(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
 		{
+			mem = true;
 			if (l == 0)	d6 = d3-d5;
 			d7 = d3-d5;
+			d66 = d6; d77 = d7;
 			if (d4<=d2 && (d3-d5)<0.001)
 			{
 				loc_idx_ = l; d6 = 0.0; break;
@@ -1431,6 +1284,14 @@ double determineLocationInterval(
 		}
 		else
 		{
+			if (mem) //### helps to mitigate the deadzone
+			{
+				if (l-1 <= 0)	d6 = d66;
+				d7 = d77;
+				loc_idx_ = (l-1<0 ? 0:l-1);
+				d6 = 0.0;
+				break;
+			}
 			if (l == 0)	d6 = d4-d5;
 			d7 = d4-d5;
 			if (d3<=d1 && (d4-d5)<0.001)
@@ -1444,7 +1305,6 @@ double determineLocationInterval(
 	if (loc_idx_<0) return d6;
 	else 			return d7;
 }
-
 
 void determineLocationInterval(
 	vector<int> &loc_idxs_,
@@ -1461,7 +1321,7 @@ void determineLocationInterval(
 	point_t proj_dir_tmp;
 	// Added a buffer to prevent the location prediction from jumping too much
 	int idx = (loc_last_idx_<0?0:loc_last_idx_);
-	for(int l=idx;l<idx+(loc_int_/4);l++)
+	for(int l=idx;l<(idx+(loc_int_/4)>loc_int_?loc_int_:idx+(loc_int_/4));l++)
 	{
 		proj_dir_tmp =
 				multiPoint(
@@ -1531,7 +1391,6 @@ void determineSectorInterval(
 	sec_idx_ = ceil(angle_tmp*(sec_int_/2)/M_PI) - 1 ;
 }
 
-
 void determineSectorMap(
 	vector<double> &sector_map_,
 	int &loc_last_idx_,
@@ -1580,7 +1439,6 @@ void determineSectorMap(
 	}
 }
 
-
 void fitSectorCurve(
 	Graph &Graph_,
 	vector<vector<point_t> > pva_avg_,
@@ -1619,7 +1477,6 @@ void fitSectorCurve(
 	reshapeVector(coeffs_,DEGREE);
 	polyCurveFitPoint(points_tmp, points_est, coeffs_, covs, true);
 }
-
 
 void checkSectorCurve(
 	Graph &Graph_,
@@ -1722,19 +1579,24 @@ void adjustSectorCurve(
 			else if (tmplen>=len_inc3 && t_end<0)
 			{t_end  = t; break;}
 		}
+		if (t_end<0) { t_end = point2_idx_-point1_idx_-1; }
 		point_t p_mid, p_tan, p_nor;
 		p_mid.x = gsl_poly_eval (cx, DEGREE, t_mid);
 		p_mid.y = gsl_poly_eval (cy, DEGREE, t_mid);
 		p_mid.z = gsl_poly_eval (cz, DEGREE, t_mid);
 		if (N>0)
+		{
 			cal_tangent_normal(t_mid, p_tan, p_nor, coeffs_, DEGREE, false);
+		}
 		else
+		{
 			cal_tangent_normal(t_mid, p_tan, p_nor, coeffs_, DEGREE, true);
-		loc_mid	 [i] = p_mid;
-		loc_beg  [i] = addPoint( p_mid , multiPoint(p_tan, t_beg-t_mid) );
-		loc_end  [i] = addPoint( p_mid , multiPoint(p_tan, t_end-t_mid) );
-		nor   [i] = multiPoint( p_nor , 1/l2Norm(p_nor) );
-		tan  [i] = multiPoint( p_tan , 1/l2Norm(p_tan) );
+		}
+		loc_mid	[i] = p_mid;
+		loc_beg [i] = addPoint( p_mid , multiPoint(p_tan, t_beg-t_mid) );
+		loc_end [i] = addPoint( p_mid , multiPoint(p_tan, t_end-t_mid) );
+		nor   	[i] = multiPoint( p_nor , 1/l2Norm(p_nor) );
+		tan  	[i] = multiPoint( p_tan , 1/l2Norm(p_tan) );
 	}
 	// *************************************************************[CURVE FIT]
 
@@ -1827,15 +1689,14 @@ void updateSectorCurve(
 	int point1_idx_,
 	int point2_idx_,
 	int label1_,
-	int label2_)
+	int label2_,
+	double max_range_)
 {
 	vector<unsigned char*> color_code(24);
 	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
 
 	vector<point_t> points_est, coeffs;
-
-	float max_range = 0.05;
 
 	if (Graph_.getCounter(edge_xy_,0) == 0)
 	{
@@ -1851,7 +1712,7 @@ void updateSectorCurve(
 				Graph_, points_est, edge_xy_, label1_, label2_);
 
 		checkSectorCurveConstraint(
-				Graph_, max_range, edge_xy_, label1_, label2_);
+				Graph_, max_range_, edge_xy_, label1_, label2_);
 
 		Graph_.incrementCounter(edge_xy_,0);
 	}
@@ -1869,7 +1730,7 @@ void updateSectorCurve(
 				point1_idx_, point2_idx_, label1_, label2_);
 
 		checkSectorCurveConstraint(
-				Graph_, max_range, edge_xy_, label1_, label2_);
+				Graph_, max_range_, edge_xy_, label1_, label2_);
 
 		Graph_.incrementCounter(edge_xy_,0);
 	}
@@ -1883,7 +1744,7 @@ void updateSectorCurve(
 				Graph_, points_est, edge_xy_, label1_, label2_);
 
 		checkSectorCurveConstraint(
-				Graph_, max_range, edge_xy_, label1_, label2_);
+				Graph_, max_range_, edge_xy_, label1_, label2_);
 	}
 
 //	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
@@ -1895,6 +1756,7 @@ void updateSectorCurve(
 void generateSectorCurve(
 	Graph &Graph_,
 	vector<vector<point_t> > pva_avg,
+	double max_range_,
 	vector<int> file_eof_)
 {
 	vector<node_tt> nodes = Graph_.getNodeList();
@@ -1934,7 +1796,7 @@ void generateSectorCurve(
 					if (i - tmp_id3 > 5) // to prevent only a few points evaluated for curve
 						updateSectorCurve(
 								Graph_, pva_avg, edge_xy,
-								tmp_id3, i, tmp_id1, tmp_id2);
+								tmp_id3, i, tmp_id1, tmp_id2, max_range_);
 					flag_next = false;
 					tmp_id1 = tmp_id2;
 					tmp_id2 = -1;
@@ -1997,11 +1859,11 @@ void fillLocationData(
 			point_t beg_t =
 					addPoint(
 							locations[i/num_loc],
-							multiPoint(tan_t,0.071619)); // 071619 is reversed calculated from 0.95 boundary.
+							multiPoint(tan_t, 0.10107676525)); // 0.10107676525 is reversed calculated from 0.60 boundary.
 			point_t end_t =
 					minusPoint(
 							locations[i%num_loc],
-							multiPoint(tan_t,0.071619));
+							multiPoint(tan_t, 0.10107676525));
 			double len_t = l2Norm(minusPoint(end_t,beg_t));
 			for(int iii=0;iii<loc_int;iii++)
 			{
@@ -2026,16 +1888,17 @@ void fillLocationData(
 void labelMovement(
 	Graph Graph_)
 {
+	bool replace = false;
 	vector<string> label; label.clear();
-
 	vector<vector<string> > data;
+	directoryCheck(SCENE + Graph_.getScene() + "/" + Graph_.getObject());
 	string path;
-	path =  SCENE + Graph_.getScene()  + "/"
-			           + Graph_.getObject() + "/mov_data.txt";
+	path = SCENE + Graph_.getScene() + "/" + Graph_.getObject() +
+			"/data_mov.txt";
 	readFile(path.c_str(), data , ',');
-
 	if(data.empty())
 	{
+		printf("[WARNING] : Movement data is empty.... Creating default data.");
 		label.push_back("MOVE");
 		label.push_back("SLIDE");
 		writeMovLabelFile(path, label);
@@ -2047,50 +1910,25 @@ void labelMovement(
 	}
 	printf("Reviewing movement labels for OBJ...\n");
 	for(int i=0;i<label.size();i++)
-		printf("MLabel %d : %s\n", i, label[i].c_str());
-
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
 	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<label.size();i++)
-			{
-				printf("Enter new label for MLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					label[i] = mystr;
-				}
-			}
-			remove(path.c_str());
-			writeMovLabelFile(path,label);
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
+		printf("MLabel %d : %s\n", i, label[i].c_str());
 	}
-
+	replaceLabel(label,replace); if (replace) {remove(path.c_str());}
 	Graph_.updateMovLabel(label);
+	writeLabelFile(Graph_, path, 1);
 }
 
 void labelLocation(
-	string path_,
-	vector<point_t> &points_,
-	vector<point_t> &locations_,
-	vector<double>  &location_boundary_,
-	vector<string>  &label_,
-	vector<int>     &surface_num_,
-	double 			epsilon_,
-	int    			minpts_)
+	string 					path_,
+	vector<point_t> 		&points_,
+	vector<point_t> 		&locations_,
+	vector<double>  		&locations_boundary_,
+	vector<string>  		&label_,
+	vector<vector<double> > surfaces_,
+	vector<int>     		&surfaces_num_,
+	vector<double>     		&surfaces_boundary_,
+	double 					epsilon_,
+	int    					minpts_)
 {
 	int num_points = points_.size();
 	int num_locations;
@@ -2105,9 +1943,8 @@ void labelLocation(
 	vector<vector<string> > data;
 	readFile(path_.c_str(), data , ',');
 
-	if(data.empty())
+	if (data.empty())
 	{
-		locations_.clear();
 		//[CLUSTERING]*********************************************************
 		dbscanCluster(epsilon_, (unsigned int)minpts_, num_points, points_array);
 		printf("Clustering training data......Complete\n");
@@ -2115,70 +1952,82 @@ void labelLocation(
 		array2vector(points_array, num_points, points_);
 		combineNearCluster(points_, locations_);
 		printf("Combining nearby clusters......Complete\n");
-		num_locations = locations_.size();
-		reshapeVector(location_boundary_, num_locations);
-		for(int i=0;i<num_locations;i++) location_boundary_[i] = 1.0;
-		contactBoundary(points_, locations_, location_boundary_, true);
-		contactBoundary(points_, locations_, location_boundary_, false);
 		//*********************************************************[CLUSTERING]
-		reshapeVector(label_, num_locations + 1);
-		label_[0] = {"CONNECTION"};
+		num_locations = locations_.size();
+		reshapeVector(locations_boundary_,	num_locations);
+		reshapeVector(label_, 				num_locations);
+		reshapeVector(surfaces_num_, 		num_locations);
+		reshapeVector(surfaces_boundary_, 	num_locations);
+
+		for(int i=0;i<num_locations;i++)
+		{
+			vector<double> tmp_vec(3);
+			int surface_num  = -1;
+			double dist_tmp1 = 0.0;
+			double dist_tmp2 = 10.0; //### need improvement
+
+			for(int ii=0;ii<surfaces_.size();ii++)
+			{
+				point_t s_tmp;
+				s_tmp.x = surfaces_[ii][4];
+				s_tmp.y = surfaces_[ii][5];
+				s_tmp.z = surfaces_[ii][6];
+				dist_tmp1 =
+						0.5*abs(surfaceDistance(locations_[i],surfaces_[ii])) +
+						0.5*l2Norm(minusPoint(locations_[i],s_tmp));
+				if (min_(dist_tmp1,dist_tmp2) && dist_tmp1<0.1)
+				{
+					surface_num = ii;
+					dist_tmp2 = dist_tmp1;
+				}
+			}
+			surfaces_num_[i] = surface_num;
+			locations_boundary_[i] = 1.0; // init
+		}
+
+		contactBoundary(
+				points_, locations_, locations_boundary_,
+				surfaces_, surfaces_num_, surfaces_boundary_, true);
+
+		contactBoundary(
+				points_, locations_, locations_boundary_,
+				surfaces_, surfaces_num_, surfaces_boundary_, false);
+
 		showData(points_, label_, color_code, true, true);
 	}
 	else
 	{
-		int data_tmp  = 6;
-		num_locations = data[0].size()/data_tmp;
-		reshapeVector(locations_,		  num_locations);
-		reshapeVector(location_boundary_, num_locations);
-		reshapeVector(label_,		  	  num_locations+1);
-		reshapeVector(surface_num_,	  	  num_locations);
-		label_[0]  = {"CONNECTION"};
-		for(int ii=0;ii<num_locations;ii++)
+		num_locations = data.size();
+		reshapeVector(locations_,		  	num_locations);
+		reshapeVector(locations_boundary_, 	num_locations);
+		reshapeVector(surfaces_num_,		num_locations);
+		reshapeVector(surfaces_boundary_, 	num_locations);
+		reshapeVector(label_,		      	num_locations);
+		for(int i=0;i<num_locations;i++)
 		{
-			label_[ii+1] 		      =      data[0][ii*data_tmp+0];
-			locations_[ii].x 		  = atof(data[0][ii*data_tmp+1].c_str());
-			locations_[ii].y 		  = atof(data[0][ii*data_tmp+2].c_str());
-			locations_[ii].z 		  = atof(data[0][ii*data_tmp+3].c_str());
-			locations_[ii].cluster_id = UNCLASSIFIED;
-			location_boundary_[ii] 	  = atof(data[0][ii*data_tmp+4].c_str());
-			surface_num_[ii] 	      = atof(data[0][ii*data_tmp+5].c_str());
+			label_[i] 		  	  		=      data[i][0];
+			locations_[i].x 		  	= atof(data[i][1].c_str());
+			locations_[i].y 		  	= atof(data[i][2].c_str());
+			locations_[i].z 		  	= atof(data[i][3].c_str());
+			locations_[i].cluster_id	= UNCLASSIFIED;
+			locations_boundary_[i] 	  	= atof(data[i][4].c_str());
+			surfaces_num_[i] 	  	  	= atof(data[i][5].c_str());
+			surfaces_boundary_[i]		= atof(data[i][6].c_str());
 		}
-		contactBoundary(points_, locations_, location_boundary_, false);
+		contactBoundary(
+				points_, locations_, locations_boundary_,
+				surfaces_, surfaces_num_, surfaces_boundary_, false);
 		showData(points_, label_, color_code, true, false);
 	}
 
 	printf("Reviewing location labels...\n");
 	for(int i=0;i<num_locations;i++)
-		printf("LLabel %d : %s\n", i+1, label_[i+1].c_str());
-
-	printf("Replace default labels? [Y/N]\n");
-	while(0)
 	{
-		string mystr2; getline (cin, mystr2);
-		if(!strcmp(mystr2.c_str(),"Y"))
-		{
-			for(int i=0;i<num_locations;i++)
-			{
-				printf("Enter new label for LLabel %d : ",i);
-				string mystr;
-				getline (cin, mystr);
-				if(!strcmp(mystr.c_str(),""))
-					cout << "[WARNING] : Label has not been overwritten."<< endl;
-				else
-				{
-					cout << "[WARNING] : Label has been overwritten. New label : " << mystr << endl;
-					label_[i+1] = mystr;
-				}
-			}
-			break;
-		}
-		if(!strcmp(mystr2.c_str(),"N"))
-		{
-			cout << "[WARNING] : Label has not been overwritten." << endl;
-			break;
-		}
+		printf("LLabel %d : %s\n", i+1, label_[i].c_str());
 	}
+
+	bool replace = false;
+	replaceLabel(label_, replace); if (replace) {remove(path_.c_str());}
 }
 
 void labelLocation_(
@@ -2187,46 +2036,47 @@ void labelLocation_(
 	double epsilon_,
 	int minpts_)
 {
+	// [VARIABLES]*************************************************************
+	data_t motion_data;
+	vector<point_t> points_avg;
 	vector<string>  label;
 	vector<point_t> locations;
 	vector<double> 	location_boundary;
 	vector<int> 	surface_num1;
+	vector<double> 	surface_boundary;
+	vector<vector<double> > surface;
+	vector<vector<data_t> > node_data;
+	vector<vector<double> > node_data_tmp;
+	int num_points 		= pos_vel_acc_.size();
+	int num_locations 	= locations.size();
+	// *************************************************************[VARIABLES]
+
+	// [LABELLING LOCATION]****************************************************
+	for(int i=0;i<pos_vel_acc_.size();i++)
+	{
+		points_avg.push_back(pos_vel_acc_[i][0]);
+	}
+	string path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() +
+					"/data_loc.txt";
 	label.clear();
 	locations.clear();
 	location_boundary.clear();
 	surface_num1.clear();
-
-	vector<vector<double> > surface = Graph_.getSurface();
-
-	int num_points = pos_vel_acc_.size();
-	int num_surfaces = surface.size();
-
-	// [LABELLING LOCATION]****************************************************
-	vector<point_t> points_avg;
+	surface_boundary.clear();
+	surface = Graph_.getSurface();
+	labelLocation(
+			path, points_avg, locations, location_boundary, label,
+			surface, surface_num1, surface_boundary, epsilon_, minpts_);
+	num_locations = locations.size();
 	for(int i=0;i<pos_vel_acc_.size();i++)
-		points_avg.push_back(pos_vel_acc_[i][0]);
-
-	string path;
-	path =  SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data.txt";
-
-	labelLocation(path, points_avg,
-				  locations, location_boundary, label, surface_num1,
-				  epsilon_, minpts_);
-
-	int num_locations = locations.size();
-
-	for(int i=0;i<pos_vel_acc_.size();i++)
+	{
 		pos_vel_acc_[i][0].cluster_id = points_avg[i].cluster_id;
+	}
 	printf("Labeling of clusters (action locations)......Complete\n");
 	// ****************************************************[LABELLING LOCATION]
 
 	// [NODES]*****************************************************************
-	vector<vector<data_t> > node_data;
-	vector<vector<double> > node_data_tmp;
 	reshapeVector(node_data,num_locations);
-
-	data_t motion_data;
-
 	for(int i=0;i<num_points;i++)
 	{
 		if (pos_vel_acc_[i][0].cluster_id >= 0)
@@ -2237,77 +2087,36 @@ void labelLocation_(
 			node_data[pos_vel_acc_[i][0].cluster_id].push_back(motion_data);
 		}
 	}
-
-	if(surface_num1.empty())
+	for(int i=0;i<num_locations;i++)
 	{
-		for(int i=0;i<num_locations;i++)
-		{
-			vector<double> tmp_vec(3);
-			int surface_num  = -1;
-			double dist_tmp1 = 0.0;
-			double dist_tmp2 = 10.0; //### need improvement
-
-			for(int ii=0;ii<num_surfaces;ii++)
-			{
-				point_t s_tmp;
-				s_tmp.x = surface[ii][4];
-				s_tmp.y = surface[ii][5];
-				s_tmp.z = surface[ii][6];
-				dist_tmp1 =
-						0.5*abs(surfaceDistance(locations[i],surface[ii])) +
-						0.5*l2Norm(minusPoint(locations[i],s_tmp));
-//				cout << ii << " " << dist_tmp1 << " " << l2Norm(minusPoint(locations[i],s_tmp)) << endl;
-				if (min_(dist_tmp1,dist_tmp2) && dist_tmp1<0.1)
-				{
-					surface_num = ii;
-					dist_tmp2 = dist_tmp1;
-				}
-			}
-			surface_num1.push_back(surface_num);
-
-			if (Graph_.checkNode(i))
-				Graph_.extendNode(i, node_data[i]);
-			else
-				Graph_.addNode(label[i], i, -1,
-							   locations[i], location_boundary[i],
-							   surface_num, node_data[i]);
-		}
-	}
-	else
-	{
-		for(int i=0;i<num_locations;i++)
-		{
-			if (Graph_.checkNode(i))
-				Graph_.extendNode(i, node_data[i]);
-			else
-				Graph_.addNode(label[i], i, -1,
-							   locations[i], location_boundary[i],
-							   surface_num1[i], node_data[i]);
-		}
+		if (Graph_.checkNode(i))
+			Graph_.extendNode(i, node_data[i]);
+		else
+			Graph_.addNode(label[i], i, -1,
+						   locations[i], location_boundary[i],
+						   surface_num1[i], surface_boundary[i], node_data[i]);
 	}
 	// *****************************************************************[NODES]
 
-	writeLocLabelFile(path, label, locations, location_boundary, surface_num1);
+	writeLabelFile(Graph_, path, 0);
 }
 
 void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	double max_range_,
-	int kernel_size_x_,
-	int kernel_size_y_,
 	vector<int> file_eof_,
 	vector<unsigned char*> color_code_)
 {
-	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
-	// However it is still possible to have like bumps because the sampling is just not enough.
-	vector<vector<double> > kernel(kernel_size_x_);
-	for(int i=0;i<kernel_size_x_;i++) kernel[i].resize(kernel_size_y_);
-	gaussKernel(kernel, kernel_size_x_, kernel_size_y_, 0.5);
+//	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
+//	// However it is still possible to have like bumps because the sampling is just not enough.
+//	vector<vector<double> > kernel(kernel_size_x_);
+//	for(int i=0;i<kernel_size_x_;i++) kernel[i].resize(kernel_size_y_);
+//	gaussKernel(kernel, kernel_size_x_, kernel_size_y_, 0.5);
 
 	// Graph_.getEdgeList() = [#loc*#loc -> #edges -> #loc*#sec]
 
-	generateSectorCurve(Graph_, pos_vel_acc_avg_, file_eof_);
+	generateSectorCurve(Graph_, pos_vel_acc_avg_, max_range_, file_eof_);
 	printf("Generating sectors......Complete\n");
 
 	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
@@ -2315,32 +2124,34 @@ void labelSector(
 	showConnection(point_zero, label_zero, Graph_, color_code_, true);
 	printf("Viewing sector......Complete\n");
 
-	string path;
-	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
-	writeSectorFile(Graph_, path, 0);
-
-	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
-	writeSectorFile(Graph_, path, 1);
-
 	fillLocationData(Graph_);
 
+	directoryCheck(SCENE + Graph_.getScene() + "/" + Graph_.getObject());
+
+	string path;
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_beg.txt";
-	writeLocationFile(Graph_, path, 0);
+	writeLearnedDataFile(Graph_, path, 0);
 
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_mid.txt";
-	writeLocationFile(Graph_, path, 1);
+	writeLearnedDataFile(Graph_, path, 1);
 
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_end.txt";
-	writeLocationFile(Graph_, path, 2);
+	writeLearnedDataFile(Graph_, path, 2);
 
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_tangent.txt";
-	writeLocationFile(Graph_, path, 3);
+	writeLearnedDataFile(Graph_, path, 3);
 
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/loc_data_normal.txt";
-	writeLocationFile(Graph_, path, 4);
+	writeLearnedDataFile(Graph_, path, 4);
 
 	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/counter.txt";
-	writeCounterFile(Graph_, path, 0);
+	writeLearnedDataFile(Graph_, path, 5);
+
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_max.txt";
+	writeLearnedDataFile(Graph_, path, 6);
+
+	path = 	SCENE + Graph_.getScene() + "/" + Graph_.getObject() + "/sec_data_const.txt";
+	writeLearnedDataFile(Graph_, path, 7);
 }
 
 // ============================================================================
@@ -2348,20 +2159,31 @@ void labelSector(
 // ============================================================================
 
 void triggerContact(
-	point_t &p_,
+	point_t &point_,
 	Graph Graph_)
 {
+	vector<vector<double> > surfaces = Graph_.getSurface();
 	vector<node_tt> nodes 	= Graph_.getNodeList();
 	int num_locations 		= nodes.size();
 	vector<point_t> locations(num_locations);
-	vector<double>  location_boundary(num_locations);
+	vector<double>  locations_boundary(num_locations);
+	vector<int>  	surfaces_num(num_locations);
+	vector<double>  surfaces_boundary(num_locations);
 	for(int i=0;i<num_locations;i++)
 	{
-		locations[i]         = nodes[i].location;
-		location_boundary[i] = nodes[i].boundary;
+		locations[i]         	= nodes[i].location;
+		locations_boundary[i]	= nodes[i].boundary;
+		surfaces_num[i]			= nodes[i].surface;
+		surfaces_boundary[i]	= nodes[i].surface_boundary;
 	}
-	decideBoundary(p_, locations, location_boundary);
+	decideBoundary(
+			point_, locations, locations_boundary,
+			surfaces, surfaces_num, surfaces_boundary);
 }
+
+
+
+
 
 void checkMotion(
 	point_t pos_,
@@ -2467,7 +2289,7 @@ void checkSector(
 				sec_idx, loc_idx, sec_int, delta_t, point_,
 				loc_mid, tan, nor);
 
-		if (tmp_dis > 0.075)
+		if (tmp_dis > 0.075) //##NEED TO VERIFY
 		{
 			prediction_.pred[i] = OUT_OF_BOUND;
 			continue;
@@ -2510,12 +2332,13 @@ void motionPrediction(
 			flag_predict_      		 = false;
 			flag_predict_last_ 		 = true;
 			prediction_.pred_in[ii]	 = 1.0;
-			prediction_.pred_err[ii] = 0.0;
+			prediction_.pred_err[ii] = 0.999999;
 		}
 		else if (prediction_.pred[ii] == OUT_OF_RANGE)
 		{
 			prediction_.pred_in[ii]  = 0.0;
 			prediction_.pred_err[ii] = pdfExp(0.01, 0.0, t_val_[ii]); // NEED TO CHANGE ######
+			// with 0.01 variance, a difference of 10cm will have 0.60653065971 prob.
 		}
 		else
 		{
@@ -2641,6 +2464,9 @@ void predictionEdge(
 
 	// 2.2. Check if the trajectory is within the range of sector map
 	checkSector(prediction_, t_val, last_loc_, pos_, Graph_, label1_);
+
+//	for(int i=0;i<t_val.size();i++)
+//	cout << t_val[i] << endl;
 
 	// 2.3. Check for motion (moving/null)
 	checkMotion(pos_, vel_, Graph_.getSurface(), limit_ , label_);
@@ -2916,8 +2742,83 @@ void outputMsg(
 	}
 }
 
+void replaceLabel(
+	vector<string> &label_,
+	bool replace_)
+{
+	printf("Replace labels? [Y/N]\n");
+	while(0)
+	{
+		string mystr2; getline (cin, mystr2);
+		if(!strcmp(mystr2.c_str(),"Y"))
+		{
+			for(int i=0;i<label_.size();i++)
+			{
+				printf("Enter new label for MLabel %d : ",i);
+				string mystr;
+				getline (cin, mystr);
+				if(!strcmp(mystr.c_str(),""))
+				{
+					printf("[WARNING] : Label has not been overwritten.\n");
+				}
+				else
+				{
+					printf("[WARNING] : Label has been overwritten. New label : %s\n", mystr.c_str());
+					label_[i] = mystr;
+					replace_ = true;
+				}
+			}
+			printf("Replace labels? [Y/N]\n");
+			string mystr3; getline (cin, mystr3);
+			if(!strcmp(mystr3.c_str(),"Y"))
+			{
+				continue;
+			}
+			if(!strcmp(mystr3.c_str(),"N"))
+			{
+				printf("Labels have been changed.\n");
+				break;
+			}
+		}
+		if(!strcmp(mystr2.c_str(),"N"))
+		{
+			cout << "[WARNING] : Label has not been overwritten." << endl;
+			break;
+		}
+	}
+}
 
+// copy in binary mode
+bool copyFile(
+	string SRC,
+	string DEST)
+{
+    ifstream src (SRC,  ios::binary);
+    ofstream dest(DEST, ios::binary);
+    dest << src.rdbuf();
+    return src && dest;
+}
 
+bool directoryCheck(
+	string path_ )
+{
+    if (path_.empty())
+    {
+    	return false;
+    }
+    DIR *dir;
+    bool exist = false;
+    dir = opendir(path_.c_str());
+    if (dir != NULL)
+    {
+    	exist = true; closedir(dir);
+    }
+    if (!exist)
+    {
+    	mkdir(path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
+    return exist;
+}
 
 
 
@@ -2996,9 +2897,6 @@ void writePointFile(
 	}
 }
 
-
-
-
 bool checkSurfaceRange(
 	point_t pos_,
 	point_t pos_surface_,
@@ -3033,8 +2931,6 @@ int checkMoveSlide(
 		return 0;
 }
 
-
-
 double checkMoveSlideOutside(
 		point_t pos_,
 		point_t vel_,
@@ -3060,14 +2956,197 @@ double checkMoveSlideOutside(
 
 
 
+// UNUSED---------------------------------------------------------------------------------------------------------------------
+void writeSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > sector_,
+	int num_locations_,
+	int num_location_intervals_,
+	int num_sector_intervals_)
+{
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		write_file << num_locations_ 		  << "\n";
+		write_file << num_location_intervals_ << "\n";
+		write_file << num_sector_intervals_   << "\n";
+		for(int i=0;i<sector_.size();i++)
+		{
+			for(int ii=0;ii<sector_[i].size();ii++)
+			{
+				for(int iii=0;iii<sector_[i][ii].size();iii++)
+				{
+					write_file << sector_[i][ii][iii];
+					if (i<sector_[i][ii].size()-1)
+						write_file << ",";
+				}
+				write_file << "\n";
+			}
+		}
+	}
+}
+
+void readSectorConstraintFile(
+	string path_,
+	vector<vector<vector<double> > > &sector_)
+{
+	vector<vector<string> > data;
+	readFile(path_.c_str(), data , ',');
+
+	if(data.empty())
+	{
+		printf("[WARNING] : Sector data is empty.");
+	}
+	else
+	{
+		int num_locations, num_location_intervals, num_sector_intervals;
+		num_locations 			= atoi(data[0][0].c_str());
+		num_location_intervals 	= atoi(data[1][0].c_str());
+		num_sector_intervals 	= atoi(data[2][0].c_str());
+
+	    reshapeVector(sector_,Sqr(num_locations));
+	    vector<vector<double> > sector1(num_location_intervals);
+		       vector<double> 	sector2(num_sector_intervals);
+
+		for(int i=0;i<Sqr(num_locations);i++)
+		{
+			sector_[i] = sector1;
+			for(int ii=0;ii<num_location_intervals;ii++)
+			{
+				sector_[i][ii] = sector2;
+			}
+		}
+
+		for(int i=0;i<num_locations;i++)
+		{
+			for(int ii=0;ii<num_location_intervals;ii++)
+			{
+				int tmp = i*num_location_intervals+ii+3;
+				for(int iii=0;iii<num_sector_intervals;iii++)
+				{
+					sector_[i][ii][iii] = atof(data[tmp][iii].c_str());
+				}
+			}
+		}
+	}
+	// Should we add the option to edit the data?
+}
+
+void writeLocLabelFile(
+	Graph Graph_,
+	string path_)
+{
+	if (!ifstream(path_))
+	{
+		vector<node_tt> node_tmp = Graph_.getNodeList();
+		ofstream write_file(path_, ios::app);
+		for(int i=0;i<node_tmp.size();i++)
+		{
+			write_file << node_tmp[i].name       << ","
+					   << node_tmp[i].location.x << ","
+					   << node_tmp[i].location.y << ","
+					   << node_tmp[i].location.z << ","
+					   << node_tmp[i].boundary   << ","
+					   << node_tmp[i].surface	 << ","
+					   << node_tmp[i].surface_boundary;
+			write_file << "\n";
+		}
+	}
+}
+
+void writeMovLabelFile(
+	string path_,
+	vector<string> label_)
+{
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		for(int i=0;i<label_.size();i++)
+		{
+			write_file << label_[i];
+			if (i<label_.size()-1)
+				write_file << ",";
+		}
+		write_file << "\n";
+	}
+}
+
+void writeCounterFile(
+	Graph Graph_,
+	string path_,
+	int type_)
+{
+	vector<node_tt> nodes = Graph_.getNodeList();
+	int num_locations = nodes.size();
+	vector<vector<edge_tt> > edges = Graph_.getEdgeList();
+
+	sector_para_t para = Graph_.getSectorPara();
+
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		write_file << "Locations," 			<< num_locations 	<< "\n";
+		write_file << "Location Intervals," << para.loc_int 	<< "\n";
+		write_file << "Sector Intervals," 	<< para.sec_int 	<< "\n";
+		for(int i=0;i<edges.size();i++)
+		{
+			for(int ii=0;ii<edges[i].size();ii++)
+			{
+				write_file << "Edge,"    << i
+						   << ",Number," << ii << "\n";
+				write_file << Graph_.getCounter(i,ii)
+						   << "\n";
+			}
+		}
+	}
+}
 
 
+void writeSectorFile(
+	Graph Graph_,
+	string path_,
+	int type_)
+{
+	vector<node_tt> nodes = Graph_.getNodeList();
+	int num_locations = nodes.size();
+	vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
+	sector_para_t para = Graph_.getSectorPara();
 
-
-
-
-
+	if (!ifstream(path_))
+	{
+		ofstream write_file(path_, ios::app);
+		write_file << "Locations," 			<< num_locations 	<< "\n";
+		write_file << "Location Intervals," << para.loc_int 	<< "\n";
+		write_file << "Sector Intervals," 	<< para.sec_int 	<< "\n";
+		for(int i=0;i<edges.size();i++)
+		{
+			for(int ii=0;ii<edges[i].size();ii++)
+			{
+				vector<double> sector       = edges[i][ii].sector_map;
+				vector<double> sector_const = edges[i][ii].sector_const;
+				write_file << "Edge,"    << i
+						   << ",Number," << ii << "\n";
+				for(int iii=0;iii<sector.size();iii++)
+				{
+					switch(type_)
+					{
+						case 0:
+							write_file << sector[iii];
+							break;
+						case 1:
+							write_file << sector_const[iii];
+							break;
+					}
+					if (iii<sector.size()-1)
+						write_file << ",";
+					else
+						write_file << "\n";
+				}
+			}
+		}
+	}
+}
 
 
 

@@ -89,8 +89,7 @@
 - restructured again the code
 - clustering is done separately before learning the sector maps
 - given a 0.9999 confidence for inside prediction to allow it to be comapred with the rest.
-- INTERESTINGLY : the confidence drops at the beginning before increasing again.
-- this is probably due to the fact that the location area is clustered as a sphere dome instead of a point.
+- INTERESTINGLY : 
 
 
 

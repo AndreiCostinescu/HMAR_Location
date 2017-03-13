@@ -6,8 +6,9 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-#define LEARN
-//#define TESTING
+//#define LEARN_LOCATION
+//#define LEARN
+#define TESTING
 
 #include "dataDeclaration.h"
 #include "algo.h"
@@ -17,17 +18,27 @@
 #include "vtkExtra.h"
 
 #ifdef PC
-	string DATADIR_ = "../../KINECT/recording/";
-	string TESTDIR_ = "../../KINECT/recording/";
+	string DATA_DIR_SINGLE 	= "../../KINECT/recording/";
+	string DATA_DIR_ALL		= "../../KINECT/recording/";
+	string TEST_DIR_ 		= "../../KINECT/recording/";
+	string SCENE_ 			= "../Scene/";
 #else
-	string DATADIR_ = "./../KINECT/recording/";
-	string TESTDIR_ = "./../KINECT/recording/";
+	string DATA_DIR_SINGLE_ = "../KINECT/recording/";
+	string DATA_DIR_ALL_	= "../KINECT/recording/";
+	string TEST_DIR_ 		= "../KINECT/recording/";
+	string SCENE_ 			= "Scene/";
 #endif
 
-	string scene  = "Kitchen";
-	string object = "05";
-	string DATADIR = DATADIR_ + object + string("/");
-	string TESTDIR = DATADIR_ + object + string("/test/");
+	string scene   			= "Kitchen";
+
+#ifdef LEARN_LOCATION
+	string object  			= "ALL";
+	string DATA_DIR_ALL 	= DATA_DIR_ALL_ 	+ object	+ string("/");
+#else
+	string object  			= "04";
+	string DATA_DIR_SINGLE 	= DATA_DIR_SINGLE_	+ object	+ string("/");
+	string TEST_DIR 		= TEST_DIR_ 		+ object 	+ string("/test/");
+#endif
 
 //=============================================================================
 // Global
@@ -49,51 +60,38 @@ void toc()
 int main(int argc, char *argv[])
 {
 
-#ifdef LEARN
+#ifdef LEARN_LOCATION
+
+	// [PARAMETERS]************************************************************
+	int num_location_intervals	= 20;
+	int num_sector_intervals 	= 36;
+	// if more data points are available these 2 values can be increased.
+	int minpts 					= 20;
+	double epsilon 				= 0.015;
+	// ************************************************************[PARAMETERS]
 
 	// [VARIABLES]*************************************************************
+	int num_points 				= 0;
+	int num_locations			= 0;
+	int file_num 				= 0;
+	vector<int> 				file_eof;
+	vector<point_t> 			points;
+	vector<vector<string> > 	data_full;
+	vector<vector<point_t> > 	pos_vel_acc_avg; // length->motion
+	vector<point_t> 			pos_vel_acc_avg1(3);
+	vector<vector<point_t> > 	pos_vel_acc_mem; // motion->length
 	vector<unsigned char*> color_code(24);
 	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
-
-	int num_location_intervals	= 20;
-	int num_sector_intervals 	= 36;
-
-	int num_surfaces 	= 1;
-	int num_scene 		= 1;
-	int num_object 		= 1;
-
-	int num_points 		= 0;
-	int num_locations	= 0;
-	int num_mov 		= 2;
-	int file_num 		= 0;
-
-	int minpts 			= 20;
-	double epsilon 		= 0.015; 	// if datasets are merged these 2 values can be increased.
-
-	vector<int> 				file_eof;
-	vector<point_t> 			points;
-	vector<point_t> 			locations;
-	vector<vector<string> > 	data_full;
-	vector<vector<point_t> > 	pos_vel_acc_avg; // length->motion
-
-	vector<double> 				surface_const(4);
-	vector<vector<double> > 	surface(num_surfaces);
-	for(int i=0;i<num_surfaces;i++) surface[i] = surface_const;
-
-//	vector<vector<Graph> > Graph; // scene -> object
-//	reshapeVector(Graph, num_scene);
-//	for(int i=0;i<num_scene;i++) reshapeVector(Graph[i], num_object);
-
 	Graph Graph(scene, object);
-
+	printf("Initialization......Complete\n");
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
 	struct dirent **namelist;
 	string name;
 	string dir_name;
-	dir_name = DATADIR;
+	dir_name = DATA_DIR_ALL;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
 	if (n == 0) return 0;
 	for(int i=0;i<n;i++)
@@ -101,9 +99,7 @@ int main(int argc, char *argv[])
 		name = dir_name + namelist[i]->d_name;
 		readFile(name.c_str(), data_full , ',');
 		file_eof.push_back(data_full.size());
-		vector<string> last_line = data_full[data_full.size()-1];
 	}
-//	Graph.addSurface(surface);
 	readSurfaceFile(Graph);
 	printf("Reading training data......Complete\n");
 	// *************************************************************[READ FILE]
@@ -116,12 +112,104 @@ int main(int argc, char *argv[])
 	// ************************************************************[PARSE DATA]
 
 	// [PREPROCESS DATA]*******************************************************
-	vector<point_t> 			pos_vel_acc_avg1(3);
-	vector<point_t > 		  	pos_vel_acc_mem1(3);
-	vector<vector< point_t > > 	pos_vel_acc_mem; // motion->length
 	reshapeVector(pos_vel_acc_avg, num_points);
 	reshapeVector(pos_vel_acc_mem, 3);
+	for(int i=0;i<num_points;i++)
+	{
+		if (i == file_eof[file_num])
+		{
+			file_num++;
+			reshapeVector(pos_vel_acc_mem, 3);
+		}
+		if (i == 0)	{ pos_vel_acc_avg[i] = pos_vel_acc_avg1; }
+		else		{ pos_vel_acc_avg[i] = pos_vel_acc_avg[i-1]; }
+		preprocessDataLive(
+				points[i], pos_vel_acc_mem, pos_vel_acc_avg[i], FILTER_WIN);
+	}
+	printf("Pre-processing data......Complete\n");
+	// *******************************************************[PREPROCESS DATA]
 
+	// [LABELLING MOVEMENT]****************************************************
+	labelMovement(Graph);
+	printf("Labeling of movements......Complete\n");
+	// ****************************************************[LABELLING MOVEMENT]
+
+	// [LABELLING LOCATION]****************************************************
+	labelLocation_(Graph, pos_vel_acc_avg, epsilon, minpts);
+	printf("Labeling of location areas......Complete\n");
+	// ****************************************************[LABELLING LOCATION]
+
+#endif
+
+
+#ifdef LEARN
+
+	// [PARAMETERS]************************************************************
+	int num_location_intervals	= 20;
+	int num_sector_intervals 	= 36;
+	// if more data points are available these 2 values can be increased.
+	int minpts 					= 20;
+	double epsilon 				= 0.015;
+	double max_range 			= 0.05;
+	// ************************************************************[PARAMETERS]
+
+	// [VARIABLES]*************************************************************
+	int num_points 				= 0;
+	int num_locations			= 0;
+	int file_num 				= 0;
+	vector<int> 				file_eof;
+	vector<point_t> 			points;
+	vector<vector<string> > 	data_full;
+	vector<vector<point_t> > 	pos_vel_acc_avg; // length->motion
+	vector<point_t> 			pos_vel_acc_avg1(3);
+	vector<vector<point_t> > 	pos_vel_acc_mem; // motion->length
+	vector<unsigned char*> color_code(24);
+	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
+	colorCode(color_code);
+	Graph Graph(scene, object);
+	printf("Initialization......Complete\n");
+	// *************************************************************[VARIABLES]
+
+	// [LEARNED DATA]**********************************************************
+	directoryCheck(SCENE_ + scene + "/" + object);
+	string path_tmp_src, path_tmp_dest;
+	path_tmp_src 	= SCENE_ + scene + string("/ALL/data_loc.txt");
+	path_tmp_dest 	= SCENE_ + scene + "/" + object + "/data_loc.txt";
+	copyFile(path_tmp_src, path_tmp_dest);
+	path_tmp_src 	= SCENE_ + scene + string("/ALL/data_mov.txt");
+	path_tmp_dest 	= SCENE_ + scene + "/" + object + "/data_mov.txt";
+	copyFile(path_tmp_src, path_tmp_dest);
+	printf("Copying learned data......Complete\n");
+	// **********************************************************[LEARNED DATA]
+
+	// [READ FILE]*************************************************************
+	struct dirent **namelist;
+	string name;
+	string dir_name;
+	dir_name = DATA_DIR_SINGLE;
+	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
+	if (n == 0) return 0;
+	for(int i=0;i<n;i++)
+	{
+		name = dir_name + namelist[i]->d_name;
+		readFile(name.c_str(), data_full , ',');
+		file_eof.push_back(data_full.size());
+		vector<string> last_line = data_full[data_full.size()-1];
+	}
+	readSurfaceFile(Graph);
+	printf("Reading training data......Complete\n");
+	// *************************************************************[READ FILE]
+
+	// [PARSE DATA]************************************************************
+	num_points = data_full.size();
+	reshapeVector(points, num_points);
+	parseData2Point(data_full, points);
+	printf("Parsing training data......Complete\n");
+	// ************************************************************[PARSE DATA]
+
+	// [PREPROCESS DATA]*******************************************************
+	reshapeVector(pos_vel_acc_avg, num_points);
+	reshapeVector(pos_vel_acc_mem, 3);
 	for(int i=0;i<num_points;i++)
 	{
 		if (i == file_eof[file_num])
@@ -136,30 +224,21 @@ int main(int argc, char *argv[])
 		preprocessDataLive(points[i], pos_vel_acc_mem, pos_vel_acc_avg[i],
 						   FILTER_WIN);
 	}
-	printf("Preprocessing data......Complete\n");
-	//********************************************************[PREPROCESS DATA]
+	printf("Pre-processing data......Complete\n");
+	// *******************************************************[PREPROCESS DATA]
 
-	//[LABELLING MOVEMENT]*****************************************************
-	labelMovement(Graph);
-	printf("Labeling of movements......Complete\n");
-	//*****************************************************[LABELLING MOVEMENT]
-
-
-// [GRAPH]*********************************************************************
-
-	// [ADD NODES]*************************************************************
+	// [NODES]*****************************************************************
+	readLocation_(Graph);
+	readMovement (Graph);
 	labelLocation_(Graph, pos_vel_acc_avg, epsilon, minpts);
-	printf("Creating nodes for clusters (action locations)......Complete\n");
-	// *************************************************************[ADD NODES]
+	printf("Creating nodes for the clusters (action locations)......Complete\n");
+	// *****************************************************************[NODES]
+
 	//[EDGES]******************************************************************
 	Graph.initEdge(num_location_intervals, num_sector_intervals);
-	labelSector(Graph, pos_vel_acc_avg,	0.05, 1, 1, file_eof, color_code);
+	labelSector(Graph, pos_vel_acc_avg,	max_range, file_eof, color_code);
 	printf("Creating sectors for connection between the clusters (action locations)......Complete\n");
-	//******************************************************************[EDGES]
-
-//**********************************************************************[GRAPH]
-printf("Creating a graph to represent the clusters (action locations)......Complete\n");
-
+	// *****************************************************************[EDGES]
 
 #endif
 
@@ -172,12 +251,6 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	vector<unsigned char*> color_code(24);
 	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
 	colorCode(color_code);
-
-//	int num_scene 		= 1;
-//	int num_object 		= 1;
-//	vector<vector<Graph> > Graph; // scene -> object
-//	reshapeVector(Graph, num_scene);
-//	for(int i=0;i<num_scene;i++) reshapeVector(Graph[i], num_object);
 
 	Graph Graph_(scene, object);
 
@@ -228,7 +301,7 @@ printf("Creating a graph to represent the clusters (action locations)......Compl
 	// [READ FILE]*************************************************************
 	struct dirent **namelist;
 	string name, dir_name;
-	dir_name = TESTDIR;
+	dir_name = TEST_DIR;
 	int n = scandir(dir_name.c_str(), &namelist, fileSelect, alphasort);
 	if (n == 0) return 0;
 	for(int i=0;i<n;i++)

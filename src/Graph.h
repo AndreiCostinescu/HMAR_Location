@@ -30,6 +30,7 @@ public:
 		point_t 		location,
 		double 			boundary,
 		int 			surface_num_,
+		double			surface_boundary_,
 		vector<data_t> 	data_);
 
 	void extendNode(

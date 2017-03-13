@@ -49,20 +49,22 @@ void Graph::addNode(
 	string 			name_,
 	unsigned int 	index_,
 	int 			category_, //not used
-	point_t 		location,
-	double 			boundary,
+	point_t 		location_,
+	double 			boundary_,
 	int 			surface_num_,
+	double			surface_boundary_,
 	vector<data_t> 	data_)
 {
 	node = {};
 
-	node.name     	= name_;
-	node.index    	= index_;
-	node.category 	= category_;
-	node.location	= location;
-	node.boundary 	= boundary;
-	node.surface	= surface_num_;
-	node.data    	= data_;
+	node.name     			= name_;
+	node.index    			= index_;
+	node.category 			= category_;
+	node.location			= location_;
+	node.boundary 			= boundary_;
+	node.surface			= surface_num_;
+	node.surface_boundary	= surface_boundary_;
+	node.data    			= data_;
 
 	if (nodes.size() < index_+1)
 		nodes.resize(index_+1);

@@ -25,13 +25,16 @@ void dbscanCluster(
 	point_t *p);
 
 void combineNearCluster(
-	vector<point_t> &points,
-	vector<point_t> &locations);
+	vector<point_t> 		&points_,
+	vector<point_t> 		&locations_);
 
 void decideBoundary(
-	point_t &p,
-	vector<point_t> location,
-	vector<double> location_boundary);
+	point_t 				&point_,
+	vector<point_t> 		locations_,
+	vector<double> 			locations_boundary_,
+	vector<vector<double> > surfaces_,
+	vector<int>     		surfaces_num_,
+	vector<double> 			surfaces_boundary_);
 
 void contactBoundary(
 	vector<point_t> &p,
@@ -92,16 +95,23 @@ void preprocessDataLive(
 void writeSurfaceFile(
 	Graph Graph_);
 
+void writeLabelFile(
+	Graph Graph_,
+	string path_,
+	int movloc_);
+
+void writeLearnedDataFile(
+	Graph Graph_,
+	string path_,
+	int type_);
+
 void writeMovLabelFile(
 	string path_,
 	vector<string> label_);
 
 void writeLocLabelFile(
-	string path_,
-	vector<string> label_,
-	vector<point_t> locations_,
-	vector<double> boundary_,
-	vector<int> surface_num_container_);
+	Graph Graph_,
+	string path_);
 
 void writeLocationFile(
 	Graph Graph_,
@@ -258,11 +268,13 @@ void updateSectorCurve(
 	int point1_idx_,
 	int point2_idx_,
 	int label1_,
-	int label2_);
+	int label2_,
+	double max_range_);
 
 void generateSectorCurve(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
+	double max_range_,
 	vector<int> file_eof_);
 
 void fillLocationData(
@@ -276,14 +288,16 @@ void labelMovement(
 	Graph Graph_);
 
 void labelLocation(
-	string path_,
-	vector<point_t> &points_,
-	vector<point_t> &locations_,
-	vector<double> &location_boundary_,
-	vector<string> &label_,
-	vector<int> &surface_num_,
-	double epsilon_,
-	int minpts_);
+	string 					path_,
+	vector<point_t> 		&points_,
+	vector<point_t> 		&locations_,
+	vector<double>  		&locations_boundary_,
+	vector<string>  		&label_,
+	vector<vector<double> > surfaces_,
+	vector<int>     		&surfaces_num_,
+	vector<double>     		&surfaces_boundary_,
+	double 					epsilon_,
+	int    					minpts_);
 
 void labelLocation_(
 	Graph &Graph_,
@@ -295,8 +309,6 @@ void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	double max_range_,
-	int kernel_size_x_,
-	int kernel_size_y_,
 	vector<int> file_eof_,
 	vector<unsigned char*> color_code_);
 
@@ -385,11 +397,16 @@ void outputMsg(
 	Graph Graph_);
 
 
+void replaceLabel(
+	vector<string> &label_,
+	bool replace_=false);
 
+bool copyFile(
+	string SRC,
+	string DEST);
 
-
-
-
+bool directoryCheck(
+	string path_ );
 
 
 

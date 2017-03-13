@@ -53,6 +53,10 @@ iterator
 -
 dirent.h
 -
+sys/stat.h
+-
+sys/types.h
+-
 vtkVersion.h
 -
 vtkSmartPointer.h
@@ -198,9 +202,19 @@ gsl/gsl_statistics.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
 
-/home/chen/HMAR/HMAR_Location/src/util.cpp
+/home/chen/HMAR/HMAR_Location/src/main.cpp
+dataDeclaration.h
+/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+algo.h
+/home/chen/HMAR/HMAR_Location/src/algo.h
 util.h
 /home/chen/HMAR/HMAR_Location/src/util.h
+dbscan.h
+/home/chen/HMAR/HMAR_Location/src/dbscan.h
+Graph.h
+/home/chen/HMAR/HMAR_Location/src/Graph.h
+vtkExtra.h
+/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
 
 /home/chen/HMAR/HMAR_Location/src/util.h
 dataDeclaration.h
