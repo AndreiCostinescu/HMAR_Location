@@ -155,6 +155,19 @@ struct point_s {
     double x, y, z;
     int cluster_id;
 };
+
+typedef struct node_s node_t;
+struct node_s {
+    unsigned int index;
+    node_t *next;
+};
+
+typedef struct epsilon_neighbours_s epsilon_neighbours_t;
+struct epsilon_neighbours_s {
+    unsigned int num_members;
+    node_t *head, *tail;
+};
+
 //********************
 
 typedef struct sector_s sector_t;

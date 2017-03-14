@@ -13,14 +13,32 @@ link_directories(/home/chen/gsl/lib)
 
 # FALSE for PC
 if(TRUE)
-  add_executable(../HMAR ./src/Graph.cpp ./src/dbscan.cpp ./src/util.cpp ./src/vtkExtra.cpp ./src/algo.cpp ./src/main.cpp)
+  add_executable(../HMAR 
+  	./src/Graph.cpp 
+  	./src/dbscan.cpp 
+  	./src/util.cpp 
+  	./src/vtkExtra.cpp 
+  	./src/algo.cpp 
+  	./src/readWriteFile.cpp 
+  	./src/labeling.cpp
+  	./src/prediction.cpp
+  	./src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(../HMAR ${VTK_LIBRARIES} gsl gslcblas)
   else()
     target_link_libraries(../HMAR vtkHybrid vtkWidgets gsl gslcblas)
   endif()
 else()
-  add_executable(HMAR ../src/Graph.cpp ../src/dbscan.cpp ../src/util.cpp ../src/vtkExtra.cpp ../src/algo.cpp ../src/main.cpp)
+  add_executable(HMAR 
+  	../src/Graph.cpp
+  	../src/dbscan.cpp
+  	../src/util.cpp
+  	../src/vtkExtra.cpp
+  	../src/algo.cpp
+  	../src/readWriteFile.cpp
+  	../src/labeling.cpp
+  	../src/prediction.cpp
+  	../src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(HMAR ${VTK_LIBRARIES} gsl gslcblas)
   else()

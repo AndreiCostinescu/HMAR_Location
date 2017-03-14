@@ -167,9 +167,78 @@ CMakeFiles/../HMAR.dir/src/algo.cpp.o.provides: CMakeFiles/../HMAR.dir/src/algo.
 
 CMakeFiles/../HMAR.dir/src/algo.cpp.o.provides.build: CMakeFiles/../HMAR.dir/src/algo.cpp.o
 
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o: CMakeFiles/../HMAR.dir/flags.make
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o: ../src/readWriteFile.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/chen/HMAR/HMAR_Location/Build/CMakeFiles $(CMAKE_PROGRESS_6)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o -c /home/chen/HMAR/HMAR_Location/src/readWriteFile.cpp
+
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/chen/HMAR/HMAR_Location/src/readWriteFile.cpp > CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.i
+
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/chen/HMAR/HMAR_Location/src/readWriteFile.cpp -o CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.s
+
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.requires:
+.PHONY : CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.requires
+
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.provides: CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.requires
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.provides.build
+.PHONY : CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.provides
+
+CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.provides.build: CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.o: CMakeFiles/../HMAR.dir/flags.make
+CMakeFiles/../HMAR.dir/src/labeling.cpp.o: ../src/labeling.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/chen/HMAR/HMAR_Location/Build/CMakeFiles $(CMAKE_PROGRESS_7)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/../HMAR.dir/src/labeling.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/../HMAR.dir/src/labeling.cpp.o -c /home/chen/HMAR/HMAR_Location/src/labeling.cpp
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/../HMAR.dir/src/labeling.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/chen/HMAR/HMAR_Location/src/labeling.cpp > CMakeFiles/../HMAR.dir/src/labeling.cpp.i
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/../HMAR.dir/src/labeling.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/chen/HMAR/HMAR_Location/src/labeling.cpp -o CMakeFiles/../HMAR.dir/src/labeling.cpp.s
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.o.requires:
+.PHONY : CMakeFiles/../HMAR.dir/src/labeling.cpp.o.requires
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.o.provides: CMakeFiles/../HMAR.dir/src/labeling.cpp.o.requires
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling.cpp.o.provides.build
+.PHONY : CMakeFiles/../HMAR.dir/src/labeling.cpp.o.provides
+
+CMakeFiles/../HMAR.dir/src/labeling.cpp.o.provides.build: CMakeFiles/../HMAR.dir/src/labeling.cpp.o
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.o: CMakeFiles/../HMAR.dir/flags.make
+CMakeFiles/../HMAR.dir/src/prediction.cpp.o: ../src/prediction.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/chen/HMAR/HMAR_Location/Build/CMakeFiles $(CMAKE_PROGRESS_8)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/../HMAR.dir/src/prediction.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/../HMAR.dir/src/prediction.cpp.o -c /home/chen/HMAR/HMAR_Location/src/prediction.cpp
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/../HMAR.dir/src/prediction.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/chen/HMAR/HMAR_Location/src/prediction.cpp > CMakeFiles/../HMAR.dir/src/prediction.cpp.i
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/../HMAR.dir/src/prediction.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/chen/HMAR/HMAR_Location/src/prediction.cpp -o CMakeFiles/../HMAR.dir/src/prediction.cpp.s
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.o.requires:
+.PHONY : CMakeFiles/../HMAR.dir/src/prediction.cpp.o.requires
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.o.provides: CMakeFiles/../HMAR.dir/src/prediction.cpp.o.requires
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/prediction.cpp.o.provides.build
+.PHONY : CMakeFiles/../HMAR.dir/src/prediction.cpp.o.provides
+
+CMakeFiles/../HMAR.dir/src/prediction.cpp.o.provides.build: CMakeFiles/../HMAR.dir/src/prediction.cpp.o
+
 CMakeFiles/../HMAR.dir/src/main.cpp.o: CMakeFiles/../HMAR.dir/flags.make
 CMakeFiles/../HMAR.dir/src/main.cpp.o: ../src/main.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/chen/HMAR/HMAR_Location/Build/CMakeFiles $(CMAKE_PROGRESS_6)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/chen/HMAR/HMAR_Location/Build/CMakeFiles $(CMAKE_PROGRESS_9)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/../HMAR.dir/src/main.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/../HMAR.dir/src/main.cpp.o -c /home/chen/HMAR/HMAR_Location/src/main.cpp
 
@@ -197,6 +266,9 @@ __/HMAR_OBJECTS = \
 "CMakeFiles/../HMAR.dir/src/util.cpp.o" \
 "CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o" \
 "CMakeFiles/../HMAR.dir/src/algo.cpp.o" \
+"CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o" \
+"CMakeFiles/../HMAR.dir/src/labeling.cpp.o" \
+"CMakeFiles/../HMAR.dir/src/prediction.cpp.o" \
 "CMakeFiles/../HMAR.dir/src/main.cpp.o"
 
 # External object files for target ../HMAR
@@ -207,6 +279,9 @@ __/HMAR_EXTERNAL_OBJECTS =
 ../HMAR: CMakeFiles/../HMAR.dir/src/util.cpp.o
 ../HMAR: CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o
 ../HMAR: CMakeFiles/../HMAR.dir/src/algo.cpp.o
+../HMAR: CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o
+../HMAR: CMakeFiles/../HMAR.dir/src/labeling.cpp.o
+../HMAR: CMakeFiles/../HMAR.dir/src/prediction.cpp.o
 ../HMAR: CMakeFiles/../HMAR.dir/src/main.cpp.o
 ../HMAR: CMakeFiles/../HMAR.dir/build.make
 ../HMAR: /home/chen/vtksrc/VTK-build/lib/libvtkFiltersStatistics-7.1.so.1
@@ -412,6 +487,9 @@ CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/dbscan.cpp.o.require
 CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/util.cpp.o.requires
 CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o.requires
 CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/algo.cpp.o.requires
+CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/readWriteFile.cpp.o.requires
+CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/labeling.cpp.o.requires
+CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/prediction.cpp.o.requires
 CMakeFiles/../HMAR.dir/requires: CMakeFiles/../HMAR.dir/src/main.cpp.o.requires
 .PHONY : CMakeFiles/../HMAR.dir/requires
 

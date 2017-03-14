@@ -40,6 +40,9 @@ public:
 	bool checkNode(
 		unsigned int node_index_);
 
+	void updateNodeName(
+		vector<string> names_);
+
 	void initEdge(
 		int loc_int,
 		int sec_int);
@@ -119,6 +122,8 @@ public:
 
 	vector<node_tt> getNodeList()
 	{return nodes;}
+
+	vector<string> getNodeName();
 
 	vector<double> getInitSector()
 	{return sector_zero;}

@@ -92,5 +92,9 @@
 - INTERESTINGLY : the confidence drops at the beginning before increasing again.
 - this is probably due to the fact that the location area is clustered as a sphere dome instead of a point.
 
-
-
+[15]
+- 14/03/2017
+- added 3 new libraries
+- moved everything from main into util
+- main functions are split into 3 modules
+- added a check to prevent prediction from showing 0% confidence by taking the last known prediction

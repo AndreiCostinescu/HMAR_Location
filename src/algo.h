@@ -12,10 +12,13 @@
 
 //=============================================================================
 // functions
+//=============================================================================
 
-double l2Norm(vector<double> A);
+double l2Norm(
+	vector<double> A);
 
-double l2Norm(point_t A);
+double l2Norm(
+	point_t A);
 
 double pdfExp(
 	double var,
@@ -27,11 +30,11 @@ double normalPdf(
 	double mu,
 	double x);
 
-point_t minusPoint(
+point_t addPoint(
 	point_t A,
 	point_t B);
 
-point_t addPoint(
+point_t minusPoint(
 	point_t A,
 	point_t B);
 
@@ -51,7 +54,8 @@ point_t movingAverage(
 	point_t a,
 	vector<point_t> &A);
 
-point_t averagePoint(vector<point_t> A);
+point_t averagePoint(
+	vector<point_t> A);
 
 point_t averagePointIncrement(
 	point_t A,
@@ -73,7 +77,7 @@ vector<double> rodriguezRot(
 	point_t vec_2);
 
 vector<double> transInv(
-		vector<double> A);
+	vector<double> A);
 
 void cal_tangent_normal(
 	double t_mid_,
@@ -84,7 +88,8 @@ void cal_tangent_normal(
 	bool normal);
 
 //=============================================================================
-// inline
+// inline + template
+//=============================================================================
 
 static inline vector<double> point2vector(point_t A)
 {
@@ -110,9 +115,6 @@ static inline bool min_ (T x,T y) { return (x<y)?true:false; }
 
 template<typename T>
 static inline bool max_ (T x,T y) { return (x>y)?true:false; }
-
-//=============================================================================
-// template
 
 template<typename T>
 void vector2array(vector<T> A, T *B)
@@ -171,5 +173,54 @@ void normalizeData(vector<T> &data_)
 //	else
 //		printf("[WARNING] : Data is empty.\n");
 }
+
+// ============================================================================
+// B-spline
+// ============================================================================
+
+//void curveFit(
+//	vector<point_t> points_,
+//	vector<point_t> &curves_);
+
+void polyCurveFit(
+	vector<double> points_,
+	vector<double> &coeff_,
+	vector<double> &cov_);
+
+void polyCurveFitPoint(
+	vector<point_t> points_,
+	vector<point_t> &points_est_,
+	vector<point_t> &coeffs_,
+	vector<point_t> &covs_,
+	bool est_);
+
+void polyCurveFitEst(
+	vector<double> &points_,
+	int num_points_,
+	vector<double> coeffs_,
+	vector<double> covs_);
+
+void polyCurveLength(
+	double &length_,
+	double a_,
+	double b_,
+	vector<point_t> coeffs_);
+
+// ============================================================================
+// Surface
+// ============================================================================
+
+double surfaceDistance(
+	point_t pos_,
+	vector<double> surface_);
+
+double surfaceAngle(
+	point_t vel_,
+	vector<double> surface_);
+
+double surfaceRange(
+	point_t pos_,
+	point_t pos_surface_,
+	vector<double> surface_);
 
 #endif /* ALGO_H_ */

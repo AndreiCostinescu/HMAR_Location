@@ -991,7 +991,7 @@ void showConnection(
 		style->setNumberOfLabels(num_locations);
 		style->setLabels(labels_);
 		style->setColors(color_);
-		for(int i=0;i<num_locations+1;i++)
+		for(int i=0;i<num_locations;i++)
 		{
 			textActor 	= vtkSmartPointer<vtkTextActor>::New();
 			if(labels_.empty()) continue;

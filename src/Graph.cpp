@@ -94,6 +94,23 @@ bool Graph::checkNode(
 	return check_flag;
 }
 
+vector<string> Graph::getNodeName()
+{
+	vector<string> names(nodes.size());
+	for(int i=0;i<nodes.size();i++)
+		names[i] = nodes[i].name;
+	return names;
+}
+
+void Graph::updateNodeName(vector<string> names_)
+{
+	if(names_.size()!=nodes.size())
+		printf("[WARNING] : Number of names is not the same as the number of nodes in graph...");
+	else
+		for(int i=0;i<nodes.size();i++)
+			nodes[i].name = names_[i];
+}
+
 //=============================================================================
 // EDGES
 //=============================================================================
