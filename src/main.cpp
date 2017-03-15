@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
 
 	scene   			= "Kitchen";
 
-//	object  			= "ALL";
-//	DATA_DIR_ALL 		= DATA_DIR_ALL_ 	+ object	+ string("/");
-//	learnLocationArea(DATA_DIR_ALL, scene, object);
+	object  			= "ALL";
+	DATA_DIR_ALL 		= DATA_DIR_ALL_ 	+ object	+ string("/");
+	learnLocationArea(DATA_DIR_ALL, scene, object);
 
 	object  			= "04";
 	DATA_DIR_SINGLE 	= DATA_DIR_SINGLE_	+ object	+ string("/");
@@ -54,8 +54,6 @@ int main(int argc, char *argv[])
 	object  			= "04";
 	TEST_DIR 			= TEST_DIR_ 		+ object 	+ string("/test/");
 	testing(TEST_DIR, scene, object);
-
-
 
 //		vector<double> x,y1,y2,y0;
 //		for(int i=0;i<num_points;i++)

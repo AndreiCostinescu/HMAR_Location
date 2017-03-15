@@ -117,6 +117,13 @@ template<typename T>
 static inline bool max_ (T x,T y) { return (x>y)?true:false; }
 
 template<typename T>
+void reshapeVector(vector<T> &A, int size)
+{
+	A.clear();
+	A.resize(size);
+}
+
+template<typename T>
 void vector2array(vector<T> A, T *B)
 {
 	for(int i=0;i<A.size();i++) B[i] = A[i];
@@ -125,14 +132,8 @@ void vector2array(vector<T> A, T *B)
 template<typename T>
 void array2vector(T *A, int size, vector<T> &B)
 {
+	reshapeVector(B,size);
 	for(int i=0;i<size;i++) B[i] = A[i];
-}
-
-template<typename T>
-void reshapeVector(vector<T> &A, int size)
-{
-	A.clear();
-	A.resize(size);
 }
 
 template<typename T>

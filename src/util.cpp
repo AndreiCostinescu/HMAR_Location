@@ -45,9 +45,7 @@ int learnLocationArea(
 	vector<vector<point_t> > 	pos_vel_acc_avg; // length->motion
 	vector<point_t> 			pos_vel_acc_avg1(3);
 	vector<vector<point_t> > 	pos_vel_acc_mem; // motion->length
-	vector<unsigned char*> color_code(24);
-	for(int j=0;j<24;j++) { color_code[j] = Calloc(unsigned char,3);}
-	colorCode(color_code);
+	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	Graph Graph(scene, object);
 	printf("Initialization......Complete\n");
 	// *************************************************************[VARIABLES]
@@ -154,9 +152,7 @@ int learnSector(
 	vector<vector<point_t> > 	pos_vel_acc_avg; // length->motion
 	vector<point_t> 			pos_vel_acc_avg1(3);
 	vector<vector<point_t> > 	pos_vel_acc_mem; // motion->length
-	vector<unsigned char*> color_code(24);
-	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
-	colorCode(color_code);
+	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	Graph Graph(scene, object);
 	printf("Initialization......Complete\n");
 	// *************************************************************[VARIABLES]
@@ -274,9 +270,7 @@ int testing(
 	string object)
 {
 	// [VARIABLES]*************************************************************
-	vector<unsigned char*> color_code(24);
-	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
-	colorCode(color_code);
+	vector<vector<unsigned char> > color_code; colorCode(color_code);
 
 	Graph Graph_(scene, object);
 

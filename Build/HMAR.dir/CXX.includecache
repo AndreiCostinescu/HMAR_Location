@@ -216,6 +216,12 @@ vtkExtra.h
 dbscan.h
 /home/chen/HMAR/HMAR_Location/src/dbscan.h
 
+/home/chen/HMAR/HMAR_Location/src/main.cpp
+dataDeclaration.h
+/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+util.h
+/home/chen/HMAR/HMAR_Location/src/util.h
+
 /home/chen/HMAR/HMAR_Location/src/prediction.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
@@ -233,10 +239,6 @@ algo.h
 /home/chen/HMAR/HMAR_Location/src/algo.h
 Graph.h
 /home/chen/HMAR/HMAR_Location/src/Graph.h
-
-/home/chen/HMAR/HMAR_Location/src/util.cpp
-util.h
-/home/chen/HMAR/HMAR_Location/src/util.h
 
 /home/chen/HMAR/HMAR_Location/src/util.h
 dataDeclaration.h

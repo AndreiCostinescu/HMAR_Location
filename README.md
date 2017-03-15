@@ -98,3 +98,8 @@
 - moved everything from main into util
 - main functions are split into 3 modules
 - added a check to prevent prediction from showing 0% confidence by taking the last known prediction
+
+[16]
+- 15/03/2017
+- reworked the colorcode function
+- allow the curve check to look for more sectors instead of just 1

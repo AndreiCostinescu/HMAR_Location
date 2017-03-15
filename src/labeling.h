@@ -19,7 +19,8 @@
 // ============================================================================
 
 void decideBoundary(
-	point_t 				&point_,
+	point_t 				&point1_,
+	point_t 				&point2_,
 	vector<point_t> 		locations_,
 	vector<double> 			locations_boundary_,
 	vector<vector<double> > surfaces_,
@@ -60,7 +61,7 @@ void labelSector(
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	double max_range_,
 	vector<int> file_eof_,
-	vector<unsigned char*> color_code_);
+	vector<vector<unsigned char> > color_code_);
 
 void readingLocation(
 	vector<point_t> &locations,

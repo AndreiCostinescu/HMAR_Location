@@ -13,7 +13,8 @@
 
 
 void decideBoundary(
-	point_t 				&point_,
+	point_t 				&point1_,
+	point_t 				&point2_,
 	vector<point_t> 		locations_,
 	vector<double> 			locations_boundary_,
 	vector<vector<double> > surfaces_,
@@ -23,10 +24,10 @@ void decideBoundary(
 	double location_contact = 0.0;
 	point_t tmp_diff;
 	location_contact = 0.0;
-	point_.cluster_id = UNCLASSIFIED;
+	point2_.cluster_id = UNCLASSIFIED;
 	for(int ii=0;ii<locations_.size();ii++)
 	{
-		tmp_diff = minusPoint(point_, locations_[ii]);
+		tmp_diff = minusPoint(point2_, locations_[ii]);
 		if (max_(
 				pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
 				location_contact ))
@@ -34,14 +35,20 @@ void decideBoundary(
 			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
 			if (max_(location_contact, locations_boundary_[ii]))
 			{
+				double tmpvel = l2Norm(minusPoint(point2_,point1_));
+				if (tmpvel > 0.005) continue;
 				if (surfaces_num_[ii] < 0)
-					point_.cluster_id = ii;
+				{
+					point2_.cluster_id = ii;
+				}
 				else
 				{
 					if (surfaceDistance(
-							point_, surfaces_[surfaces_num_[ii]])
+							point2_, surfaces_[surfaces_num_[ii]])
 						<= surfaces_boundary_[ii])
-						point_.cluster_id = ii;
+					{
+						point2_.cluster_id = ii;
+					}
 				}
 			}
 		}
@@ -89,9 +96,14 @@ void contactBoundary(
 		}
 		else
 		{
-			decideBoundary(
-					points_[i], locations_, locations_boundary_,
-					surfaces_, surfaces_num_, surfaces_boundary_);
+			if(i>0)
+				decideBoundary(
+						points_[i-1], points_[i], locations_, locations_boundary_,
+						surfaces_, surfaces_num_, surfaces_boundary_);
+			else
+				decideBoundary(
+						points_[i], points_[i], locations_, locations_boundary_,
+						surfaces_, surfaces_num_, surfaces_boundary_);
 		}
 	}
 }
@@ -136,9 +148,7 @@ void labelLocation(
 	int num_points = points_.size();
 	int num_locations;
 
-	vector<unsigned char*> color_code(24);
-	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
-	colorCode(color_code);
+	vector<vector<unsigned char> > color_code; colorCode(color_code);
 
 	point_t *points_array = Calloc(point_t,points_.size());
 	vector2array(points_, points_array);
@@ -221,7 +231,7 @@ void labelLocation(
 	}
 
 	printf("Reviewing location labels...\n");
-	for(int i=0;i<num_locations;i++)
+	for(int i=0;i<1;i++)
 	{
 		printf("LLabel %d : %s\n", i+1, label_[i].c_str());
 	}
@@ -302,7 +312,7 @@ void labelSector(
 	vector<vector<point_t> > pos_vel_acc_avg_,
 	double max_range_,
 	vector<int> file_eof_,
-	vector<unsigned char*> color_code_)
+	vector<vector<unsigned char> > color_code_)
 {
 //	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
 //	// However it is still possible to have like bumps because the sampling is just not enough.
@@ -524,7 +534,7 @@ void determineLocationInterval(
 		}
 	}
 	// to prevent unknown locations at start and end
-	if (loc_idxs_.size()<1) loc_idxs_.push_back(loc_last_idx_); loc_last_idx_ = loc_idxs_[0];
+	if (loc_idxs_.size()<1) loc_idxs_.push_back(loc_last_idx_); loc_last_idx_ = loc_idxs_.back();
 }
 
 void determineSectorInterval(
@@ -680,7 +690,7 @@ void checkSectorCurve(
 		determineSectorMap(
 				sector_map, loc_last_idx, loc_int, sec_int,
 				points_est[ii], loc_beg, loc_mid, loc_end, tan, nor,
-				false);
+				true);
 	}
 	Graph_.updateEdgeSector(sector_map, label1_, label2_, 0);
 }
@@ -870,9 +880,7 @@ void updateSectorCurve(
 	int label2_,
 	double max_range_)
 {
-	vector<unsigned char*> color_code(24);
-	for(int j=0;j<24;j++) color_code[j] = Calloc(unsigned char,3);
-	colorCode(color_code);
+	vector<vector<unsigned char> > color_code; colorCode(color_code);
 
 	vector<point_t> points_est, coeffs;
 
@@ -902,6 +910,11 @@ void updateSectorCurve(
 
 		checkSectorCurve(
 				Graph_, points_est, edge_xy_, label1_, label2_);
+
+//		vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
+//		for(int i=point1_idx_;i<point2_idx_;i++) point_zero.push_back(pva_avg_[i][0]);
+//		showConnection(points_est, label_zero, Graph_, color_code, true);
+//		printf("Viewing sector......Complete\n");
 
 		adjustSectorCurve(
 				Graph_, points_est, coeffs, edge_xy_,

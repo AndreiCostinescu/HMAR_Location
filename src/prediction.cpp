@@ -30,7 +30,7 @@ void triggerContact(
 		surfaces_boundary[i]	= nodes[i].surface_boundary;
 	}
 	decideBoundary(
-			point_, locations, locations_boundary,
+			point_, point_, locations, locations_boundary,
 			surfaces, surfaces_num, surfaces_boundary);
 }
 
