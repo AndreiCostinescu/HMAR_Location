@@ -111,6 +111,11 @@
 
 using namespace std;
 
+#ifdef PC
+	#include <opencv2/opencv.hpp>
+	using namespace cv;
+#endif
+
 #define Sqr(x) ((x)*(x))
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
