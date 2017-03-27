@@ -103,3 +103,12 @@
 - 15/03/2017
 - reworked the colorcode function
 - allow the curve check to look for more sectors instead of just 1
+
+[17] MAJOR CHANGE
+- 27/03/2017
+- files are now processed individually instead of doing batch processing.
+- LA are defined as locations where a change in contact is valid.
+- Normal vector for each edge is only calculated using the first sector and transformed along the entire edge.
+- Reworked the prediction model, it now takes in 5 criterias to determine the actions.
+- a list of action label is defined.
+- surface information is not used...

@@ -38,22 +38,37 @@ void toc()
 //=============================================================================
 int main(int argc, char *argv[])
 {
+	printf("==============================================================================\n");
+	printf("|| SYSTEM START                                                             ||\n");
+	printf("==============================================================================\n");
+
 
 	string object, scene, DATA_DIR_ALL, DATA_DIR_SINGLE, TEST_DIR;
 
-	scene   			= "Kitchen";
+	scene   		= "Kitchen";
 
-	object  			= "ALL";
-	DATA_DIR_ALL 		= DATA_DIR_ALL_ 	+ object	+ string("/");
-	learnLocationArea(DATA_DIR_ALL, scene, object);
+//	object  		= "ALL";
+//	DATA_DIR_ALL 	= DATA_DIR_ALL_ 	+ object	+ string("/");
+//	result 			= learnLocationArea(DATA_DIR_ALL, scene, object);
+//
+//	if (result==EXIT_SUCCESS)
+//		cout << "SUCCESS"<< endl;
+//	else if (result==EXIT_FAILURE)
+//		cerr << "FAILURE" << endl;
+//	else
+//		cout << "UNKNOWN" << endl;
+
 
 	object  			= "04";
 	DATA_DIR_SINGLE 	= DATA_DIR_SINGLE_	+ object	+ string("/");
-	learnSector( DATA_DIR_SINGLE, scene, object);
+	learning( DATA_DIR_SINGLE, scene, object);
 
-	object  			= "04";
-	TEST_DIR 			= TEST_DIR_ 		+ object 	+ string("/test/");
-	testing(TEST_DIR, scene, object);
+
+
+//
+//	object  			= "04";
+//	TEST_DIR 			= TEST_DIR_ 		+ object 	+ string("/test/");
+//	testing(TEST_DIR, scene, object);
 
 //		vector<double> x,y1,y2,y0;
 //		for(int i=0;i<num_points;i++)
@@ -68,7 +83,10 @@ int main(int argc, char *argv[])
 //		plotData(x, y1);
 //		plotData(x, y2);
 
-	cout << "END" << endl;
+
+	printf("==============================================================================\n");
+	printf("|| SYSTEM END                                                               ||\n");
+	printf("==============================================================================\n");
 
 	return 0;
 }

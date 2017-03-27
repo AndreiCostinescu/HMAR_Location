@@ -18,50 +18,38 @@ int append_at_end(
      epsilon_neighbours_t *en);
 epsilon_neighbours_t *get_epsilon_neighbours(
     unsigned int index,
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
-    double (*dist)(point_t *a, point_t *b));
+    double (*dist)(point_d *a, point_d *b));
 void destroy_epsilon_neighbours(
 	epsilon_neighbours_t *en);
 void dbscan(
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b));
+    double (*dist)(point_d *a, point_d *b));
 int expand(
     unsigned int index,
     unsigned int cluster_id,
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b));
+    double (*dist)(point_d *a, point_d *b));
 int spread(
     unsigned int index,
     epsilon_neighbours_t *seeds,
     unsigned int cluster_id,
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b));
+    double (*dist)(point_d *a, point_d *b));
 double euclidean_dist(
-	point_t *a,
-	point_t *b);
-//unsigned int parse_input(
-//    FILE *file,
-//    point_t **points,
-//    double *epsilon,
-//    unsigned int *minpts);
-//void print_points(
-//    point_t *points,
-//    unsigned int num_points);
-//void print_epsilon_neighbours(
-//    point_t *points,
-//    epsilon_neighbours_t *en);
-
+	point_d *a,
+	point_d *b);
 
 // ============================================================================
 // ADD-ONS
@@ -70,11 +58,13 @@ void dbscanCluster(
 	double 			epsilon,
 	unsigned int 	minpts,
 	unsigned int 	num_points,
-	point_t 		*p);
+	point_d 		*p);
 void combineNearCluster(
-	vector<point_t> &points_,
-	vector<point_t> &locations_);
-
+	vector<point_d> &points_,
+	vector<point_d> &locations_,
+	vector<int> 	contact_);
+int clustering(
+	vector<point_d> &points_);
 
 
 #endif /* DBSCAN_H_ */

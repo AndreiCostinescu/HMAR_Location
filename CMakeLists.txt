@@ -20,8 +20,11 @@ if(TRUE)
   	./src/vtkExtra.cpp 
   	./src/algo.cpp 
   	./src/readWriteFile.cpp 
-  	./src/labeling.cpp
-  	./src/prediction.cpp
+  	./src/labeling_loc.cpp
+  	./src/labeling_sec.cpp
+  	./src/predicting.cpp
+  	./src/misc.cpp
+  	./src/core.cpp
   	./src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(../HMAR ${VTK_LIBRARIES} gsl gslcblas)
@@ -36,8 +39,11 @@ else()
   	../src/vtkExtra.cpp
   	../src/algo.cpp
   	../src/readWriteFile.cpp
-  	../src/labeling.cpp
-  	../src/prediction.cpp
+  	../src/labeling_loc.cpp
+  	../src/labeling_sec.cpp
+  	../src/predicting.cpp
+  	../src/misc.cpp
+  	../src/core.cpp
   	../src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(HMAR ${VTK_LIBRARIES} gsl gslcblas)

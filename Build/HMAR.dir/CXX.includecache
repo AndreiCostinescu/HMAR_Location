@@ -13,6 +13,16 @@ dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/algo.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+vtkExtra.h
+/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
+
+/home/chen/HMAR/HMAR_Location/src/core.h
+dataDeclaration.h
+/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+algo.h
+/home/chen/HMAR/HMAR_Location/src/algo.h
+Graph.h
+/home/chen/HMAR/HMAR_Location/src/Graph.h
 
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
 iostream
@@ -23,13 +33,17 @@ signal.h
 -
 list
 -
+algorithm
+-
 math.h
 -
-algorithm
+numeric
 -
 vector
 -
 stack
+-
+map
 -
 semaphore.h
 -
@@ -135,8 +149,6 @@ vtkPen.h
 -
 vtkSmartPointer.h
 -
-vtkVersion.h
--
 vtkParametricFunctionSource.h
 -
 vtkTupleInterpolator.h
@@ -167,8 +179,6 @@ vtkCleanPolyData.h
 -
 vtkAppendPolyData.h
 -
-vtkPolyDataMapper.h
--
 vtkAssembly.h
 -
 vtkPropAssembly.h
@@ -197,6 +207,8 @@ gsl/gsl_randist.h
 -
 gsl/gsl_statistics.h
 -
+gsl/gsl_linalg.h
+-
 
 /home/chen/HMAR/HMAR_Location/src/dbscan.h
 dataDeclaration.h
@@ -204,7 +216,15 @@ dataDeclaration.h
 algo.h
 /home/chen/HMAR/HMAR_Location/src/algo.h
 
-/home/chen/HMAR/HMAR_Location/src/labeling.h
+/home/chen/HMAR/HMAR_Location/src/misc.h
+dataDeclaration.h
+/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
+
+/home/chen/HMAR/HMAR_Location/src/predicting.cpp
+predicting.h
+/home/chen/HMAR/HMAR_Location/src/predicting.h
+
+/home/chen/HMAR/HMAR_Location/src/predicting.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
 algo.h
@@ -215,50 +235,10 @@ vtkExtra.h
 /home/chen/HMAR/HMAR_Location/src/vtkExtra.h
 dbscan.h
 /home/chen/HMAR/HMAR_Location/src/dbscan.h
-
-/home/chen/HMAR/HMAR_Location/src/main.cpp
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-util.h
-/home/chen/HMAR/HMAR_Location/src/util.h
-
-/home/chen/HMAR/HMAR_Location/src/prediction.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-labeling.h
-/home/chen/HMAR/HMAR_Location/src/labeling.h
-
-/home/chen/HMAR/HMAR_Location/src/readWriteFile.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-
-/home/chen/HMAR/HMAR_Location/src/util.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-util.h
-/home/chen/HMAR/HMAR_Location/src/util.h
-dbscan.h
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-vtkExtra.h
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
-readWriteFile.h
-/home/chen/HMAR/HMAR_Location/src/readWriteFile.h
-labeling.h
-/home/chen/HMAR/HMAR_Location/src/labeling.h
-prediction.h
-/home/chen/HMAR/HMAR_Location/src/prediction.h
+core.h
+/home/chen/HMAR/HMAR_Location/src/core.h
+misc.h
+/home/chen/HMAR/HMAR_Location/src/misc.h
 
 /home/chen/HMAR/HMAR_Location/src/vtkExtra.h
 dataDeclaration.h
@@ -267,6 +247,20 @@ Graph.h
 /home/chen/HMAR/HMAR_Location/src/Graph.h
 algo.h
 /home/chen/HMAR/HMAR_Location/src/algo.h
+misc.h
+/home/chen/HMAR/HMAR_Location/src/misc.h
+
+/home/chen/gsl/include/gsl/gsl_blas.h
+gsl/gsl_vector.h
+-
+gsl/gsl_matrix.h
+-
+gsl/gsl_blas_types.h
+-
+
+/home/chen/gsl/include/gsl/gsl_blas_types.h
+gsl/gsl_cblas.h
+-
 
 /home/chen/gsl/include/gsl/gsl_block_char.h
 stdlib.h
@@ -362,6 +356,10 @@ gsl/gsl_vector.h
 gsl/gsl_matrix.h
 -
 
+/home/chen/gsl/include/gsl/gsl_cblas.h
+stddef.h
+-
+
 /home/chen/gsl/include/gsl/gsl_check_range.h
 stdlib.h
 -
@@ -384,6 +382,24 @@ gsl/gsl_types.h
 stdlib.h
 -
 gsl/gsl_math.h
+-
+
+/home/chen/gsl/include/gsl/gsl_linalg.h
+stdlib.h
+-
+gsl/gsl_mode.h
+-
+gsl/gsl_permutation.h
+-
+gsl/gsl_vector.h
+-
+gsl/gsl_matrix.h
+-
+gsl/gsl_math.h
+-
+gsl/gsl_inline.h
+-
+gsl/gsl_blas.h
 -
 
 /home/chen/gsl/include/gsl/gsl_machine.h
@@ -640,6 +656,10 @@ gsl/gsl_vector_ushort.h
 gsl/gsl_inline.h
 -
 
+/home/chen/gsl/include/gsl/gsl_mode.h
+gsl/gsl_inline.h
+-
+
 /home/chen/gsl/include/gsl/gsl_multifit.h
 stdlib.h
 -
@@ -653,6 +673,18 @@ gsl/gsl_types.h
 -
 
 /home/chen/gsl/include/gsl/gsl_nan.h
+
+/home/chen/gsl/include/gsl/gsl_permutation.h
+stdlib.h
+-
+gsl/gsl_types.h
+-
+gsl/gsl_errno.h
+-
+gsl/gsl_inline.h
+-
+gsl/gsl_check_range.h
+-
 
 /home/chen/gsl/include/gsl/gsl_poly.h
 stdlib.h

@@ -162,6 +162,30 @@ src/algo.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/algo.cpp.s
 .PHONY : src/algo.cpp.s
 
+src/core.o: src/core.cpp.o
+.PHONY : src/core.o
+
+# target to build an object file
+src/core.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/core.cpp.o
+.PHONY : src/core.cpp.o
+
+src/core.i: src/core.cpp.i
+.PHONY : src/core.i
+
+# target to preprocess a source file
+src/core.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/core.cpp.i
+.PHONY : src/core.cpp.i
+
+src/core.s: src/core.cpp.s
+.PHONY : src/core.s
+
+# target to generate assembly for a file
+src/core.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/core.cpp.s
+.PHONY : src/core.cpp.s
+
 src/dbscan.o: src/dbscan.cpp.o
 .PHONY : src/dbscan.o
 
@@ -186,29 +210,53 @@ src/dbscan.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/dbscan.cpp.s
 .PHONY : src/dbscan.cpp.s
 
-src/labeling.o: src/labeling.cpp.o
-.PHONY : src/labeling.o
+src/labeling_loc.o: src/labeling_loc.cpp.o
+.PHONY : src/labeling_loc.o
 
 # target to build an object file
-src/labeling.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling.cpp.o
-.PHONY : src/labeling.cpp.o
+src/labeling_loc.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.o
+.PHONY : src/labeling_loc.cpp.o
 
-src/labeling.i: src/labeling.cpp.i
-.PHONY : src/labeling.i
+src/labeling_loc.i: src/labeling_loc.cpp.i
+.PHONY : src/labeling_loc.i
 
 # target to preprocess a source file
-src/labeling.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling.cpp.i
-.PHONY : src/labeling.cpp.i
+src/labeling_loc.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.i
+.PHONY : src/labeling_loc.cpp.i
 
-src/labeling.s: src/labeling.cpp.s
-.PHONY : src/labeling.s
+src/labeling_loc.s: src/labeling_loc.cpp.s
+.PHONY : src/labeling_loc.s
 
 # target to generate assembly for a file
-src/labeling.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling.cpp.s
-.PHONY : src/labeling.cpp.s
+src/labeling_loc.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.s
+.PHONY : src/labeling_loc.cpp.s
+
+src/labeling_sec.o: src/labeling_sec.cpp.o
+.PHONY : src/labeling_sec.o
+
+# target to build an object file
+src/labeling_sec.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_sec.cpp.o
+.PHONY : src/labeling_sec.cpp.o
+
+src/labeling_sec.i: src/labeling_sec.cpp.i
+.PHONY : src/labeling_sec.i
+
+# target to preprocess a source file
+src/labeling_sec.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_sec.cpp.i
+.PHONY : src/labeling_sec.cpp.i
+
+src/labeling_sec.s: src/labeling_sec.cpp.s
+.PHONY : src/labeling_sec.s
+
+# target to generate assembly for a file
+src/labeling_sec.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_sec.cpp.s
+.PHONY : src/labeling_sec.cpp.s
 
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
@@ -234,29 +282,53 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
-src/prediction.o: src/prediction.cpp.o
-.PHONY : src/prediction.o
+src/misc.o: src/misc.cpp.o
+.PHONY : src/misc.o
 
 # target to build an object file
-src/prediction.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/prediction.cpp.o
-.PHONY : src/prediction.cpp.o
+src/misc.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.o
+.PHONY : src/misc.cpp.o
 
-src/prediction.i: src/prediction.cpp.i
-.PHONY : src/prediction.i
+src/misc.i: src/misc.cpp.i
+.PHONY : src/misc.i
 
 # target to preprocess a source file
-src/prediction.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/prediction.cpp.i
-.PHONY : src/prediction.cpp.i
+src/misc.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.i
+.PHONY : src/misc.cpp.i
 
-src/prediction.s: src/prediction.cpp.s
-.PHONY : src/prediction.s
+src/misc.s: src/misc.cpp.s
+.PHONY : src/misc.s
 
 # target to generate assembly for a file
-src/prediction.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/prediction.cpp.s
-.PHONY : src/prediction.cpp.s
+src/misc.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.s
+.PHONY : src/misc.cpp.s
+
+src/predicting.o: src/predicting.cpp.o
+.PHONY : src/predicting.o
+
+# target to build an object file
+src/predicting.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/predicting.cpp.o
+.PHONY : src/predicting.cpp.o
+
+src/predicting.i: src/predicting.cpp.i
+.PHONY : src/predicting.i
+
+# target to preprocess a source file
+src/predicting.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/predicting.cpp.i
+.PHONY : src/predicting.cpp.i
+
+src/predicting.s: src/predicting.cpp.s
+.PHONY : src/predicting.s
+
+# target to generate assembly for a file
+src/predicting.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/predicting.cpp.s
+.PHONY : src/predicting.cpp.s
 
 src/readWriteFile.o: src/readWriteFile.cpp.o
 .PHONY : src/readWriteFile.o
@@ -345,18 +417,27 @@ help:
 	@echo "... src/algo.o"
 	@echo "... src/algo.i"
 	@echo "... src/algo.s"
+	@echo "... src/core.o"
+	@echo "... src/core.i"
+	@echo "... src/core.s"
 	@echo "... src/dbscan.o"
 	@echo "... src/dbscan.i"
 	@echo "... src/dbscan.s"
-	@echo "... src/labeling.o"
-	@echo "... src/labeling.i"
-	@echo "... src/labeling.s"
+	@echo "... src/labeling_loc.o"
+	@echo "... src/labeling_loc.i"
+	@echo "... src/labeling_loc.s"
+	@echo "... src/labeling_sec.o"
+	@echo "... src/labeling_sec.i"
+	@echo "... src/labeling_sec.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... src/prediction.o"
-	@echo "... src/prediction.i"
-	@echo "... src/prediction.s"
+	@echo "... src/misc.o"
+	@echo "... src/misc.i"
+	@echo "... src/misc.s"
+	@echo "... src/predicting.o"
+	@echo "... src/predicting.i"
+	@echo "... src/predicting.s"
 	@echo "... src/readWriteFile.o"
 	@echo "... src/readWriteFile.i"
 	@echo "... src/readWriteFile.s"

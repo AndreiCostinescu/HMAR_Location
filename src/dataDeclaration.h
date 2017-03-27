@@ -10,19 +10,16 @@
 
 //#define PC
 
-#ifdef PC
-	// For backward compatibility with new VTK generic data arrays
-	#define InsertNextTypedTuple InsertNextTupleValue
-#endif
-
 #include <iostream>
 #include <pthread.h>
 #include <signal.h>
 #include <list>
-#include <math.h>
 #include <algorithm>
+#include <math.h>
+#include <numeric>
 #include <vector>
 #include <stack>
+#include <map>
 #include <semaphore.h>
 #include <fstream>
 #include <sstream>
@@ -76,7 +73,6 @@
 #include <vtkContextScene.h>
 #include <vtkPen.h>
 #include <vtkSmartPointer.h>
-#include <vtkVersion.h>
 #include <vtkParametricFunctionSource.h>
 #include <vtkTupleInterpolator.h>
 #include <vtkTubeFilter.h>
@@ -92,7 +88,6 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkCleanPolyData.h>
 #include <vtkAppendPolyData.h>
-#include <vtkPolyDataMapper.h>
 #include <vtkAssembly.h>
 #include <vtkPropAssembly.h>
 #include <vtkRegularPolygonSource.h>
@@ -108,17 +103,30 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_linalg.h>
 
 using namespace std;
 
 #ifdef PC
+	// For backward compatibility with new VTK generic data arrays
+	#define InsertNextTypedTuple InsertNextTupleValue
 	#include <opencv2/opencv.hpp>
 	using namespace cv;
 #endif
 
+#define CRED "\x1B[31m"
+#define CGRN "\x1B[32m"
+#define CYEL "\x1B[33m"
+#define CBLU "\x1B[34m"
+#define CMAG "\x1B[35m"
+#define CCYN "\x1B[36m"
+#define CWHT "\x1B[37m"
+#define CNOR "\x1B[0m"
+
 #define Sqr(x) ((x)*(x))
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
+#define v vector
 
 //0 : all
 //1 : motion
@@ -126,24 +134,43 @@ using namespace std;
 //3 : label only
 #define VERBOSE 3
 
+#define CLUSTER_LIMIT 0.1
+
 #define FILTER_WIN 15
 
 #define BOUNDARY_VAR 0.01
 
+#define CONTACT_TRIGGER_RATIO 0.65
+
+#define DBSCAN_EPS 0.025
+#define DBSCAN_MIN 10
+#define MAX_RANGE 0.05
+#define	LOC_INT 200
+#define	SEC_INT 72
+
 // number of fit coefficients
-// nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4
-#define NCOEFFS	12
+// nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4 (for cubic b-spline)
+#define NCOEFFS	15
 #define NBREAK 	(NCOEFFS - 2)
-#define DEGREE 5 //k+1
+#define DEGREE 10 //k+1
 
-#define OUT_OF_BOUND 2
-#define OUT_OF_RANGE 1
-#define	WITHIN_RANGE 0
-#define EXCEED_RANGE -1
+#define RANGE_EXCEED	3
+#define RANGE_OUT		2
+#define	RANGE_IN		1
+#define RANGE_NULL		0
 
-#define WIN_HEIGHT	800
-#define WIN_WIDTH 	1200
-#define FONT_SIZE 	10
+// constraints during movements
+#define MOV_CONST_CIRC 	2
+#define MOV_CONST_SURF 	1
+#define MOV_CONST_STOP 	0
+
+#define WIN_HEIGHT		800
+#define WIN_WIDTH 		1200
+#define FONT_SIZE 		10
+
+#define CLICK_EMPTY		0
+#define CLICK_LABEL		1
+#define CLICK_DELETE 	2
 
 //******************** TAKEN FROM .....
 #define UNCLASSIFIED 	-1
@@ -155,11 +182,11 @@ using namespace std;
 #define SUCCESS 		 0
 #define FAILURE 		-3
 
-typedef struct point_s point_t;
-struct point_s {
-    double x, y, z;
-    int cluster_id;
-};
+//typedef struct point_s point_t;
+//struct point_s {
+//    double x, y, z;
+//    int cluster_id;
+//};
 
 typedef struct node_s node_t;
 struct node_s {
@@ -175,6 +202,12 @@ struct epsilon_neighbours_s {
 
 //********************
 
+typedef struct point_sd point_d;
+struct point_sd
+{
+    double x, y, z, l;
+};
+
 typedef struct sector_s sector_t;
 struct sector_s
 {
@@ -185,8 +218,8 @@ struct sector_s
 typedef struct sector_para_s sector_para_t;
 struct sector_para_s
 {
-	vector<point_t> dir;
-	vector<point_t> dir_n;
+	vector<point_d> dir;
+	vector<point_d> dir_n;
 	vector<double>  dist;
 	int loc_int;
 	int sec_int;
@@ -195,19 +228,16 @@ struct sector_para_s
 typedef struct data_s data_t;
 struct data_s
 {
-	point_t pos;
-	point_t vel;
-	point_t acc;
+	point_d pos, vel, acc;
 };
 
 typedef struct node_ss node_tt;
 struct node_ss
 {
 	string 			name;
-	unsigned int 	index;
+	int 			index;
 	int 			category; //moving???
-	point_t 		location;
-	double 			boundary;
+	point_d 		centroid;
 	int				surface;
 	double 			surface_boundary;
 	vector<data_t> 	data;
@@ -222,12 +252,17 @@ struct edge_ss
 	vector<data_t> 	data;
 	vector<double> 	sector_map; // locations int * sectors int
 	vector<double> 	sector_const;
-	vector<point_t> tan; // locations int
-	vector<point_t> nor; // locations int
-	vector<point_t> loc_start; // locations int
-	vector<point_t> loc_mid; // locations int
-	vector<point_t> loc_end; // locations int
+	vector<point_d> tan; // locations int
+	vector<point_d> nor; // locations int
+	vector<point_d> loc_start; // locations int
+	vector<point_d> loc_mid; // locations int
+	vector<point_d> loc_end; // locations int
 	double 			total_len;
+	int 			counter;
+	vector<int> 	mov_const; // 0/1 activation of the mov_const labels
+	vector<double> 	loc_mem; // to calculate d2(loc)
+	vector<double> 	sec_mem; // to calculate d2(sec)
+	vector<double> 	err_mem; // to calculate d2(err)
 };
 
 typedef struct label_s label_t;
@@ -245,6 +280,20 @@ struct pred_s
 	vector<double> 	pred_in; // prob shared between multiple predictions of inside
 	vector<double> 	pred_in_last; // prob shared between multiple predictions of inside
 	vector<double> 	pred_err; // prediction error = diff from the sectormap
+};
+
+typedef struct predict_s predict_t;
+struct predict_s
+{
+	double 			velocity; // velocity limit 0/1
+	vector<double> 	curvature; // curvature value : 1 for line
+	vector<double>	range; // in or outside
+	vector<double> 	err; // prediction error = diff from the sectormap
+	vector<double> 	pct_err; // prob shared between multiple predictions of inside
+	vector<double>	err_diff; // change in the error compared to original
+	vector<double>	pct_err_diff; // change in the error compared to original
+	vector<double>	oscillate; // repetitive movement
+	vector<double>	window; // knot in trajectory
 };
 
 typedef struct msg_s msg_t;

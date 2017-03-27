@@ -1,7 +1,10 @@
 /* Copyright 2015 Gagarine Yaikhom (MIT License) */
 /* modified by Chen */
+/* changed all point_d to point_d and changed l to l*/
 
 #include "dbscan.h"
+
+#define CONTACT
 
 node_t *create_node(unsigned int index)
 {
@@ -37,10 +40,10 @@ int append_at_end(
 
 epsilon_neighbours_t *get_epsilon_neighbours(
     unsigned int index,
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
-    double (*dist)(point_t *a, point_t *b))
+    double (*dist)(point_d *a, point_d *b))
 {
     epsilon_neighbours_t *en = (epsilon_neighbours_t *)
         calloc(1, sizeof(epsilon_neighbours_t));
@@ -78,31 +81,31 @@ void destroy_epsilon_neighbours(epsilon_neighbours_t *en)
 }
 
 void dbscan(
-    point_t *points,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b))
+    double (*dist)(point_d *a, point_d *b))
 {
-    unsigned int i, cluster_id = 0;
+    unsigned int i, l = 0;
     for (i = 0; i < num_points; ++i) {
-        if (points[i].cluster_id == UNCLASSIFIED) {
-            if (expand(i, cluster_id, points,
+        if (points[i].l == UNCLASSIFIED) {
+            if (expand(i, l, points,
                        num_points, epsilon, minpts,
                        dist) == CORE_POINT)
-                ++cluster_id;
+                ++l;
         }
     }
 }
 
 int expand(
     unsigned int index,
-    unsigned int cluster_id,
-    point_t *points,
+    unsigned int l,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b))
+    double (*dist)(point_d *a, point_d *b))
 {
     int return_value = NOT_CORE_POINT;
     epsilon_neighbours_t *seeds =
@@ -113,18 +116,18 @@ int expand(
         return FAILURE;
 
     if (seeds->num_members < minpts)
-        points[index].cluster_id = NOISE;
+        points[index].l = NOISE;
     else {
-        points[index].cluster_id = cluster_id;
+        points[index].l = l;
         node_t *h = seeds->head;
         while (h) {
-            points[h->index].cluster_id = cluster_id;
+            points[h->index].l = l;
             h = h->next;
         }
 
         h = seeds->head;
         while (h) {
-            spread(h->index, seeds, cluster_id, points,
+            spread(h->index, seeds, l, points,
                    num_points, epsilon, minpts, dist);
             h = h->next;
         }
@@ -138,12 +141,12 @@ int expand(
 int spread(
     unsigned int index,
     epsilon_neighbours_t *seeds,
-    unsigned int cluster_id,
-    point_t *points,
+    unsigned int l,
+    point_d *points,
     unsigned int num_points,
     double epsilon,
     unsigned int minpts,
-    double (*dist)(point_t *a, point_t *b))
+    double (*dist)(point_d *a, point_d *b))
 {
     epsilon_neighbours_t *spread =
         get_epsilon_neighbours(index, points,
@@ -153,19 +156,19 @@ int spread(
         return FAILURE;
     if (spread->num_members >= minpts) {
         node_t *n = spread->head;
-        point_t *d;
+        point_d *d;
         while (n) {
             d = &points[n->index];
-            if (d->cluster_id == NOISE ||
-                d->cluster_id == UNCLASSIFIED) {
-                if (d->cluster_id == UNCLASSIFIED) {
+            if (d->l == NOISE ||
+                d->l == UNCLASSIFIED) {
+                if (d->l == UNCLASSIFIED) {
                     if (append_at_end(n->index, seeds)
                         == FAILURE) {
                         destroy_epsilon_neighbours(spread);
                         return FAILURE;
                     }
                 }
-                d->cluster_id = cluster_id;
+                d->l = l;
             }
             n = n->next;
         }
@@ -175,88 +178,12 @@ int spread(
     return SUCCESS;
 }
 
-double euclidean_dist(point_t *a, point_t *b)
+double euclidean_dist(point_d *a, point_d *b)
 {
     return sqrt(pow(a->x - b->x, 2) +
             pow(a->y - b->y, 2) +
             pow(a->z - b->z, 2));
 }
-
-//unsigned int parse_input(
-//    FILE *file,
-//    point_t **points,
-//    double *epsilon,
-//    unsigned int *minpts)
-//{
-//    unsigned int num_points, i = 0;
-//    fscanf(file, "%lf %u %u\n",
-//           epsilon, minpts, &num_points);
-//    point_t *p = (point_t *)
-//        calloc(num_points, sizeof(point_t));
-//    if (p == NULL) {
-//        perror("Failed to allocate points array");
-//        return 0;
-//    }
-//    while (i < num_points) {
-//          fscanf(file, "%lf %lf %lf\n",
-//                 &(p[i].x), &(p[i].y), &(p[i].z));
-//          p[i].cluster_id = UNCLASSIFIED;
-//          ++i;
-//    }
-//    *points = p;
-//    return num_points;
-//}
-//
-//void print_points(
-//    point_t *points,
-//    unsigned int num_points)
-//{
-//    unsigned int i = 0;
-//    printf("Number of points: %u\n"
-//        " x     y     z     cluster_id\n"
-//        "-----------------------------\n"
-//        , num_points);
-//    while (i < num_points) {
-//          printf("%5.2lf %5.2lf %5.2lf: %d\n",
-//                 points[i].x,
-//                 points[i].y, points[i].z,
-//                 points[i].cluster_id);
-//          ++i;
-//    }
-//}
-//
-//void print_epsilon_neighbours(
-//    point_t *points,
-//    epsilon_neighbours_t *en)
-//{
-//    if (en) {
-//        node_t *h = en->head;
-//        while (h) {
-//            printf("(%lfm, %lf, %lf)\n",
-//                   points[h->index].x,
-//                   points[h->index].y,
-//                   points[h->index].z);
-//            h = h->next;
-//        }
-//    }
-//}
-//
-//int main(void) {
-//    point_t *points;
-//    double epsilon;
-//    unsigned int minpts;
-//    unsigned int num_points =
-//        parse_input(stdin, &points, &epsilon, &minpts);
-//    if (num_points) {
-//        dbscan(points, num_points, epsilon,
-//               minpts, euclidean_dist);
-//        printf("Epsilon: %lf\n", epsilon);
-//        printf("Minimum points: %u\n", minpts);
-//        print_points(points, num_points);
-//    }
-//    free(points);
-//    return 0;
-//}
 
 
 // ============================================================================
@@ -267,7 +194,7 @@ void dbscanCluster(
 	double epsilon,
 	unsigned int minpts,
 	unsigned int num_points,
-	point_t *p)
+	point_d *p)
 {
 	if(num_points)
         dbscan(p, num_points, epsilon, minpts, euclidean_dist);
@@ -276,8 +203,9 @@ void dbscanCluster(
 }
 
 void combineNearCluster(
-	vector<point_t> 		&points_,
-	vector<point_t> 		&locations_)
+	vector<point_d> &points_,
+	vector<point_d> &locations_,
+	vector<int> 	contact_)
 {
 	int num_points 		= points_.size();
 	int num_locations 	= locations_.size();
@@ -285,30 +213,27 @@ void combineNearCluster(
 	if (num_locations < 1)
 	{
 		for(int i=0;i<num_points;i++)
-			num_locations = max(points_[i].cluster_id,num_locations);
+			num_locations = max((int)points_[i].l, num_locations);
 		num_locations += 1;
 	}
 
 	// calculating the centroid of cluster
-	vector<point_t> p_tmp0(num_locations);
-	vector<point_t> p_tmp1(num_locations);
+	vector<point_d> p_tmp; p_tmp.resize(num_locations);
+	vector<double>	count; count.resize(num_locations);
 	for(int i=0;i<num_points;i++)
 	{
-		if(points_[i].cluster_id >= 0)
+		if(points_[i].l >= 0)
 		{
-			p_tmp1[points_[i].cluster_id].cluster_id += 1;
-			p_tmp0[points_[i].cluster_id].x += points_[i].x;
-			p_tmp0[points_[i].cluster_id].y += points_[i].y;
-			p_tmp0[points_[i].cluster_id].z += points_[i].z;
+			p_tmp[(int)points_[i].l] =
+					addPoint(p_tmp[(int)points_[i].l], points_[i]);
+			count[(int)points_[i].l] += 1;
 		}
 	}
 
 	for(int i=0;i<num_locations;i++)
 	{
-		p_tmp1[i].x = p_tmp0[i].x/p_tmp1[i].cluster_id;
-		p_tmp1[i].y = p_tmp0[i].y/p_tmp1[i].cluster_id;
-		p_tmp1[i].z = p_tmp0[i].z/p_tmp1[i].cluster_id;
-		p_tmp1[i].cluster_id = UNCLASSIFIED;
+		p_tmp[i] = multiPoint(p_tmp[i],1/count[i]);
+		p_tmp[i].l = UNCLASSIFIED;
 	}
 
 	// combine cluster if it is less than 0.1m
@@ -320,107 +245,161 @@ void combineNearCluster(
 			if(j<=i) continue;
 
 			for(int ii=0;ii<num_points;ii++)
-				if(points_[ii].cluster_id == i && !limit)
+				if(points_[ii].l == i && !limit)
 					for(int jj=0;jj<num_points;jj++)
-						if(points_[jj].cluster_id == j)
-							if(l2Norm(minusPoint(points_[ii],points_[jj]))<0.1)
+						if(points_[jj].l == j)
+							if(l2Norm(minusPoint(points_[ii],points_[jj]))<CLUSTER_LIMIT)
 								limit = true;
 
 			if(limit)
 			{
 				limit = false;
 
-				if(p_tmp1[i].cluster_id>=0 && p_tmp1[j].cluster_id>=0)
+				if(p_tmp[i].l>=0 && p_tmp[j].l>=0)
 				{
-					int big   = max(p_tmp1[i].cluster_id,
-									p_tmp1[j].cluster_id);
-					int small = min(p_tmp1[i].cluster_id,
-									p_tmp1[j].cluster_id);
+					int big   = max(p_tmp[i].l, p_tmp[j].l);
+					int small = min(p_tmp[i].l, p_tmp[j].l);
 					for(int ii=0;ii<num_locations;ii++)
 					{
-						if(p_tmp1[ii].cluster_id == big)
-						   p_tmp1[ii].cluster_id = small;
+						if (p_tmp[ii].l == big) { p_tmp[ii].l = small; }
 					}
 				}
-				else if(p_tmp1[i].cluster_id>=0)
-						p_tmp1[j].cluster_id = p_tmp1[i].cluster_id;
-				else if(p_tmp1[j].cluster_id>=0)
-						p_tmp1[i].cluster_id = p_tmp1[j].cluster_id;
+				else if(p_tmp[i].l>=0) { p_tmp[j].l = p_tmp[i].l; }
+				else if(p_tmp[j].l>=0) { p_tmp[i].l = p_tmp[j].l; }
 				else
 				{
-					if(i<j)
-					{
-						p_tmp1[i].cluster_id = i;
-						p_tmp1[j].cluster_id = i;
-					}
-					else
-					{
-						p_tmp1[i].cluster_id = j;
-						p_tmp1[j].cluster_id = j;
-					}
+					if(i<j)	{ p_tmp[i].l = i; p_tmp[j].l = i; }
+					else	{ p_tmp[i].l = j; p_tmp[j].l = j; }
 				}
 			}
 			else
 			{
-				if(p_tmp1[i].cluster_id!=(int)i && p_tmp1[i].cluster_id<0)
-				   p_tmp1[i].cluster_id = i;
-				if(p_tmp1[j].cluster_id!=(int)j && p_tmp1[j].cluster_id<0)
-				   p_tmp1[j].cluster_id = j;
+				if(p_tmp[i].l!=(int)i && p_tmp[i].l<0) { p_tmp[i].l = i; }
+				if(p_tmp[j].l!=(int)j && p_tmp[j].l<0) { p_tmp[j].l = j; }
 			}
 		}
-		//printf("Location %02d: %02d\n", i, p_tmp1[i].cluster_id);
+		//printf("Location %02d: %02d\n", i, p_tmp1[i].l);
 	}
 
 	// removing the missing cluster labels
 	int c = 1;
 	for(int i=1;i<num_locations;i++)
 	{
-		if(p_tmp1[i].cluster_id > p_tmp1[i-1].cluster_id &&
-		   p_tmp1[i].cluster_id == i)
+		if(p_tmp[i].l > p_tmp[i-1].l && p_tmp[i].l == i)
 		{
-			p_tmp1[i].cluster_id = c;
+			p_tmp[i].l = c;
 			for(int ii=i+1;ii<num_locations;ii++)
-				if(p_tmp1[ii].cluster_id == i)
-				   p_tmp1[ii].cluster_id = c;
+			{
+				if(p_tmp[ii].l == i) { p_tmp[ii].l = c; }
+			}
 			c++;
 		}
-		//printf("Location %02d: %02d\n", i, p_tmp1[i].cluster_id );
+		//printf("Location %02d: %02d\n", i, p_tmp1[i].l );
 	}
 
 	// updating cluster label
 	for(int i=0;i<num_points;i++)
 	{
-		if (points_[i].cluster_id >= 0)
-			points_[i].cluster_id = p_tmp1[points_[i].cluster_id].cluster_id;
-		//printf("Location %02d: %02d\n", i, points_[i].cluster_id );
+		if (points_[i].l >= 0) { points_[i].l = p_tmp[(int)points_[i].l].l; }
+		//printf("Location %02d: %02d\n", i, points_[i].l );
 	}
 
+#ifdef CONTACT
+	if(!contact_.empty())
+	{
+		// checking contact constraint
+		num_locations = 0;
+		for(int i=0;i<num_points;i++)
+		{
+			num_locations = max((int)points_[i].l, num_locations);
+		}
+		num_locations += 1;
+		vector<double> c1; c1.resize(num_locations);
+		vector<double> c2; c2.resize(num_locations);
+		for(int i=0;i<num_points;i++)
+		{
+			if (points_[i].l<0) { continue; }
+			if (contact_[i]==1) { c1[points_[i].l]+=1; }
+			c2[points_[i].l]+=1;
+		}
+		for(int i=0;i<num_points;i++)
+		{
+			if (points_[i].l<0) { continue; }
+			if (c1[points_[i].l]/
+				c2[points_[i].l] < CONTACT_TRIGGER_RATIO)
+			{ continue; }
+			points_[i].l = UNCLASSIFIED;
+		}
+		// removing the missing cluster labels
+		vector<point_d> p_tmp1; p_tmp1.resize(num_locations);
+		c = 0;
+		for(int i=0;i<num_locations;i++)
+		{
+			if(c1[i]/c2[i] < CONTACT_TRIGGER_RATIO)
+			{
+				p_tmp1[i].l = c;
+				c++;
+			}
+			else
+			{
+				p_tmp1[i].l = UNCLASSIFIED;
+			}
+			//printf("Location %02d: %02d\n", i, p_tmp1[i].l );
+		}
+		// updating cluster label
+		for(int i=0;i<num_points;i++)
+		{
+			if (points_[i].l >= 0)
+			{
+				points_[i].l = p_tmp1[(int)points_[i].l].l;
+			}
+			//printf("Location %02d: %02d\n", i, points_[i].l );
+		}
+	}
+#endif
+
 	// calculate the centroid of combined clusters
-	vector<point_t> p_tmp2  (c);
-	vector<point_t> p_center(c);
+	vector<point_d> p_tmp2; p_tmp2.resize(num_locations);
+	vector<double>	count2; count2.resize(num_locations);
 
 	for(int i=0;i<num_points;i++)
 	{
-		if(points_[i].cluster_id >= 0)
+		if(points_[i].l >= 0)
 		{
-			p_center[points_[i].cluster_id].cluster_id += 1;
-			p_tmp2  [points_[i].cluster_id].x += points_[i].x;
-			p_tmp2  [points_[i].cluster_id].y += points_[i].y;
-			p_tmp2  [points_[i].cluster_id].z += points_[i].z;
+			p_tmp2[(int)points_[i].l] =
+					addPoint(p_tmp2[(int)points_[i].l], points_[i]);
+			count2[(int)points_[i].l] += 1;
 		}
-		//printf("Location %02d: %02d %02d\n", i, points_[i].cluster_id, p_center  [p[i].cluster_id].cluster_id );
+		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
 	}
 
+	reshapeVector(locations_,c);
 	for(int i=0;i<c;i++)
 	{
-		p_center[i].x = p_tmp2[i].x/p_center[i].cluster_id;
-		p_center[i].y = p_tmp2[i].y/p_center[i].cluster_id;
-		p_center[i].z = p_tmp2[i].z/p_center[i].cluster_id;
-		p_center[i].cluster_id = UNCLASSIFIED;
-		//printf("Location %02d: %+.4f %+.4f %+.4f\n", i, p_center[i].x, p_center[i].y, p_center[i].z );
+		p_tmp2[i]		= multiPoint(p_tmp2[i],1/count2[i]);
+		p_tmp2[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
+		locations_[i] 	= p_tmp2[i];
+		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
 	}
+}
 
-	//cout << num_locations << c << endl;
 
-	locations_.clear(); locations_ = p_center;
+int clustering(
+	vector<point_d> &points_)
+{
+	int num_points;
+	point_d *points_array;
+
+	num_points = points_.size();
+
+	points_array = Calloc(point_d, num_points);
+	vector2array(points_, points_array);
+
+	dbscanCluster(DBSCAN_EPS, DBSCAN_MIN, num_points, points_array);
+	printer(13);
+
+	reshapeVector(points_, num_points);
+	array2vector(points_array, num_points, points_);
+
+	return EXIT_SUCCESS;
 }

@@ -13,55 +13,82 @@
 	string SCENE = "./Scene/";
 #endif
 
-void writeSurfaceFile(
-	vector<vector<double> > surface_)
+
+bool copyFile(
+	string SRC,
+	string DEST)
 {
-	directoryCheck(SCENE + string("Kitchen"));
-	string path = SCENE + "Kitchen/surface.txt";
-	if (!ifstream(path))
-	{
-		ofstream write_file(path, std::ios::app);
-		for(int i=0;i<surface_.size();i++)
-		{
-			write_file << i;
-			for(int ii=0;ii<4;ii++)
-			{
-				write_file << ",";
-				write_file << surface_[i][ii];
-			}
-			write_file << "\n";
-		}
-	}
+	ifstream src (SRC,  ios::binary);
+	ofstream dest(DEST, ios::binary);
+	dest << src.rdbuf();
+	return src && dest;
 }
 
-void writeSurfaceFile(
-	Graph Graph_)
+bool directoryCheck(
+	string path_ )
 {
-	directoryCheck(SCENE + Graph_.getScene());
-	string path = SCENE + Graph_.getScene() + "/surface.txt";
-	vector<vector<double> > surface = Graph_.getSurface();
-	if (!ifstream(path))
+	if (path_.empty())
 	{
-		ofstream write_file(path, std::ios::app);
-		for(int i=0;i<surface.size();i++)
-		{
-			write_file << i;
-			for(int ii=0;ii<4;ii++)
-			{
-				write_file << ",";
-				write_file << surface[i][ii];
-			}
-		}
-		write_file << "\n";
+		return false;
 	}
+	DIR *dir;
+	bool exist = false;
+	dir = opendir(path_.c_str());
+	if (dir != NULL)
+	{
+		exist = true; closedir(dir);
+	}
+	if (!exist)
+	{
+		mkdir(path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	}
+	return exist;
 }
 
-void writeLabelFile(
+
+int fileSelect(
+	const struct dirent *entry)
+{
+	int n;
+	size_t found_extension = string(entry->d_name).find(".txt");
+	if ((int)found_extension == -1)
+		n = 0;
+	else
+		n = 1;
+	return n;
+}
+
+int readFile(
+	const char *name,
+	vector<vector<string> > &data_,
+	char delimiter)
+{
+	ifstream src_file( name );
+	while (src_file)
+	{
+		string file_line_;
+		if (!getline( src_file, file_line_ )) break;
+		istringstream line_( file_line_ );
+		vector <string> data_line_;
+		while (line_)
+		{
+		   string word;
+		   if (!getline( line_, word, delimiter)) break;
+		   data_line_.push_back( word );
+		}
+		data_.push_back( data_line_ );
+	}
+
+	if (!src_file.eof()) {return EXIT_FAILURE;}
+	else 				 {return EXIT_SUCCESS;}
+}
+
+void writeFile(
 	Graph Graph_,
 	string path_,
-	int movloc_)
+	int option_)
 {
-	switch(movloc_)
+	switch(option_)
 	{
 		case 0:
 			if (!ifstream(path_))
@@ -70,13 +97,11 @@ void writeLabelFile(
 				ofstream write_file(path_, ios::app);
 				for(int i=0;i<node_tmp.size();i++)
 				{
-					write_file << node_tmp[i].name       << ","
-							   << node_tmp[i].location.x << ","
-							   << node_tmp[i].location.y << ","
-							   << node_tmp[i].location.z << ","
-							   << node_tmp[i].boundary   << ","
-							   << node_tmp[i].surface	 << ","
-							   << node_tmp[i].surface_boundary;
+					write_file << node_tmp[i].name      	<< ","
+							   << node_tmp[i].centroid.x	<< ","
+							   << node_tmp[i].centroid.y 	<< ","
+							   << node_tmp[i].centroid.z 	<< ","
+							   << node_tmp[i].centroid.l;
 					write_file << "\n";
 				}
 			}
@@ -95,126 +120,127 @@ void writeLabelFile(
 				write_file << "\n";
 			}
 			break;
-	}
-}
-
-void writeLearnedDataFile(
-	Graph Graph_,
-	string path_,
-	int type_)
-{
-	vector<node_tt> nodes = Graph_.getNodeList();
-	int num_locations = nodes.size();
-	vector<vector<edge_tt> > edges = Graph_.getEdgeList();
-
-	sector_para_t para = Graph_.getSectorPara();
-
-	vector<point_t> data;
-	vector<double> 	sec;
-
-	if (!ifstream(path_))
-	{
-		ofstream write_file(path_, ios::app);
-		write_file << "Locations," 			<< num_locations 	<< "\n";
-		write_file << "Location Intervals," << para.loc_int 	<< "\n";
-		write_file << "Sector Intervals," 	<< para.sec_int 	<< "\n";
-		for(int i=0;i<edges.size();i++)
-		{
-			for(int ii=0;ii<edges[i].size();ii++)
+		default:
+			if (!ifstream(path_))
 			{
-				data.clear(); sec.clear();
-				write_file << "Edge,"    << i
-						   << ",Number," << ii << "\n";
-				switch (type_)
+				int num_location = Graph_.getNodeList().size();
+				vector<double> sec;
+				vector<point_d> data;
+				vector<vector<vector<edge_tt> > > edges = Graph_.getListOfEdges();
+
+				ofstream write_file(path_, ios::app);
+				write_file << "Locations," 			<< num_location << "\n";
+				write_file << "Location Intervals," << LOC_INT		<< "\n";
+				write_file << "Sector Intervals," 	<< SEC_INT		<< "\n";
+				for(int i=0;i<edges.size();i++)
 				{
-					case 0:
-						data = edges[i][ii].loc_start;
-						break;
-					case 1:
-						data = edges[i][ii].loc_mid;
-						break;
-					case 2:
-						data = edges[i][ii].loc_end;
-						break;
-					case 3:
-						data = edges[i][ii].tan;
-						break;
-					case 4:
-						data = edges[i][ii].nor;
-						break;
-					case 5:
-						write_file << Graph_.getCounter(i,ii)
-								   << "\n";
-						break;
-					case 6:
-						sec = edges[i][ii].sector_map;
-						for(int iii=0;iii<sec.size();iii++)
+					for(int ii=0;ii<edges[i].size();ii++)
+					{
+						data.clear(); sec.clear();
+						write_file << "Edge,"    << i
+								   << ",Number," << ii << "\n";
+						switch (option_)
 						{
-							write_file << sec[iii];
-							if (iii<sec.size()-1) 	{ write_file << ",";  }
+							case 10:
+								data = edges[i][ii][0].loc_start;
+								break;
+							case 11:
+								data = edges[i][ii][0].loc_mid;
+								break;
+							case 12:
+								data = edges[i][ii][0].loc_end;
+								break;
+							case 13:
+								data = edges[i][ii][0].tan;
+								break;
+							case 14:
+								data = edges[i][ii][0].nor;
+								break;
+							case 15:
+								write_file << Graph_.getEdgeCounter(i,ii,0) << "\n";
+								break;
+							case 16:
+								sec = edges[i][ii][0].sector_map;
+								for(int iii=0;iii<sec.size();iii++)
+								{
+									write_file << sec[iii];
+									if (iii < sec.size()-1)	{ write_file << ",";  }
+									else 					{ write_file << "\n"; }
+								}
+								break;
+							case 17:
+								sec = edges[i][ii][0].sector_const;
+								for(int iii=0;iii<sec.size();iii++)
+								{
+									write_file << sec[iii];
+									if (iii < sec.size()-1)	{ write_file << ",";  }
+									else 					{ write_file << "\n"; }
+								}
+								break;
+						}
+						if (option_ > 14) {continue;}
+						for(int iii=0;iii<LOC_INT;iii++)
+						{
+							write_file << data[iii].x << ",";
+							write_file << data[iii].y << ",";
+							write_file << data[iii].z;
+							if (iii<data.size()-1) 	{ write_file << ",";  }
 							else 					{ write_file << "\n"; }
 						}
-						break;
-					case 7:
-						sec = edges[i][ii].sector_const;
-						for(int iii=0;iii<sec.size();iii++)
-						{
-							write_file << sec[iii];
-							if (iii<sec.size()-1) 	{ write_file << ",";  }
-							else 					{ write_file << "\n"; }
-						}
-						break;
-				}
-				if (type_ > 4) {continue;}
-				for(int iii=0;iii<para.loc_int;iii++)
-				{
-					write_file << data[iii].x << ",";
-					write_file << data[iii].y << ",";
-					write_file << data[iii].z;
-					if (iii<data.size()-1) 	{ write_file << ",";  }
-					else 					{ write_file << "\n"; }
+					}
 				}
 			}
-		}
 	}
 }
 
-int fileSelect(
-	const struct dirent *entry)
+int readFileExt(
+	Graph &Graph_,
+	string path_,
+	int option_)
 {
-	int n;
-	size_t found_extension = string(entry->d_name).find(".txt");
-	if ((int)found_extension == -1)
-		n = 0;
-	else
-		n = 1;
-	return n;
-}
-
-void readFile(
-	const char *name,
-	vector<vector<string> > &data_full,
-	char delimiter)
-{
-	ifstream src_file( name );
-	while (src_file)
+	vector<vector<string> > data;
+	switch(option_)
 	{
-		string file_line_;
-		if (!getline( src_file, file_line_ )) break;
-		istringstream line_( file_line_ );
-		vector <string> data_line_;
-		while (line_)
-		{
-		   string word;
-		   if (!getline( line_, word, delimiter)) break;
-		   data_line_.push_back( word );
-		}
-		data_full.push_back( data_line_ );
+		case 0:
+			readFile(path_.c_str(), data , ',');
+			if (!data.empty())
+			{
+				node_tt node_tmp = {};
+				for(int i=0;i<data.size();i++)
+				{
+					node_tmp.name 		=      data[i][0];
+					node_tmp.centroid.x	= atof(data[i][1].c_str());
+					node_tmp.centroid.y	= atof(data[i][2].c_str());
+					node_tmp.centroid.z	= atof(data[i][3].c_str());
+					node_tmp.centroid.l	= atof(data[i][4].c_str());
+					node_tmp.index    	= i;
+					Graph_.setNode(node_tmp);
+					Graph_.addEmptyEdgeForNewNode(i);
+					Graph_.expandFilter(i+1);
+				}
+				for(int i=0;i<data.size();i++) { Graph_.updateFilter(i); }
+				printer(6);
+			}
+			else
+			{
+				printer(7);
+			}
+			break;
+		case 1:
+			break;
 	}
-
-	if (!src_file.eof())
-		cerr << "FILE ERROR!!!\n";
+	return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+
+
+
 
 void readSurfaceFile(
 	Graph &Graph_)
@@ -241,7 +267,7 @@ void readSurfaceFile(
 void readLocation(
 	vector<vector<string> > data_,
 	vector<string> 	&label_,
-	vector<point_t> &locations_,
+	vector<point_d> &locations_,
 	vector<double> 	&locations_boundary_,
 	vector<int> 	&surfaces_num_,
 	vector<double> 	&surfaces_boundary_)
@@ -264,7 +290,7 @@ void readLocation(
 			locations_[i].x 		  	= atof(data_[i][1].c_str());
 			locations_[i].y 		  	= atof(data_[i][2].c_str());
 			locations_[i].z 		  	= atof(data_[i][3].c_str());
-			locations_[i].cluster_id	= UNCLASSIFIED;
+			locations_[i].l				= UNCLASSIFIED;
 			locations_boundary_[i] 	  	= atof(data_[i][4].c_str());
 			surfaces_num_[i] 	  	  	= atof(data_[i][5].c_str());
 			surfaces_boundary_[i] 	   	= atof(data_[i][6].c_str());
@@ -282,7 +308,7 @@ void readLocation_(
 	vector<vector<string> > data_)
 {
 	vector<string> 	label;
-	vector<point_t> locations;
+	vector<point_d> locations;
 	vector<double> 	locations_boundary;
 	vector<int> 	surfaces_num;
 	vector<double> 	surfaces_boundary;
@@ -292,10 +318,10 @@ void readLocation_(
 			data_, label, locations, locations_boundary,
 			surfaces_num, surfaces_boundary);
 
-	for(int i=0;i<locations.size();i++)
-		Graph_.addNode(label[i], i, -1,
-					   locations[i], locations_boundary[i],
-					   surfaces_num[i], surfaces_boundary[i], data_tmp);
+//	for(int i=0;i<locations.size();i++)
+//		Graph_.addNode(label[i], i, -1,
+//					   locations[i], locations_boundary[i],
+//					   surfaces_num[i], surfaces_boundary[i], data_tmp);
 }
 
 void readMovement(
@@ -352,8 +378,8 @@ void readSectorFile(
 		num_location_intervals 	= atoi(data[1][1].c_str());
 		num_sector_intervals 	= atoi(data[2][1].c_str());
 
-		if (Graph_.getEdgeList().empty())
-			Graph_.initEdge(num_location_intervals,num_sector_intervals);
+//		if (Graph_.getEdgeList().empty())
+//			Graph_.initEdge(num_location_intervals,num_sector_intervals);
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
@@ -434,8 +460,8 @@ void readLocationFile(
 		num_location_intervals 	= atoi(data[1][1].c_str());
 		num_sector_intervals 	= atoi(data[2][1].c_str());
 
-		if (Graph_.getEdgeList().empty())
-			Graph_.initEdge(num_location_intervals,num_sector_intervals);
+//		if (Graph_.getEdgeList().empty())
+//			Graph_.initEdge(num_location_intervals,num_sector_intervals);
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
@@ -538,8 +564,8 @@ void readCounterFile(
 		num_location_intervals 	= atoi(data[1][1].c_str());
 		num_sector_intervals 	= atoi(data[2][1].c_str());
 
-		if (Graph_.getEdgeList().empty())
-			Graph_.initEdge(num_location_intervals,num_sector_intervals);
+//		if (Graph_.getEdgeList().empty())
+//			Graph_.initEdge(num_location_intervals,num_sector_intervals);
 
 		vector<vector<edge_tt> > edges = Graph_.getEdgeList();
 
@@ -555,37 +581,6 @@ void readCounterFile(
 			}
 		}
 	}
-}
-
-bool copyFile(
-	string SRC,
-	string DEST)
-{
-    ifstream src (SRC,  ios::binary);
-    ofstream dest(DEST, ios::binary);
-    dest << src.rdbuf();
-    return src && dest;
-}
-
-bool directoryCheck(
-	string path_ )
-{
-    if (path_.empty())
-    {
-    	return false;
-    }
-    DIR *dir;
-    bool exist = false;
-    dir = opendir(path_.c_str());
-    if (dir != NULL)
-    {
-    	exist = true; closedir(dir);
-    }
-    if (!exist)
-    {
-    	mkdir(path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    }
-    return exist;
 }
 
 

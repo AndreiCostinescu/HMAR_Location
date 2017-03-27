@@ -13,53 +13,19 @@
 #include "Graph.h"
 #include "vtkExtra.h"
 #include "dbscan.h"
+#include "labeling_loc.h"
 
 // ============================================================================
 // Mov, Loc Labels
 // ============================================================================
 
-void decideBoundary(
-	point_t 				&point1_,
-	point_t 				&point2_,
-	vector<point_t> 		locations_,
-	vector<double> 			locations_boundary_,
-	vector<vector<double> > surfaces_,
-	vector<int>     		surfaces_num_,
-	vector<double> 			surfaces_boundary_);
-
-void contactBoundary(
-	vector<point_t> &p,
-	vector<point_t> locations,
-	vector<double> 	&location_boundary,
-	bool 			learn);
-
 void labelMovement(
-	Graph &Graph_,
-	vector<vector<string> > data_);
-
-void labelLocation(
-	vector<vector<string> > data_,
-	vector<point_t> 		&points_,
-	vector<point_t> 		&locations_,
-	vector<double>  		&locations_boundary_,
-	vector<string>  		&label_,
-	vector<vector<double> > surfaces_,
-	vector<int>     		&surfaces_num_,
-	vector<double>     		&surfaces_boundary_,
-	double 					epsilon_,
-	int    					minpts_);
-
-void labelLocation_(
-	Graph &Graph_,
-	vector<vector<point_t> > &pos_vel_acc_,
-	vector<vector<string> > data_,
-	double epsilon_,
-	int minpts_);
+	Graph &Graph_);
 
 void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	double max_range_,
+	vector<int> contact_,
 	vector<int> file_eof_,
 	vector<vector<unsigned char> > color_code_);
 
@@ -171,7 +137,7 @@ void updateSectorCurve(
 void generateSectorCurve(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	double max_range_,
+	vector<int> contact_,
 	vector<int> file_eof_);
 
 void fillLocationData(

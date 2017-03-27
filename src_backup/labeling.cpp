@@ -7,326 +7,35 @@
 
 #include "labeling.h"
 
+//#define DELETE
+
 // ============================================================================
 // Mov, Loc Labels
 // ============================================================================
 
-
-void decideBoundary(
-	point_t 				&point1_,
-	point_t 				&point2_,
-	vector<point_t> 		locations_,
-	vector<double> 			locations_boundary_,
-	vector<vector<double> > surfaces_,
-	vector<int>     		surfaces_num_,
-	vector<double> 			surfaces_boundary_)
-{
-	double location_contact = 0.0;
-	point_t tmp_diff;
-	location_contact = 0.0;
-	point2_.cluster_id = UNCLASSIFIED;
-	for(int ii=0;ii<locations_.size();ii++)
-	{
-		tmp_diff = minusPoint(point2_, locations_[ii]);
-		if (max_(
-				pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
-				location_contact ))
-		{
-			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
-			if (max_(location_contact, locations_boundary_[ii]))
-			{
-				double tmpvel = l2Norm(minusPoint(point2_,point1_));
-				if (tmpvel > 0.005) continue;
-				if (surfaces_num_[ii] < 0)
-				{
-					point2_.cluster_id = ii;
-				}
-				else
-				{
-					if (surfaceDistance(
-							point2_, surfaces_[surfaces_num_[ii]])
-						<= surfaces_boundary_[ii])
-					{
-						point2_.cluster_id = ii;
-					}
-				}
-			}
-		}
-	}
-}
-
-void contactBoundary(
-	vector<point_t> 		&points_,
-	vector<point_t> 		locations_,
-	vector<double> 			&locations_boundary_,
-	vector<vector<double> > surfaces_,
-	vector<int>     		surfaces_num_,
-	vector<double> 			&surfaces_boundary_,
-	bool 					learn_)
-{
-//	if (learn)
-//		for(int i=0;i<locations.size();i++)
-//			location_boundary[i] = 0.95; //1.0 is the max
-
-	for (int i=0;i<points_.size();i++)
-	{
-		if (learn_)
-		{
-			if (points_[i].cluster_id<0) continue;
-			point_t tmp_diff =
-					minusPoint(points_[i], locations_[points_[i].cluster_id]);
-			locations_boundary_[points_[i].cluster_id] =
-					min(
-							pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
-							locations_boundary_[points_[i].cluster_id]);
-			if (surfaces_num_[points_[i].cluster_id]<0)
-			{
-				locations_boundary_[points_[i].cluster_id] =
-						max(0.60, locations_boundary_[points_[i].cluster_id]);
-			}
-			else
-			{
-				surfaces_boundary_[points_[i].cluster_id] =
-						max(
-								surfaces_boundary_[points_[i].cluster_id],
-								surfaceDistance(
-										points_[i],
-										surfaces_[points_[i].cluster_id]));
-			}
-		}
-		else
-		{
-			if(i>0)
-				decideBoundary(
-						points_[i-1], points_[i], locations_, locations_boundary_,
-						surfaces_, surfaces_num_, surfaces_boundary_);
-			else
-				decideBoundary(
-						points_[i], points_[i], locations_, locations_boundary_,
-						surfaces_, surfaces_num_, surfaces_boundary_);
-		}
-	}
-}
-
 void labelMovement(
-	Graph &Graph_,
-	vector<vector<string> > data_)
+	Graph &Graph_)
 {
-	bool replace = false;
 	vector<string> label; label.clear();
-	if(data_.empty())
-	{
-		printf("[WARNING] : Movement data is empty.... Creating default data.");
-		label.push_back("MOVE");
-		label.push_back("SLIDE");
-	}
-	else
-	{
-		for(int ii=0;ii<data_[0].size();ii++)
-			label.push_back(data_[0][ii]);
-	}
-	printf("Reviewing movement labels for OBJ...\n");
-	for(int i=0;i<label.size();i++)
-	{
-		printf("MLabel %d : %s\n", i, label[i].c_str());
-	}
+	label.push_back("MOVE");
+	label.push_back("SLIDE");
 	Graph_.updateMovLabel(label);
-}
-
-void labelLocation(
-	vector<vector<string> > data_,
-	vector<point_t> 		&points_,
-	vector<point_t> 		&locations_,
-	vector<double>  		&locations_boundary_,
-	vector<string>  		&label_,
-	vector<vector<double> > surfaces_,
-	vector<int>     		&surfaces_num_,
-	vector<double>     		&surfaces_boundary_,
-	double 					epsilon_,
-	int    					minpts_)
-{
-	int num_points = points_.size();
-	int num_locations;
-
-	vector<vector<unsigned char> > color_code; colorCode(color_code);
-
-	point_t *points_array = Calloc(point_t,points_.size());
-	vector2array(points_, points_array);
-
-	if (data_.empty())
-	{
-		//[CLUSTERING]*********************************************************
-		dbscanCluster(epsilon_, (unsigned int)minpts_, num_points, points_array);
-		printf("Clustering training data......Complete\n");
-		reshapeVector(points_, num_points);
-		array2vector(points_array, num_points, points_);
-		combineNearCluster(points_, locations_);
-		printf("Combining nearby clusters......Complete\n");
-		//*********************************************************[CLUSTERING]
-		num_locations = locations_.size();
-		reshapeVector(locations_boundary_,	num_locations);
-		reshapeVector(label_, 				num_locations);
-		reshapeVector(surfaces_num_, 		num_locations);
-		reshapeVector(surfaces_boundary_, 	num_locations);
-
-		for(int i=0;i<num_locations;i++)
-		{
-			vector<double> tmp_vec(3);
-			int surface_num  = -1;
-			double dist_tmp1 = 0.0;
-			double dist_tmp2 = 10.0; //### need improvement
-
-			for(int ii=0;ii<surfaces_.size();ii++)
-			{
-				point_t s_tmp;
-				s_tmp.x = surfaces_[ii][4];
-				s_tmp.y = surfaces_[ii][5];
-				s_tmp.z = surfaces_[ii][6];
-				dist_tmp1 =
-						0.5*abs(surfaceDistance(locations_[i],surfaces_[ii])) +
-						0.5*l2Norm(minusPoint(locations_[i],s_tmp));
-				if (min_(dist_tmp1,dist_tmp2) && dist_tmp1<0.1)
-				{
-					surface_num = ii;
-					dist_tmp2 = dist_tmp1;
-				}
-			}
-			surfaces_num_[i] = surface_num;
-			locations_boundary_[i] = 1.0; // init
-		}
-
-		contactBoundary(
-				points_, locations_, locations_boundary_,
-				surfaces_, surfaces_num_, surfaces_boundary_, true);
-
-		contactBoundary(
-				points_, locations_, locations_boundary_,
-				surfaces_, surfaces_num_, surfaces_boundary_, false);
-
-		showData(points_, label_, color_code, true, true);
-	}
-	else
-	{
-		num_locations = data_.size();
-		reshapeVector(locations_,		  	num_locations);
-		reshapeVector(locations_boundary_, 	num_locations);
-		reshapeVector(surfaces_num_,		num_locations);
-		reshapeVector(surfaces_boundary_, 	num_locations);
-		reshapeVector(label_,		      	num_locations);
-		for(int i=0;i<num_locations;i++)
-		{
-			label_[i] 		  	  		=      data_[i][0];
-			locations_[i].x 		  	= atof(data_[i][1].c_str());
-			locations_[i].y 		  	= atof(data_[i][2].c_str());
-			locations_[i].z 		  	= atof(data_[i][3].c_str());
-			locations_[i].cluster_id	= UNCLASSIFIED;
-			locations_boundary_[i] 	  	= atof(data_[i][4].c_str());
-			surfaces_num_[i] 	  	  	= atof(data_[i][5].c_str());
-			surfaces_boundary_[i]		= atof(data_[i][6].c_str());
-		}
-		contactBoundary(
-				points_, locations_, locations_boundary_,
-				surfaces_, surfaces_num_, surfaces_boundary_, false);
-		showData(points_, label_, color_code, true, false);
-	}
-
-	printf("Reviewing location labels...\n");
-	for(int i=0;i<1;i++)
-	{
-		printf("LLabel %d : %s\n", i+1, label_[i].c_str());
-	}
-}
-
-void labelLocation_(
-	Graph &Graph_,
-	vector<vector<point_t> > &pos_vel_acc_,
-	vector<vector<string> > data_,
-	double epsilon_,
-	int minpts_)
-{
-	// [VARIABLES]*************************************************************
-	data_t motion_data;
-	vector<point_t> points_avg;
-	vector<string>  label;
-	vector<point_t> locations;
-	vector<double> 	location_boundary;
-	vector<int> 	surface_num1;
-	vector<double> 	surface_boundary;
-	vector<vector<double> > surface;
-	vector<vector<data_t> > node_data;
-	vector<vector<double> > node_data_tmp;
-	int num_points 		= pos_vel_acc_.size();
-	int num_locations 	= locations.size();
-	// *************************************************************[VARIABLES]
-
-	// [LABELLING LOCATION]****************************************************
-	for(int i=0;i<pos_vel_acc_.size();i++)
-	{
-		points_avg.push_back(pos_vel_acc_[i][0]);
-	}
-	label.clear();
-	locations.clear();
-	location_boundary.clear();
-	surface_num1.clear();
-	surface_boundary.clear();
-	surface = Graph_.getSurface();
-	labelLocation(
-			data_, points_avg,
-			locations, location_boundary, label,
-			surface, surface_num1, surface_boundary,
-			epsilon_, minpts_);
-	num_locations = locations.size();
-	for(int i=0;i<pos_vel_acc_.size();i++)
-	{
-		pos_vel_acc_[i][0].cluster_id = points_avg[i].cluster_id;
-	}
-	printf("Labeling of clusters (action locations)......Complete\n");
-	// ****************************************************[LABELLING LOCATION]
-
-	// [NODES]*****************************************************************
-	reshapeVector(node_data,num_locations);
-	for(int i=0;i<num_points;i++)
-	{
-		if (pos_vel_acc_[i][0].cluster_id >= 0)
-		{
-			motion_data.pos = pos_vel_acc_[i][0];
-			motion_data.vel = pos_vel_acc_[i][1];
-			motion_data.acc = pos_vel_acc_[i][2];
-			node_data[pos_vel_acc_[i][0].cluster_id].push_back(motion_data);
-		}
-	}
-	for(int i=0;i<num_locations;i++)
-	{
-		if (Graph_.checkNode(i))
-			Graph_.extendNode(i, node_data[i]);
-		else
-			Graph_.addNode(label[i], i, -1,
-						   locations[i], location_boundary[i],
-						   surface_num1[i], surface_boundary[i], node_data[i]);
-	}
-	// *****************************************************************[NODES]
 }
 
 void labelSector(
 	Graph &Graph_,
 	vector<vector<point_t> > pos_vel_acc_avg_,
-	double max_range_,
+	vector<int> contact_,
 	vector<int> file_eof_,
 	vector<vector<unsigned char> > color_code_)
 {
-//	// THE use of gaussian kernel helps to smoothen can create a tube like structure.
-//	// However it is still possible to have like bumps because the sampling is just not enough.
-//	vector<vector<double> > kernel(kernel_size_x_);
-//	for(int i=0;i<kernel_size_x_;i++) kernel[i].resize(kernel_size_y_);
-//	gaussKernel(kernel, kernel_size_x_, kernel_size_y_, 0.5);
-
 	// Graph_.getEdgeList() = [#loc*#loc -> #edges -> #loc*#sec]
 
-	generateSectorCurve(Graph_, pos_vel_acc_avg_, max_range_, file_eof_);
+//	generateSectorCurve(Graph_, pos_vel_acc_avg_, contact_, file_eof_);
 	printf("Generating sectors......Complete\n");
 
 	vector<point_t> point_zero; vector<string> label_zero; bool flag = false;
-//	for(int i=0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
+	for(int i=0;i<pos_vel_acc_avg_.size();i++) point_zero.push_back(pos_vel_acc_avg_[i][0]);
 	showConnection(point_zero, label_zero, Graph_, color_code_, true);
 	printf("Viewing sector......Complete\n");
 
@@ -337,6 +46,13 @@ bool replaceLabel(
 	vector<string> &label_)
 {
 	bool replace = false;
+
+	printf("Saved labels...\n");
+	for(int i=0;i<label_.size();i++)
+	{
+		printf("Label %d : %s\n", i, label_[i].c_str());
+	}
+
 	printf("Replace labels? [Y/N]\n");
 	while(0)
 	{
@@ -661,9 +377,20 @@ void fitSectorCurve(
 					data_old.end(), edge_data.begin(), edge_data.end());
 		Graph_.updateEdgeData(data_old, label1_, label2_, 0);
 	}
-	reshapeVector(points_est,(points_tmp.size())*2);
-	reshapeVector(coeffs_,DEGREE);
+	reshapeVector(points_est,(points_tmp.size())*1);
 	polyCurveFitPoint(points_tmp, points_est, coeffs_, covs, true);
+	vector<point_t> P = points_tmp;
+	P.insert(P.end(),points_est.begin(),points_est.end());
+	for(int i=0;i<points_tmp.size();i++)
+	{
+		P[i].cluster_id = 2;
+	}
+
+//	vector<vector<unsigned char> > color_code; colorCode(color_code);
+//	vector<string> label_(2);
+//	vector<int> loc_idx_zero;
+//	showData(P, label_, loc_idx_zero, color_code, true, false, false);
+
 }
 
 void checkSectorCurve(
@@ -886,6 +613,7 @@ void updateSectorCurve(
 
 	if (Graph_.getCounter(edge_xy_,0) == 0)
 	{
+
 		fitSectorCurve(
 				Graph_, pva_avg_, points_est, coeffs, edge_xy_,
 				point1_idx_, point2_idx_, label1_, label2_);
@@ -946,8 +674,8 @@ void updateSectorCurve(
 
 void generateSectorCurve(
 	Graph &Graph_,
-	vector<vector<point_t> > pva_avg,
-	double max_range_,
+	vector<vector<point_t> > pva_avg_,
+	vector<int> contact_,
 	vector<int> file_eof_)
 {
 	vector<node_tt> nodes = Graph_.getNodeList();
@@ -955,55 +683,65 @@ void generateSectorCurve(
 	vector<point_t> locations(num_locations);
 	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].location;}
 
-	int tmp_id1 = -1, tmp_id2 = -1, tmp_id3 = -1, file_num = 0, edge_xy = 0;
+	int tmp_id1 = 0, tmp_id2 = -1, tmp_id3 = -1, file_num = 0, edge_xy = 0;
 	bool flag_next 	= false;
 
-	for(int i=0;i<pva_avg.size();i++)
+	for(int p_idx=0;p_idx<pva_avg_.size();p_idx++)
 	{
-		if(i==file_eof_[file_num]-1)
+		if(p_idx==file_eof_[file_num]-1)
 		{
+			vector<vector<string> > data_;
+			vector<vector<point_t> > pva_avg_tmp(p_idx-tmp_id1);
+
+			for(int p_idx2=tmp_id1;p_idx2<p_idx;p_idx2++)
+			{
+				pva_avg_tmp[p_idx2-tmp_id1] = pva_avg_[p_idx2];
+			}
+
+//			labelLocation_(Graph_, pva_avg_tmp, contact_, data_, DBSCAN_EPS, DBSCAN_MIN);
+
+			//						updateSectorCurve(
+			//								Graph_, pva_avg, edge_xy,
+			//								tmp_id3, i, tmp_id1, tmp_id2, max_range_);
+
 			file_num++;
-			flag_next = false;
-			tmp_id1 = -1; // from
-			tmp_id2 = -1; // to
-			tmp_id3 = -1; // data number of from
-			continue;
+			tmp_id1 = p_idx+1; // from
 		}
-		if (pva_avg[i][0].cluster_id >= 0)
-		{
-			// Initial location
-			if (tmp_id1 < 0)
-			{
-				tmp_id1 = pva_avg[i][0].cluster_id;
-				continue;
-			}
-			else
-			{
-				// Check if location has changed
-				if (flag_next)
-				{
-					tmp_id2 = pva_avg[i][0].cluster_id;
-					edge_xy = tmp_id1*locations.size() + tmp_id2;
-					if (i - tmp_id3 > 5) // to prevent only a few points evaluated for curve
-						updateSectorCurve(
-								Graph_, pva_avg, edge_xy,
-								tmp_id3, i, tmp_id1, tmp_id2, max_range_);
-					flag_next = false;
-					tmp_id1 = tmp_id2;
-					tmp_id2 = -1;
-					tmp_id3 = -1;
-				}
-			}
-		}
-		else
-		{
-			// saves the data number of initial location
-			if (tmp_id1 >=0 && tmp_id3 < 0)
-			{
-				tmp_id3 = i;
-				flag_next = true;
-			}
-		}
+//		if (pva_avg[i][0].cluster_id >= 0)
+//		{
+//			// Initial location
+//			if (tmp_id1 < 0)
+//			{
+//				tmp_id1 = pva_avg[i][0].cluster_id;
+//				continue;
+//			}
+//			else
+//			{
+//				// Check if location has changed
+//				if (flag_next)
+//				{
+//					tmp_id2 = pva_avg[i][0].cluster_id;
+//					edge_xy = tmp_id1*locations.size() + tmp_id2;
+//					if (i - tmp_id3 > 5) // to prevent only a few points evaluated for curve
+//						updateSectorCurve(
+//								Graph_, pva_avg, edge_xy,
+//								tmp_id3, i, tmp_id1, tmp_id2, max_range_);
+//					flag_next = false;
+//					tmp_id1 = tmp_id2;
+//					tmp_id2 = -1;
+//					tmp_id3 = -1;
+//				}
+//			}
+//		}
+//		else
+//		{
+//			// saves the data number of initial location
+//			if (tmp_id1 >=0 && tmp_id3 < 0)
+//			{
+//				tmp_id3 = i;
+//				flag_next = true;
+//			}
+//		}
 	}
 }
 
