@@ -35,7 +35,9 @@ int clusteringExt(
 	vector<point_d> &points_,
 	vector<int> 	contact_,
 	vector<point_d> &locations_,
-	vector<string> 	&labels_);
+	vector<string> 	&labels_,
+	vector<string> 	labels_ref_,
+	bool 			delete_=false);
 
 int buildLocationArea(
 	Graph 						&Graph_,

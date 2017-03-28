@@ -7,7 +7,7 @@
 
 #include "labeling_loc.h"
 
-//#define DELETE
+#define DELETE
 
 int decideBoundaryExt(
 	point_d 		&point1_,
@@ -39,7 +39,7 @@ int contactBoundary(
 							centroids_[points_[i].l].l);
 			centroids_[points_[i].l].l =
 					max(
-							0.60,
+							0.70,
 							centroids_[points_[i].l].l);
 		}
 		else
@@ -84,21 +84,23 @@ int clusteringExt(
 	vector<point_d> &points_,
 	vector<int> 	contact_,
 	vector<point_d> &locations_,
-	vector<string> 	&labels_)
+	vector<string> 	&labels_,
+	vector<string> 	labels_ref_,
+	bool 			delete_)
 {
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	vector<int> loc_idx_zero;
 
 	clustering(points_);
 
-#ifdef DELETE
-	while(1)
+	if(delete_)
 	{
 		combineNearCluster(points_, locations_, contact_);
 		int num_locations = locations_.size();
-		reshapeVector(label_, 		num_locations);
+		reshapeVector(labels_, 	num_locations);
 		reshapeVector(loc_idx_zero,	num_locations);
-		showData(points_, label_, loc_idx_zero, color_code, true, false, true);
+		printer(23);
+		showData(points_, labels_, labels_ref_, loc_idx_zero, color_code, true, false, true);
 		for(int i=0;i<points_.size();i++)
 			if (loc_idx_zero[points_[i].l]<0)
 				points_[i].l = UNCLASSIFIED;
@@ -113,29 +115,19 @@ int clusteringExt(
 			}
 		}
 		// updating cluster label
-		for(int i=0;i<num_points;i++)
+		for(int i=0;i<points_.size();i++)
 		{
 			if (points_[i].l >= 0)
 				points_[i].l = loc_idx_zero[points_[i].l];
-			//printf("Location %02d: %02d\n", i, points_[i].l );
+			//printf("Location %02d: %02f\n", i, points_[i].l );
 		}
-		cout << ">>>>> Are the labels correct? [Y/N]\n";
-		string mystr; getline (cin, mystr);
-		if(!strcmp(mystr.c_str(),"Y"))
-		{
-			combineNearCluster(points_, locations_, contact_);
-			num_locations = locations_.size();
-			reshapeVector(label_, 		num_locations);
-			reshapeVector(loc_idx_zero,	num_locations);
-			break;
-		}
+		locations_.clear();
+		combineNearCluster(points_, locations_, contact_);
 	}
-#else
-
-	combineNearCluster(points_, locations_, contact_);
-	int num_locations = locations_.size();
-
-#endif
+	else
+	{
+		combineNearCluster(points_, locations_, contact_);
+	}
 
 	//contactCheck(points_, contact_, num_locations);
 	printer(14);
@@ -154,29 +146,37 @@ int buildLocationArea(
 	// [VARIABLES]*************************************************************
 	bool 			flag = false;
 	vector<point_d> points_avg;
-	vector<string>  goal_action;
 	vector<point_d> locations;
+	vector<string>  goal_action;
+	vector<string>	action_label_tmp;
 	vector<int> 	loc_idx_zero;
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	// *************************************************************[VARIABLES]
+
+	contact_.clear();
 
 	// [LABELLING LOCATION]****************************************************
 	for(int i=0;i<Graph_.getNumberOfNodes();i++)
 	{
 		goal_action.push_back(Graph_.getNode(i).name);
+		locations.push_back(Graph_.getNode(i).centroid);
 	}
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
 		points_avg.push_back(pos_vel_acc_[i][0]);
 	}
-	clusteringExt(points_avg, contact_, locations, goal_action);
 	if (Graph_.getNumberOfNodes()==0)
 	{
-		reshapeVector(goal_action, locations.size());
-		vector<string> action_label_tmp;
 		Graph_.getActionLabel(action_label_tmp);
+		clusteringExt(points_avg, contact_, locations, goal_action, action_label_tmp, true);
+		reshapeVector(goal_action, locations.size());
 		printer(15);
 		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, true, false);
+	}
+	else
+	{
+		Graph_.getActionLabel(action_label_tmp);
+		clusteringExt(points_avg, contact_, locations, goal_action, action_label_tmp, false);
 	}
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
@@ -250,12 +250,22 @@ int buildLocationArea(
 
 //	if (flag)
 //	{
+//		goal_action.clear();
+//		for(int i=0;i<Graph_.getNumberOfNodes();i++)
+//		{
+//			goal_action.push_back(Graph_.getNode(i).name);
+//		}
 //		vector<string> action_label_tmp;
 //		Graph_.getActionLabel(action_label_tmp);
 //		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, true, false);
 //	}
 //	else
 //	{
+//		goal_action.clear();
+//		for(int i=0;i<Graph_.getNumberOfNodes();i++)
+//		{
+//			goal_action.push_back(Graph_.getNode(i).name);
+//		}
 //		vector<string> action_label_tmp;
 //		Graph_.getActionLabel(action_label_tmp);
 //		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, false, false);

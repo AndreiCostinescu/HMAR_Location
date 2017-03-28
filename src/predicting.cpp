@@ -320,11 +320,11 @@ int decideOscillate(
 	// Since this is in the representation of the sector-map,
 	// it gives a more intuitive explanation of the property of an action,
 	// instead of giving just a spatial representation in 3D as in the case of acceleration.
-	predict_.oscillate[label2_] =
-			((1.0 - X[1]) *         d2[2]) +
-			((      X[1]) *
-					((1.0 - X[0]) * d2[0] +
-					 (      X[0]) * d2[1]));
+	predict_.oscillate[label2_] = d2[2];
+//			((1.0 - X[1]) *         d2[2]) +
+//			((      X[1]) *
+//					((1.0 - X[0]) * d2[0] +
+//					 (      X[0]) * d2[1]));
 
 	return EXIT_SUCCESS;
 }
@@ -379,6 +379,7 @@ int predictFromSectorMap(
 
 		// [LOC INT CONSTRAINT]************************************************
 		decideWindow(predict_, sm_tmp, loc_idx, i);
+//		if(i == 1) cout << loc_idx << " " <<predict_.window[i] << endl;
 		// ************************************************[LOC INT CONSTRAINT]
 
 		// [REPETITIVE]********************************************************

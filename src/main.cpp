@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 //		cout << "UNKNOWN" << endl;
 
 
-	object  			= "04";
+	object  			= "001";
 	DATA_DIR_SINGLE 	= DATA_DIR_SINGLE_	+ object	+ string("/");
 	learning( DATA_DIR_SINGLE, scene, object);
 

@@ -201,12 +201,14 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 						if(!strcmp(mystr.c_str(),"Y"))
 						{
 							cout << ">>>>> [WARNING] : Label has been deleted." << endl;
+							cout << ">>>>> Press q to quit..." << endl;
 							location[i] = -1;
 							break;
 						}
 						if(!strcmp(mystr.c_str(),"N"))
 						{
 							cout << ">>>>> [WARNING] : Label has not been deleted." << endl;
+							cout << ">>>>> Press q to quit..." << endl;
 							break;
 						}
 					}
@@ -433,10 +435,17 @@ void showData(
 		}
 
 		if (deleting_)
+		{
+			printf(">>>>> Pick a location with color to delete.\n");
 			style->setLeftButton(CLICK_DELETE);
+		}
 		else
+		{
 			style->setLeftButton(CLICK_EMPTY);
+		}
 	}
+
+
 
 
 	renderer->AddActor(actor);

@@ -209,6 +209,8 @@ gsl/gsl_statistics.h
 -
 gsl/gsl_linalg.h
 -
+opencv2/opencv.hpp
+-
 
 /home/chen/HMAR/HMAR_Location/src/dbscan.h
 dataDeclaration.h

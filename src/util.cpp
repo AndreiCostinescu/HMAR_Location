@@ -179,7 +179,7 @@ int learning(
 //	// ***********************************************************[FILTER MASK]
 
 	// [SAVED LOCATION]********************************************************
-	path =  SCENE_ + scene + "/" + object + "/data_loc.txt";
+	path =  SCENE_ + scene + "/" + object + "/location_area.txt";
 	readFileExt(Graph_main, path, 0);
 	// ********************************************************[SAVED LOCATION]
 
@@ -319,8 +319,9 @@ int learning(
 
 
 			}
-			plotData(x,y[0]);
+
 			plotData(x,y[1]);
+			plotData(x,y[2]);
 
 			vector<point_d> point_zero; vector<string> label_zero;
 			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);

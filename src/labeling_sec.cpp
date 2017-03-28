@@ -400,7 +400,7 @@ int adjustCurve(
 							edge_tmp.loc_end,
 							edge_tmp.tan,
 							edge_tmp.nor,
-							2,
+							5,
 							true);
 				}
 			} //s
@@ -408,6 +408,7 @@ int adjustCurve(
 			{
 				if (loc_last[i-1]>loc_last[i]) {loc_last[i] = loc_last[i-1];}
 			}
+//			cout << l << " " << loc_last[0] << " " << loc_last[1] << " " << loc_last[2] << endl;
 		} //l
 		// ********************************************************[SECTOR MAP]
 		edge_tmp.sector_map.clear();

@@ -209,17 +209,25 @@ void combineNearCluster(
 {
 	int num_points 		= points_.size();
 	int num_locations 	= locations_.size();
+	int num_locations2 	= 0;
 
 	if (num_locations < 1)
 	{
 		for(int i=0;i<num_points;i++)
 			num_locations = max((int)points_[i].l, num_locations);
 		num_locations += 1;
+		num_locations2 = num_locations;
+	}
+	else
+	{
+		for(int i=0;i<num_points;i++)
+			num_locations2 = max((int)points_[i].l, num_locations2);
+		num_locations2 += 1;
 	}
 
 	// calculating the centroid of cluster
-	vector<point_d> p_tmp; p_tmp.resize(num_locations);
-	vector<double>	count; count.resize(num_locations);
+	vector<point_d> p_tmp; p_tmp.resize(num_locations2);
+	vector<double>	count; count.resize(num_locations2);
 	for(int i=0;i<num_points;i++)
 	{
 		if(points_[i].l >= 0)
@@ -230,7 +238,7 @@ void combineNearCluster(
 		}
 	}
 
-	for(int i=0;i<num_locations;i++)
+	for(int i=0;i<num_locations2;i++)
 	{
 		p_tmp[i] = multiPoint(p_tmp[i],1/count[i]);
 		p_tmp[i].l = UNCLASSIFIED;
@@ -238,9 +246,9 @@ void combineNearCluster(
 
 	// combine cluster if it is less than 0.1m
 	bool limit = false;
-	for(int i=0;i<num_locations;i++)
+	for(int i=0;i<num_locations2;i++)
 	{
-		for(int j=0;j<num_locations;j++)
+		for(int j=0;j<num_locations2;j++)
 		{
 			if(j<=i) continue;
 
@@ -259,7 +267,7 @@ void combineNearCluster(
 				{
 					int big   = max(p_tmp[i].l, p_tmp[j].l);
 					int small = min(p_tmp[i].l, p_tmp[j].l);
-					for(int ii=0;ii<num_locations;ii++)
+					for(int ii=0;ii<num_locations2;ii++)
 					{
 						if (p_tmp[ii].l == big) { p_tmp[ii].l = small; }
 					}
@@ -278,17 +286,17 @@ void combineNearCluster(
 				if(p_tmp[j].l!=(int)j && p_tmp[j].l<0) { p_tmp[j].l = j; }
 			}
 		}
-		//printf("Location %02d: %02d\n", i, p_tmp1[i].l);
+		//printf("Location %02d: %02f\n", i, p_tmp[i].l);
 	}
 
 	// removing the missing cluster labels
 	int c = 1;
-	for(int i=1;i<num_locations;i++)
+	for(int i=1;i<num_locations2;i++)
 	{
 		if(p_tmp[i].l > p_tmp[i-1].l && p_tmp[i].l == i)
 		{
 			p_tmp[i].l = c;
-			for(int ii=i+1;ii<num_locations;ii++)
+			for(int ii=i+1;ii<num_locations2;ii++)
 			{
 				if(p_tmp[ii].l == i) { p_tmp[ii].l = c; }
 			}
@@ -301,21 +309,21 @@ void combineNearCluster(
 	for(int i=0;i<num_points;i++)
 	{
 		if (points_[i].l >= 0) { points_[i].l = p_tmp[(int)points_[i].l].l; }
-		//printf("Location %02d: %02d\n", i, points_[i].l );
+		//printf("Location %02d: %02f\n", i, points_[i].l );
 	}
 
 #ifdef CONTACT
 	if(!contact_.empty())
 	{
 		// checking contact constraint
-		num_locations = 0;
+		num_locations2 = 0;
 		for(int i=0;i<num_points;i++)
 		{
-			num_locations = max((int)points_[i].l, num_locations);
+			num_locations2 = max((int)points_[i].l, num_locations2);
 		}
-		num_locations += 1;
-		vector<double> c1; c1.resize(num_locations);
-		vector<double> c2; c2.resize(num_locations);
+		num_locations2 += 1;
+		vector<double> c1; c1.resize(num_locations2);
+		vector<double> c2; c2.resize(num_locations2);
 		for(int i=0;i<num_points;i++)
 		{
 			if (points_[i].l<0) { continue; }
@@ -331,18 +339,18 @@ void combineNearCluster(
 			points_[i].l = UNCLASSIFIED;
 		}
 		// removing the missing cluster labels
-		vector<point_d> p_tmp1; p_tmp1.resize(num_locations);
+		p_tmp.clear(); p_tmp.resize(num_locations2);
 		c = 0;
-		for(int i=0;i<num_locations;i++)
+		for(int i=0;i<num_locations2;i++)
 		{
 			if(c1[i]/c2[i] < CONTACT_TRIGGER_RATIO)
 			{
-				p_tmp1[i].l = c;
+				p_tmp[i].l = c;
 				c++;
 			}
 			else
 			{
-				p_tmp1[i].l = UNCLASSIFIED;
+				p_tmp[i].l = UNCLASSIFIED;
 			}
 			//printf("Location %02d: %02d\n", i, p_tmp1[i].l );
 		}
@@ -351,7 +359,7 @@ void combineNearCluster(
 		{
 			if (points_[i].l >= 0)
 			{
-				points_[i].l = p_tmp1[(int)points_[i].l].l;
+				points_[i].l = p_tmp[(int)points_[i].l].l;
 			}
 			//printf("Location %02d: %02d\n", i, points_[i].l );
 		}
@@ -359,27 +367,47 @@ void combineNearCluster(
 #endif
 
 	// calculate the centroid of combined clusters
-	vector<point_d> p_tmp2; p_tmp2.resize(num_locations);
-	vector<double>	count2; count2.resize(num_locations);
+	p_tmp.clear(); p_tmp.resize(num_locations2);
+	count.clear(); count.resize(num_locations2);
 
 	for(int i=0;i<num_points;i++)
 	{
 		if(points_[i].l >= 0)
 		{
-			p_tmp2[(int)points_[i].l] =
-					addPoint(p_tmp2[(int)points_[i].l], points_[i]);
-			count2[(int)points_[i].l] += 1;
+			p_tmp[(int)points_[i].l] =
+					addPoint(p_tmp[(int)points_[i].l], points_[i]);
+			count[(int)points_[i].l] += 1;
 		}
 		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
 	}
 
-	reshapeVector(locations_,c);
 	for(int i=0;i<c;i++)
 	{
-		p_tmp2[i]		= multiPoint(p_tmp2[i],1/count2[i]);
-		p_tmp2[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
-		locations_[i] 	= p_tmp2[i];
+		p_tmp[i]	= multiPoint(p_tmp[i],1/count[i]);
+		p_tmp[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
 		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
+	}
+
+	if(locations_.empty())
+	{
+		locations_ = p_tmp;
+	}
+	else
+	{
+		// fusing with the saved data
+		for(int i=0;i<num_locations;i++)
+		{
+			for(int ii=0;ii<num_locations2;ii++)
+			{
+				if(l2Norm(minusPoint(locations_[i],p_tmp[ii]))<CLUSTER_LIMIT)
+				{
+					double tmp_l = (locations_[i].l + p_tmp[ii].l) / 2.0;
+					locations_[i] = multiPoint(addPoint(locations_[i], p_tmp[ii]), 0.5);
+					locations_[i].l = tmp_l;
+					break;
+				}
+			}
+		}
 	}
 }
 

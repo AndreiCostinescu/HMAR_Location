@@ -134,7 +134,7 @@ using namespace std;
 //3 : label only
 #define VERBOSE 3
 
-#define CLUSTER_LIMIT 0.1
+#define CLUSTER_LIMIT 0.05
 
 #define FILTER_WIN 15
 

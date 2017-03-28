@@ -89,7 +89,9 @@ int printer(
 		case 22:
 			printf("# Fitting points to initial sector map.................................SUCCESS\n");
 			break;
-
+		case 23:
+			printf(CYEL "# Deleting clusters (location areas)..........................................\n" CNOR);
+			break;
 //		case :
 //			break;
 
