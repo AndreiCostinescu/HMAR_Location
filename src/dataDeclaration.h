@@ -142,7 +142,7 @@ using namespace std;
 
 #define CONTACT_TRIGGER_RATIO 0.65
 
-#define DBSCAN_EPS 0.025
+#define DBSCAN_EPS 0.015
 #define DBSCAN_MIN 10
 #define MAX_RANGE 0.05
 #define	LOC_INT 200

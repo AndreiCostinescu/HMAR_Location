@@ -381,10 +381,12 @@ void combineNearCluster(
 		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
 	}
 
-	for(int i=0;i<c;i++)
+
+	for(int i=0;i<p_tmp.size();i++)
 	{
 		p_tmp[i]	= multiPoint(p_tmp[i],1/count[i]);
 		p_tmp[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
+		count[i]	= UNCLASSIFIED;
 		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
 	}
 
@@ -404,9 +406,41 @@ void combineNearCluster(
 					double tmp_l = (locations_[i].l + p_tmp[ii].l) / 2.0;
 					locations_[i] = multiPoint(addPoint(locations_[i], p_tmp[ii]), 0.5);
 					locations_[i].l = tmp_l;
+					p_tmp[ii].l = 0.0;
+					count[ii]	= (double)ii;
 					break;
 				}
 			}
+		}
+//		// updating cluster label
+//		for(int i=0;i<num_points;i++)
+//		{
+//			if (points_[i].l < 0) 				{ continue; }
+//			if (p_tmp[(int)points_[i].l].l < 1)	{ continue; }
+//			points_[i].l = UNCLASSIFIED;
+//		}
+		// removing the missing cluster labels
+		c = 0;
+		for(int i=0;i<num_locations2;i++)
+		{
+			if (i==0 && count[i] == 0)	{ c++; }
+			else
+			{
+				if(count[i] > count[i-1] && count[i] == i)
+				{
+					count[i] = c;
+					for(int ii=i+1;ii<num_locations2;ii++)
+					{
+						if(count[ii] == i) { count[ii] = c; }
+					}
+					c++;
+				}
+			}
+		}
+		// updating cluster label
+		for(int i=0;i<num_points;i++)
+		{
+			if (points_[i].l >= 0) { points_[i].l = count[(int)points_[i].l]; }
 		}
 	}
 }

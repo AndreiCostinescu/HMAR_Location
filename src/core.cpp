@@ -24,9 +24,9 @@ int decideBoundary(
 	vector<point_d> centroids_)
 {
 	point2_.l = UNCLASSIFIED;
-	double location_contact = 0.0;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
+		double location_contact = 0.0;
 		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
 		if (
 				max_(
@@ -45,7 +45,7 @@ int decideBoundary(
 	return EXIT_SUCCESS;
 }
 
-void decideLocationInterval(
+double decideLocationInterval(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,
 	point_d point_,
@@ -56,8 +56,10 @@ void decideLocationInterval(
 	int loc_offset_)
 {
 	vector<int> idx_tmp;
-	double d1,d2,d3,d4,d5;
+	double d1,d2,d3,d4,d5,d6; d1=d2=d3=d4=d5=d6=0.0;
 	point_d proj_dir_tmp;
+	// Added a buffer to let the system find the first sector
+	if (loc_last_idx_==0) loc_offset_*=2;
 	// Added a buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
@@ -78,6 +80,7 @@ void decideLocationInterval(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
 		{
+			if (idx1 == 0 || idx1 == LOC_INT-1)	{d6 = d3-d5;}
 			if (d4<=d2 && (d3-d5)<0.001) //### TODO small error deviation (deadzone)
 			{
 				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
@@ -86,6 +89,7 @@ void decideLocationInterval(
 		}
 		else
 		{
+			if (idx1 == 0 || idx1 == LOC_INT-1)	{d6 = d4-d5;}
 			if (d3<=d1 && (d4-d5)<0.001)
 			{
 				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
@@ -108,8 +112,9 @@ void decideLocationInterval(
 		}
 		loc_idxs_.size() > 1 ? loc_last_idx_ = loc_idxs_.back() : loc_last_idx_ = loc_idxs_[0];
 	}
-//	if (loc_idxs_.size() == 1) 	{loc_last_idx_ = loc_idxs_[0];}
-//	else						{(loc_idxs_[1] - loc_idxs_[0]>1) ? loc_last_idx_ = loc_idxs_[0] : loc_last_idx_ = loc_idxs_[1];}
+//	if(idx1<20)
+//	cout << idx1 << " : " << d6 << endl;
+	return d6;
 }
 
 double decideLocationInterval(

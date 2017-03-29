@@ -228,7 +228,91 @@ int readFileExt(
 			break;
 		case 1:
 			break;
+		default:
+			readFile(path_.c_str(), data , ',');
+			if (!data.empty())
+			{
+				int num_locations, num_location_intervals, num_sector_intervals;
+				num_locations 			= atoi(data[0][1].c_str());
+				num_location_intervals 	= atoi(data[1][1].c_str());
+				num_sector_intervals 	= atoi(data[2][1].c_str());
+
+				int c = 4;
+				for(int i=0;i<num_locations;i++)
+				{
+					for(int ii=0;ii<num_locations;ii++)
+					{
+						edge_tt edge_tmp = Graph_.getEdge(i,ii,0);
+						switch(option_)
+						{
+							case 10:
+								for(int iii=0;iii<num_location_intervals;iii++)
+								{
+									edge_tmp.loc_start[iii].x = atof(data[c][iii*3+0].c_str());
+									edge_tmp.loc_start[iii].y = atof(data[c][iii*3+1].c_str());
+									edge_tmp.loc_start[iii].z = atof(data[c][iii*3+2].c_str());
+								}
+								break;
+							case 11:
+								for(int iii=0;iii<num_location_intervals;iii++)
+								{
+									edge_tmp.loc_mid[iii].x = atof(data[c][iii*3+0].c_str());
+									edge_tmp.loc_mid[iii].y = atof(data[c][iii*3+1].c_str());
+									edge_tmp.loc_mid[iii].z = atof(data[c][iii*3+2].c_str());
+								}
+								break;
+							case 12:
+								for(int iii=0;iii<num_location_intervals;iii++)
+								{
+									edge_tmp.loc_end[iii].x = atof(data[c][iii*3+0].c_str());
+									edge_tmp.loc_end[iii].y = atof(data[c][iii*3+1].c_str());
+									edge_tmp.loc_end[iii].z = atof(data[c][iii*3+2].c_str());
+								}
+								break;
+							case 13:
+								for(int iii=0;iii<num_location_intervals;iii++)
+								{
+									edge_tmp.tan[iii].x = atof(data[c][iii*3+0].c_str());
+									edge_tmp.tan[iii].y = atof(data[c][iii*3+1].c_str());
+									edge_tmp.tan[iii].z = atof(data[c][iii*3+2].c_str());
+								}
+								break;
+							case 14:
+								for(int iii=0;iii<num_location_intervals;iii++)
+								{
+									edge_tmp.nor[iii].x = atof(data[c][iii*3+0].c_str());
+									edge_tmp.nor[iii].y = atof(data[c][iii*3+1].c_str());
+									edge_tmp.nor[iii].z = atof(data[c][iii*3+2].c_str());
+								}
+								break;
+							case 15:
+								edge_tmp.counter = atoi(data[c][0].c_str());
+								break;
+							case 16:
+								for(int iii=0;iii<num_location_intervals*num_sector_intervals;iii++)
+								{
+									edge_tmp.sector_map[iii] = atof(data[c][iii].c_str());
+								}
+								break;
+							case 17:
+								for(int iii=0;iii<num_location_intervals*num_sector_intervals;iii++)
+								{
+									edge_tmp.sector_const[iii] = atof(data[c][iii].c_str());
+								}
+								break;
+						}
+						Graph_.setEdge(i,ii,0,edge_tmp);
+						c += 2;
+					}
+				}
+				//printer
+			}
+			else
+			{
+				//printer
+			}
 	}
+
 	return EXIT_SUCCESS;
 }
 

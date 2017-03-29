@@ -21,7 +21,7 @@ int decideBoundary(
 	point_d 		&point2_,
 	vector<point_d> locations_);
 
-void decideLocationInterval(
+double decideLocationInterval(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,
 	point_d point_,

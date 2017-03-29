@@ -93,13 +93,13 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 					rgb[1]==color_[i+1][1] &&
 					rgb[2]==color_[i+1][2])
 				{
-					for(int ii=0;ii<5;ii++)
+					for(int ii=0;ii<6;ii++)
 					{
 						printf(">>>>> %d %s\n", ii, label_ref[ii].c_str());
 					}
 					printf(">>>>> Select label from list by entering the number : ");
 					string mystr; getline (cin, mystr);
-					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) >= 5)
+					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) >= 6)
 					{
 						printf(CYEL ">>>>> [WARNING] : Please choose only from the listed numbers.\n" CNOR);
 						printf(">>>>> Pick a location with color.");

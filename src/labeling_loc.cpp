@@ -26,7 +26,7 @@ int contactBoundary(
 	{
 		if (learn_)
 		{
-			if (points_[i].l < 0) { continue; }
+			if (points_[i].l < 0.0) { continue; }
 			centroids_[points_[i].l].l =
 					min(
 							pdfExp(
@@ -40,6 +40,10 @@ int contactBoundary(
 			centroids_[points_[i].l].l =
 					max(
 							0.70,
+							centroids_[points_[i].l].l);
+			centroids_[points_[i].l].l =
+					min(
+							0.98,
 							centroids_[points_[i].l].l);
 		}
 		else
@@ -153,7 +157,7 @@ int buildLocationArea(
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	// *************************************************************[VARIABLES]
 
-	contact_.clear();
+	vector<int> contact_tmp;
 
 	// [LABELLING LOCATION]****************************************************
 	for(int i=0;i<Graph_.getNumberOfNodes();i++)
@@ -168,7 +172,7 @@ int buildLocationArea(
 	if (Graph_.getNumberOfNodes()==0)
 	{
 		Graph_.getActionLabel(action_label_tmp);
-		clusteringExt(points_avg, contact_, locations, goal_action, action_label_tmp, true);
+		clusteringExt(points_avg, contact_tmp, locations, goal_action, action_label_tmp, true);
 		reshapeVector(goal_action, locations.size());
 		printer(15);
 		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, true, false);
@@ -176,11 +180,12 @@ int buildLocationArea(
 	else
 	{
 		Graph_.getActionLabel(action_label_tmp);
-		clusteringExt(points_avg, contact_, locations, goal_action, action_label_tmp, false);
+		clusteringExt(points_avg, contact_tmp, locations, goal_action, action_label_tmp, false);
 	}
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
 		pos_vel_acc_[i][0].l = points_avg[i].l;
+//		cout << points_avg[i].l << endl;
 	}
 	printer(16);
 	// ****************************************************[LABELLING LOCATION]
@@ -270,6 +275,5 @@ int buildLocationArea(
 //		Graph_.getActionLabel(action_label_tmp);
 //		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, false, false);
 //	}
-
 	return EXIT_SUCCESS;
 }

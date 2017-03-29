@@ -204,6 +204,8 @@ int learning(
 	// ************************************************************[PARSE DATA]
 
 	// [LOOP THROUGH FILES]****************************************************
+//	int tmp_id1 = file_eof[file_eof.size()-2]+1;
+//	for(int i=file_eof.size()-1;i<file_eof.size();i++)
 	int tmp_id1 = 0;
 	for(int i=0;i<file_eof.size();i++)
 	{
@@ -232,7 +234,22 @@ int learning(
 			path = 	SCENE_ + scene + "/" + object + "/sec_data_const.txt";
 			writeFile(Graph_main, path, 17);
 
-
+			path = 	SCENE_ + scene + "/" + object + "/loc_data_begin.txt";
+			readFileExt(Graph_main, path, 10);
+			path = 	SCENE_ + scene + "/" + object + "/loc_data_mid.txt";
+			readFileExt(Graph_main, path, 11);
+			path = 	SCENE_ + scene + "/" + object + "/loc_data_end.txt";
+			readFileExt(Graph_main, path, 12);
+			path = 	SCENE_ + scene + "/" + object + "/loc_data_tangent.txt";
+			readFileExt(Graph_main, path, 13);
+			path = 	SCENE_ + scene + "/" + object + "/loc_data_normal.txt";
+			readFileExt(Graph_main, path, 14);
+			path = 	SCENE_ + scene + "/" + object + "/counter.txt";
+			readFileExt(Graph_main, path, 15);
+			path = 	SCENE_ + scene + "/" + object + "/sec_data_max.txt";
+			readFileExt(Graph_main, path, 16);
+			path = 	SCENE_ + scene + "/" + object + "/sec_data_const.txt";
+			readFileExt(Graph_main, path, 17);
 
 			vector<int> contact_tmp; contact_tmp.resize(file_eof[i]-1-tmp_id1);
 			for(int iii=30;iii<contact_tmp.size();iii++)
@@ -281,7 +298,6 @@ int learning(
 						false);
 
 
-
 				map<string,pair<int,int> > ac_tmp;
 				vector<string> al_tmp;
 				vector<map<string, double> > f_tmp;
@@ -300,8 +316,8 @@ int learning(
 //						y[iii].push_back(f_tmp[iii]["CUT"]);
 //						y[iii].push_back(f_tmp[iii]["CLEAN"]);
 //						y[iii].push_back(f_tmp[iii]["SCAN"]);
-//						y[iii].push_back(f_tmp[iii]["WINDOW"]);
-						y[iii].push_back(f_tmp[iii]["SLIDE"]);
+						y[iii].push_back(f_tmp[iii]["WINDOW"]);
+//						y[iii].push_back(f_tmp[iii]["SLIDE"]);
 //						y[iii].push_back(f_tmp[iii]["CURVE"]);
 //						y[iii].push_back(f_tmp[iii]["MOVE"]);
 //						y[iii].push_back(f_tmp[iii]["STOP"]);
@@ -309,7 +325,7 @@ int learning(
 				}
 
 
-//				if (ii>491)
+//				if (ii>800)
 //				{
 //					vector<point_d> point_zero; vector<string> label_zero;
 //					for(int iii=0;iii<ii+1;iii++) point_zero.push_back(pva_avg[iii][0]);
@@ -320,8 +336,10 @@ int learning(
 
 			}
 
+			plotData(x,y[0]);
 			plotData(x,y[1]);
 			plotData(x,y[2]);
+//			plotData(x,y[3]);
 
 			vector<point_d> point_zero; vector<string> label_zero;
 			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
@@ -371,6 +389,12 @@ int learning(
 			printer(12);
 			// ***************************************[LOCATION AND SECTOR-MAP]
 			tmp_id1 = file_eof[i];
+//
+//			vector<point_d> point_zero; vector<string> label_zero;
+//			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
+//			vector<vector<unsigned char> > color_code; colorCode(color_code);
+//			showConnection(Graph_main, point_zero, label_zero, color_code, true);
+
 		}
 	}
 

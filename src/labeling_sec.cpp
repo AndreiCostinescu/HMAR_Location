@@ -47,6 +47,20 @@ int findMovementConstraint(
 			vel_tmp.push_back(l2Norm(vels_[i]));
 		}
 	}
+
+	// Visualize
+	if(0)
+	{
+		vector<point_d> P = points_;
+		P.insert(P.end(),points_out.begin(),points_out.end());
+		for(int i=0;i<points_.size();i++) { P[i].l = 1; }
+		vector<vector<unsigned char> > color_code; colorCode(color_code);
+		vector<string> label_; label_.resize(5);
+		vector<string> label_ref; label_ref.resize(5);
+		vector<int> loc_idx_zero;
+		showData(P, label_, label_ref, loc_idx_zero, color_code, true, false, false);
+	}
+
 	points_.clear();
 	points_ = points_out;
 
@@ -143,7 +157,7 @@ double decideLocationIntervalExt(
 					beg_, mid_, end_, tangent_, offset_);
 }
 
-void decideLocationIntervalExt(
+double decideLocationIntervalExt(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,
 	point_d point_,
@@ -153,7 +167,7 @@ void decideLocationIntervalExt(
 	vector<point_d> tangent_,
 	int loc_offset_)
 {
-	decideLocationInterval(
+	return decideLocationInterval(
 			loc_idxs_, loc_last_idx_, point_,
 			beg_, mid_, end_, tangent_, loc_offset_);
 }
@@ -168,40 +182,70 @@ int adjustSectorMap(
 	vector<point_d> tangent_,
 	vector<point_d> normal_,
 	int loc_offset_,
-	bool multiple_locations_)
+	int option_)
 {
 	point_d delta_t;
 	int sec_idx = -1;
-	if(multiple_locations_)
+	int loc_idx = -1;
+	vector<int> loc_idxs;
+	switch(option_)
 	{
-		vector<int> loc_idxs;
-		decideLocationIntervalExt(
-				loc_idxs, loc_last_idx_, point_,
-				beg_, mid_, end_, tangent_, loc_offset_);
-		for(int ll=0;ll<loc_idxs.size();ll++)
+		case 1:
 		{
-			decideSectorIntervalExt(
-					sec_idx, loc_idxs[ll], delta_t,
-					point_, mid_, tangent_, normal_);
-			sector_map_[loc_idxs[ll]*SEC_INT + sec_idx] =
-					max(
-							sector_map_[loc_idxs[ll]*SEC_INT + sec_idx],
-							l2Norm(delta_t));
+			// to deal with cases where the beginning is out of the sectormap
+			// required for the fitting part only
+			if (decideLocationIntervalExt(
+					loc_idxs, loc_last_idx_, point_,
+					beg_, mid_, end_, tangent_, loc_offset_)>0.01)
+			{
+				return EXIT_FAILURE;
+			}
+			for(int ll=0;ll<loc_idxs.size();ll++)
+			{
+				decideSectorIntervalExt(
+						sec_idx, loc_idxs[ll], delta_t,
+						point_, mid_, tangent_, normal_);
+				sector_map_[loc_idxs[ll]*SEC_INT + sec_idx] =
+						max(
+								sector_map_[loc_idxs[ll]*SEC_INT + sec_idx],
+								l2Norm(delta_t));
+			}
+			break;
 		}
-	}
-	else
-	{
-		int loc_idx = -1;
-		decideLocationIntervalExt(
-				loc_idx, loc_last_idx_, point_,
-				beg_, mid_, end_, tangent_,loc_offset_);
-		decideSectorIntervalExt(
-				sec_idx, loc_idx, delta_t,
-				point_, mid_, tangent_, normal_);
-		sector_map_[loc_idx*SEC_INT + sec_idx] =
-				max(
-						sector_map_[loc_idx*SEC_INT + sec_idx],
-						l2Norm(delta_t));
+		case 2:
+		{
+			if (decideLocationIntervalExt(
+					loc_idxs, loc_last_idx_, point_,
+					beg_, mid_, end_, tangent_, loc_offset_)>0.01 && loc_idxs.back()==LOC_INT-1)
+			{
+				return EXIT_FAILURE;
+			}
+			for(int ll=0;ll<loc_idxs.size();ll++)
+			{
+				decideSectorIntervalExt(
+						sec_idx, loc_idxs[ll], delta_t,
+						point_, mid_, tangent_, normal_);
+				sector_map_[loc_idxs[ll]*SEC_INT + sec_idx] =
+						max(
+								sector_map_[loc_idxs[ll]*SEC_INT + sec_idx],
+								l2Norm(delta_t));
+			}
+			break;
+		}
+		case 3:
+		{
+			decideLocationIntervalExt(
+					loc_idx, loc_last_idx_, point_,
+					beg_, mid_, end_, tangent_,loc_offset_);
+			decideSectorIntervalExt(
+					sec_idx, loc_idx, delta_t,
+					point_, mid_, tangent_, normal_);
+			sector_map_[loc_idx*SEC_INT + sec_idx] =
+					max(
+							sector_map_[loc_idx*SEC_INT + sec_idx],
+							l2Norm(delta_t));
+			break;
+		}
 	}
 	return EXIT_SUCCESS;
 }
@@ -400,8 +444,8 @@ int adjustCurve(
 							edge_tmp.loc_end,
 							edge_tmp.tan,
 							edge_tmp.nor,
-							5,
-							true);
+							10,
+							2);
 				}
 			} //s
 			for(int i=1;i<3;i++)
@@ -425,8 +469,7 @@ int fitSectorMapInit(
 	vector<point_d> &points_,
 	int label1_,
 	int label2_,
-	int loc_offset_,
-	bool multiple_locations_)
+	int loc_offset_)
 {
 	edge_tt edge_tmp = Graph_.getEdge(label1_, label2_, 0);
 	int loc_last_idx = 0;
@@ -443,7 +486,7 @@ int fitSectorMapInit(
 				edge_tmp.tan,
 				edge_tmp.nor,
 				loc_offset_,
-				multiple_locations_);
+				1);
 	}
 	Graph_.setEdge(label1_, label2_, 0, edge_tmp);
 	printer(22);
@@ -455,8 +498,7 @@ int fitSectorMap(
 	vector<point_d> &points_,
 	int label1_,
 	int label2_,
-	int loc_offset_,
-	bool multiple_locations_)
+	int loc_offset_)
 {
 	edge_tt edge_tmp = Graph_.getEdge(label1_, label2_, 0);
 	int loc_last_idx = 0;
@@ -486,7 +528,7 @@ int fitSectorMap(
 				edge_tmp.tan,
 				edge_tmp.nor,
 				offset,
-				multiple_locations_);
+				1);
 		loc_last_idx = last;
 	}
 
@@ -537,14 +579,14 @@ int updateSectorMap(
 	{
 		fitCurve(points_avg_, points_est, coeffs);
 		adjustCurve(Graph_, coeffs, points_avg_.size(), label1_, label2_);
-		fitSectorMapInit(Graph_, points_est, label1_, label2_, 10, true);
+		fitSectorMapInit(Graph_, points_est, label1_, label2_, 10);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_.setEdgeCounter(label1_, label2_, 0, 1);
 	}
 	else if (Graph_.getEdgeCounter(label1_,label2_,0) < 50)
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		fitSectorMap(Graph_, points_est, label1_, label2_, 20, true);
+		fitSectorMap(Graph_, points_est, label1_, label2_, 20);
 
 		//VISUALIZE
 		if(0)
@@ -561,7 +603,7 @@ int updateSectorMap(
 	else
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		fitSectorMap(Graph_, points_est, label1_, label2_, 10, true);
+		fitSectorMap(Graph_, points_est, label1_, label2_, 20);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_.setEdgeCounter(label1_, label2_, 0, 1);
 	}
@@ -698,7 +740,8 @@ int buildSectorMap(
 				if (label_idx > 0)
 				{
 					label2 = pts_avg[i].l;
-					if (i - label_idx > 5) // to prevent only a few points evaluated for curve
+					if (label2==label1)	{ continue; }
+					if (i - label_idx > 5) // to prevent only a few points evaluated for curve, might not need this ###
 					{
 						vector<point_d> pts_avg_tmp(
 								pts_avg.begin()+label_idx,
@@ -706,7 +749,6 @@ int buildSectorMap(
 						vector<point_d> vel_avg_tmp(
 								vel_avg.begin()+label_idx,
 								vel_avg.begin()+i);
-
 						findMovementConstraint(
 								Graph_,
 								pts_avg_tmp,
@@ -739,6 +781,7 @@ int buildSectorMap(
 		}
 		// saves the data number of initial location
 		else { if (label1 >=0 && label_idx < 0) { label_idx = i; } }
+//		cout << label1 << label2 << pts_avg[i].l << endl;
 	}
 	return EXIT_SUCCESS;
 }

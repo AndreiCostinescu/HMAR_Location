@@ -47,7 +47,7 @@ double decideLocationIntervalExt(
 	vector<point_d> tangent_,
 	int offset_);
 
-void decideLocationIntervalExt(
+double decideLocationIntervalExt(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,
 	point_d point_,
@@ -67,7 +67,7 @@ int adjustSectorMap(
 	vector<point_d> tangent_,
 	vector<point_d> normal_,
 	int loc_offset_,
-	bool multiple_locations_=false);
+	int option_);
 
 int adjustCurve(
 	Graph &Graph_,
@@ -82,16 +82,14 @@ int fitSectorMapInit(
 	vector<point_d> &points_,
 	int label1_,
 	int label2_,
-	int loc_offset_,
-	bool multiple_locations_=false);
+	int loc_offset_);
 
 int fitSectorMap(
 	Graph &Graph_,
 	vector<point_d> &points_,
 	int label1_,
 	int label2_,
-	int loc_offset_,
-	bool multiple_locations_=false);
+	int loc_offset_);
 
 int findSectorMapConstraint(
 	Graph &Graph_,

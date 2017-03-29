@@ -167,14 +167,11 @@ int decideWindow(
 	int label2_)
 {
 	double max_val = 0.0;
-	for(int s=0;s<SEC_INT/2;s++)
+	for(int s=0;s<SEC_INT;s++)
 	{
-		double tmp =
-				sm_[loc_idx_*SEC_INT+s] +
-				sm_[loc_idx_*SEC_INT+s+SEC_INT/2];
-		max_val = max(tmp,max_val);
+		max_val = max(sm_[loc_idx_*SEC_INT+s],max_val);
 	}
-	predict_.window[label2_] = max_val;
+	predict_.window[label2_] = 2*max_val;
 //	predict_.window[label2_] = min(pdfExp(0.01,0,max_val-0.001), 1.0);
 	return EXIT_SUCCESS;
 }
@@ -320,11 +317,11 @@ int decideOscillate(
 	// Since this is in the representation of the sector-map,
 	// it gives a more intuitive explanation of the property of an action,
 	// instead of giving just a spatial representation in 3D as in the case of acceleration.
-	predict_.oscillate[label2_] = d2[2];
-//			((1.0 - X[1]) *         d2[2]) +
-//			((      X[1]) *
-//					((1.0 - X[0]) * d2[0] +
-//					 (      X[0]) * d2[1]));
+	predict_.oscillate[label2_] =
+			((1.0 - X[1]) *         d2[2]) +
+			((      X[1]) *
+					((1.0 - X[0]) * d2[0] +
+					 (      X[0]) * d2[1]));
 
 	return EXIT_SUCCESS;
 }
@@ -378,6 +375,7 @@ int predictFromSectorMap(
 		// ***************************************************************[GLA]
 
 		// [LOC INT CONSTRAINT]************************************************
+		Graph_update_.getEdgeSectorMap(label1_, i, 0, sm_tmp2);
 		decideWindow(predict_, sm_tmp, loc_idx, i);
 //		if(i == 1) cout << loc_idx << " " <<predict_.window[i] << endl;
 		// ************************************************[LOC INT CONSTRAINT]
@@ -397,7 +395,6 @@ int predictFromSectorMap(
 		else
 		{
 			// [LOC INT CONSTRAINT]********************************************
-			Graph_update_.getEdgeSectorMap(label1_, i, 0, sm_tmp2);
 			decideSectorMapChangeRate(predict_, sm_tmp, sm_tmp2, loc_idx, i);
 			// ********************************************[LOC INT CONSTRAINT]
 
@@ -527,7 +524,25 @@ int predictAction(
 	// 3. Prediction within location area
 	else
 	{
-		if (learn_) { Graph_ = Graph_update_; }
+		// ### TODO not really correct because the clusters are still there
+		// just to show how the sectormap changes with time
+		if (label1_!=pva_avg_[0].l && label1_>=0)
+		{
+			vector<double> sm_tmp;
+			for(int i=0;i<Graph_update_.getNodeList().size();i++)
+			{
+				if(i==pva_avg_[0].l) { continue; }
+				Graph_.getEdgeSectorMap(label1_, i, 0, sm_tmp);
+				Graph_update_.setEdgeSectorMap(label1_, i, 0, sm_tmp);
+			}
+
+			curve_mem_.clear();
+			reshapeVector(last_loc_, Graph_.getNumberOfNodes());
+		}
+		if (learn_)
+		{
+			Graph_ = Graph_update_;
+		}
 		label1_ = pva_avg_[0].l;
 		vector<map<string, double> > f_tmp;
 		Graph_.getFilter(f_tmp);

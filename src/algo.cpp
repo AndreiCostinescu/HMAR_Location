@@ -692,6 +692,12 @@ void polyCurveFitPoint(
 			points_est_[i].z = z2[i];
 			points_est_[i].l = UNCLASSIFIED;
 		}
+		// ##TODO hack
+		for(int i=0;i<4;i++)
+		{
+			points_est_.erase(points_est_.begin());
+			points_est_.pop_back();
+		}
 	}
 }
 

@@ -117,3 +117,9 @@
 - 28/03/2017
 - added new data
 - added the option of deleting locations
+
+[19]
+- 29/03/2017
+- added new data
+- added some constraint to prevent the front and back part of sectormap from changing drastically
+-still need to address the issue of curved ends#####
