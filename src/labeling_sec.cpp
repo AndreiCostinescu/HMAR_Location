@@ -22,7 +22,7 @@ int findMovementConstraint(
 	vector<double> vel_tmp;
 	vector<int> contact;
 	points_tmp = points_;
-	clustering(points_tmp);
+	clustering(points_tmp, DBSCAN_EPS_MOV, DBSCAN_MIN_MOV);
 //	combineNearCluster(points_tmp, centroids, contact); ### TODO: can be extended to include multiple clusters
 //	reshapeVector(points_cluster, centroids.size()); ### TODO: can be extended to include multiple clusters
 	for(int i=0;i<points_tmp.size();i++)
@@ -504,14 +504,19 @@ int fitSectorMap(
 	int loc_last_idx = 0;
 	vector<double> sector_map_new; sector_map_new.resize(SEC_INT*LOC_INT);
 
-//	vector<point_d> curve_mem;
-//	vector<double> x, curve;  curve.resize(points_.size());
-//	for(int i=0;i<edge_tmp.loc_mid.size();i++)
-//	{
-//		decideCurvature(edge_tmp.loc_mid[i], curve_mem, curve[i], 3);
-//		x.push_back(i);
-//	}
-//	plotData(x,curve);
+	// add the option to check if the curve is too much
+	// how to handle with it ??? ####
+	if(0)
+	{
+		vector<point_d> curve_mem;
+		vector<double> x, curve;  curve.resize(points_.size());
+		for(int i=0;i<edge_tmp.loc_mid.size();i++)
+		{
+			decideCurvature(edge_tmp.loc_mid[i], curve_mem, curve[i], 3);
+			x.push_back(i);
+		}
+		plotData(x,curve);
+	}
 
 	int offset, last;
 	for(int i=0;i<points_.size();i++)
@@ -530,6 +535,15 @@ int fitSectorMap(
 				offset,
 				1);
 		loc_last_idx = last;
+
+		//VISUALIZE
+		if(0)
+		{
+			Graph_.setEdge(label1_, label2_, 0, edge_tmp);
+			vector<point_d> point_zero; vector<string> label_zero;
+			vector<vector<unsigned char> > color_code; colorCode(color_code);
+			showConnection(Graph_, points_, label_zero, color_code, true);
+		}
 	}
 
 	Graph_.setEdge(label1_, label2_, 0, edge_tmp);
@@ -589,11 +603,11 @@ int updateSectorMap(
 		fitSectorMap(Graph_, points_est, label1_, label2_, 20);
 
 		//VISUALIZE
-		if(0)
+		if(1)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
-			showConnection(Graph_, points_avg_, label_zero, color_code, true);
+			showConnection(Graph_, points_est, label_zero, color_code, true);
 		}
 
 		adjustCurve(Graph_, coeffs, points_avg_.size(), label1_, label2_);
@@ -609,11 +623,11 @@ int updateSectorMap(
 	}
 
 	//VISUALIZE
-	if(0)
+	if(1)
 	{
 		vector<point_d> point_zero; vector<string> label_zero;
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
-		showConnection(Graph_, points_avg_, label_zero, color_code, true);
+		showConnection(Graph_, points_est, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;
@@ -749,6 +763,7 @@ int buildSectorMap(
 						vector<point_d> vel_avg_tmp(
 								vel_avg.begin()+label_idx,
 								vel_avg.begin()+i);
+
 						findMovementConstraint(
 								Graph_,
 								pts_avg_tmp,
@@ -764,15 +779,16 @@ int buildSectorMap(
 								label1,
 								label2);
 
-//						vector<point_d> point_zero; vector<string> label_zero;
-//						vector<vector<unsigned char> > color_code; colorCode(color_code);
-////						showConnection(Graph_, points_avg_tmp2, label_zero, color_code, true);
-//						Graph G2 = Graph_;
-//						// Fit the pure trajectory points to the sector map.
-//						fitSectorMap(G2, points_avg_tmp2, label1, label2, false);
-//						showConnection(G2, points_avg_tmp2, label_zero, color_code, true);
+						//VISUALIZE
+						if(0)
+						{
+							vector<point_d> point_zero; vector<string> label_zero;
+							vector<vector<unsigned char> > color_code; colorCode(color_code);
+							showConnection(Graph_, pts_avg_tmp, label_zero, color_code, true);
+						}
 
 					}
+
 					label1 		= label2;
 					label2 		= -1;
 					label_idx 	= -1;
@@ -781,7 +797,6 @@ int buildSectorMap(
 		}
 		// saves the data number of initial location
 		else { if (label1 >=0 && label_idx < 0) { label_idx = i; } }
-//		cout << label1 << label2 << pts_avg[i].l << endl;
 	}
 	return EXIT_SUCCESS;
 }

@@ -338,7 +338,7 @@ int learning(
 
 			plotData(x,y[0]);
 			plotData(x,y[1]);
-			plotData(x,y[2]);
+//			plotData(x,y[2]);
 //			plotData(x,y[3]);
 
 			vector<point_d> point_zero; vector<string> label_zero;

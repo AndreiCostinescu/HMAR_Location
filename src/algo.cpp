@@ -7,6 +7,8 @@
 
 #include "algo.h"
 
+//#define BSPLINE
+
 //=============================================================================
 // functions
 //=============================================================================
@@ -461,39 +463,9 @@ void polyCurveFit(
 	vector<double> &coeff_,
 	vector<double> &cov_)
 {
-	gsl_multifit_linear_workspace *mws;
-	gsl_matrix *cov, *X;
-	gsl_vector *y, *c;
-	double chisq; //residual error
-	int num_points = points_.size();
-	X = gsl_matrix_alloc(num_points, DEGREE);
-	y = gsl_vector_alloc(num_points);
-	c = gsl_vector_alloc(DEGREE);
-	cov = gsl_matrix_alloc(DEGREE, DEGREE);
-	for(int i=0;i<num_points;i++)
-	{
-		for(int j=0;j<DEGREE;j++)
-		{
-			gsl_matrix_set(X, i, j, pow(i, j));
-		}
-		gsl_vector_set(y, i, points_[i]);
-	}
-	mws = gsl_multifit_linear_alloc(num_points, DEGREE);
-	gsl_multifit_linear(X, y, c, cov, &chisq, mws);
-	reshapeVector(coeff_, DEGREE);
-	for(int i=0;i<DEGREE;i++) { coeff_[i] = gsl_vector_get(c, i); }
-	reshapeVector(cov_, Sqr(DEGREE));
-	for(int i=0;i<Sqr(DEGREE);i++)
-	{
-		cov_[i] = gsl_matrix_get(cov, i/DEGREE, i%DEGREE);
-	}
-	gsl_multifit_linear_free(mws);
-	gsl_matrix_free(X);
-	gsl_matrix_free(cov);
-	gsl_vector_free(y);
-	gsl_vector_free(c);
 
 #ifdef BSPLINE
+
 	int num_points = points_.size();
 	double chisq; //residual error
 
@@ -558,6 +530,41 @@ void polyCurveFit(
 	gsl_vector_free(y);
 	gsl_vector_free(c);
 	gsl_vector_free(B);
+
+#else
+
+	gsl_multifit_linear_workspace *mws;
+	gsl_matrix *cov, *X;
+	gsl_vector *y, *c;
+	double chisq; //residual error
+	int num_points = points_.size();
+	X = gsl_matrix_alloc(num_points, DEGREE);
+	y = gsl_vector_alloc(num_points);
+	c = gsl_vector_alloc(DEGREE);
+	cov = gsl_matrix_alloc(DEGREE, DEGREE);
+	for(int i=0;i<num_points;i++)
+	{
+		for(int j=0;j<DEGREE;j++)
+		{
+			gsl_matrix_set(X, i, j, pow(i, j));
+		}
+		gsl_vector_set(y, i, points_[i]);
+	}
+	mws = gsl_multifit_linear_alloc(num_points, DEGREE);
+	gsl_multifit_linear(X, y, c, cov, &chisq, mws);
+	reshapeVector(coeff_, DEGREE);
+	for(int i=0;i<DEGREE;i++) { coeff_[i] = gsl_vector_get(c, i); }
+	reshapeVector(cov_, Sqr(DEGREE));
+	for(int i=0;i<Sqr(DEGREE);i++)
+	{
+		cov_[i] = gsl_matrix_get(cov, i/DEGREE, i%DEGREE);
+	}
+	gsl_multifit_linear_free(mws);
+	gsl_matrix_free(X);
+	gsl_matrix_free(cov);
+	gsl_vector_free(y);
+	gsl_vector_free(c);
+
 #endif
 
 }
@@ -568,28 +575,9 @@ void polyCurveFitEst(
 	vector<double> coeffs_,
 	vector<double> covs_)
 {
-	gsl_matrix *cov, *X;
-	gsl_vector *c, *Xj;
-	double cc[DEGREE];
-	X  = gsl_matrix_alloc(num_points_, DEGREE);
-	Xj = gsl_vector_alloc(DEGREE);
-	c  = gsl_vector_alloc(DEGREE);
-	cov = gsl_matrix_alloc(DEGREE, DEGREE);
-	for(int i=0;i<DEGREE;i++) { cc[i] = coeffs_[i]; }
-	for(int i=0;i<points_.size();i++)
-	{
-		points_[i] =
-				gsl_poly_eval(
-						cc,
-						DEGREE,
-						(double)i/(points_.size()/num_points_));
-	}
-	gsl_matrix_free(X);
-	gsl_matrix_free(cov);
-	gsl_vector_free(Xj);
-	gsl_vector_free(c);
 
 #ifdef BSPLINE
+
 	gsl_matrix *cov, *X;
 	gsl_vector *c, *Xj, *B;
 	gsl_bspline_workspace *bw;
@@ -632,6 +620,30 @@ void polyCurveFitEst(
 	gsl_vector_free(Xj);
 	gsl_vector_free(c);
 	gsl_vector_free(B);
+
+#else
+
+	gsl_matrix *cov, *X;
+	gsl_vector *c, *Xj;
+	double cc[DEGREE];
+	X  = gsl_matrix_alloc(num_points_, DEGREE);
+	Xj = gsl_vector_alloc(DEGREE);
+	c  = gsl_vector_alloc(DEGREE);
+	cov = gsl_matrix_alloc(DEGREE, DEGREE);
+	for(int i=0;i<DEGREE;i++) { cc[i] = coeffs_[i]; }
+	for(int i=0;i<points_.size();i++)
+	{
+		points_[i] =
+				gsl_poly_eval(
+						cc,
+						DEGREE,
+						(double)i/(points_.size()/num_points_));
+	}
+	gsl_matrix_free(X);
+	gsl_matrix_free(cov);
+	gsl_vector_free(Xj);
+	gsl_vector_free(c);
+
 #endif
 
 }

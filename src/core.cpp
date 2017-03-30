@@ -58,11 +58,17 @@ double decideLocationInterval(
 	vector<int> idx_tmp;
 	double d1,d2,d3,d4,d5,d6; d1=d2=d3=d4=d5=d6=0.0;
 	point_d proj_dir_tmp;
+	bool flag = false;
+	int offset = loc_offset_;
 	// Added a buffer to let the system find the first sector
-	if (loc_last_idx_==0) loc_offset_*=2;
+	if (loc_last_idx_==0)
+	{
+		flag = true;
+		offset = LOC_INT;
+	}
 	// Added a buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
-	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
+	int idx2 = ( idx1+offset > LOC_INT ? LOC_INT : idx1+offset );
 	for(int l=idx1;l<idx2;l++)
 	{
 		proj_dir_tmp =
@@ -85,6 +91,7 @@ double decideLocationInterval(
 			{
 				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
 				else if (l-idx_tmp.back()<2) 	{idx_tmp.push_back(l);} //### TODO prevent the algo from cutting parts of a curve off
+				if (flag) 						{break;}
 			}
 		}
 		else
@@ -94,6 +101,7 @@ double decideLocationInterval(
 			{
 				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
 				else if (l-idx_tmp.back()<2) 	{idx_tmp.push_back(l);}
+				if (flag) 						{break;}
 			}
 		}
 	}
@@ -106,14 +114,24 @@ double decideLocationInterval(
 	}
 	else
 	{
-		for(int i=loc_last_idx_;i<idx_tmp.back()+1;i++)
+		// to prevent the first data from filling up too much of the front part
+		if (flag && idx_tmp.back()>=(loc_offset_/2))
 		{
-			loc_idxs_.push_back(i);
+			for(int i=idx_tmp.back()-(loc_offset_/2)+1;i<idx_tmp.back()+1;i++)
+			{
+				loc_idxs_.push_back(i);
+			}
+		}
+		else
+		{
+			for(int i=loc_last_idx_;i<idx_tmp.back()+1;i++)
+			{
+				loc_idxs_.push_back(i);
+			}
 		}
 		loc_idxs_.size() > 1 ? loc_last_idx_ = loc_idxs_.back() : loc_last_idx_ = loc_idxs_[0];
 	}
-//	if(idx1<20)
-//	cout << idx1 << " : " << d6 << endl;
+
 	return d6;
 }
 

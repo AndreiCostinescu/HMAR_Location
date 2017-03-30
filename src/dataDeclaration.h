@@ -144,6 +144,8 @@ using namespace std;
 
 #define DBSCAN_EPS 0.015
 #define DBSCAN_MIN 10
+#define DBSCAN_EPS_MOV 0.025
+#define DBSCAN_MIN_MOV 5
 #define MAX_RANGE 0.05
 #define	LOC_INT 200
 #define	SEC_INT 72

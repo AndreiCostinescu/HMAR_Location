@@ -95,7 +95,7 @@ int clusteringExt(
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	vector<int> loc_idx_zero;
 
-	clustering(points_);
+	clustering(points_, DBSCAN_EPS, DBSCAN_MIN);
 
 	if(delete_)
 	{

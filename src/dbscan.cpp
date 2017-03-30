@@ -180,7 +180,8 @@ int spread(
 
 double euclidean_dist(point_d *a, point_d *b)
 {
-    return sqrt(pow(a->x - b->x, 2) +
+    return sqrt(
+    		pow(a->x - b->x, 2) +
             pow(a->y - b->y, 2) +
             pow(a->z - b->z, 2));
 }
@@ -196,10 +197,8 @@ void dbscanCluster(
 	unsigned int num_points,
 	point_d *p)
 {
-	if(num_points)
-        dbscan(p, num_points, epsilon, minpts, euclidean_dist);
-	else
-		cerr << "NO POINTS FOR CLUSTERING!!!";
+	if(num_points)	{ dbscan(p, num_points, epsilon, minpts, euclidean_dist); }
+	else 			{ cerr << "NO POINTS FOR CLUSTERING!!!"; }
 }
 
 void combineNearCluster(
@@ -447,21 +446,18 @@ void combineNearCluster(
 
 
 int clustering(
-	vector<point_d> &points_)
+	vector<point_d> &points_,
+	double epsilon,
+	unsigned int minpts)
 {
 	int num_points;
 	point_d *points_array;
-
 	num_points = points_.size();
-
 	points_array = Calloc(point_d, num_points);
 	vector2array(points_, points_array);
-
-	dbscanCluster(DBSCAN_EPS, DBSCAN_MIN, num_points, points_array);
+	dbscanCluster(epsilon, minpts, num_points, points_array);
 	printer(13);
-
 	reshapeVector(points_, num_points);
 	array2vector(points_array, num_points, points_);
-
 	return EXIT_SUCCESS;
 }
