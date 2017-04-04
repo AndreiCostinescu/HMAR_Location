@@ -181,7 +181,7 @@ void writeLearnedDataFile(
 
 void writeFile(
 	Graph Graph_,
-	string path_,
+	const char *path_,
 	int option_)
 {
 	switch(option_)

@@ -33,7 +33,7 @@ void showConnectionOnly(
 	vector<vector<unsigned char> > color_);
 
 void showConnection(
-	Graph Graph_,
+	Graph *Graph_,
 	vector<point_d> points_,
 	vector<string> &labels_,
 	vector<vector<unsigned char> > color_,
@@ -56,6 +56,16 @@ void plotData(
 	vector<double> x2,
 	vector<double> y2);
 
+void plotDatas(
+	vector<string> title,
+	vector<double> x,
+	vector<vector<vector<double> > > y);
+
+void plotDatasGeo(
+	vector<string> title,
+	vector<double> x,
+	vector<vector<vector<double> > > y,
+	vector<int> z);
 
 vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 	vector<point_d> points_,

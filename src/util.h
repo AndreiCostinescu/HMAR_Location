@@ -31,23 +31,21 @@ int learnLocationArea(
 
 int learning(
 	string dirname_,
-	string scene,
-	string object);
+	Graph *Graph_);
 
 int testing(
 	string dirname_,
-	string scene,
-	string object);
+	Graph *Graph_);
 
 // ============================================================================
 // Data
 // ============================================================================
-void parseData2Point(
+int parseData2Point(
 	vector<vector<string> > data_,
 	vector<point_d> 		&points_,
 	vector<int> 			&contact_);
 
-void preprocessDataLive(
+int preprocessDataLive(
 	point_d 					pos_,
 	vector< vector< point_d > > &pos_vel_acc_mem_, // motion -> length(empty at beginning)
 	vector<point_d> 			&pos_vel_acc_avg_, //motion

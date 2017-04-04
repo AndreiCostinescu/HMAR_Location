@@ -21,6 +21,17 @@ int decideBoundary(
 	point_d 		&point2_,
 	vector<point_d> locations_);
 
+double dLI(
+	int &loc_idx_,
+	int loc_last_idx_,
+	point_d point_,
+	vector<point_d> beg_,
+	vector<point_d> mid_,
+	vector<point_d> end_,
+	vector<point_d> tangent_,
+	int loc_offset_,
+	bool loc_init_);
+
 double decideLocationInterval(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,
@@ -29,7 +40,8 @@ double decideLocationInterval(
 	vector<point_d> mid_,
 	vector<point_d> end_,
 	vector<point_d> tangent_,
-	int loc_offset_);
+	int loc_offset_,
+	bool loc_init_=false);
 
 double decideLocationInterval(
 	int &loc_idx_,
@@ -54,6 +66,12 @@ int decideCurvature(
 	point_d point_,
 	vector<point_d> &curve_mem_,
 	double &curve_,
+	int num_points_);
+
+int decideRateOfChangeOfDeltaT(
+	point_d delta_t_,
+	vector<point_d> &delta_t_mem_,
+	double &dd_delta_t_,
 	int num_points_);
 
 #endif /* CORE_H_ */

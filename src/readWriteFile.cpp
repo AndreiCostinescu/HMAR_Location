@@ -45,17 +45,27 @@ bool directoryCheck(
 	return exist;
 }
 
+int folderSelect(
+	const struct dirent *entry)
+{
+	if (entry->d_name[2] == '_')	{return 1;}
+	else							{return 0;}
+}
+
+int folderSelect2(
+	const struct dirent *entry)
+{
+	size_t found_extension = string(entry->d_name).find(".");
+	if ((int)found_extension == -1) {return 1;}
+	else							{return 0;}
+}
 
 int fileSelect(
 	const struct dirent *entry)
 {
-	int n;
 	size_t found_extension = string(entry->d_name).find(".txt");
-	if ((int)found_extension == -1)
-		n = 0;
-	else
-		n = 1;
-	return n;
+	if ((int)found_extension == -1) {return 0;}
+	else							{return 1;}
 }
 
 int readFile(
@@ -85,7 +95,7 @@ int readFile(
 
 void writeFile(
 	Graph Graph_,
-	string path_,
+	const char *path_,
 	int option_)
 {
 	switch(option_)
@@ -194,42 +204,99 @@ void writeFile(
 }
 
 int readFileExt(
-	Graph &Graph_,
-	string path_,
+	Graph *Graph_,
+	const char *path_,
 	int option_)
 {
 	vector<vector<string> > data;
 	switch(option_)
 	{
 		case 0:
-			readFile(path_.c_str(), data , ',');
+		{
+			readFile(path_, data , ',');
 			if (!data.empty())
 			{
 				node_tt node_tmp = {};
 				for(int i=0;i<data.size();i++)
 				{
+					if (Graph_->getNode(i,node_tmp)==EXIT_SUCCESS)
+					{return EXIT_SUCCESS;}
 					node_tmp.name 		=      data[i][0];
 					node_tmp.centroid.x	= atof(data[i][1].c_str());
 					node_tmp.centroid.y	= atof(data[i][2].c_str());
 					node_tmp.centroid.z	= atof(data[i][3].c_str());
 					node_tmp.centroid.l	= atof(data[i][4].c_str());
 					node_tmp.index    	= i;
-					Graph_.setNode(node_tmp);
-					Graph_.addEmptyEdgeForNewNode(i);
-					Graph_.expandFilter(i+1);
+					Graph_->setNode(node_tmp);
+					Graph_->addEmptyEdgeForNewNode(i);
+					Graph_->expandFilter(i+1);
 				}
-				for(int i=0;i<data.size();i++) { Graph_.updateFilter(i); }
+				for(int i=0;i<data.size();i++) { Graph_->updateFilter(i); }
 				printer(6);
 			}
 			else
 			{
 				printer(7);
+				return EXIT_FAILURE;
 			}
 			break;
+		}
 		case 1:
+		{
+			readFile(path_, data , ',');
+			if (!data.empty())
+			{
+				vector<int>	obj_mask;
+				for(int i=3;i<data.size();i++)
+				{
+					obj_mask.push_back(atoi(data[i][0].c_str()));
+				}
+				Graph_->setInitFilter(obj_mask);
+				printer(4);
+			}
+			else
+			{
+				printer(5);
+				return EXIT_FAILURE;
+			}
 			break;
+		}
+		case 2:
+		{
+			readFile(path_, data , ',');
+			if (!data.empty())
+			{
+				map<string,pair<int,int> >	action_cat;
+				vector<string> 				action_label;
+				for(int i=0;i<data.size();i++)
+				{
+					if (i<3)
+					{
+						pair<int,int> tmp_pair(
+								atoi(data[i][1].c_str()),
+								atoi(data[i][2].c_str()));
+						action_cat[data[i][0]] = tmp_pair;
+					}
+					else
+					{
+						action_label.push_back(data[i][0]);
+					}
+				}
+				Graph_->setActionCategory(action_cat);
+				Graph_->setActionLabel(action_label);
+				Graph_->initFilter();
+				printer(2);
+			}
+			else
+			{
+				printer(3);
+				return EXIT_FAILURE;
+			}
+			break;
+		}
 		default:
-			readFile(path_.c_str(), data , ',');
+		{
+			readFile(path_, data , ',');
 			if (!data.empty())
 			{
 				int num_locations, num_location_intervals, num_sector_intervals;
@@ -242,7 +309,7 @@ int readFileExt(
 				{
 					for(int ii=0;ii<num_locations;ii++)
 					{
-						edge_tt edge_tmp = Graph_.getEdge(i,ii,0);
+						edge_tt edge_tmp = Graph_->getEdge(i,ii,0);
 						switch(option_)
 						{
 							case 10:
@@ -301,7 +368,7 @@ int readFileExt(
 								}
 								break;
 						}
-						Graph_.setEdge(i,ii,0,edge_tmp);
+						Graph_->setEdge(i,ii,0,edge_tmp);
 						c += 2;
 					}
 				}
@@ -311,6 +378,7 @@ int readFileExt(
 			{
 				//printer
 			}
+		}
 	}
 
 	return EXIT_SUCCESS;

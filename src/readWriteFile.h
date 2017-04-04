@@ -19,6 +19,12 @@ bool copyFile(
 bool directoryCheck(
 	string path_ );
 
+int folderSelect(
+	const struct dirent *entry);
+
+int folderSelect2(
+	const struct dirent *entry);
+
 int fileSelect(
 	const struct dirent *entry);
 
@@ -29,12 +35,12 @@ int readFile(
 
 void writeFile(
 	Graph Graph_,
-	string path_,
+	const char *path_,
 	int option_);
 
 int readFileExt(
-	Graph &Graph_,
-	string path_,
+	Graph *Graph_,
+	const char *path_,
 	int option_);
 
 

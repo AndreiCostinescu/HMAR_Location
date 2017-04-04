@@ -8,14 +8,13 @@
 #include "predicting.h"
 
 int predictFromNode(
-	Graph Graph_,
+	Graph *Graph_,
 	point_d &point_)
 {
-	return decideBoundary(point_, point_, Graph_.getCentroidList());
+	return decideBoundary(point_, point_, Graph_->getCentroidList());
 }
 
 int decideMovement(
-	Graph Graph_,
 	point_d vel_,
 	predict_t &predict_)
 {
@@ -31,7 +30,6 @@ int decideCurvatureExt(
 	predict_t &predict_,
 	int num_points_)
 {
-	//	predict_.curvature = 1 - pdfExp(0.1, 0, predict_.curvature);
 	double curve = 0.0;
 	decideCurvature(point_, curve_mem_, curve, num_points_);
 	predict_.curvature.push_back(curve);
@@ -39,6 +37,21 @@ int decideCurvatureExt(
 	{
 		predict_.curvature.erase(predict_.curvature.begin());
 	}
+	return EXIT_SUCCESS;
+}
+
+int decideRateOfChangeOfDeltaTExt(
+	point_d delta_t_,
+	vector<point_d> &delta_t_mem_,
+	predict_t &predict_,
+	int num_points_,
+	int label2_)
+{
+	double dd_delta_t_ = 0.0;
+	decideRateOfChangeOfDeltaT(delta_t_, delta_t_mem_, dd_delta_t_, num_points_);
+	predict_.err_diff[label2_] = dd_delta_t_;
+	predict_.pct_err_diff[label2_] =
+			1 - pdfExp(0.0001, 0.0, predict_.err_diff[label2_]);
 	return EXIT_SUCCESS;
 }
 
@@ -73,47 +86,48 @@ int decideCurvatureExt(
 //}
 
 double decideLocSecInt(
-	Graph &Graph_,
-	Graph &Graph_update_,
+	edge_tt edge_,
 	point_d point_,
 	point_d &delta_t_,
+	vector<double> sectormap_,
 	int &sec_idx_,
 	int &loc_idx_,
 	int &loc_last_idx_,
-	int label1_,
-	int label2_)
+	bool &init_)
 {
-	double last, tmp_dis;
-	vector<double> sm;
-	edge_tt edge_tmp;
-	Graph_update_.getEdgeSectorMap(label1_, label2_, 0, sm);
-	edge_tmp = Graph_.getEdge(label1_, label2_, 0);
-	last 	 = loc_last_idx_;
+	double tmp_dis, offset;
+
+	if (init_)	{offset = LOC_INT;}
+	else		{offset = 20.0;}
+
 	tmp_dis  =
-			decideLocationInterval(
+			dLI(
 					loc_idx_,
 					loc_last_idx_,
 					point_,
-					edge_tmp.loc_start,
-					edge_tmp.loc_mid,
-					edge_tmp.loc_end,
-					edge_tmp.tan,
-					20);
-	if(loc_idx_-last>1)
+					edge_.loc_start,
+					edge_.loc_mid,
+					edge_.loc_end,
+					edge_.tan,
+					offset,
+					init_);
+
+	if(loc_idx_>loc_last_idx_) init_ = false;
+
+	if(loc_idx_-loc_last_idx_>1)
 	{
-		for(int i=0;i<loc_idx_-last;i++)
+		for(int i=loc_last_idx_+1;i<loc_idx_+1;i++)
 		{
 			decideSectorInterval(
 					sec_idx_,
-					last+1+i,
+					i,
 					delta_t_,
 					point_,
-					edge_tmp.loc_mid,
-					edge_tmp.tan,
-					edge_tmp.nor);
-			sm[(last+1+i)*SEC_INT + sec_idx_] < l2Norm(delta_t_) ?
-					sm[(last+1+i)*SEC_INT + sec_idx_] = l2Norm(delta_t_) :
-					0;
+					edge_.loc_mid,
+					edge_.tan,
+					edge_.nor);
+			sectormap_[i*SEC_INT + sec_idx_] < l2Norm(delta_t_) ?
+					sectormap_[i*SEC_INT + sec_idx_] = l2Norm(delta_t_) : 0;
 		}
 	}
 	else
@@ -123,13 +137,14 @@ double decideLocSecInt(
 				loc_idx_,
 				delta_t_,
 				point_,
-				edge_tmp.loc_mid,
-				edge_tmp.tan,
-				edge_tmp.nor);
-		sm[loc_idx_*SEC_INT + sec_idx_] < l2Norm(delta_t_) ?
-				sm[loc_idx_*SEC_INT + sec_idx_] = l2Norm(delta_t_) : 0;
+				edge_.loc_mid,
+				edge_.tan,
+				edge_.nor);
+		sectormap_[loc_idx_*SEC_INT + sec_idx_] < l2Norm(delta_t_) ?
+				sectormap_[loc_idx_*SEC_INT + sec_idx_] = l2Norm(delta_t_) : 0;
 	}
-	Graph_update_.setEdgeSectorMap(label1_, label2_, 0, sm);
+
+	loc_last_idx_ = loc_idx_;
 	return tmp_dis;
 }
 
@@ -140,7 +155,7 @@ bool decideGoal(
 	double delta_t_,
 	double loc_error_)
 {
-	if (loc_error_ > 1.075) //## TODO :NEED TO VERIFY
+	if (loc_error_ > 10.075) //## TODO :NEED TO VERIFY
 	{
 		predict_.range[label2_] = RANGE_EXCEED;
 		return false;
@@ -171,60 +186,57 @@ int decideWindow(
 	{
 		max_val = max(sm_[loc_idx_*SEC_INT+s],max_val);
 	}
-	predict_.window[label2_] = 2*max_val;
+	predict_.window[label2_] = max_val;
 //	predict_.window[label2_] = min(pdfExp(0.01,0,max_val-0.001), 1.0);
 	return EXIT_SUCCESS;
 }
 
-int decideSectorMapChangeRate(
-	predict_t &predict_,
-	vector<double> sm_,
-	vector<double> sm2_,
-	int loc_idx_,
-	int label2_)
-{
-	vector<double> diff_tmp; diff_tmp.resize(LOC_INT);
-	int idx1 = (loc_idx_-10) < 0 ? 0 : (loc_idx_-10); // faster and dont get affected by other change along the trajectory
-	int idx2 = (loc_idx_+10) > LOC_INT ? LOC_INT : (loc_idx_+10); // faster and dont get affected by other change along the trajectory
-	for(int l=idx1;l<idx2;l++)
-	{
-		double old_sm = 0.0;
-		for(int s=0;s<SEC_INT/2;s++)
-		{
-			double tmp =
-					sm2_[l*SEC_INT+s] +
-					sm2_[l*SEC_INT+s+SEC_INT/2];
-			old_sm = max(tmp, old_sm);
-		}
-		double new_sm = 0.0;
-		for(int s=0;s<SEC_INT/2;s++)
-		{
-			double tmp =
-					sm_[l*SEC_INT+s] +
-					sm_[l*SEC_INT+s+SEC_INT/2];
-			new_sm = max(tmp, new_sm);
-		}
-		diff_tmp[l] = fabs(old_sm-new_sm);
-	}
-	vector<double> ddt_tmp;
-	for(int n=2;n<diff_tmp.size();n++)
-	{
-		ddt_tmp.push_back(
-				diff_tmp[n] -
-				diff_tmp[n-1] -
-				diff_tmp[n-1] +
-				diff_tmp[n-2]);
-	}
-
-	// -1 because calculating difference
-	// sudden zero is because the original diff is already bigger than the one that is being registered
-	predict_.err_diff[label2_] =
-			*max_element(ddt_tmp.begin() + loc_idx_ - 2, ddt_tmp.end());
-	predict_.pct_err_diff[label2_] =
-			1 - pdfExp(0.01, 0.0, predict_.err_diff[label2_]);
-
-	return EXIT_SUCCESS;
-}
+//int decideSectorMapChangeRate(
+//	predict_t &predict_,
+//	vector<double> sm_,
+//	vector<double> sm2_,
+//	int loc_idx_,
+//	int label2_)
+//{
+//	vector<double> diff_tmp; diff_tmp.resize(LOC_INT);
+//	int idx1 = (loc_idx_-10) < 0 ? 0 : (loc_idx_-10); // faster and dont get affected by other change along the trajectory
+//	int idx2 = (loc_idx_+10) > LOC_INT ? LOC_INT : (loc_idx_+10); // faster and dont get affected by other change along the trajectory
+//	for(int l=idx1;l<idx2;l++)
+//	{
+//		double old_sm = 0.0;
+////		for(int s=0;s<SEC_INT/2;s++)
+////		{
+////			double tmp =
+////					sm_[l*SEC_INT+s] +
+////					sm_[l*SEC_INT+s+SEC_INT/2];
+////			old_sm = max(tmp, old_sm);
+////		}
+//		double new_sm = 0.0;
+//		for(int s=0;s<SEC_INT;s++)
+//		{
+//			new_sm = max(sm2_[l*SEC_INT+s], new_sm);
+//		}
+//		diff_tmp[l] = fabs(new_sm-old_sm);
+//	}
+//	vector<double> ddt_tmp;
+//	for(int n=2;n<diff_tmp.size();n++)
+//	{
+//		ddt_tmp.push_back(
+//				diff_tmp[n] -
+//				diff_tmp[n-1] -
+//				diff_tmp[n-1] +
+//				diff_tmp[n-2]);
+//	}
+//
+//	// -1 because calculating difference
+//	// sudden zero is because the original diff is already bigger than the one that is being registered
+//	predict_.err_diff[label2_] =
+//			*max_element(ddt_tmp.begin() + loc_idx_ - 2, ddt_tmp.end());
+//	predict_.pct_err_diff[label2_] =
+//			1 - pdfExp(0.01, 0.0, predict_.err_diff[label2_]);
+//
+//	return EXIT_SUCCESS;
+//}
 
 int decideOscillate(
 	predict_t &predict_,
@@ -308,8 +320,8 @@ int decideOscillate(
 					: tmps[1];
 	d2[0] = fabs((tmps[1] - tmps[0])/SEC_INT);
 	d2[1] = fabs((loc_mem_[2] + loc_mem_[0] - (2*loc_mem_[1]))/LOC_INT);
-	d2[0] = 1 - pdfExp(0.01, 0, d2[0]);
-	d2[1] = 1 - pdfExp(0.01, 0, d2[1]);
+	d2[0] = 1 - pdfExp(0.0005, 0, d2[0]);
+	d2[1] = 1 - pdfExp(0.0005, 0, d2[1]);
 
 	// might need to filter the output
 	// Here the result of this formula/equation should in theory be similar/equal to acceleration.
@@ -322,21 +334,29 @@ int decideOscillate(
 			((      X[1]) *
 					((1.0 - X[0]) * d2[0] +
 					 (      X[0]) * d2[1]));
+//	predict_.oscillate[label2_] =
+//							((1.0 - X[0]) * d2[0] +
+//							 (      X[0]) * d2[1]);
+//	predict_.oscillate[label2_] = d2[0];
+//	predict_.oscillate[label2_] = d2[1];
+//	predict_.oscillate[label2_] = d2[2];
 
 	return EXIT_SUCCESS;
 }
 
 int predictFromSectorMap(
-	Graph &Graph_,
-	Graph &Graph_update_,
+	Graph *Graph_,
+	Graph *Graph_update_,
 	point_d point_,
 	point_d vel_,
 	point_d acc_,
 	predict_t &predict_,
 	vector<int> &loc_last_idxs_,
-	int label1_)
+	int label1_,
+	vector<point_d> &delta_t_mem_,
+	bool &init_)
 {
-	for(int i=0;i<Graph_.getNumberOfNodes();i++)
+	for(int i=0;i<Graph_->getNumberOfNodes();i++)
 	{
 		predict_.range[i] 			= RANGE_NULL;
 		predict_.err[i] 			= 0.0;
@@ -347,13 +367,14 @@ int predictFromSectorMap(
 		predict_.window[i]			= 0.0;
 
 		if (label1_==i) {continue;}
-		if (Graph_.getEdgeCounter(label1_, i, 0)==0) {continue;}
+		if (Graph_->getEdgeCounter(label1_, i, 0)==0) {continue;}
 
 		vector<point_d> tan_tmp, nor_tmp;
 		vector<double> sm_tmp, sm_tmp2;
-		Graph_.getEdgeTan(label1_, i, 0, tan_tmp);
-		Graph_.getEdgeNor(label1_, i, 0, nor_tmp);
-		Graph_.getEdgeSectorMap(label1_, i, 0, sm_tmp);
+		Graph_->getEdgeTan(label1_, i, 0, tan_tmp);
+		Graph_->getEdgeNor(label1_, i, 0, nor_tmp);
+		Graph_->getEdgeSectorMap(label1_, i, 0, sm_tmp);
+		Graph_update_->getEdgeSectorMap(label1_, i, 0, sm_tmp2);
 
 		point_d delta_t;
 		int loc_idx, sec_idx;
@@ -361,9 +382,11 @@ int predictFromSectorMap(
 
 		// [LOC SEC INT]*******************************************************
 		loc_idx = -1;
-		tmp_dis = decideLocSecInt(
-				Graph_, Graph_update_, point_, delta_t,
-				sec_idx, loc_idx, loc_last_idxs_[i], label1_, i);
+		tmp_dis =
+				decideLocSecInt(
+						Graph_->getEdge(label1_, i, 0), point_, delta_t,
+						sm_tmp2, sec_idx, loc_idx, loc_last_idxs_[i], init_);
+		Graph_update_->setEdgeSectorMap(label1_, i, 0, sm_tmp2);
 		// *******************************************************[LOC SEC INT]
 
 		// [GLA]***************************************************************
@@ -375,7 +398,6 @@ int predictFromSectorMap(
 		// ***************************************************************[GLA]
 
 		// [LOC INT CONSTRAINT]************************************************
-		Graph_update_.getEdgeSectorMap(label1_, i, 0, sm_tmp2);
 		decideWindow(predict_, sm_tmp, loc_idx, i);
 //		if(i == 1) cout << loc_idx << " " <<predict_.window[i] << endl;
 		// ************************************************[LOC INT CONSTRAINT]
@@ -383,27 +405,29 @@ int predictFromSectorMap(
 		// [REPETITIVE]********************************************************
 		vector<double> loc_mem;
 		vector<double> sec_mem;
-		Graph_.getEdgeLocMem(label1_, i, 0, loc_mem);
-		Graph_.getEdgeSecMem(label1_, i, 0, sec_mem);
+		Graph_->getEdgeLocMem(label1_, i, 0, loc_mem);
+		Graph_->getEdgeSecMem(label1_, i, 0, sec_mem);
 		if (loc_mem.size() < 3)
 		{
+			if (loc_idx==0) { continue; }
 			loc_mem.push_back(loc_idx);
 			sec_mem.push_back(sec_idx);
-			Graph_.setEdgeLocMem(label1_, i, 0, loc_mem);
-			Graph_.setEdgeSecMem(label1_, i, 0, sec_mem);
+			Graph_->setEdgeLocMem(label1_, i, 0, loc_mem);
+			Graph_->setEdgeSecMem(label1_, i, 0, sec_mem);
 		}
 		else
 		{
 			// [LOC INT CONSTRAINT]********************************************
-			decideSectorMapChangeRate(predict_, sm_tmp, sm_tmp2, loc_idx, i);
+//			decideSectorMapChangeRate(predict_, sm_tmp, sm_tmp2, loc_idx, i);
+			decideRateOfChangeOfDeltaTExt(delta_t, delta_t_mem_, predict_, 5, i);
 			// ********************************************[LOC INT CONSTRAINT]
 
 			loc_mem.erase(loc_mem.begin());
 			sec_mem.erase(sec_mem.begin());
 			loc_mem.push_back(loc_idx);
 			sec_mem.push_back(sec_idx);
-			Graph_.setEdgeLocMem(label1_, i, 0, loc_mem);
-			Graph_.setEdgeSecMem(label1_, i, 0, sec_mem);
+			Graph_->setEdgeLocMem(label1_, i, 0, loc_mem);
+			Graph_->setEdgeSecMem(label1_, i, 0, sec_mem);
 
 			decideOscillate(
 					predict_, vel_, acc_, loc_mem, sec_mem, tan_tmp, nor_tmp,
@@ -416,19 +440,20 @@ int predictFromSectorMap(
 }
 
 int evaluatePrediction(
-	Graph &Graph_,
+	Graph *Graph_,
 	predict_t &predict_)
 {
 	map<string,pair<int,int> > ac_tmp;
 	vector<string> al_tmp;
-	vector<map<string, double> > f_tmp;
-	Graph_.getActionCategory(ac_tmp);
-	Graph_.getActionLabel(al_tmp);
-	Graph_.getFilter(f_tmp);
+	vector<map<string, double> > f_tmp, p_tmp;
+	Graph_->getActionCategory(ac_tmp);
+	Graph_->getActionLabel(al_tmp);
+	Graph_->getFilter(f_tmp);
+	Graph_->getPrediction(p_tmp);
 
 	double curve = average(predict_.curvature);
 
-	for(int i=0;i<Graph_.getNumberOfNodes();i++)
+	for(int i=0;i<Graph_->getNumberOfNodes();i++)
 	{
 		for(int ii = ac_tmp["GEOMETRIC"].first;
 				ii < ac_tmp["GEOMETRIC"].second+1;
@@ -437,10 +462,10 @@ int evaluatePrediction(
 			f_tmp[i][al_tmp[ii]] = f_tmp[i][al_tmp[ii]]*predict_.pct_err[i];
 		}
 		f_tmp[i]["CUT"]		= f_tmp[i]["CUT"]	* predict_.oscillate[i];
-		f_tmp[i]["CLEAN"] 	= f_tmp[i]["CLEAN"]	* predict_.oscillate[i];
+		f_tmp[i]["CLEAN"] 	= (f_tmp[i]["CLEAN"]	* predict_.oscillate[i] + p_tmp[i]["CLEAN"]) / 2;
 		f_tmp[i]["SCAN"] 	= f_tmp[i]["SCAN"]	* predict_.window[i];
 		f_tmp[i]["WINDOW"]	= f_tmp[i]["WINDOW"]* predict_.window[i];
-		f_tmp[i]["SLIDE"] 	= f_tmp[i]["SLIDE"]	* predict_.oscillate[i];
+		f_tmp[i]["SLIDE"] 	= (f_tmp[i]["SLIDE"]	* predict_.oscillate[i] + p_tmp[i]["SLIDE"]) / 2;
 
 //		if (i==1)
 //		{
@@ -449,27 +474,29 @@ int evaluatePrediction(
 
 		f_tmp[i]["CURVE"] 	= f_tmp[i]["CURVE"]	* curve;
 		f_tmp[i]["MOVE"] 	= f_tmp[i]["MOVE"]	* predict_.velocity;
-		f_tmp[i]["STOP"] 	= f_tmp[i]["STOP"]	* fmod((predict_.velocity+1),2);
+		f_tmp[i]["STOP"] 	= f_tmp[i]["STOP"]	* (predict_.velocity > 0.0 ? 0.0 : 1.0);
 	}
 
-	Graph_.setPrediction(f_tmp);
+	Graph_->setPrediction(f_tmp);
 
 	return EXIT_SUCCESS;
 }
 
 int predictFromEdge(
-	Graph &Graph_,
-	Graph &Graph_update_,
+	Graph *Graph_,
+	Graph *Graph_update_,
 	point_d pos_,
 	point_d vel_,
 	point_d acc_,
 	vector<point_d> &curve_mem_,
+	vector<point_d> &delta_t_mem_,
 	predict_t &predict_,
 	vector<int> &last_loc_,
-	int label1_)
+	int label1_,
+	bool &init_)
 {
 	// 2.1. Check for motion
-	decideMovement(Graph_, vel_, predict_);
+	decideMovement(vel_, predict_);
 
 	// 2.2. Check for trajectory curvature
 	decideCurvatureExt(pos_, curve_mem_, predict_, 3);
@@ -477,7 +504,7 @@ int predictFromEdge(
 	// 2.3. Check if repetitive motion is detected
 	// 2.4. Check for window
 	// 2.5. Check if the trajectory is within the range of sector map
-	predictFromSectorMap(Graph_, Graph_update_, pos_, vel_, acc_, predict_, last_loc_, label1_);
+	predictFromSectorMap(Graph_, Graph_update_, pos_, vel_, acc_, predict_, last_loc_, label1_, delta_t_mem_,init_);
 
 	// 2.X. Predict the goal based on the trajectory error from sector map
 	evaluatePrediction(Graph_, predict_);
@@ -485,15 +512,60 @@ int predictFromEdge(
 	return EXIT_SUCCESS;
 }
 
+int rebuildSectorMap(
+	Graph 						*Graph_,
+	vector<vector<point_d> > 	pva_avg_,
+	int							label1_,
+	int 						label2_)
+{
+	// Graph_.getEdgeList() = [#loc*#loc -> #edges -> #loc*#sec]
+
+	if (pva_avg_.size() < 5) { return EXIT_FAILURE; }
+
+	vector<point_d> pts_avg, vel_avg;
+	for(int i=0;i<pva_avg_.size();i++)
+	{
+		pts_avg.push_back(pva_avg_[i][0]);
+		vel_avg.push_back(pva_avg_[i][0]);
+	}
+
+	findMovementConstraint(
+			Graph_,
+			pts_avg,
+			vel_avg,
+			label1_,
+			label2_);
+	updateSectorMap(Graph_,
+			pts_avg,
+			label1_,
+			label2_);
+	findWindowConstraint(
+			Graph_,
+			label1_,
+			label2_);
+
+	//VISUALIZE
+	if(0)
+	{
+		vector<point_d> point_zero; vector<string> label_zero;
+		vector<vector<unsigned char> > color_code; colorCode(color_code);
+		showConnection(Graph_, pts_avg, label_zero, color_code, true);
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int predictAction(
-	Graph &Graph_,
-	Graph &Graph_update_,
-	int contact_,
+	Graph *Graph_,
+	Graph *Graph_update_,
 	vector<point_d> &pva_avg_,
+	vector<vector<point_d> > &pva_avg_mem_,
 	vector<point_d> &curve_mem_,
+	vector<point_d> &delta_t_mem_,
 	predict_t &predict_,
 	int &label1_,
 	vector<int> &last_loc_,
+	bool &init_,
 	bool learn_)
 {
 	// 1. Contact trigger
@@ -503,6 +575,7 @@ int predictAction(
 	// 2. Prediction during motion
 	if (pva_avg_[0].l < 0)
 	{
+		pva_avg_mem_.push_back(pva_avg_);
 		predictFromEdge(
 				Graph_,
 				Graph_update_,
@@ -510,9 +583,11 @@ int predictAction(
 				pva_avg_[1],
 				pva_avg_[2],
 				curve_mem_,
+				delta_t_mem_,
 				predict_,
 				last_loc_,
-				label1_);
+				label1_,
+				init_);
 
 		// all_of is c++11
 		bool zeros =
@@ -524,30 +599,46 @@ int predictAction(
 	// 3. Prediction within location area
 	else
 	{
+		init_ = true;
 		// ### TODO not really correct because the clusters are still there
 		// just to show how the sectormap changes with time
 		if (label1_!=pva_avg_[0].l && label1_>=0)
 		{
-			vector<double> sm_tmp;
-			for(int i=0;i<Graph_update_.getNodeList().size();i++)
-			{
-				if(i==pva_avg_[0].l) { continue; }
-				Graph_.getEdgeSectorMap(label1_, i, 0, sm_tmp);
-				Graph_update_.setEdgeSectorMap(label1_, i, 0, sm_tmp);
-			}
-
 			curve_mem_.clear();
-			reshapeVector(last_loc_, Graph_.getNumberOfNodes());
+			delta_t_mem_.clear();
+			reshapeVector(last_loc_, Graph_->getNumberOfNodes());
+			reshapePredict(predict_, Graph_->getNumberOfNodes());
+
+			if (learn_)
+			{
+				vector<double> sm_tmp;
+				for(int i=0;i<Graph_update_->getNodeList().size();i++)
+				{
+					if(i==pva_avg_[0].l) { continue; }
+					Graph_->getEdgeSectorMap(label1_, i, 0, sm_tmp);
+					Graph_update_->setEdgeSectorMap(label1_, i, 0, sm_tmp);
+				}
+				rebuildSectorMap(Graph_, pva_avg_mem_, label1_, pva_avg_[0].l);
+				pva_avg_mem_.clear();
+			}
+			else
+			{
+				vector<double> sm_tmp;
+				for(int i=0;i<Graph_update_->getNodeList().size();i++)
+				{
+					Graph_->getEdgeSectorMap(label1_, i, 0, sm_tmp);
+					Graph_update_->setEdgeSectorMap(label1_, i, 0, sm_tmp);
+				}
+			}
 		}
-		if (learn_)
-		{
-			Graph_ = Graph_update_;
-		}
+
+
+
+		vector<map<string, double> > p_tmp;
+		Graph_->getPredictionReset(p_tmp);
+		Graph_->setPrediction(p_tmp);
+
 		label1_ = pva_avg_[0].l;
-		vector<map<string, double> > f_tmp;
-		Graph_.getFilter(f_tmp);
-		Graph_.setPrediction(f_tmp);
-		reshapePredict(predict_, Graph_.getNumberOfNodes());
 	}
 
 

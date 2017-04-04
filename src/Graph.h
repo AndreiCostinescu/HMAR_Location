@@ -42,7 +42,7 @@ public:
 	}
 
 	void getActionLabel(
-			vector<string> &x_)
+		vector<string> &x_)
 	{
 		x_ = action_label;
 	}
@@ -82,6 +82,12 @@ public:
 		filter = x_;
 	}
 
+	void getPredictionReset(
+		vector<map<string, double> > &x_)
+	{
+		x_ = prediction_reset;
+	}
+
 	void getPrediction(
 		vector<map<string, double> > &x_)
 	{
@@ -105,13 +111,22 @@ public:
 // NODES
 //=============================================================================
 
-	node_tt getNode(
-		int  idx_)
+	int getNode(
+		int  idx_,
+		node_tt &x_)
 	{
-		return node_list[idx_];
+		if (idx_<node_list.size())
+		{
+			x_ = node_list[idx_];
+			return EXIT_SUCCESS;
+		}
+		else
+		{
+			return EXIT_FAILURE;
+		}
 	}
 
-	void setNode(
+	int setNode(
 		node_tt	node_)
 	{
 		if (node_list.size() < node_.index+1)
@@ -119,6 +134,7 @@ public:
 			node_list.resize(node_.index+1);
 		}
 		node_list[node_.index] = node_;
+		return EXIT_SUCCESS;
 	}
 
 	int getNumberOfNodes()
@@ -434,8 +450,10 @@ private:
 	vector<node_tt> 					node_list;
 	vector<vector<vector<edge_tt> > > 	edge_list;
 	map<string, double>					filter_init;
+	map<string, double>					prediction_init;
 	vector<map<string, double> >		filter;
 	vector<map<string, double> >		prediction;
+	vector<map<string, double> >		prediction_reset;
 	map<string,pair<int,int> >			action_cat;
 	vector<string>						action_label; //fixed given beforehand
 

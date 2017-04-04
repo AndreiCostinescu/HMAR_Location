@@ -16,6 +16,10 @@ dataDeclaration.h
 vtkExtra.h
 /home/chen/HMAR/HMAR_Location/src/vtkExtra.h
 
+/home/chen/HMAR/HMAR_Location/src/core.cpp
+core.h
+/home/chen/HMAR/HMAR_Location/src/core.h
+
 /home/chen/HMAR/HMAR_Location/src/core.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
@@ -193,6 +197,8 @@ vtkSmoothPolyDataFilter.h
 -
 vtkLight.h
 -
+vtkRect.h
+-
 gsl/gsl_integration.h
 -
 gsl/gsl_bspline.h
@@ -211,32 +217,6 @@ gsl/gsl_linalg.h
 -
 opencv2/opencv.hpp
 -
-
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-
-/home/chen/HMAR/HMAR_Location/src/labeling_sec.cpp
-labeling_sec.h
-/home/chen/HMAR/HMAR_Location/src/labeling_sec.h
-
-/home/chen/HMAR/HMAR_Location/src/labeling_sec.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-vtkExtra.h
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
-dbscan.h
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
-misc.h
-/home/chen/HMAR/HMAR_Location/src/misc.h
-core.h
-/home/chen/HMAR/HMAR_Location/src/core.h
 
 /home/chen/HMAR/HMAR_Location/src/misc.h
 dataDeclaration.h

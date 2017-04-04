@@ -39,7 +39,7 @@ int contactBoundary(
 							centroids_[points_[i].l].l);
 			centroids_[points_[i].l].l =
 					max(
-							0.70,
+							0.50,
 							centroids_[points_[i].l].l);
 			centroids_[points_[i].l].l =
 					min(
@@ -143,7 +143,7 @@ int clusteringExt(
 }
 
 int buildLocationArea(
-	Graph 						&Graph_,
+	Graph 						*Graph_,
 	vector<vector<point_d> > 	&pos_vel_acc_,
 	vector<int> 				contact_)
 {
@@ -160,18 +160,20 @@ int buildLocationArea(
 	vector<int> contact_tmp;
 
 	// [LABELLING LOCATION]****************************************************
-	for(int i=0;i<Graph_.getNumberOfNodes();i++)
+	for(int i=0;i<Graph_->getNumberOfNodes();i++)
 	{
-		goal_action.push_back(Graph_.getNode(i).name);
-		locations.push_back(Graph_.getNode(i).centroid);
+		node_tt node_tmp = {};
+		Graph_->getNode(i, node_tmp);
+		goal_action.push_back(node_tmp.name);
+		locations.push_back(node_tmp.centroid);
 	}
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
 		points_avg.push_back(pos_vel_acc_[i][0]);
 	}
-	if (Graph_.getNumberOfNodes()==0)
+	if (Graph_->getNumberOfNodes()==0)
 	{
-		Graph_.getActionLabel(action_label_tmp);
+		Graph_->getActionLabel(action_label_tmp);
 		clusteringExt(points_avg, contact_tmp, locations, goal_action, action_label_tmp, true);
 		reshapeVector(goal_action, locations.size());
 		printer(15);
@@ -179,30 +181,31 @@ int buildLocationArea(
 	}
 	else
 	{
-		Graph_.getActionLabel(action_label_tmp);
+		Graph_->getActionLabel(action_label_tmp);
 		clusteringExt(points_avg, contact_tmp, locations, goal_action, action_label_tmp, false);
 	}
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
 		pos_vel_acc_[i][0].l = points_avg[i].l;
-//		cout << points_avg[i].l << endl;
 	}
 	printer(16);
 	// ****************************************************[LABELLING LOCATION]
 
 	// [NODES]*****************************************************************
-	if (Graph_.getNumberOfNodes()>0)
+	if (Graph_->getNumberOfNodes()>0)
 	{
 		for(int i=0;i<locations.size();i++)
 		{
 			int key = -1;
 			double mem = 10.0;
-			for(int ii=0;ii<Graph_.getNumberOfNodes();ii++)
+			for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
 			{
-				if (min_(l2Norm(minusPoint(Graph_.getNode(ii).centroid, locations[i])), mem) &&
-					l2Norm(minusPoint(Graph_.getNode(ii).centroid, locations[i])) < CLUSTER_LIMIT)
+				node_tt node_tmp = {};
+				Graph_->getNode(i, node_tmp);
+				if (min_(l2Norm(minusPoint(node_tmp.centroid, locations[i])), mem) &&
+					l2Norm(minusPoint(node_tmp.centroid, locations[i])) < CLUSTER_LIMIT)
 				{
-					mem = l2Norm(minusPoint(Graph_.getNode(ii).centroid, locations[i]));
+					mem = l2Norm(minusPoint(node_tmp.centroid, locations[i]));
 					key = ii;
 				}
 			}
@@ -210,29 +213,35 @@ int buildLocationArea(
 			{
 				goal_action.resize(goal_action.size()+1);
 				flag = true;
-				node_tt node_tmp;
+				node_tt node_tmp = {};
 				node_tmp.name 				= "";
-				node_tmp.index 				= Graph_.getNodeList().size();
+				node_tmp.index 				= Graph_->getNodeList().size();
 				node_tmp.centroid 			= locations[i];
-				Graph_.setNode(node_tmp);
-				Graph_.addEmptyEdgeForNewNode(node_tmp.index);
-				Graph_.expandFilter(node_tmp.index+1);
-				Graph_.updateFilter(node_tmp.index);
+				Graph_->setNode(node_tmp);
+				Graph_->addEmptyEdgeForNewNode(node_tmp.index);
+				Graph_->expandFilter(node_tmp.index+1);
+				Graph_->updateFilter(node_tmp.index);
 			}
 			else
 			{
-				double tmp = locations[key].l;
+				node_tt node_tmp = {};
+				Graph_->getNode(key, node_tmp);
+				double tmp1 = locations[key].l;
+				double tmp2 = node_tmp.centroid.l;
+				tmp1 = Sqr(-log(tmp1)*BOUNDARY_VAR*2);
+				tmp2 = Sqr(-log(tmp2)*BOUNDARY_VAR*2);
 				locations[key] =
 						multiPoint(
 								addPoint(
-										Graph_.getNode(key).centroid,
+										node_tmp.centroid,
 										locations[key]),
 								0.5);
-				locations[key].l = tmp;
-				contactBoundary(points_avg, locations, true);
-				node_tt node_tmp  = Graph_.getNode(key);
+				tmp1 += l2Norm(locations[key]);
+				tmp2 += l2Norm(locations[key]);
+				locations[key].l =
+						max(0.7, pdfExp(BOUNDARY_VAR, 0.0, max(tmp1,tmp2)));
 				node_tmp.centroid = locations[key];
-				Graph_.setNode(node_tmp);
+				Graph_->setNode(node_tmp);
 			}
 		}
 	}
@@ -244,10 +253,10 @@ int buildLocationArea(
 			node_tmp.name 		= goal_action[i];
 			node_tmp.index 		= i;
 			node_tmp.centroid 	= locations[i];
-			Graph_.setNode(node_tmp);
-			Graph_.addEmptyEdgeForNewNode(node_tmp.index);
-			Graph_.expandFilter(node_tmp.index+1);
-			Graph_.updateFilter(node_tmp.index);
+			Graph_->setNode(node_tmp);
+			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
+			Graph_->expandFilter(node_tmp.index+1);
+			Graph_->updateFilter(node_tmp.index);
 		}
 	}
 	printer(17);
@@ -256,23 +265,27 @@ int buildLocationArea(
 //	if (flag)
 //	{
 //		goal_action.clear();
-//		for(int i=0;i<Graph_.getNumberOfNodes();i++)
+//		for(int i=0;i<Graph_->getNumberOfNodes();i++)
 //		{
-//			goal_action.push_back(Graph_.getNode(i).name);
+//			node_tt node_tmp = {};
+//			Graph_->getNode(i, node_tmp);
+//			goal_action.push_back(node_tmp.name);
 //		}
 //		vector<string> action_label_tmp;
-//		Graph_.getActionLabel(action_label_tmp);
+//		Graph_->getActionLabel(action_label_tmp);
 //		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, true, false);
 //	}
 //	else
 //	{
 //		goal_action.clear();
-//		for(int i=0;i<Graph_.getNumberOfNodes();i++)
+//		for(int i=0;i<Graph_->getNumberOfNodes();i++)
 //		{
-//			goal_action.push_back(Graph_.getNode(i).name);
+//			node_tt node_tmp = {};
+//			Graph_->getNode(i, node_tmp);
+//			goal_action.push_back(node_tmp.name);
 //		}
 //		vector<string> action_label_tmp;
-//		Graph_.getActionLabel(action_label_tmp);
+//		Graph_->getActionLabel(action_label_tmp);
 //		showData(points_avg, goal_action, action_label_tmp, loc_idx_zero, color_code, true, false, false);
 //	}
 	return EXIT_SUCCESS;

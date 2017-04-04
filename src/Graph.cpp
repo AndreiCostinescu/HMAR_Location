@@ -21,7 +21,8 @@ void Graph::initFilter()
 	map<string,double> mask;
 	for(int i=0;i<action_label.size();i++)
 	{
-		filter_init[action_label[i]] = 0.0;
+		filter_init[action_label[i]] 		= 0.0;
+		prediction_init[action_label[i]] 	= 0.0;
 	}
 }
 
@@ -47,6 +48,7 @@ void Graph::expandFilter(
 	while (filter.size() < x_)
 	{
 		filter.push_back(filter_init);
+		prediction_reset.push_back(prediction_init);
 	}
 }
 

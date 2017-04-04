@@ -637,7 +637,7 @@ void polyCurveFitEst(
 				gsl_poly_eval(
 						cc,
 						DEGREE,
-						(double)i/(points_.size()/num_points_));
+						((double)i+1)/(points_.size()/num_points_));
 	}
 	gsl_matrix_free(X);
 	gsl_matrix_free(cov);

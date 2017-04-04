@@ -19,7 +19,7 @@
 // Data
 // ============================================================================
 
-void parseData2Point(
+int parseData2Point(
 	vector<vector<string> > data_,
 	vector<point_d> 		&points_,
 	vector<int> 			&contact_)
@@ -34,9 +34,10 @@ void parseData2Point(
 		points_ [i].z = atof(data_[i][4].c_str());
 		points_ [i].l = UNCLASSIFIED;
 	}
+	return EXIT_SUCCESS;
 }
 
-void preprocessDataLive(
+int preprocessDataLive(
 	point_d pos_,
 	vector< vector< point_d > > &pva_mem_, // motion -> length(empty at beginning)
 	vector<point_d> &pva_avg_, //motion
@@ -72,6 +73,7 @@ void preprocessDataLive(
 		if(i==0)	{ pva_avg_[i].l = UNCLASSIFIED;	}
 		else		{ pva_avg_[i].l = 0.0;			}
 	}
+	return EXIT_SUCCESS;
 }
 
 
@@ -81,119 +83,64 @@ void preprocessDataLive(
 
 int learning(
 	string dirname_,
-	string scene,
-	string object)
+	Graph *Graph_)
 {
 	// [VARIABLES]*************************************************************
-	string path;
-	vector<int> 				file_eof;
+	struct dirent 				**namelist;
+	int* 						file_eof;
+
+	string						path;
 	vector<int> 				contact;
 	vector<int> 				last_loc;
-	map<string,pair<int,int> >	action_cat;
-	vector<string> 				action_label;
 	vector<vector<string> > 	data;
 	vector<point_d> 			points;
 	vector<point_d> 			curve_mem;
+	vector<point_d> 			delta_t_mem;
 	vector<point_d> 			pva_avg1; pva_avg1.resize(3);
 	vector<vector<point_d> > 	pva_avg; // length->motion
 	vector<vector<point_d> > 	pva_mem; // motion->length
 	vector<vector<int> >		filter_mask;
-	vector<int>					obj_mask;
+	vector<point_d> 			faces;
 	predict_t					predict;
-	Graph 						Graph_main(scene, object);
 	printer(1);
 	// *************************************************************[VARIABLES]
 
 	// [ACTION LABELS]*********************************************************
-	path =  SCENE_ + "/action_label.txt";
-	data.clear();
-	readFile(path.c_str(), data , ',');
-	if (!data.empty())
-	{
-		for(int i=0;i<data.size();i++)
-		{
-			if (i<3)
-			{
-				pair<int,int> tmp_pair(
-						atoi(data[i][1].c_str()),
-						atoi(data[i][2].c_str()));
-				action_cat[data[i][0]] = tmp_pair;
-			}
-			else
-			{
-				action_label.push_back(data[i][0]);
-			}
-		}
-		Graph_main.setActionCategory(action_cat);
-		Graph_main.setActionLabel(action_label);
-		Graph_main.initFilter();
-	}
-	else
-	{
-		printer(3);
-		return EXIT_FAILURE;
-	}
-	printer(2);
+	path = SCENE_ + "/action_label.txt";
+	if (readFileExt(Graph_, path.c_str(), 2)==EXIT_FAILURE)
+	{return EXIT_FAILURE;}
 	// *********************************************************[ACTION LABELS]
 
 	// [OBJ MASK]**************************************************************
-	path =  SCENE_ + scene + "/" + object + "/obj_action_label.txt";
-	data.clear();
-	readFile(path.c_str(), data , ',');
-	if (!data.empty())
-	{
-		for(int i=3;i<data.size();i++)
-		{
-			obj_mask.push_back(atoi(data[i][0].c_str()));
-		}
-		Graph_main.setInitFilter(obj_mask);
-	}
-	else
-	{
-		printer(5);
-		return EXIT_FAILURE;
-	}
-	printer(4);
+	path =
+			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			"/obj_action_label.txt";
+	if (readFileExt(Graph_, path.c_str(), 1)==EXIT_FAILURE)
+	{return EXIT_FAILURE;}
 	// **************************************************************[OBJ MASK]
 
-//	// [FILTER MASK]***********************************************************
-//	path =  SCENE_ + scene + "/" + object + "/filter_mask.txt";
-//	data.clear();
-//	readFile(path.c_str(), data , ',');
-//	if (!data.empty())
-//	{
-//		filter_mask.resize(data[0].size());
-//		for(int i=0;i<data.size();i++)
-//		{
-//			for(int ii=0;ii<data[i].size();ii++)
-//			{
-//				filter_mask[ii][i] = atoi(data[i][ii].c_str());
-//			}
-//		}
-//		// options : c_cur, c_vel, c_sur, c_win
-//		Graph_main.setFilter("c_cur", filter_mask[0]);
-//		Graph_main.setFilter("c_vel", filter_mask[1]);
-//		Graph_main.setFilter("c_sur", filter_mask[2]);
-//		Graph_main.setFilter("c_win", filter_mask[3]);
-//	}
-//	// ***********************************************************[FILTER MASK]
-
 	// [SAVED LOCATION]********************************************************
-	path =  SCENE_ + scene + "/" + object + "/location_area.txt";
-	readFileExt(Graph_main, path, 0);
+	path =
+			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			"/location_area.txt";
+	readFileExt(Graph_, path.c_str(), 0);
 	// ********************************************************[SAVED LOCATION]
 
 	// [READ FILE]*************************************************************
-	data.clear();
-	struct dirent **namelist;
-	string name;
 	int n = scandir(dirname_.c_str(), &namelist, fileSelect, alphasort);
-	if (n == 0) return 0;
+	if (n == 0) {printer(24); return EXIT_FAILURE;}
+	file_eof = new int[n];
 	for(int i=0;i<n;i++)
 	{
-		name = dirname_ + namelist[i]->d_name;
+		string name = dirname_ + "/" + namelist[i]->d_name;
 		readFile(name.c_str(), data , ',');
-		file_eof.push_back(data.size());
+		file_eof[i] = data.size();
+		point_d face; // use of 10 is just random
+		face.x = atof(data[file_eof[i]-10][5].c_str());
+		face.y = atof(data[file_eof[i]-10][6].c_str())+0.02;
+		face.z = atof(data[file_eof[i]-10][7].c_str())+0.05;
+		face.l = UNCLASSIFIED;
+		faces.push_back(face);
 	}
 	printer(8);
 	// *************************************************************[READ FILE]
@@ -204,126 +151,242 @@ int learning(
 	// ************************************************************[PARSE DATA]
 
 	// [LOOP THROUGH FILES]****************************************************
-//	int tmp_id1 = file_eof[file_eof.size()-2]+1;
-//	for(int i=file_eof.size()-1;i<file_eof.size();i++)
 	int tmp_id1 = 0;
-	for(int i=0;i<file_eof.size();i++)
+	for(int i=0;i<n;i++)
+	{
+		if (!strcmp(Graph_->getObject().c_str(),"002"))
+		{
+			for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
+			{
+				node_tt node_tmp = {};
+				Graph_->getNode(ii, node_tmp);
+				if (!strcmp(node_tmp.name.c_str(),"DRINK") || !strcmp(node_tmp.name.c_str(),"EAT"))
+				{
+					faces[i]. l = 0.010;
+					node_tmp.centroid = faces[i];
+					Graph_->setNode(node_tmp);
+				}
+			}
+		}
+		// [PREPROCESS DATA]***********************************************
+		vector<point_d> point_tmp(
+				points.begin() + tmp_id1,
+				points.begin() + file_eof[i]-1);
+		reshapeVector(pva_avg, point_tmp.size());
+		reshapeVector(pva_mem, 3);
+		for(int ii=0;ii<point_tmp.size();ii++)
+		{
+			if (ii == 0) 	{ pva_avg[ii] = pva_avg1;		}
+			else			{ pva_avg[ii] = pva_avg[ii-1];	}
+			preprocessDataLive(
+					points[ii+tmp_id1], pva_mem, pva_avg[ii], FILTER_WIN);
+		}
+		printer(10);
+		// ***********************************************[PREPROCESS DATA]
+
+		vector<int> contact_tmp; contact_tmp.resize(file_eof[i]-1-tmp_id1);
+		for(int iii=30;iii<contact_tmp.size();iii++)
+		{
+			contact_tmp[iii] =
+					(int)(
+							(float)accumulate(
+									contact.begin()+tmp_id1-30+iii,
+									contact.begin()+tmp_id1+iii, 0) / 30);
+		}
+
+		// [LOCATION AND SECTOR-MAP]***************************************
+		buildLocationArea(Graph_, pva_avg, contact_tmp);
+		printer(11);
+		buildSectorMap   (Graph_, pva_avg, contact_tmp);
+		printer(12);
+		// ***************************************[LOCATION AND SECTOR-MAP]
+		tmp_id1 = file_eof[i];
+
+		// Visualize
+		if(0)
+		{
+			vector<point_d> point_zero; vector<string> label_zero;
+			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
+			vector<vector<unsigned char> > color_code; colorCode(color_code);
+			showConnection(Graph_, point_zero, label_zero, color_code, true);
+		}
+	}
+	// *************************************************** [LOOP THROUGH FILES]
+	delete[] file_eof;
+
+	return EXIT_SUCCESS;
+}
+
+
+int testing(
+	string dirname_,
+	Graph *Graph_)
+{
+	// [VARIABLES]*************************************************************
+	struct dirent 				**namelist;
+	int* 						file_eof;
+
+	bool 						sm_init;
+	int 						label1;
+	string 						path;
+	vector<int> 				contact;
+	vector<int> 				last_loc;
+	vector<vector<string> > 	data;
+	vector<point_d> 			points;
+	vector<point_d> 			curve_mem;
+	vector<point_d> 			delta_t_mem;
+	vector<point_d> 			pva_avg1; pva_avg1.resize(3);
+	vector<vector<point_d> > 	pva_avg; // length->motion
+	vector<vector<point_d> > 	pva_avg_mem;
+	vector<vector<point_d> > 	pva_mem; // motion->length
+	vector<vector<int> >		filter_mask;
+	predict_t					predict;
+
+
+	vector<double> 						px;
+	vector<vector<double> > 			py;
+	vector<vector<vector<double> > > 	pyy;
+
+	map<string,pair<int,int> > 		ac;
+	vector<string> 					al;
+	vector<map<string, double> >	prediction;
+
+	printer(1);
+	// *************************************************************[VARIABLES]
+
+	// [ACTION LABELS]*********************************************************
+	path = SCENE_ + "/action_label.txt";
+	if (readFileExt(Graph_, path.c_str(), 2)==EXIT_FAILURE)
+	{return EXIT_FAILURE;}
+	Graph_->getActionCategory(ac);
+	Graph_->getActionLabel(al);
+	// *********************************************************[ACTION LABELS]
+
+	// [OBJ MASK]**************************************************************
+	path =
+			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			"/obj_action_label.txt";
+	if (readFileExt(Graph_, path.c_str(), 1)==EXIT_FAILURE)
+	{return EXIT_FAILURE;}
+	// **************************************************************[OBJ MASK]
+
+	// [SAVED LOCATION]********************************************************
+	path =
+			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			"/location_area.txt";
+	readFileExt(Graph_, path.c_str(), 0);
+	// ********************************************************[SAVED LOCATION]
+
+	// [READ FILE]*************************************************************
+	string name;
+	int n = scandir(dirname_.c_str(), &namelist, fileSelect, alphasort);
+	if (n == 0) {printer(24); return EXIT_FAILURE;}
+	file_eof = new int[n];
+	for(int i=0;i<n;i++)
+	{
+		name = dirname_ + "/" + namelist[i]->d_name;
+		readFile(name.c_str(), data , ',');
+		file_eof[i] = data.size();
+	}
+	printer(8);
+	// *************************************************************[READ FILE]
+
+	// [PARSE DATA]************************************************************
+	parseData2Point(data, points, contact);
+	printer(9);
+	// ************************************************************[PARSE DATA]
+
+	// [LOOP THROUGH FILES]****************************************************
+	int tmp_id1 = 0;
+	int id1 = 0;
+	int id2 = id1+1;
+	for(int i=id1;i<id2;i++)
+//	int tmp_id1 = 0;
+//	for(int i=0;i<file_eof.size();i++)
 	{
 		// ====================================================================
 		// TESTING (ONLINE PREDICTION)
 		// ====================================================================
-		if (i==file_eof.size()-1)
+		vector<int> contact_tmp; contact_tmp.resize(file_eof[i]-1-tmp_id1);
+		for(int iii=30;iii<contact_tmp.size();iii++)
 		{
-			directoryCheck(SCENE_ + scene + "/" + object);
-			path =  SCENE_ + scene + "/" + object + "/location_area.txt";
-			writeFile(Graph_main, path, 0);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_begin.txt";
-			writeFile(Graph_main, path, 10);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_mid.txt";
-			writeFile(Graph_main, path, 11);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_end.txt";
-			writeFile(Graph_main, path, 12);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_tangent.txt";
-			writeFile(Graph_main, path, 13);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_normal.txt";
-			writeFile(Graph_main, path, 14);
-			path = 	SCENE_ + scene + "/" + object + "/counter.txt";
-			writeFile(Graph_main, path, 15);
-			path = 	SCENE_ + scene + "/" + object + "/sec_data_max.txt";
-			writeFile(Graph_main, path, 16);
-			path = 	SCENE_ + scene + "/" + object + "/sec_data_const.txt";
-			writeFile(Graph_main, path, 17);
+			contact_tmp[iii] =
+					(int)(
+							(float)accumulate(
+									contact.begin()+tmp_id1-30+iii,
+									contact.begin()+tmp_id1+iii, 0) / 30);
+		}
 
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_begin.txt";
-			readFileExt(Graph_main, path, 10);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_mid.txt";
-			readFileExt(Graph_main, path, 11);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_end.txt";
-			readFileExt(Graph_main, path, 12);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_tangent.txt";
-			readFileExt(Graph_main, path, 13);
-			path = 	SCENE_ + scene + "/" + object + "/loc_data_normal.txt";
-			readFileExt(Graph_main, path, 14);
-			path = 	SCENE_ + scene + "/" + object + "/counter.txt";
-			readFileExt(Graph_main, path, 15);
-			path = 	SCENE_ + scene + "/" + object + "/sec_data_max.txt";
-			readFileExt(Graph_main, path, 16);
-			path = 	SCENE_ + scene + "/" + object + "/sec_data_const.txt";
-			readFileExt(Graph_main, path, 17);
 
-			vector<int> contact_tmp; contact_tmp.resize(file_eof[i]-1-tmp_id1);
-			for(int iii=30;iii<contact_tmp.size();iii++)
+		printf("\n******************************************************************************\n");
+		printf("* TESTING START                                                              *\n");
+		printf("******************************************************************************\n");
+
+		// [Initialization] ***************************************************
+		vector<point_d> point_tmp(
+				points.begin() + tmp_id1,
+				points.begin() + file_eof[i]-1);
+		reshapeVector(pva_avg, point_tmp.size());
+		reshapeVector(pva_mem, 3);
+		reshapeVector(last_loc, Graph_->getNumberOfNodes());
+		reshapePredict(predict, Graph_->getNumberOfNodes());
+
+		pva_avg_mem.clear();
+		sm_init = true;
+		label1 = -1;
+		Graph* Graph_update = new Graph(*Graph_);
+
+		px.clear();
+		py.resize(Graph_->getNumberOfNodes());
+		for(int ii=0;ii<al.size();ii++) {pyy.push_back(py);}
+		// *************************************************** [Initialization]
+		for(int ii=0;ii<point_tmp.size();ii++)
+		{
+			if (ii == 0) 	{ pva_avg[ii] = pva_avg1;		}
+			else			{ pva_avg[ii] = pva_avg[ii-1];	}
+			preprocessDataLive(
+					points[ii+tmp_id1], pva_mem, pva_avg[ii], FILTER_WIN);
+
+			if (contact_tmp[ii]==1)
 			{
-				contact_tmp[iii] =
-						(int)(
-								(float)accumulate(
-										contact.begin()+tmp_id1-30+iii,
-										contact.begin()+tmp_id1+iii, 0) / 30);
-			}
-
-
-			printf("\n******************************************************************************\n");
-			printf("* TESTING START                                                              *\n");
-			printf("******************************************************************************\n");
-
-			vector<point_d> point_tmp(
-					points.begin() + tmp_id1,
-					points.begin() + file_eof[i]-1);
-			int p1 = point_tmp.size();
-			reshapeVector(pva_avg, p1);
-			reshapeVector(pva_mem, 3);
-			reshapeVector(last_loc, Graph_main.getNumberOfNodes());
-			reshapePredict(predict, Graph_main.getNumberOfNodes());
-			bool flag_last=false;
-			double pow_dec = 1.0;
-			int label1 = -1;
-			Graph Graph_update = Graph_main;
-			vector<double> x;
-			vector<vector<double> > y; y.resize(10);
-			for(int ii=0;ii<p1;ii++)
-			{
-				if (ii == 0) 	{ pva_avg[ii] = pva_avg1;		}
-				else			{ pva_avg[ii] = pva_avg[ii-1];	}
-				preprocessDataLive(
-						points[ii+tmp_id1], pva_mem, pva_avg[ii], FILTER_WIN);
 				predictAction(
-						Graph_main,
+						Graph_,
 						Graph_update,
-						contact_tmp[ii],
 						pva_avg[ii],
+						pva_avg_mem,
 						curve_mem,
+						delta_t_mem,
 						predict,
 						label1,
 						last_loc,
+						sm_init,
 						false);
+			}
 
+			Graph_->getPrediction(prediction);
 
-				map<string,pair<int,int> > ac_tmp;
-				vector<string> al_tmp;
-				vector<map<string, double> > f_tmp;
-				Graph_main.getActionCategory(ac_tmp);
-				Graph_main.getActionLabel(al_tmp);
-				Graph_main.getPrediction(f_tmp);
-
-
-				if (f_tmp.size()>0)
+			if (prediction.size()>0)
+			{
+				px.push_back(ii);
+				for(int iii=0;iii<Graph_->getNumberOfNodes();iii++)
 				{
-					x.push_back(ii);
-					for(int iii=0;iii<Graph_main.getNumberOfNodes();iii++)
-					{
-//						y[iii].push_back(f_tmp[iii]["DRINK"]);
-//						y[iii].push_back(f_tmp[iii]["THROW"]);
-//						y[iii].push_back(f_tmp[iii]["CUT"]);
-//						y[iii].push_back(f_tmp[iii]["CLEAN"]);
-//						y[iii].push_back(f_tmp[iii]["SCAN"]);
-						y[iii].push_back(f_tmp[iii]["WINDOW"]);
-//						y[iii].push_back(f_tmp[iii]["SLIDE"]);
-//						y[iii].push_back(f_tmp[iii]["CURVE"]);
-//						y[iii].push_back(f_tmp[iii]["MOVE"]);
-//						y[iii].push_back(f_tmp[iii]["STOP"]);
-					}
+					int c = 0;
+					pyy[c][iii].push_back(prediction[iii]["EAT"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["DRINK"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["WASH"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["THROW"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["KEEP"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["REST"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["CUT"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["CLEAN"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["SCAN"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["WINDOW"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["SLIDE"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["CURVE"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["MOVE"]); c++;
+					pyy[c][iii].push_back(prediction[iii]["STOP"]);
 				}
-
+			}
 
 //				if (ii>800)
 //				{
@@ -333,96 +396,62 @@ int learning(
 //					showConnection(Graph_update, point_zero, label_zero, color_code, true);
 //				}
 
-
-			}
-
-			plotData(x,y[0]);
-			plotData(x,y[1]);
-//			plotData(x,y[2]);
-//			plotData(x,y[3]);
-
-			vector<point_d> point_zero; vector<string> label_zero;
-			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
-			vector<vector<unsigned char> > color_code; colorCode(color_code);
-			showConnection(Graph_update, point_zero, label_zero, color_code, true);
-
-			tmp_id1 = file_eof[i];
-			printf("******************************************************************************\n");
-			printf("* TESTING END                                                                *\n");
-			printf("******************************************************************************\n\n");
 		}
-		// ====================================================================
-		// TRAINING
-		// ====================================================================
-		else
+
 		{
-			// [PREPROCESS DATA]***********************************************
-			vector<point_d> point_tmp(
-					points.begin() + tmp_id1,
-					points.begin() + file_eof[i]-1);
-			reshapeVector(pva_avg, point_tmp.size());
-			reshapeVector(pva_mem, 3);
-			for(int ii=0;ii<point_tmp.size();ii++)
+			vector<string> al_tmp(
+					al.begin() + ac["GEOMETRIC"].first,
+					al.begin() + ac["GEOMETRIC"].second+1);
+			vector<vector<vector<double> > > pyyy(
+					pyy.begin() + ac["GEOMETRIC"].first,
+					pyy.begin() + ac["GEOMETRIC"].second+1);
+			vector<int> z;
+			z.resize(ac["GEOMETRIC"].second - ac["GEOMETRIC"].first + 1);
+			for(int ii=0;ii<z.size();ii++)
 			{
-				if (ii == 0) 	{ pva_avg[ii] = pva_avg1;		}
-				else			{ pva_avg[ii] = pva_avg[ii-1];	}
-				preprocessDataLive(
-						points[ii+tmp_id1], pva_mem, pva_avg[ii], FILTER_WIN);
+				z[ii] = -1;
+				for(int iii=0;iii<Graph_->getNumberOfNodes();iii++)
+				{
+					node_tt node_tmp = {};
+					Graph_->getNode(iii,node_tmp);
+					if(!strcmp(node_tmp.name.c_str(),al_tmp[ii].c_str()))
+					{
+						z[ii] = iii;
+						break;
+					}
+				}
 			}
-			printer(10);
-			// ***********************************************[PREPROCESS DATA]
-
-			vector<int> contact_tmp; contact_tmp.resize(file_eof[i]-1-tmp_id1);
-			for(int iii=30;iii<contact_tmp.size();iii++)
-			{
-				contact_tmp[iii] =
-						(int)(
-								(float)accumulate(
-										contact.begin()+tmp_id1-30+iii,
-										contact.begin()+tmp_id1+iii, 0) / 30);
-			}
-
-			// [LOCATION AND SECTOR-MAP]***************************************
-			buildLocationArea(Graph_main, pva_avg, contact_tmp);
-			printer(11);
-			buildSectorMap   (Graph_main, pva_avg, contact_tmp);
-			printer(12);
-			// ***************************************[LOCATION AND SECTOR-MAP]
-			tmp_id1 = file_eof[i];
-//
-//			vector<point_d> point_zero; vector<string> label_zero;
-//			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
-//			vector<vector<unsigned char> > color_code; colorCode(color_code);
-//			showConnection(Graph_main, point_zero, label_zero, color_code, true);
-
+			plotDatasGeo(al_tmp,px,pyyy,z);
 		}
+		{
+			vector<string> al_tmp(
+					al.begin() + ac["MOVEMENT"].first,
+					al.begin() + ac["MOVEMENT"].second+1);
+			vector<vector<vector<double> > > pyyy(
+					pyy.begin() + ac["MOVEMENT"].first,
+					pyy.begin() + ac["MOVEMENT"].second+1);
+			plotDatas(al_tmp,px,pyyy);
+		}
+		{
+			vector<string> al_tmp(
+					al.begin() + ac["GENERIC"].first,
+					al.begin() + ac["GENERIC"].second+1);
+			vector<vector<vector<double> > > pyyy(
+					pyy.begin() + ac["GENERIC"].first,
+					pyy.begin() + ac["GENERIC"].second+1);
+			plotDatas(al_tmp,px,pyyy);
+		}
+
+		vector<point_d> point_zero; vector<string> label_zero;
+		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
+		vector<vector<unsigned char> > color_code; colorCode(color_code);
+		showConnection(Graph_, point_zero, label_zero, color_code, true);
+
+		tmp_id1 = file_eof[i];
+		printf("******************************************************************************\n");
+		printf("* TESTING END                                                                *\n");
+		printf("******************************************************************************\n\n");
 	}
-
-
-
-
-
-
-
-//	directoryCheck(SCENE_ + scene + "/" + object);
-//	path = 	SCENE_ + scene + "/" + object + "/loc_data_beg.txt";
-//	writeLearnedDataFile(Graph, path, 0);
-//	path = 	SCENE_ + scene + "/" + object + "/loc_data_mid.txt";
-//	writeLearnedDataFile(Graph, path, 1);
-//	path = 	SCENE_ + scene + "/" + object + "/loc_data_end.txt";
-//	writeLearnedDataFile(Graph, path, 2);
-//	path = 	SCENE_ + scene + "/" + object + "/loc_data_tangent.txt";
-//	writeLearnedDataFile(Graph, path, 3);
-//	path = 	SCENE_ + scene + "/" + object + "/loc_data_normal.txt";
-//	writeLearnedDataFile(Graph, path, 4);
-//	path = 	SCENE_ + scene + "/" + object + "/counter.txt";
-//	writeLearnedDataFile(Graph, path, 5);
-//	path = 	SCENE_ + scene + "/" + object + "/sec_data_max.txt";
-//	writeLearnedDataFile(Graph, path, 6);
-//	path = 	SCENE_ + scene + "/" + object + "/sec_data_const.txt";
-//	writeLearnedDataFile(Graph, path, 7);
-//	printf("Creating sectors for connection between the clusters (action locations)......Complete\n");
 	// *************************************************** [LOOP THROUGH FILES]
 	return EXIT_SUCCESS;
 }
-

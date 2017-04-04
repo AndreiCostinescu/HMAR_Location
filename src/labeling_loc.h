@@ -40,7 +40,7 @@ int clusteringExt(
 	bool 			delete_=false);
 
 int buildLocationArea(
-	Graph 						&Graph_,
+	Graph 						*Graph_,
 	vector<vector<point_d> > 	&pos_vel_acc_,
 	vector<int> 				contact_);
 

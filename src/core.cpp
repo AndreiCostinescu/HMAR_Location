@@ -45,30 +45,25 @@ int decideBoundary(
 	return EXIT_SUCCESS;
 }
 
-double decideLocationInterval(
-	vector<int> &loc_idxs_,
-	int &loc_last_idx_,
+double dLI(
+	int &loc_idx_,
+	int loc_last_idx_,
 	point_d point_,
 	vector<point_d> beg_,
 	vector<point_d> mid_,
 	vector<point_d> end_,
 	vector<point_d> tangent_,
-	int loc_offset_)
+	int loc_offset_,
+	bool loc_init_)
 {
-	vector<int> idx_tmp;
-	double d1,d2,d3,d4,d5,d6; d1=d2=d3=d4=d5=d6=0.0;
+	int idx_tmp;
+	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
 	point_d proj_dir_tmp;
-	bool flag = false;
-	int offset = loc_offset_;
-	// Added a buffer to let the system find the first sector
-	if (loc_last_idx_==0)
-	{
-		flag = true;
-		offset = LOC_INT;
-	}
-	// Added a buffer to prevent the location prediction from jumping too much
+	bool flag = true;
+
+	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
-	int idx2 = ( idx1+offset > LOC_INT ? LOC_INT : idx1+offset );
+	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
 		proj_dir_tmp =
@@ -86,53 +81,173 @@ double decideLocationInterval(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
 		{
-			if (idx1 == 0 || idx1 == LOC_INT-1)	{d6 = d3-d5;}
-			if (d4<=d2 && (d3-d5)<0.001) //### TODO small error deviation (deadzone)
+			if (l == idx1)	{d6 = d3-d5; d6min2 = d6;}
+			if (d4<=d2 && (d3-d5) < 0.005) //### TODO small error deviation (deadzone)
 			{
-				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
-				else if (l-idx_tmp.back()<2) 	{idx_tmp.push_back(l);} //### TODO prevent the algo from cutting parts of a curve off
-				if (flag) 						{break;}
+				d6 = d3-d5;
 			}
 		}
 		else
 		{
-			if (idx1 == 0 || idx1 == LOC_INT-1)	{d6 = d4-d5;}
-			if (d3<=d1 && (d4-d5)<0.001)
+			if (l == idx1)	{d6 = d4-d5; d6min2 = d6;}
+			if (d3<=d1 && (d4-d5) < 0.005)
 			{
-				if (idx_tmp.empty()) 			{idx_tmp.push_back(l);}
-				else if (l-idx_tmp.back()<2) 	{idx_tmp.push_back(l);}
-				if (flag) 						{break;}
+				d6 = d4-d5;
 			}
+		}
+
+		if(l==idx1) continue;
+
+		if (min_(d6,d6min))
+		{
+			d6min = d6;
+			idx_tmp = l;
+		}
+		else
+		{
+			// breaks only when the location is larger than the current one
+			if(d6min < 0.0001 && l>idx1) // inside
+			{
+				break;
+			}
+		}
+
+		if (l==idx2-1)
+		{
+			d6min = d6min2;
+			loc_idx_ = idx1;
+		}
+	}
+
+	// to prevent unknown locations at start and end
+	if (d6min > 0.0001)
+	{
+		loc_idx_ = loc_last_idx_;
+	}
+	else
+	{
+		if (loc_init_)
+		{
+			loc_idx_ = idx_tmp;
+//			loc_last_idx_ = loc_idx_;
+		}
+		else
+		{
+			loc_idx_ = idx_tmp;
+//			if (idx_tmp>loc_last_idx_)
+//			{
+//				for(int i=loc_last_idx_+1;i<idx_tmp+1;i++)
+//				{
+//					loc_idxs_.push_back(i);
+//				}
+//				loc_last_idx_ = idx_tmp;
+//			}
+//			else
+//			{
+//				for(int i=idx_tmp+1;i<loc_last_idx_+1;i++)
+//				{
+//					loc_idxs_.push_back(i);
+//				}
+//				loc_last_idx_ = idx_tmp;
+//			}
+		}
+	}
+
+	return d6min;
+}
+
+double decideLocationInterval(
+	vector<int> &loc_idxs_,
+	int &loc_last_idx_,
+	point_d point_,
+	vector<point_d> beg_,
+	vector<point_d> mid_,
+	vector<point_d> end_,
+	vector<point_d> tangent_,
+	int loc_offset_,
+	bool loc_init_)
+{
+	int idx_tmp;
+	double d1,d2,d3,d4,d5,d6,d6min; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
+	point_d proj_dir_tmp;
+	bool flag = true;
+
+	// Added a buffer to prevent the location prediction from jumping too much
+	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
+	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
+	for(int l=idx1;l<idx2;l++)
+	{
+		proj_dir_tmp =
+				multiPoint(
+						tangent_[l],
+						dotProduct(
+								point2vector(minusPoint(point_,mid_[l])),
+								point2vector(tangent_[l])));
+		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
+		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
+		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
+		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
+		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+		if (vectorDirectionCheck(
+				point2vector(proj_dir_tmp),
+				point2vector(tangent_[l])))
+		{
+			if (l == idx1)	{d6 = d3-d5;}
+			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
+			{
+				d6 = d3-d5;
+			}
+		}
+		else
+		{
+			if (l == idx1)	{d6 = d4-d5;}
+			if (d3<=d1 && (d4-d5) < 0.01)
+			{
+				d6 = d4-d5;
+			}
+		}
+		if (min_(fabs(d6),d6min))
+		{
+			d6min = fabs(d6);
+			idx_tmp = l;
 		}
 	}
 
 	loc_idxs_.clear();
 	// to prevent unknown locations at start and end
-	if (idx_tmp.size()<1)
+	if (d6min > 0.005)
 	{
 		loc_idxs_.push_back(loc_last_idx_);
+		loc_last_idx_ = loc_idxs_.back();
 	}
 	else
 	{
-		// to prevent the first data from filling up too much of the front part
-		if (flag && idx_tmp.back()>=(loc_offset_/2))
+		if (loc_init_ || idx_tmp==loc_last_idx_)
 		{
-			for(int i=idx_tmp.back()-(loc_offset_/2)+1;i<idx_tmp.back()+1;i++)
-			{
-				loc_idxs_.push_back(i);
-			}
+			loc_idxs_.push_back(idx_tmp);
+			loc_last_idx_ = loc_idxs_.back();
 		}
 		else
 		{
-			for(int i=loc_last_idx_;i<idx_tmp.back()+1;i++)
+			if (idx_tmp>loc_last_idx_)
 			{
-				loc_idxs_.push_back(i);
+				for(int i=loc_last_idx_+1;i<idx_tmp+1;i++)
+				{
+					loc_idxs_.push_back(i);
+				}
+				loc_last_idx_ = idx_tmp;
+			}
+			else
+			{
+				for(int i=idx_tmp+1;i<loc_last_idx_+1;i++)
+				{
+					loc_idxs_.push_back(i);
+				}
+				loc_last_idx_ = idx_tmp;
 			}
 		}
-		loc_idxs_.size() > 1 ? loc_last_idx_ = loc_idxs_.back() : loc_last_idx_ = loc_idxs_[0];
 	}
-
-	return d6;
+	return d6min;
 }
 
 double decideLocationInterval(
@@ -188,10 +303,9 @@ double decideLocationInterval(
 		}
 	}
 	// to prevent unknown locations at start and end
-	if (loc_idx_<0) {loc_idx_		= loc_last_idx_	;}
-	else			{loc_last_idx_	= loc_idx_		;}
-	if (loc_idx_<0) return d6;
-	else 			return d7;
+	if (loc_idx_<0) {loc_idx_		= loc_last_idx_	; return d6;}
+	else			{loc_last_idx_	= loc_idx_		; return d7;}
+
 }
 
 int decideSectorInterval(
@@ -253,23 +367,33 @@ int decideCurvature(
 		curve_ -= 1.0;
 	}
 	return EXIT_SUCCESS;
+}
 
-//	curve_ = 0.0;
-//	int s = curve_mem_.size()-1;
-//	if (s+1<num_points_)
-//	{
-//		curve_mem_.push_back(point_);
-//	}
-//	else
-//	{
-//		curve_mem_.erase(curve_mem_.begin());
-//		curve_mem_.push_back(point_);
-//		for(int i=1;i<s+1;i++)
-//		{
-//			curve_ += l2Norm(minusPoint(curve_mem_[i], curve_mem_[i-1]));
-//		}
-//		curve_ /= l2Norm(minusPoint(curve_mem_[s], curve_mem_[0]));
-//		curve_ -= 1.0;
-//	}
-//	return EXIT_SUCCESS;
+int decideRateOfChangeOfDeltaT(
+	point_d delta_t_,
+	vector<point_d> &delta_t_mem_,
+	double &dd_delta_t_,
+	int num_points_)
+{
+	int s = delta_t_mem_.size()-1;
+	if (s+1<num_points_)
+	{
+		delta_t_mem_.push_back(delta_t_);
+		dd_delta_t_ = 0.0;
+	}
+	else
+	{
+		delta_t_mem_.erase(delta_t_mem_.begin());
+		delta_t_mem_.push_back(delta_t_);
+		dd_delta_t_ =
+				l2Norm(
+					minusPoint(
+							minusPoint(
+									delta_t_mem_[s  ],
+									delta_t_mem_[s/2]),
+							minusPoint(
+									delta_t_mem_[s/2],
+									delta_t_mem_[0  ])));
+	}
+	return EXIT_SUCCESS;
 }

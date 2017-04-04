@@ -95,6 +95,7 @@
 #include <vtkCurvatures.h>
 #include <vtkSmoothPolyDataFilter.h>
 #include <vtkLight.h>
+#include <vtkRect.h>
 
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_bspline.h>
@@ -134,7 +135,7 @@ using namespace std;
 //3 : label only
 #define VERBOSE 3
 
-#define CLUSTER_LIMIT 0.05
+#define CLUSTER_LIMIT 0.2
 
 #define FILTER_WIN 15
 
@@ -144,8 +145,8 @@ using namespace std;
 
 #define DBSCAN_EPS 0.015
 #define DBSCAN_MIN 10
-#define DBSCAN_EPS_MOV 0.025
-#define DBSCAN_MIN_MOV 5
+#define DBSCAN_EPS_MOV 0.015
+#define DBSCAN_MIN_MOV 8
 #define MAX_RANGE 0.05
 #define	LOC_INT 200
 #define	SEC_INT 72

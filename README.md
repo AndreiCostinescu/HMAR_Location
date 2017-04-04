@@ -123,3 +123,9 @@
 - added new data
 - added some constraint to prevent the front and back part of sectormap from changing drastically
 -still need to address the issue of curved ends#####
+
+[20]
+- 04/04/2017
+- new data 
+- reworked how to deal with begin and end situation of sectormap
+- for case of curve we ignore if the curve goes backwards

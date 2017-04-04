@@ -15,13 +15,13 @@
 #include "dbscan.h"
 #include "core.h"
 #include "misc.h"
+#include "labeling_sec.h"
 
 int predictFromNode(
-	Graph Graph_,
+	Graph *Graph_,
 	point_d &point_);
 
 int decideMovement(
-	Graph Graph_,
 	point_d vel_,
 	predict_t &predict_);
 
@@ -31,16 +31,22 @@ int decideCurvatureExt(
 	predict_t &predict_,
 	int num_points_);
 
+int decideRateOfChangeOfDeltaTExt(
+	point_d delta_t_,
+	vector<point_d> &delta_t_mem_,
+	predict_t &predict_,
+	int num_points_,
+	int label2_);
+
 double decideLocSecInt(
-	Graph &Graph_,
-	Graph &Graph_update_,
+	edge_tt edge_,
 	point_d point_,
 	point_d &delta_t_,
+	vector<double> sectormap_,
 	int &sec_idx_,
 	int &loc_idx_,
 	int &loc_last_idx_,
-	int label1_,
-	int label2_);
+	bool &init_);
 
 bool decideGoal(
 	predict_t &predict_,
@@ -81,10 +87,12 @@ int predictFromSectorMap(
 	point_d acc_,
 	predict_t &predict_,
 	vector<int> &loc_last_idxs_,
-	int label1_);
+	int label1_,
+	vector<point_d> &delta_t_mem_,
+	bool &init_);
 
 int evaluatePrediction(
-	Graph &Graph_,
+	Graph *Graph_,
 	predict_t &predict_);
 
 int predictFromEdge(
@@ -94,21 +102,30 @@ int predictFromEdge(
 	point_d vel_,
 	point_d acc_,
 	vector<point_d> &curve_mem_,
+	vector<point_d> &delta_t_mem_,
 	predict_t &predict_,
 	vector<int> &last_loc_,
-	int label1_);
+	int label1_,
+	bool &init_);
+
+int rebuildSectorMap(
+	Graph *Graph_,
+	vector<vector<point_d> > pva_avg_,
+	int	label1_,
+	int label2_);
 
 int predictAction(
-	Graph &Graph_,
-	Graph &Graph_update_,
-	int contact_,
+	Graph *Graph_,
+	Graph *Graph_update_,
 	vector<point_d> &pva_avg_, //MOTION
+	vector<vector<point_d> > &pva_avg_mem_,
 	vector<point_d> &curve_mem_,
+	vector<point_d> &delta_t_mem_,
 	predict_t &predict_,
 	int &label1_,
 	vector<int> &last_loc_,
+	bool &init_,
 	bool learn_=false);
-
 
 
 #endif /* PREDICTING_H_ */

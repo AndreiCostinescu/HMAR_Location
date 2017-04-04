@@ -45,10 +45,10 @@ int printer(
 			printf(CYEL "# No information about location areas is found................................\n" CNOR);
 			break;
 		case 8:
-			printf("# Reading training data................................................SUCCESS\n");
+			printf("# Reading data.........................................................SUCCESS\n");
 			break;
 		case 9:
-			printf("# Parsing training data................................................SUCCESS\n");
+			printf("# Parsing data.........................................................SUCCESS\n");
 			break;
 		case 10:
 			printf("# Pre-processing data..................................................SUCCESS\n");
@@ -91,6 +91,30 @@ int printer(
 			break;
 		case 23:
 			printf(CYEL "# Deleting clusters (location areas)..........................................\n" CNOR);
+			break;
+		case 24:
+			printf(CRED "# Data is empty...............................................................\n" CNOR);
+			printf(CRED "# Reading data..........................................................FAILED\n" CNOR);
+			break;
+		case 25:
+			printf(CRED "# Folder with data is missing.................................................\n" CNOR);
+			printf(CRED "# Reading data folders..................................................FAILED\n" CNOR);
+			break;
+		case 26:
+			printf("# Reading data folders.................................................SUCCESS\n");
+			break;
+		case 27:
+			printf(CRED "# Individual folder with data is missing......................................\n" CNOR);
+			printf(CRED "# Reading individual data folders.......................................FAILED\n" CNOR);
+			break;
+		case 28:
+			printf("# Reading individual data folders......................................SUCCESS\n");
+			break;
+		case 29:
+			printf(CRED "# Learning process......................................................FAILED\n" CNOR);
+			break;
+		case 30:
+			printf(CGRN "# Learning process.....................................................SUCCESS\n" CNOR);
 			break;
 //		case :
 //			break;
