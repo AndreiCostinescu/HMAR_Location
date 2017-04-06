@@ -19,7 +19,7 @@ int decideMovement(
 	predict_t &predict_)
 {
 	// #### TODO: vel limit
-	if (l2Norm(vel_)<0.0005) 	{ predict_.velocity = 0; }
+	if (l2Norm(vel_)<0.001) 	{ predict_.velocity = 0; }
 	else						{ predict_.velocity = l2Norm(vel_); }
 	return EXIT_SUCCESS;
 }
@@ -435,6 +435,7 @@ int predictFromSectorMap(
 				decideLocSecInt(
 						Graph_->getEdge(label1_, i, 0), point_, delta_t,
 						sm_tmp2, sec_idx, loc_idx, loc_last_idxs_[i], init_tmp);
+
 		Graph_update_->setEdgeSectorMap(label1_, i, 0, sm_tmp2);
 		init_[i] = init_tmp;
 		// *******************************************************[LOC SEC INT]
@@ -521,7 +522,6 @@ int evaluatePrediction(
 
 	for(int i=0;i<Graph_->getNumberOfNodes();i++)
 	{
-//		cout << i << " " << window[i].back()<< endl;
 		node_tt node_tmp = {};
 		Graph_->getNode(i, node_tmp);
 		for(int ii=ac_tmp["GEOMETRIC"].first;ii<ac_tmp["GEOMETRIC"].second+1;ii++)
@@ -535,48 +535,48 @@ int evaluatePrediction(
 					p_reset_tmp[ii][al_tmp[iii]] = f_tmp[ii][al_tmp[iii]]*predict_mem_.back().pct_err[i];
 				}
 
-				if (predict_mem_.size()>5)
+
+				if (predict_mem_.back().velocity > 0 )
 				{
-					if (predict_mem_.back().velocity > 0 )
-					{
-						p_reset_tmp[ii]["SLIDE"] 	= f_tmp[ii]["SLIDE"] * average(oscillate[i]);
-						p_reset_tmp[ii]["WINDOW"] 	= f_tmp[ii]["WINDOW"]* average(window[i]);
-//						p_reset_tmp[ii]["WINDOW"] 	= p_reset_tmp[ii]["WINDOW"] / p_reset_tmp[ii]["SLIDE"];
-
-//						(p_reset_tmp[ii]["SLIDE"]  > 0.1) ? 0: p_reset_tmp[ii]["SLIDE"]  = 0.0;
-//						(p_reset_tmp[ii]["WINDOW"] > 0.0) ? 0: p_reset_tmp[ii]["WINDOW"] = 0.0;
-
-						p_reset_tmp[ii]["CURVE"]	= f_tmp[ii]["CURVE"]* (average(curve)/0.4);//(average(curve) > 0.4 ? 1.0 : average(curve)/0.4);
-						p_reset_tmp[ii]["MOVE"]		= f_tmp[ii]["MOVE"]	* predict_mem_.back().velocity/10;
-						p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 0.0;
-
-						if (p_reset_tmp[ii]["SLIDE"]<0.05)
-							p_reset_tmp[ii]["CURVE"] = 0.0;
-						else
-							p_reset_tmp[ii]["CURVE"] = p_reset_tmp[ii]["CURVE"]/p_reset_tmp[ii]["SLIDE"];
-
-						p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 0.0;
-//						p_reset_tmp[ii]["STOP"] 	= average(ddl[i]);
-
-						if (p_reset_tmp[ii]["WINDOW"]<0.5) p_reset_tmp[ii]["WINDOW"] = 0;
-						if (p_reset_tmp[ii]["SLIDE"]<0.1) p_reset_tmp[ii]["SLIDE"] = 0;
-						if (p_reset_tmp[ii]["CURVE"]<0.1) p_reset_tmp[ii]["CURVE"] = 0;
-
-						p_reset_tmp[ii]["CLEAN"]	= f_tmp[ii]["CLEAN"]* p_reset_tmp[ii]["SLIDE"];
-						p_reset_tmp[ii]["CUT"]		= f_tmp[ii]["CUT"]	* p_reset_tmp[ii]["SLIDE"];
-						p_reset_tmp[ii]["SCAN"]		= f_tmp[ii]["SCAN"] * p_reset_tmp[ii]["WINDOW"];
-
-					}
-					else
-					{
-						p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 1.0;
-					}
+					p_reset_tmp[ii]["MOVE"]		= f_tmp[ii]["MOVE"]	* predict_mem_.back().velocity/10.0;
+					p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 0.0;
 				}
 				else
 				{
-					p_reset_tmp[ii]["MOVE"]		= f_tmp[ii]["MOVE"]	* predict_mem_.back().velocity/10;
-					p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 0.0;
+					p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 1.0;
 				}
+
+				if (predict_mem_.size()>5)
+				{
+					p_reset_tmp[ii]["SLIDE"] 	= f_tmp[ii]["SLIDE"] * average(oscillate[i]);
+					p_reset_tmp[ii]["WINDOW"] 	= f_tmp[ii]["WINDOW"]* average(window[i]);
+					p_reset_tmp[ii]["CURVE"]	= f_tmp[ii]["CURVE"]* (average(curve)/0.4);//(average(curve) > 0.4 ? 1.0 : average(curve)/0.4);
+
+					if (p_reset_tmp[ii]["SLIDE"]<0.1)
+						p_reset_tmp[ii]["CURVE"] = 0.0;
+					else
+						p_reset_tmp[ii]["CURVE"] = p_reset_tmp[ii]["CURVE"]/p_reset_tmp[ii]["SLIDE"];
+
+					p_reset_tmp[ii]["STOP"]		= f_tmp[ii]["STOP"]	* 0.0;
+
+					// TODO THRESHOLD
+					if (p_reset_tmp[ii]["WINDOW"]<0.5) p_reset_tmp[ii]["WINDOW"] = 0;
+					if (p_reset_tmp[ii]["SLIDE"]<0.1)  p_reset_tmp[ii]["SLIDE"] = 0;
+					if (p_reset_tmp[ii]["CURVE"]<0.1)  p_reset_tmp[ii]["CURVE"] = 0;
+					p_reset_tmp[ii]["SLIDE"] = max(p_reset_tmp[ii]["SLIDE"],p_reset_tmp[ii]["CURVE"]);
+
+					p_reset_tmp[ii]["CURVE"] = 0;
+
+//					p_reset_tmp[ii]["CURVE"] = p_reset_tmp[ii]["MOVE"]-p_tmp[ii]["MOVE"];
+//						// along traj
+//						p_reset_tmp[ii]["CURVE"] = average(ddl[i]);
+//						if (p_reset_tmp[ii]["CURVE"]<0.05)  p_reset_tmp[ii]["CURVE"] = 0;
+
+				}
+
+				p_reset_tmp[ii]["CLEAN"]	= f_tmp[ii]["CLEAN"]* p_reset_tmp[ii]["SLIDE"];
+				p_reset_tmp[ii]["CUT"]		= f_tmp[ii]["CUT"]	* p_reset_tmp[ii]["SLIDE"];
+				p_reset_tmp[ii]["SCAN"]		= f_tmp[ii]["SCAN"] * p_reset_tmp[ii]["WINDOW"];
 
 				break;
 			}
@@ -603,6 +603,7 @@ int predictFromEdge(
 {
 	predict_t predict;
 	reshapePredict(predict, Graph_->getNumberOfNodes());
+	predict.acc = l2Norm(acc_);
 
 	// 2.1. Check for motion
 	decideMovement(vel_, predict);

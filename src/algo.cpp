@@ -314,6 +314,7 @@ void reshapePredict(
 	predict_t &P_,
 	int size)
 {
+	P_.acc		 = 0.0;
 	P_.velocity  = 0.0;
 	P_.curvature = 0.0;
 	reshapeVector(P_.range, 		size);

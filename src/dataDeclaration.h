@@ -297,6 +297,7 @@ struct pred_s
 typedef struct predict_s predict_t;
 struct predict_s
 {
+	double 			acc; // acc
 	double 			velocity; // velocity limit 0/1
 	double 			curvature; // curvature value : 1 for line
 	vector<double>	range; // in or outside
