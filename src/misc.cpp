@@ -116,8 +116,12 @@ int printer(
 		case 30:
 			printf(CGRN "# Learning process.....................................................SUCCESS\n" CNOR);
 			break;
-//		case :
-//			break;
+		case 31:
+			printf(CYEL "# Current action is creating a huge sector map, action will be ignored........\n" CNOR);
+			break;
+		default :
+			printf(CRED "# UNKNOWN COMMAND.............................................................\n" CNOR);
+			break;
 
 	}
 	return EXIT_SUCCESS;

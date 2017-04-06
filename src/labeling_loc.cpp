@@ -201,7 +201,12 @@ int buildLocationArea(
 			for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
 			{
 				node_tt node_tmp = {};
-				Graph_->getNode(i, node_tmp);
+				Graph_->getNode(ii, node_tmp);
+				if (!strcmp(node_tmp.name.c_str(),"DRINK") || !strcmp(node_tmp.name.c_str(),"EAT"))
+				{
+					key = 0;
+					continue;
+				}
 				if (min_(l2Norm(minusPoint(node_tmp.centroid, locations[i])), mem) &&
 					l2Norm(minusPoint(node_tmp.centroid, locations[i])) < CLUSTER_LIMIT)
 				{
@@ -219,27 +224,34 @@ int buildLocationArea(
 				node_tmp.centroid 			= locations[i];
 				Graph_->setNode(node_tmp);
 				Graph_->addEmptyEdgeForNewNode(node_tmp.index);
-				Graph_->expandFilter(node_tmp.index+1);
-				Graph_->updateFilter(node_tmp.index);
+//				Graph_->expandFilter(node_tmp.index+1);
+//				Graph_->updateFilter(node_tmp.index);
 			}
 			else
 			{
 				node_tt node_tmp = {};
 				Graph_->getNode(key, node_tmp);
+				if (!strcmp(node_tmp.name.c_str(),"DRINK") || !strcmp(node_tmp.name.c_str(),"EAT"))
+				{
+					continue;
+				}
 				double tmp1 = locations[key].l;
 				double tmp2 = node_tmp.centroid.l;
 				tmp1 = Sqr(-log(tmp1)*BOUNDARY_VAR*2);
 				tmp2 = Sqr(-log(tmp2)*BOUNDARY_VAR*2);
-				locations[key] =
+				point_d loc_tmp =
 						multiPoint(
 								addPoint(
 										node_tmp.centroid,
 										locations[key]),
 								0.5);
-				tmp1 += l2Norm(locations[key]);
-				tmp2 += l2Norm(locations[key]);
+				tmp1 += l2Norm(minusPoint(locations[key],loc_tmp));
+				tmp2 += l2Norm(minusPoint(node_tmp.centroid,loc_tmp));
+				locations[key] = loc_tmp;
 				locations[key].l =
-						max(0.7, pdfExp(BOUNDARY_VAR, 0.0, max(tmp1,tmp2)));
+						min(0.7, pdfExp(BOUNDARY_VAR, 0.0, max(tmp1,tmp2)));
+				locations[key].l =
+						max(0.7, locations[key].l);
 				node_tmp.centroid = locations[key];
 				Graph_->setNode(node_tmp);
 			}
@@ -255,8 +267,8 @@ int buildLocationArea(
 			node_tmp.centroid 	= locations[i];
 			Graph_->setNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
-			Graph_->expandFilter(node_tmp.index+1);
-			Graph_->updateFilter(node_tmp.index);
+//			Graph_->expandFilter(node_tmp.index+1);
+//			Graph_->updateFilter(node_tmp.index);
 		}
 	}
 	printer(17);

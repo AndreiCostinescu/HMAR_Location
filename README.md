@@ -129,3 +129,11 @@
 - new data 
 - reworked how to deal with begin and end situation of sectormap
 - for case of curve we ignore if the curve goes backwards
+
+[21]
+- 06/04/2017
+- new data 
+- added printout analysis
+- new ideas on analysis based on d2l and curve together with slide
+
+

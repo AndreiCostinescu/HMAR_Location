@@ -89,11 +89,11 @@ int predictFromSectorMap(
 	vector<int> &loc_last_idxs_,
 	int label1_,
 	vector<point_d> &delta_t_mem_,
-	bool &init_);
+	vector<bool> &init_);
 
 int evaluatePrediction(
 	Graph *Graph_,
-	predict_t &predict_);
+	vector<predict_t> predict_mem_);
 
 int predictFromEdge(
 	Graph &Graph_,
@@ -103,10 +103,10 @@ int predictFromEdge(
 	point_d acc_,
 	vector<point_d> &curve_mem_,
 	vector<point_d> &delta_t_mem_,
-	predict_t &predict_,
+	vector<predict_t> &predict_mem_,
 	vector<int> &last_loc_,
 	int label1_,
-	bool &init_);
+	vector<bool> &init_);
 
 int rebuildSectorMap(
 	Graph *Graph_,
@@ -121,10 +121,10 @@ int predictAction(
 	vector<vector<point_d> > &pva_avg_mem_,
 	vector<point_d> &curve_mem_,
 	vector<point_d> &delta_t_mem_,
-	predict_t &predict_,
+	vector<predict_t> &predict_mem_,
 	int &label1_,
 	vector<int> &last_loc_,
-	bool &init_,
+	vector<bool> &init_,
 	bool learn_=false);
 
 

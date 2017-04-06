@@ -72,8 +72,11 @@ int findMovementConstraint(
 		showData(P, label_, label_ref, loc_idx_zero, color_code, true, false, false);
 	}
 
-	points_.clear();
-	points_ = points_out;
+	if (points_out.size()>20)
+	{
+		points_.clear();
+		points_ = points_out;
+	}
 
 //	double det = 0.0;
 //	vector<vector<double> > tmp;
@@ -228,32 +231,18 @@ int adjustSectorMap(
 			// required for the fitting part only
 			// also for the ending
 
-
-
-			cout << "AA : ";
-
 			if (dLIE(edge_, points_[1],
-					loc_idx, loc_last_idx_, loc_offset_, loc_init_) > 0.0001)
+					loc_idx, loc_last_idx_, loc_offset_, loc_init_) > 0.001)
 			{
 				if(mem || loc_last_idx_==LOC_INT-1)
 				{
 					loc_last_idx_ = loc_last_idx_mem;
-					return EXIT_FAILURE;
+					return EXIT_SUCCESS; //#TODO should be failure
 				}
 				else
 				{
 					loc_last_idx_ = loc_last_idx_mem;
-					return EXIT_FAILURE;
-//					while(dLIE(edge_, points_[1],
-//							loc_idx, loc_last_idx_, loc_offset_, loc_init_)>0.005)
-//					{
-//						if (loc_last_idx_ < loc_offset_/2)
-//						{
-//							loc_last_idx_ = loc_last_idx_mem;
-//							return EXIT_FAILURE;
-//						}
-//						loc_last_idx_ -= (loc_offset_/2);
-//					}
+					return EXIT_SUCCESS; //#TODO should be failure
 				}
 			}
 
@@ -261,105 +250,177 @@ int adjustSectorMap(
 			decideSectorIntervalExt(
 					edge_, points_[1], delta_t, sec_idx, loc_idx);
 
-			// extend the delta_t to last location to "fill up holes"
-			// compare trajectory and tangent
-			if (dotProduct(
-					point2vector(edge_.tan[loc_idx]),
-					point2vector(
-							multiPoint(
-									minusPoint(
-											points_[1],
-											points_[0]),
-									1/l2Norm(
-											minusPoint(
-													points_[1],
-													points_[0])))))>0.88)
+
+			// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
+			double tmpmin = 10.0;
+			double tmpdeltatmin = 0.0;
+			int min_idx = 0;
+
+			if (loc_idx==loc_last_idx_)
 			{
-				loc_init_ = false;
-				if (loc_idx>loc_last_idx_)
+				min_idx			= loc_idx*SEC_INT + sec_idx;
+				tmpmin			= l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx]));
+				tmpdeltatmin	= l2Norm(delta_t);
+			}
+			else if (loc_idx>loc_last_idx_)
+			{
+				for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
 				{
-					for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
+					decideSectorIntervalExt(
+							edge_, points_[1], delta_t_zero, sec_idx, ll);
+					int tmp_idx = ll*SEC_INT + sec_idx;
+					if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[ll])), tmpmin))
 					{
-						double tmp =
-								delta_t_mem_ +
-								((l2Norm(delta_t) - delta_t_mem_) *
-										(((double)(ll-loc_last_idx_-1) + 1) / (loc_idx - loc_last_idx_)));
-						int tmp_idx = ll*SEC_INT + sec_idx;
-						decideSectorIntervalExt(
-								edge_, points_[1], delta_t_zero, sec_idx, ll);
-						edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], tmp);
+						tmpmin			= l2Norm(minusPoint(points_[1], edge_.loc_mid[ll]));
+						tmpdeltatmin	= l2Norm(delta_t_zero);
+						min_idx 		= tmp_idx;
 					}
-					int tmp_idx = loc_idx*SEC_INT + sec_idx;
-					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t));
-					delta_t_mem_ = l2Norm(delta_t);
-					loc_last_idx_ = loc_idx;
-					loc_curr_idx_ = loc_last_idx_;
 				}
-				else if (loc_idx==loc_last_idx_)
+			}
+
+
+			if (loc_init_)
+			{
+				// if point starts before curve
+				point_d proj_dir_tmp =
+						multiPoint(
+								edge_.tan[0],
+								dotProduct(
+										point2vector(minusPoint(points_[1],edge_.loc_mid[0])),
+										point2vector(edge_.tan[0])));
+				if (!vectorDirectionCheck(
+						point2vector(proj_dir_tmp),
+						point2vector(edge_.tan[0])))
 				{
-					int tmp_idx = loc_idx*SEC_INT + sec_idx;
-					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t));
-					delta_t_mem_ = l2Norm(delta_t);
-					loc_last_idx_ = loc_idx;
-					loc_curr_idx_ = loc_last_idx_;
+					loc_init_ = true;
+					loc_last_idx_ = 0;
+					loc_curr_idx_ = 0;
+					return EXIT_SUCCESS;
 				}
-				// should not happen cause the dot product means that it is in the same direction
-//				else
+				else
+				{
+					loc_init_ = false;
+					edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpdeltatmin);
+//					if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+					loc_last_idx_ = min_idx/SEC_INT;
+					loc_curr_idx_ = min_idx/SEC_INT;
+					return EXIT_SUCCESS;
+				}
+			}
+
+			edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpdeltatmin);
+//			if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+
+			if ((min_idx/SEC_INT) - loc_last_idx_ > 1)
+			{
+				for(int l=loc_last_idx_+1;l<(min_idx/SEC_INT);l++)
+				{
+					decideSectorIntervalExt(
+							edge_, points_[1], delta_t_zero, sec_idx, l);
+					int tmp_idx = l*SEC_INT + sec_idx;
+					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+				}
+				loc_curr_idx_ = (min_idx/SEC_INT);
+			}
+			else if ((min_idx/SEC_INT) - loc_last_idx_ == 1)
+			{
+				loc_curr_idx_ = (min_idx/SEC_INT);
+			}
+
+//			cout << edge_.sector_map[min_idx] << endl; 0.449658
+
+			loc_last_idx_ = loc_curr_idx_;
+			return EXIT_SUCCESS;
+
+
+
+
+
+
+//			// extend the delta_t to last location to "fill up holes"
+//			// compare trajectory and tangent
+//			if (dotProduct(
+//					point2vector(edge_.tan[loc_idx]),
+//					point2vector(
+//							multiPoint(
+//									minusPoint(
+//											points_[1],
+//											points_[0]),
+//									1/l2Norm(
+//											minusPoint(
+//													points_[1],
+//													points_[0])))))>0.88)
+//			{
+//				loc_init_ = false;
+//				if (loc_idx>loc_last_idx_)
 //				{
-//					for(int ll=loc_idx;ll<loc_last_idx_;ll++)
+//					for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
 //					{
 //						double tmp =
 //								delta_t_mem_ +
 //								((l2Norm(delta_t) - delta_t_mem_) *
-//										(((double)(ll-loc_idx) + 1) / (loc_idx - loc_last_idx_)));
+//										(((double)(ll-loc_last_idx_-1) + 1) / (loc_idx - loc_last_idx_)));
 //						int tmp_idx = ll*SEC_INT + sec_idx;
 //						decideSectorIntervalExt(
 //								edge_, points_[1], delta_t_zero, sec_idx, ll);
 //						edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], tmp);
 //					}
+//					int tmp_idx = loc_idx*SEC_INT + sec_idx;
+//					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t));
 //					delta_t_mem_ = l2Norm(delta_t);
-//					(loc_last_idx_ > loc_curr_idx_) ? loc_curr_idx_ = loc_last_idx_: 0;
+//					loc_last_idx_ = loc_idx;
+//					loc_curr_idx_ = loc_last_idx_;
 //				}
-				return EXIT_SUCCESS;
-			}
-			else
-			{
-				// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
-				double tmpmin = 10.0;
-				double tmpdeltatmin = 0.0;
-				int min_idx = 0;
-
-				if (loc_idx==loc_last_idx_)
-				{
-					decideSectorIntervalExt(
-							edge_, points_[1], delta_t_zero, sec_idx, loc_idx);
-					int tmp_idx = loc_idx*SEC_INT + sec_idx;
-					if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx])), tmpmin))
-					{
-						tmpmin			= l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx]));
-						tmpdeltatmin	= l2Norm(delta_t_zero);
-						min_idx 		= tmp_idx;
-					}
-				}
-				else if (loc_idx>loc_last_idx_)
-				{
-					for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
-					{
-						decideSectorIntervalExt(
-								edge_, points_[1], delta_t_zero, sec_idx, ll);
-						int tmp_idx = ll*SEC_INT + sec_idx;
-						if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[ll])), tmpmin))
-						{
-							tmpmin			= l2Norm(minusPoint(points_[1], edge_.loc_mid[ll]));
-							tmpdeltatmin	= l2Norm(delta_t_zero);
-							min_idx 		= tmp_idx;
-						}
-					}
-				}
-
-//				else
+//				else if (loc_idx==loc_last_idx_)
 //				{
-//					for(int ll=loc_idx;ll<loc_last_idx_;ll++)
+//					int tmp_idx = loc_idx*SEC_INT + sec_idx;
+//					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t));
+//					delta_t_mem_ = l2Norm(delta_t);
+//					loc_last_idx_ = loc_idx;
+//					loc_curr_idx_ = loc_last_idx_;
+//				}
+//				// should not happen cause the dot product means that it is in the same direction
+////				else
+////				{
+////					for(int ll=loc_idx;ll<loc_last_idx_;ll++)
+////					{
+////						double tmp =
+////								delta_t_mem_ +
+////								((l2Norm(delta_t) - delta_t_mem_) *
+////										(((double)(ll-loc_idx) + 1) / (loc_idx - loc_last_idx_)));
+////						int tmp_idx = ll*SEC_INT + sec_idx;
+////						decideSectorIntervalExt(
+////								edge_, points_[1], delta_t_zero, sec_idx, ll);
+////						edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], tmp);
+////					}
+////					delta_t_mem_ = l2Norm(delta_t);
+////					(loc_last_idx_ > loc_curr_idx_) ? loc_curr_idx_ = loc_last_idx_: 0;
+////				}
+//				return EXIT_SUCCESS;
+//			}
+//			else
+//			{
+//				cout << "AA : " << loc_idx << " ";
+//				// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
+//				double tmpmin = 10.0;
+//				double tmpdeltatmin = 0.0;
+//				int min_idx = 0;
+//
+//				if (loc_idx==loc_last_idx_)
+//				{
+//					decideSectorIntervalExt(
+//							edge_, points_[1], delta_t_zero, sec_idx, loc_idx);
+//					int tmp_idx = loc_idx*SEC_INT + sec_idx;
+//					if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx])), tmpmin))
+//					{
+//						tmpmin			= l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx]));
+//						tmpdeltatmin	= l2Norm(delta_t_zero);
+//						min_idx 		= tmp_idx;
+//					}
+//				}
+//				else if (loc_idx>loc_last_idx_)
+//				{
+//					for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
 //					{
 //						decideSectorIntervalExt(
 //								edge_, points_[1], delta_t_zero, sec_idx, ll);
@@ -372,49 +433,42 @@ int adjustSectorMap(
 //						}
 //					}
 //				}
-
-				if (loc_init_)
-				{
-					// if point starts before curve
-					point_d proj_dir_tmp =
-							multiPoint(
-									edge_.tan[0],
-									dotProduct(
-											point2vector(minusPoint(points_[1],edge_.loc_mid[0])),
-											point2vector(edge_.tan[0])));
-					if (!vectorDirectionCheck(
-							point2vector(proj_dir_tmp),
-							point2vector(edge_.tan[0])))
-					{
-						loc_last_idx_ = 0;
-						loc_curr_idx_ = 0;
-						return EXIT_SUCCESS;
-					}
-//					loc_last_idx_ = loc_idx;
-//					loc_curr_idx_ = loc_last_idx_;
-//					return EXIT_SUCCESS;
-				}
-
-				edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpmin);
-
-				if ((min_idx/SEC_INT) - loc_curr_idx_ > 1)
-				{
-					for(int l=loc_curr_idx_+1;l<(min_idx/SEC_INT);l++)
-					{
-						decideSectorIntervalExt(
-								edge_, points_[1], delta_t_zero, sec_idx, l);
-						int tmp_idx = l*SEC_INT + sec_idx;
-						edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
-					}
-					loc_curr_idx_ = (min_idx/SEC_INT);
-				}
-				else if ((min_idx/SEC_INT) - loc_curr_idx_ == 1)
-				{
-					loc_curr_idx_ = (min_idx/SEC_INT);
-				}
-//				else if ((min_idx/SEC_INT) - loc_curr_idx_ < 0) // if it goes backward
+//				cout << min_idx/SEC_INT << " " << loc_init_ << " ";
+//
+//				if (loc_init_)
 //				{
-//					for(int l=(min_idx/SEC_INT)+1;l<loc_curr_idx_;l++)
+//					// if point starts before curve
+//					point_d proj_dir_tmp =
+//							multiPoint(
+//									edge_.tan[0],
+//									dotProduct(
+//											point2vector(minusPoint(points_[1],edge_.loc_mid[0])),
+//											point2vector(edge_.tan[0])));
+//					cout << vectorDirectionCheck(
+//							point2vector(proj_dir_tmp),
+//							point2vector(edge_.tan[0])) << endl;
+//					if (!vectorDirectionCheck(
+//							point2vector(proj_dir_tmp),
+//							point2vector(edge_.tan[0])))
+//					{
+//						loc_last_idx_ = 0;
+//						loc_curr_idx_ = 0;
+//						return EXIT_SUCCESS;
+//					}
+//					else
+//					{
+//						edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpmin);
+//						loc_last_idx_ = 0;
+//						loc_curr_idx_ = 0;
+//						return EXIT_SUCCESS;
+//					}
+//				}
+//
+//				edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpmin);
+//
+//				if ((min_idx/SEC_INT) - loc_curr_idx_ > 1)
+//				{
+//					for(int l=loc_curr_idx_+1;l<(min_idx/SEC_INT);l++)
 //					{
 //						decideSectorIntervalExt(
 //								edge_, points_[1], delta_t_zero, sec_idx, l);
@@ -423,37 +477,122 @@ int adjustSectorMap(
 //					}
 //					loc_curr_idx_ = (min_idx/SEC_INT);
 //				}
-				loc_last_idx_ = loc_curr_idx_;
-				return EXIT_SUCCESS;
-			}
-
-			loc_last_idx_ = loc_last_idx_mem;
-			return EXIT_FAILURE;
+//				else if ((min_idx/SEC_INT) - loc_curr_idx_ == 1)
+//				{
+//					loc_curr_idx_ = (min_idx/SEC_INT);
+//				}
+////				else if ((min_idx/SEC_INT) - loc_curr_idx_ < 0) // if it goes backward
+////				{
+////					for(int l=(min_idx/SEC_INT)+1;l<loc_curr_idx_;l++)
+////					{
+////						decideSectorIntervalExt(
+////								edge_, points_[1], delta_t_zero, sec_idx, l);
+////						int tmp_idx = l*SEC_INT + sec_idx;
+////						edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+////					}
+////					loc_curr_idx_ = (min_idx/SEC_INT);
+////				}
+//				loc_last_idx_ = loc_curr_idx_;
+//				return EXIT_SUCCESS;
+//			}
+//
+//			loc_last_idx_ = loc_last_idx_mem;
+//			return EXIT_FAILURE;
 
 			break;
 		}
 		case 2:
 		{
-			vector<int> loc_idxs;
-			loc_init_ = false;
-			if (decideLocationIntervalExt(edge_, points_[1],
-					loc_idxs, loc_last_idx_, loc_offset_, loc_init_)>0.01 &&
-				loc_idxs.back()==LOC_INT-1)
+			int loc_idx;
+
+			double tmpdlie =
+					dLIE(
+							edge_, points_[1], loc_idx, loc_last_idx_,
+							loc_offset_, loc_init_);
+
+			if (tmpdlie > 0.001)
 			{
-				loc_last_idx_ = loc_last_idx_mem;
-				return EXIT_FAILURE;
+				if(mem || loc_last_idx_==LOC_INT-1)
+				{
+					loc_last_idx_ = loc_last_idx_mem;
+					return EXIT_FAILURE;
+				}
+				else
+				{
+					loc_last_idx_ = loc_last_idx_mem;
+					return EXIT_FAILURE;
+				}
 			}
-			for(int ll=0;ll<loc_idxs.size();ll++)
+
+			// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
+			double tmpmin = 10.0;
+			double tmpdeltatmin = 0.0;
+			int min_idx = 0;
+
+			decideSectorIntervalExt(
+					edge_, points_[1], delta_t_zero, sec_idx, loc_idx);
+			int tmp_idx = loc_idx*SEC_INT + sec_idx;
+			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+
+
+			if (loc_idx>10) //offset because we shift back 10 at beginning
 			{
-				decideSectorIntervalExt(
-						edge_, points_[1], delta_t, sec_idx, loc_idxs[ll]);
-				edge_.sector_map[loc_idxs[ll]*SEC_INT + sec_idx] =
-						max(
-								edge_.sector_map[loc_idxs[ll]*SEC_INT + sec_idx],
-								l2Norm(delta_t));
+				for(int l=loc_last_idx_+10;l<loc_idx;l++)
+				{
+					decideSectorIntervalExt(
+							edge_, points_[1], delta_t_zero, sec_idx, l);
+					int tmp_idx = l*SEC_INT + sec_idx;
+					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+				}
 			}
+
+//			if (loc_idx==loc_last_idx_)
+//			{
+//				decideSectorIntervalExt(
+//						edge_, points_[1], delta_t_zero, sec_idx, loc_idx);
+//				int tmp_idx = loc_idx*SEC_INT + sec_idx;
+//				edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+//			}
+//			else
+//			{
+//				for(int l=loc_curr_idx_+1;l<loc_idx+1;l++)
+//				{
+//					decideSectorIntervalExt(
+//							edge_, points_[1], delta_t_zero, sec_idx, l);
+//					int tmp_idx = l*SEC_INT + sec_idx;
+//					edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+//				}
+//			}
+
+			loc_curr_idx_ = (min_idx/SEC_INT);
+			loc_last_idx_ = loc_curr_idx_;
+
+			return EXIT_SUCCESS;
+
 			break;
 		}
+
+//		{
+//			vector<int> loc_idxs;
+//			loc_init_ = false;
+//			if (decideLocationIntervalExt(edge_, points_[1],
+//					loc_idxs, loc_last_idx_, loc_offset_, loc_init_)>0.001 &&
+//				loc_idxs.back()==LOC_INT-1)
+//			{
+//				loc_last_idx_ = loc_last_idx_mem;
+//				return EXIT_FAILURE;
+//			}
+//			for(int ll=0;ll<loc_idxs.size();ll++)
+//			{
+//				decideSectorIntervalExt(
+//						edge_, points_[1], delta_t, sec_idx, loc_idxs[ll]);
+//				edge_.sector_map[loc_idxs[ll]*SEC_INT + sec_idx] =
+//						max(
+//								edge_.sector_map[loc_idxs[ll]*SEC_INT + sec_idx],
+//								l2Norm(delta_t));
+//			}
+//			break;
+//		}
 		case 3:
 		{
 			decideLocationIntervalExt(
@@ -472,6 +611,62 @@ int adjustSectorMap(
 }
 
 int adjustCurve(
+	edge_tt &edge_,
+	vector<point_d> &points_,
+	int &loc_last_idx_,
+	bool &loc_init_,
+	int loc_offset_)
+{
+	point_d delta_t_zero;
+	int sec_idx 			= -1;
+	int loc_idx 			= -1;
+	int loc_last_idx_mem 	= loc_last_idx_;
+	bool mem 				= loc_init_;
+
+	double tmpdlie =
+			dLIE(
+					edge_, points_[1], loc_idx, loc_last_idx_,
+					loc_offset_, loc_init_);
+
+	if (tmpdlie > 0.001)
+	{
+		if(mem || loc_last_idx_==LOC_INT-1)
+		{
+			loc_last_idx_ = loc_last_idx_mem;
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			loc_last_idx_ = loc_last_idx_mem;
+			return EXIT_FAILURE;
+		}
+	}
+
+	// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
+
+	decideSectorIntervalExt(
+			edge_, points_[1], delta_t_zero, sec_idx, loc_idx);
+	int tmp_idx = loc_idx*SEC_INT + sec_idx;
+	edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+
+
+	if (loc_idx>10) //offset because we shift back 10 at beginning
+	{
+		for(int l=loc_last_idx_+10;l<loc_idx;l++)
+		{
+			decideSectorIntervalExt(
+					edge_, points_[1], delta_t_zero, sec_idx, l);
+			int tmp_idx = l*SEC_INT + sec_idx;
+			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+		}
+	}
+
+	loc_last_idx_ = loc_idx;
+
+	return EXIT_SUCCESS;
+}
+
+int adjustCurveExt(
 	Graph *Graph_,
 	vector<point_d> coeffs_,
 	int integral_limit_,
@@ -623,10 +818,8 @@ int adjustCurve(
 		// ***********************************************************[AVERAGE]
 		// [SECTOR MAP]********************************************************
 		reshapeVector(edge_tmp.sector_map, LOC_INT*SEC_INT);
-		double delta_t_mem = 0.0;
-		bool init = true;
-		vector<int> loc_last; loc_last.resize(3);
-		vector<int> loc_curr; loc_curr.resize(3);
+		vector<double> delta_t_mem; delta_t_mem.resize(3);
+
 		for(int l=0;l<LOC_INT;l++)
 		{
 			for(int s=0;s<SEC_INT;s++)
@@ -657,24 +850,19 @@ int adjustCurve(
 										tmpN,
 										edge_tmp_mem.sector_map[l*SEC_INT+s]));
 				// *************************************************[OLD POINT]
-				for(int ii=0;ii<3;ii++)
+				for(int ii=2;ii<3;ii++)
 				{
 					vector<point_d> points_tmp = {p_old[ii],p_old[ii]};
-					adjustSectorMap(
-							edge_tmp,
-							points_tmp,
-							loc_last[ii],
-							loc_curr[ii],
-							delta_t_mem,
-							init,
-							10,
-							2);
+					bool tmp_init = false;
+					int last, curr; //##TODO
+					if (l<10) 	{ last = 0; 	curr = 0; }
+					else 		{ last = l-10; 	curr = l-10; }
+					adjustCurve(edge_tmp, points_tmp, last, tmp_init, 20);
 				}
 			} //s
-			for(int i=1;i<3;i++)
-			{
-				if (loc_last[i-1]>loc_last[i]) {loc_last[i] = loc_last[i-1];}
-			}
+
+			//for(int i=1;i<3;i++) { if (loc_last[i-1]>loc_last[i]) { init[i]	= init[i-1]; loc_last[i] = loc_last[i-1]; } }
+
 		} //l
 		// ********************************************************[SECTOR MAP]
 	}
@@ -682,6 +870,131 @@ int adjustCurve(
 	Graph_->setEdge(label1_, label2_, 0, edge_tmp);
 	printer(19);
 	return EXIT_SUCCESS;
+}
+
+int fitSectorMap(
+	edge_tt &edge_,
+	vector<point_d> &points_,
+	int &loc_last_idx_,
+	int loc_offset_,
+	bool &loc_init_)
+{
+	int sec_idx 			= -1;
+	int loc_idx 			= -1;
+	int loc_last_idx_mem 	= loc_last_idx_;
+	bool mem 				= loc_init_;
+	point_d delta_t, delta_t_zero;
+
+	// to deal with cases where the beginning is out of the sectormap
+	// required for the fitting part only
+	// also for the ending
+
+	if (dLIE(edge_, points_[1],
+			loc_idx, loc_last_idx_, loc_offset_, loc_init_) > 0.001)
+	{
+		if(mem || loc_last_idx_==LOC_INT-1)
+		{
+			loc_last_idx_ = loc_last_idx_mem;
+			return EXIT_SUCCESS; //#TODO should be failure
+		}
+		else
+		{
+			loc_last_idx_ = loc_last_idx_mem;
+			return EXIT_SUCCESS; //#TODO should be failure
+		}
+	}
+
+	// find the delta_t
+	decideSectorIntervalExt(
+			edge_, points_[1], delta_t, sec_idx, loc_idx);
+
+
+	// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
+	double min_dist 	= 10.0;
+	double delta_t_min	= 0.0;
+	int min_idx 		= 0;
+
+	if (loc_idx==loc_last_idx_)
+	{
+		min_idx		= loc_idx*SEC_INT + sec_idx;
+		min_dist	= l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx]));
+		delta_t_min	= l2Norm(delta_t);
+	}
+	else if (loc_idx>loc_last_idx_)
+	{
+		for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
+		{
+			decideSectorIntervalExt(
+					edge_, points_[1], delta_t_zero, sec_idx, ll);
+			int tmp_idx = ll*SEC_INT + sec_idx;
+			if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[ll])),
+					 min_dist))
+			{
+				min_dist	= l2Norm(minusPoint(points_[1], edge_.loc_mid[ll]));
+				delta_t_min	= l2Norm(delta_t_zero);
+				min_idx 	= tmp_idx;
+			}
+		}
+	}
+	//else
+	// we do not consider going back for now
+
+	if (loc_init_)
+	{
+		// if point starts before curve
+		point_d proj_dir_tmp =
+				multiPoint(
+						edge_.tan[0],
+						dotProduct(
+								point2vector(
+										minusPoint(
+												points_[1],edge_.loc_mid[0])),
+								point2vector(edge_.tan[0])));
+		if (!vectorDirectionCheck(
+				point2vector(proj_dir_tmp),
+				point2vector(edge_.tan[0])))
+		{
+			loc_init_ = true;
+			loc_last_idx_ = 0;
+			return EXIT_SUCCESS;
+		}
+		else
+		{
+			loc_init_ = false;
+			edge_.sector_map[min_idx] =
+					max(edge_.sector_map[min_idx], delta_t_min);
+			if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+			loc_last_idx_ = min_idx/SEC_INT;
+			return EXIT_SUCCESS;
+		}
+	}
+
+	edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], delta_t_min);
+	if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+
+	if ((min_idx/SEC_INT) - loc_last_idx_ > 1)
+	{
+		for(int l=loc_last_idx_+1;l<(min_idx/SEC_INT);l++)
+		{
+			decideSectorIntervalExt(
+					edge_, points_[1], delta_t_zero, sec_idx, l);
+			int tmp_idx = l*SEC_INT + sec_idx;
+			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+			if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+		}
+		loc_last_idx_ = (min_idx/SEC_INT);
+	}
+	else if ((min_idx/SEC_INT) - loc_last_idx_ == 1)
+	{
+		loc_last_idx_ = (min_idx/SEC_INT);
+	}
+	//else
+	// we do not consider going back for now
+
+	//cout << edge_.sector_map[min_idx] << endl; 0.449658
+
+	return EXIT_SUCCESS;
+
 }
 
 int fitSectorMapInit(
@@ -717,7 +1030,7 @@ int fitSectorMapInit(
 	return EXIT_SUCCESS;
 }
 
-int fitSectorMap(
+int fitSectorMapExt(
 	Graph *Graph_,
 	vector<point_d> &points_,
 	int label1_,
@@ -743,11 +1056,10 @@ int fitSectorMap(
 	bool flag_init		= true;
 	int offset			= loc_offset_;
 	int loc_last_idx	= 0;
-	int loc_curr_idx	= 0;
-	double delta_t_mem	= 0.0;
+	int res				= -1;
 	for(int i=1;i<points_.size();i++)
 	{
-		edge_tmp = Graph_->getEdge(label1_, label2_, 0);
+//		edge_tmp = Graph_->getEdge(label1_, label2_, 0);
 
 		if (flag_init)	{offset = LOC_INT;}
 		else			{offset = loc_offset_;}
@@ -771,17 +1083,13 @@ int fitSectorMap(
 
 		vector<point_d> points_tmp {points_[i-1], points_[i]};
 
-		adjustSectorMap(
-				edge_tmp,
-				points_tmp,
-				loc_last_idx,
-				loc_curr_idx,
-				delta_t_mem,
-				flag_init,
-				offset,
-				1);
+		res =
+				fitSectorMap(
+						edge_tmp, points_tmp, loc_last_idx, offset, flag_init);
 
-		Graph_->setEdge(label1_, label2_, 0, edge_tmp);
+		if (res==EXIT_FAILURE) {printer(31); return EXIT_FAILURE;}
+
+//		Graph_->setEdge(label1_, label2_, 0, edge_tmp);
 
 		vector<point_d> points_tmp2(points_.begin(),points_.begin()+i);
 
@@ -793,6 +1101,8 @@ int fitSectorMap(
 			showConnection(Graph_, points_tmp2, label_zero, color_code, true);
 		}
 	}
+
+	Graph_->setEdge(label1_, label2_, 0, edge_tmp);
 
 	printer(20);
 	return EXIT_SUCCESS;
@@ -827,19 +1137,20 @@ int updateSectorMap(
 {
 	// fitCurve()				: Fit the curve based on pure trajectory points.
 	//							: Estimate points that are used to do fitting later.
-	// adjustCurve()			: Obtain the tan and nor from the estimated points. (only for the first run)
+	// adjustCurveExt()			: Obtain the tan and nor from the estimated points. (only for the first run)
 	//							: Adjust the tan and nor from the estimated points.
 	// fitSectorMapInit()		: Fit the estimated points to the sector map. (only for the first run)
-	// fitSectorMap()			: Fit the estimated points to the sector map.
+	// fitSectorMapExt()			: Fit the estimated points to the sector map.
 	// findSectorMapConstraint(): Check the constraints of  the sector map.
 	// Graph_.setEdgeCounter()	: Increment the counter.
 
 	vector<point_d> points_est, coeffs;
+	int res = -1;
 
 	if (Graph_->getEdgeCounter(label1_,label2_,0) == 0)
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		adjustCurve(Graph_, coeffs, points_avg_.size(), label1_, label2_);
+		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_);
 		fitSectorMapInit(Graph_, points_est, label1_, label2_, 10);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
@@ -847,34 +1158,34 @@ int updateSectorMap(
 	else if (Graph_->getEdgeCounter(label1_,label2_,0) < 50)
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		fitSectorMap(Graph_, points_avg_, label1_, label2_, 20);
-
+		res = fitSectorMapExt(Graph_, points_est, label1_, label2_, 20);
+		if (res==EXIT_FAILURE) {return EXIT_FAILURE;}
 		//VISUALIZE
 		if(1)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
-			showConnection(Graph_, points_avg_, label_zero, color_code, true);
+			showConnection(Graph_, points_est, label_zero, color_code, true);
 		}
-
-		adjustCurve(Graph_, coeffs, points_avg_.size(), label1_, label2_);
+		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
 	}
 	else
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		fitSectorMap(Graph_, points_est, label1_, label2_, 20);
+		res = fitSectorMapExt(Graph_, points_est, label1_, label2_, 20);
+		if (res==EXIT_FAILURE) {return EXIT_FAILURE;}
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
 	}
 
 	//VISUALIZE
-	if(0)
+	if(1)
 	{
 		vector<point_d> point_zero; vector<string> label_zero;
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
-		showConnection(Graph_, points_avg_, label_zero, color_code, true);
+		showConnection(Graph_, points_est, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;
@@ -989,6 +1300,9 @@ int buildSectorMap(
 	// label_idx: index of data point for label1
 	int label1, label2, label_idx;
 	label1 = label2 = label_idx = -1;
+
+	int res = -1;
+
 	for(int i=0;i<pts_avg.size();i++)
 	{
 		if (pts_avg[i].l >= 0)

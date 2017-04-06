@@ -32,6 +32,17 @@ double dLI(
 	int loc_offset_,
 	bool loc_init_);
 
+double dLIPredict(
+	int &loc_idx_,
+	int loc_last_idx_,
+	point_d point_,
+	vector<point_d> beg_,
+	vector<point_d> mid_,
+	vector<point_d> end_,
+	vector<point_d> tangent_,
+	int loc_offset_,
+	bool loc_init_);
+
 double decideLocationInterval(
 	vector<int> &loc_idxs_,
 	int &loc_last_idx_,

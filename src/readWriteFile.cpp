@@ -115,6 +115,21 @@ void writeFile(
 					write_file << "\n";
 				}
 			}
+			else
+			{
+				remove(path_);
+				vector<node_tt> node_tmp = Graph_.getNodeList();
+				ofstream write_file(path_, ios::app);
+				for(int i=0;i<node_tmp.size();i++)
+				{
+					write_file << node_tmp[i].name      	<< ","
+							   << node_tmp[i].centroid.x	<< ","
+							   << node_tmp[i].centroid.y 	<< ","
+							   << node_tmp[i].centroid.z 	<< ","
+							   << node_tmp[i].centroid.l;
+					write_file << "\n";
+				}
+			}
 			break;
 		case 1:
 			if (!ifstream(path_))
@@ -229,9 +244,9 @@ int readFileExt(
 					node_tmp.index    	= i;
 					Graph_->setNode(node_tmp);
 					Graph_->addEmptyEdgeForNewNode(i);
-					Graph_->expandFilter(i+1);
+//					Graph_->expandFilter(i+1);
 				}
-				for(int i=0;i<data.size();i++) { Graph_->updateFilter(i); }
+//				for(int i=0;i<data.size();i++) { Graph_->updateFilter(i); }
 				printer(6);
 			}
 			else

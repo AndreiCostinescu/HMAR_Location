@@ -70,12 +70,26 @@ int adjustSectorMap(
 	int option_);
 
 int adjustCurve(
+	edge_tt &edge_,
+	vector<point_d> &points_,
+	int &loc_last_idx_,
+	bool &loc_init_,
+	int loc_offset_);
+
+int adjustCurveExt(
 	Graph *Graph_,
 	vector<point_d> coeffs_,
 	int point1_idx_,
 	int point2_idx_,
 	int label1_,
 	int label2_);
+
+int fitSectorMap(
+	edge_tt &edge_,
+	vector<point_d> &points_,
+	int &loc_last_idx_,
+	int loc_offset_,
+	bool &loc_init_);
 
 int fitSectorMapInit(
 	Graph *Graph_,
@@ -84,7 +98,7 @@ int fitSectorMapInit(
 	int label2_,
 	int loc_offset_);
 
-int fitSectorMap(
+int fitSectorMapExt(
 	Graph *Graph_,
 	vector<point_d> &points_,
 	int label1_,

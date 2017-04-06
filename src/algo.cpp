@@ -315,13 +315,14 @@ void reshapePredict(
 	int size)
 {
 	P_.velocity  = 0.0;
-	P_.curvature.clear();
+	P_.curvature = 0.0;
 	reshapeVector(P_.range, 		size);
 	reshapeVector(P_.err, 			size);
 	reshapeVector(P_.pct_err, 		size);
 	reshapeVector(P_.err_diff,		size);
 	reshapeVector(P_.pct_err_diff,	size);
 	reshapeVector(P_.oscillate, 	size);
+	reshapeVector(P_.ddl, 			size);
 	reshapeVector(P_.window,	 	size);
 }
 

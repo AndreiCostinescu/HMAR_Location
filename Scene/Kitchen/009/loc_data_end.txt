@@ -1,0 +1,3 @@
+Locations,0
+Location Intervals,200
+Sector Intervals,72

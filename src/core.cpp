@@ -59,7 +59,6 @@ double dLI(
 	int idx_tmp;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
 	point_d proj_dir_tmp;
-	bool flag = true;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
@@ -81,7 +80,7 @@ double dLI(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
 		{
-			if (l == idx1)	{d6 = d3-d5; d6min2 = d6;}
+			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2;}
 			if (d4<=d2 && (d3-d5) < 0.005) //### TODO small error deviation (deadzone)
 			{
 				d6 = d3-d5;
@@ -89,13 +88,14 @@ double dLI(
 		}
 		else
 		{
-			if (l == idx1)	{d6 = d4-d5; d6min2 = d6;}
+			if (l == idx1)	{d6min2 = d4-d5; d6 = d6min2;}
 			if (d3<=d1 && (d4-d5) < 0.005)
 			{
 				d6 = d4-d5;
 			}
 		}
 
+		// ignore the first loc_int so that we don't get "stuck" at curves
 		if(l==idx1) continue;
 
 		if (min_(d6,d6min))
@@ -120,7 +120,7 @@ double dLI(
 	}
 
 	// to prevent unknown locations at start and end
-	if (d6min > 0.0001)
+	if (d6min > 0.001)
 	{
 		loc_idx_ = loc_last_idx_;
 	}
@@ -152,8 +152,104 @@ double dLI(
 //			}
 		}
 	}
-
+//	cout << d6min << " " << loc_idx_ << endl;
 	return d6min;
+}
+
+double dLIPredict(
+	int &loc_idx_,
+	int loc_last_idx_,
+	point_d point_,
+	vector<point_d> beg_,
+	vector<point_d> mid_,
+	vector<point_d> end_,
+	vector<point_d> tangent_,
+	int loc_offset_,
+	bool loc_init_)
+{
+	int idx_tmp=loc_last_idx_;
+	double d1,d2,d3,d4,d5,d6,d6min,d6min2,min_dist;
+	d1=d2=d3=d4=d5=d6=0.0; d6min = min_dist = 10;
+	point_d proj_dir_tmp;
+
+	// Added an offset buffer to prevent the location prediction from jumping too much
+	int idx1 = 0;//( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
+	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
+	for(int l=idx1;l<idx2;l++)
+	{
+		proj_dir_tmp =
+				multiPoint(
+						tangent_[l],
+						dotProduct(
+								point2vector(minusPoint(point_,mid_[l])),
+								point2vector(tangent_[l])));
+		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
+		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
+		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
+		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
+		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+		if (vectorDirectionCheck(
+				point2vector(proj_dir_tmp),
+				point2vector(tangent_[l])))
+		{
+			// ignore the first loc_int so that we don't get "stuck" at curves
+			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2; continue;}
+			if (d4<=d2 && (d3-d5) < 0.005) //### TODO small error deviation (deadzone)
+			{
+				d6 = d3-d5;
+				if (min_(l2Norm(minusPoint(point_, mid_[l])), min_dist))
+				{
+					min_dist	= l2Norm(minusPoint(point_, mid_[l]));
+					idx_tmp 	= l;
+				}
+			}
+		}
+		else
+		{
+			// ignore the first loc_int so that we don't get "stuck" at curves
+			if (l == idx1)	{d6min2 = d4-d5; d6 = d6min2; continue;}
+			if (d3<=d1 && (d4-d5) < 0.005)
+			{
+				d6 = d4-d5;
+				if (min_(l2Norm(minusPoint(point_, mid_[l])), min_dist))
+				{
+					min_dist	= l2Norm(minusPoint(point_, mid_[l]));
+					idx_tmp 	= l;
+				}
+			}
+		}
+
+//		if (min_(d6,d6min))
+//		{
+//			d6min = d6;
+//			idx_tmp = l;
+//		}
+//		else
+//		{
+//			// breaks only when the location is larger than the current one
+//			if(d6min < 0.0001 && l>idx1) // inside
+//			{
+//				break;
+//			}
+//		}
+//
+//		if (l==idx2-1)
+//		{
+//			d6min = d6min2;
+//			loc_idx_ = idx1;
+//		}
+	}
+
+//	// to prevent unknown locations at start and end
+//	if (d6min > 0.001)
+//	{
+//		loc_idx_ = loc_last_idx_;
+//	}
+//	else
+//	{
+		loc_idx_ = idx_tmp;
+//	}
+	return d6;
 }
 
 double decideLocationInterval(
@@ -366,6 +462,8 @@ int decideCurvature(
 				 l2Norm(minusPoint(curve_mem_[0],	curve_mem_[s]));
 		curve_ -= 1.0;
 	}
+	// HACK TODO
+	if (curve_>0.4) {curve_ = 0.4;}
 	return EXIT_SUCCESS;
 }
 

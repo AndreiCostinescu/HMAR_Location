@@ -64,8 +64,7 @@ void plotDatas(
 void plotDatasGeo(
 	vector<string> title,
 	vector<double> x,
-	vector<vector<vector<double> > > y,
-	vector<int> z);
+	vector<vector<vector<double> > > y);
 
 vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 	vector<point_d> points_,

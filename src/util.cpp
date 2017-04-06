@@ -9,12 +9,6 @@
 
 #include "util.h"
 
-#ifdef PC
-	string SCENE_ = "../Scene/";
-#else
-	string SCENE_ = "Scene/";
-#endif
-
 // ============================================================================
 // Data
 // ============================================================================
@@ -106,14 +100,14 @@ int learning(
 	// *************************************************************[VARIABLES]
 
 	// [ACTION LABELS]*********************************************************
-	path = SCENE_ + "/action_label.txt";
+	path = string(SCN) + "/action_label.txt";
 	if (readFileExt(Graph_, path.c_str(), 2)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 	// *********************************************************[ACTION LABELS]
 
 	// [OBJ MASK]**************************************************************
 	path =
-			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			string(SCN) + Graph_->getScene() + "/" + Graph_->getObject() +
 			"/obj_action_label.txt";
 	if (readFileExt(Graph_, path.c_str(), 1)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
@@ -121,7 +115,7 @@ int learning(
 
 	// [SAVED LOCATION]********************************************************
 	path =
-			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
+			string(SCN) + Graph_->getScene() + "/" + Graph_->getObject() +
 			"/location_area.txt";
 	readFileExt(Graph_, path.c_str(), 0);
 	// ********************************************************[SAVED LOCATION]
@@ -137,8 +131,8 @@ int learning(
 		file_eof[i] = data.size();
 		point_d face; // use of 10 is just random
 		face.x = atof(data[file_eof[i]-10][5].c_str());
-		face.y = atof(data[file_eof[i]-10][6].c_str())+0.02;
-		face.z = atof(data[file_eof[i]-10][7].c_str())+0.05;
+		face.y = atof(data[file_eof[i]-10][6].c_str())-0.10;
+		face.z = atof(data[file_eof[i]-10][7].c_str())-0.05;
 		face.l = UNCLASSIFIED;
 		faces.push_back(face);
 	}
@@ -154,18 +148,15 @@ int learning(
 	int tmp_id1 = 0;
 	for(int i=0;i<n;i++)
 	{
-		if (!strcmp(Graph_->getObject().c_str(),"002"))
+		for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
 		{
-			for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
+			node_tt node_tmp = {};
+			Graph_->getNode(ii, node_tmp);
+			if (!strcmp(node_tmp.name.c_str(),"DRINK") || !strcmp(node_tmp.name.c_str(),"EAT"))
 			{
-				node_tt node_tmp = {};
-				Graph_->getNode(ii, node_tmp);
-				if (!strcmp(node_tmp.name.c_str(),"DRINK") || !strcmp(node_tmp.name.c_str(),"EAT"))
-				{
-					faces[i]. l = 0.010;
-					node_tmp.centroid = faces[i];
-					Graph_->setNode(node_tmp);
-				}
+				faces[i]. l = 0.10;
+				node_tmp.centroid = faces[i];
+				Graph_->setNode(node_tmp);
 			}
 		}
 		// [PREPROCESS DATA]***********************************************
@@ -203,7 +194,7 @@ int learning(
 		tmp_id1 = file_eof[i];
 
 		// Visualize
-		if(0)
+		if(1)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
 			for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
@@ -241,6 +232,7 @@ int testing(
 	vector<vector<point_d> > 	pva_mem; // motion->length
 	vector<vector<int> >		filter_mask;
 	predict_t					predict;
+	vector<predict_t>			predict_mem;
 
 
 	vector<double> 						px;
@@ -254,28 +246,27 @@ int testing(
 	printer(1);
 	// *************************************************************[VARIABLES]
 
-	// [ACTION LABELS]*********************************************************
-	path = SCENE_ + "/action_label.txt";
-	if (readFileExt(Graph_, path.c_str(), 2)==EXIT_FAILURE)
-	{return EXIT_FAILURE;}
-	Graph_->getActionCategory(ac);
-	Graph_->getActionLabel(al);
-	// *********************************************************[ACTION LABELS]
-
-	// [OBJ MASK]**************************************************************
-	path =
-			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
-			"/obj_action_label.txt";
-	if (readFileExt(Graph_, path.c_str(), 1)==EXIT_FAILURE)
-	{return EXIT_FAILURE;}
-	// **************************************************************[OBJ MASK]
-
-	// [SAVED LOCATION]********************************************************
-	path =
-			SCENE_ + Graph_->getScene() + "/" + Graph_->getObject() +
-			"/location_area.txt";
-	readFileExt(Graph_, path.c_str(), 0);
-	// ********************************************************[SAVED LOCATION]
+//	// [ACTION LABELS]*********************************************************
+//	path = string(SCN) + "/action_label.txt";
+//	if (readFileExt(Graph_, path.c_str(), 2)==EXIT_FAILURE)
+//	{return EXIT_FAILURE;}
+//	// *********************************************************[ACTION LABELS]
+//
+//	// [OBJ MASK]**************************************************************
+//	path =
+//			string(SCN) + Graph_->getScene() + "/" + Graph_->getObject() +
+//			"/obj_action_label.txt";
+//	if (readFileExt(Graph_, path.c_str(), 1)==EXIT_FAILURE)
+//	{return EXIT_FAILURE;}
+//	// **************************************************************[OBJ MASK]
+//
+//	// [SAVED LOCATION]********************************************************
+//	path =
+//			string(SCN) + Graph_->getScene() + "/" + Graph_->getObject() +
+//			"/location_area.txt";
+//	if (readFileExt(Graph_, path.c_str(), 0)==EXIT_FAILURE)
+//	{return EXIT_FAILURE;}
+//	// ********************************************************[SAVED LOCATION]
 
 	// [READ FILE]*************************************************************
 	string name;
@@ -312,9 +303,10 @@ int testing(
 		{
 			contact_tmp[iii] =
 					(int)(
-							(float)accumulate(
-									contact.begin()+tmp_id1-30+iii,
-									contact.begin()+tmp_id1+iii, 0) / 30);
+							round(
+									(float)accumulate(
+										contact.begin()+tmp_id1-30+iii,
+										contact.begin()+tmp_id1+iii, 0) / 30));
 		}
 
 
@@ -323,6 +315,9 @@ int testing(
 		printf("******************************************************************************\n");
 
 		// [Initialization] ***************************************************
+		Graph_->getActionCategory(ac);
+		Graph_->getActionLabel(al);
+
 		vector<point_d> point_tmp(
 				points.begin() + tmp_id1,
 				points.begin() + file_eof[i]-1);
@@ -332,13 +327,23 @@ int testing(
 		reshapePredict(predict, Graph_->getNumberOfNodes());
 
 		pva_avg_mem.clear();
-		sm_init = true;
-		label1 = -1;
+		vector<bool> sm_init; for(int is=0;is<Graph_->getNumberOfNodes();is++) sm_init.push_back(true);
+		label1 = 0; //###TODO:HACK ALWAYS START AT 0
 		Graph* Graph_update = new Graph(*Graph_);
 
 		px.clear();
-		py.resize(Graph_->getNumberOfNodes());
+		py.resize(ac["GEOMETRIC"].second-ac["GEOMETRIC"].first+1);
 		for(int ii=0;ii<al.size();ii++) {pyy.push_back(py);}
+
+		vector<map<string, double> > p_tmp;
+		Graph_->getPredictionReset(p_tmp);
+		Graph_->setPrediction(p_tmp);
+
+		vector<double> prob_tmp;
+		int decide = -1;
+
+		string out1 = "";
+		string out2 = "";
 		// *************************************************** [Initialization]
 		for(int ii=0;ii<point_tmp.size();ii++)
 		{
@@ -356,82 +361,160 @@ int testing(
 						pva_avg_mem,
 						curve_mem,
 						delta_t_mem,
-						predict,
+						predict_mem,
 						label1,
 						last_loc,
 						sm_init,
 						false);
 			}
+//			else
+//			{
+//				vector<map<string, double> > p_tmp;
+//				Graph_->getPredictionReset(p_tmp);
+//				Graph_->setPrediction(p_tmp);
+//			}
 
 			Graph_->getPrediction(prediction);
 
-			if (prediction.size()>0)
+			px.push_back(ii);
+			for(int iii=0;iii<(ac["GEOMETRIC"].second-ac["GEOMETRIC"].first+1);iii++)
 			{
-				px.push_back(ii);
-				for(int iii=0;iii<Graph_->getNumberOfNodes();iii++)
-				{
-					int c = 0;
-					pyy[c][iii].push_back(prediction[iii]["EAT"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["DRINK"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["WASH"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["THROW"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["KEEP"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["REST"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["CUT"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["CLEAN"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["SCAN"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["WINDOW"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["SLIDE"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["CURVE"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["MOVE"]); c++;
-					pyy[c][iii].push_back(prediction[iii]["STOP"]);
-				}
+				int c = 0;
+				pyy[c][iii].push_back(prediction[iii]["EAT"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["DRINK"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["WASH"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["THROW"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["KEEP"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["REST"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["CUT"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["CLEAN"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["SCAN"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["WINDOW"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["SLIDE"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["CURVE"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["MOVE"]); c++;
+				pyy[c][iii].push_back(prediction[iii]["STOP"]);
 			}
 
-//				if (ii>800)
-//				{
-//					vector<point_d> point_zero; vector<string> label_zero;
-//					for(int iii=0;iii<ii+1;iii++) point_zero.push_back(pva_avg[iii][0]);
-//					vector<vector<unsigned char> > color_code; colorCode(color_code);
-//					showConnection(Graph_update, point_zero, label_zero, color_code, true);
-//				}
-
-		}
-
-		{
-			vector<string> al_tmp(
-					al.begin() + ac["GEOMETRIC"].first,
-					al.begin() + ac["GEOMETRIC"].second+1);
-			vector<vector<vector<double> > > pyyy(
-					pyy.begin() + ac["GEOMETRIC"].first,
-					pyy.begin() + ac["GEOMETRIC"].second+1);
-			vector<int> z;
-			z.resize(ac["GEOMETRIC"].second - ac["GEOMETRIC"].first + 1);
-			for(int ii=0;ii<z.size();ii++)
+			if (contact_tmp[ii]==0)
 			{
-				z[ii] = -1;
-				for(int iii=0;iii<Graph_->getNumberOfNodes();iii++)
-				{
-					node_tt node_tmp = {};
-					Graph_->getNode(iii,node_tmp);
-					if(!strcmp(node_tmp.name.c_str(),al_tmp[ii].c_str()))
-					{
-						z[ii] = iii;
-						break;
-					}
-				}
+				out1 = "[---] NO CONTACT\n";
+				if(strcmp(out1.c_str(),out2.c_str()))
+					printf("%s", out1.c_str());
+				out2 = out1;
+				continue;
 			}
-			plotDatasGeo(al_tmp,px,pyyy,z);
+
+			if (pva_avg[ii][0].l<0)
+			{
+				prob_tmp.clear();
+				prob_tmp.resize(ac["GEOMETRIC"].second-ac["GEOMETRIC"].first+1);
+				for(int iii=ac["GEOMETRIC"].first;
+						iii<ac["GEOMETRIC"].second+1;
+						iii++)
+				{
+					prob_tmp[iii] = prediction[iii][al[iii]];
+				}
+				if (*max_element(prob_tmp.begin(), prob_tmp.end()) <= 0)
+				{
+//					out1 = to_string(ii) + "[GLA] UNKNOWN GOAL ";
+					out1 = "[GLA] UNKNOWN GOAL ";
+				}
+				else
+				{
+					decide =
+							distance(
+									prob_tmp.begin(),
+									max_element(
+										   prob_tmp.begin(),
+										   prob_tmp.end()));
+//					out1 = to_string(ii) + "[GLA] " + al[decide] + " ";
+					out1 = "[GLA] " + al[decide] + " ";
+				}
+
+				prob_tmp.clear();
+				prob_tmp.resize(ac["MOVEMENT"].second-ac["MOVEMENT"].first+1);
+				for(int iii=ac["MOVEMENT"].first;
+						iii<ac["MOVEMENT"].second+1;
+						iii++)
+				{
+					prob_tmp[iii-ac["MOVEMENT"].first] = prediction[decide][al[iii]];
+				}
+				if (*max_element(prob_tmp.begin(), prob_tmp.end()) <= 0)
+				{
+					out1 += "[MOV] UNKNOWN MOV ";
+				}
+				else
+				{
+					out1 += "[MOV] " + al[ ac["MOVEMENT"].first +
+										   distance(
+												   prob_tmp.begin(),
+												   max_element(
+														   prob_tmp.begin(),
+														   prob_tmp.end()))] + " ";
+				}
+
+				prob_tmp.clear();
+				prob_tmp.resize(ac["GENERIC"].second-ac["GENERIC"].first+1);
+				for(int iii=ac["GENERIC"].first;
+						iii<ac["GENERIC"].second+1;
+						iii++)
+				{
+					prob_tmp[iii-ac["GENERIC"].first] = prediction[decide][al[iii]];
+				}
+				if (*max_element(prob_tmp.begin(), prob_tmp.end()) <= 0)
+				{
+					out1 += "[GEN] UNKNOWN GEN\n";
+					if(strcmp(out1.c_str(),out2.c_str()))
+						printf("%s", out1.c_str());
+					out2 = out1;
+				}
+				else
+				{
+					out1 += "[GEN] " + al[ ac["GENERIC"].first +
+										   distance(
+												   prob_tmp.begin(),
+												   max_element(
+														   prob_tmp.begin(),
+														   prob_tmp.end()))] + "\n";
+					if(strcmp(out1.c_str(),out2.c_str()))
+						printf("%s", out1.c_str());
+					out2 = out1;
+				}
+
+			}
+			else
+			{
+				node_tt node_tmp = {};
+				Graph_->getNode(pva_avg[ii][0].l, node_tmp);
+//				out1 = to_string(ii) + "[CLA] " + node_tmp.name + "\n";
+				out1 = "[CLA] " + node_tmp.name + "\n";
+				if(strcmp(out1.c_str(),out2.c_str()))
+					printf("%s", out1.c_str());
+				out2 = out1;
+			}
 		}
-		{
-			vector<string> al_tmp(
-					al.begin() + ac["MOVEMENT"].first,
-					al.begin() + ac["MOVEMENT"].second+1);
-			vector<vector<vector<double> > > pyyy(
-					pyy.begin() + ac["MOVEMENT"].first,
-					pyy.begin() + ac["MOVEMENT"].second+1);
-			plotDatas(al_tmp,px,pyyy);
-		}
+
+//		{
+//			vector<string> al_tmp(
+//					al.begin() + ac["GEOMETRIC"].first,
+//					al.begin() + ac["GEOMETRIC"].second+1);
+//			vector<vector<vector<double> > > pyyy(
+//					pyy.begin() + ac["GEOMETRIC"].first,
+//					pyy.begin() + ac["GEOMETRIC"].second+1);
+//			plotDatasGeo(al_tmp,px,pyyy);
+//		}
+//
+//		{
+//			vector<string> al_tmp(
+//					al.begin() + ac["MOVEMENT"].first,
+//					al.begin() + ac["MOVEMENT"].second+1);
+//			vector<vector<vector<double> > > pyyy(
+//					pyy.begin() + ac["MOVEMENT"].first,
+//					pyy.begin() + ac["MOVEMENT"].second+1);
+//			plotDatas(al_tmp,px,pyyy);
+//		}
+
 		{
 			vector<string> al_tmp(
 					al.begin() + ac["GENERIC"].first,

@@ -1,0 +1,11 @@
+Locations,2
+Location Intervals,200
+Sector Intervals,72
+Edge,0,Number,0
+0
+Edge,0,Number,1
+18
+Edge,1,Number,0
+13
+Edge,1,Number,1
+0

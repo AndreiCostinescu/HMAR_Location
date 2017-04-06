@@ -1127,6 +1127,8 @@ void plotDatas(
 	view->GetRenderer()->SetBackground(1.0, 1.0, 1.0);
 	view->GetRenderer()->GetRenderWindow()->SetSize(1600,800); //(width, height)
 
+	vector<vector<unsigned char> > cc; colorCode(cc);
+
 	for(int i=0;i<title.size();i++)
 	{
 		vtkRectf tmp(
@@ -1181,9 +1183,14 @@ void plotDatas(
 	#else
 			line->SetInputData(table, 0, ii+1);
 	#endif
-			line->SetColor(255, 0, 0, 255);
+			line->SetColor(cc[ii+1][0], cc[ii+1][1], cc[ii+1][2], 255);
 			line->SetWidth(2.0);
 		}
+
+		// 0 for y, 1 for x
+		chart->GetAxis(0)->SetBehavior(vtkAxis::FIXED);
+		chart->GetAxis(0)->SetMinimum(0.0);
+		chart->GetAxis(0)->SetMaximum(1.0);
 	}
 
 	// Start interactor
@@ -1195,8 +1202,7 @@ void plotDatas(
 void plotDatasGeo(
 	vector<string> title,
 	vector<double> x,
-	vector<vector<vector<double> > > y,
-	vector<int> z)
+	vector<vector<vector<double> > > y)
 {
 	vtkSmartPointer<vtkTable> 		table;
 	vtkSmartPointer<vtkFloatArray> 	arrX;
@@ -1209,6 +1215,9 @@ void plotDatasGeo(
 	// Set up the view
 	view->GetRenderer()->SetBackground(1.0, 1.0, 1.0);
 	view->GetRenderer()->GetRenderWindow()->SetSize(1600,800); //(width, height)
+
+
+	vector<vector<unsigned char> > cc; colorCode(cc);
 
 	for(int i=0;i<title.size();i++)
 	{
@@ -1231,6 +1240,7 @@ void plotDatasGeo(
 
 		for(int ii=0;ii<y[i].size();ii++)
 		{
+			if(ii!=i) continue;
 			arrY = vtkSmartPointer<vtkFloatArray>::New();
 			arrY->SetName(string("Y" + to_string(ii+1) + " Axis").c_str()); //to_string is c++11
 			table->AddColumn(arrY);
@@ -1245,21 +1255,11 @@ void plotDatasGeo(
 
 		for(int ii=0;ii<y[i].size();ii++)
 		{
-			if(z[i]!=ii)
+			if(ii!=i) continue;
+			// Fill in the table with values
+			for (int iii=0;iii<y[i][ii].size();++iii)
 			{
-				// Fill in the table with values
-				for (int iii=0;iii<y[i][ii].size();++iii)
-				{
-					table->SetValue(iii, ii+1, 0.0);
-				}
-			}
-			else
-			{
-				// Fill in the table with values
-				for (int iii=0;iii<y[i][ii].size();++iii)
-				{
-					table->SetValue(iii, ii+1, y[i][ii][iii]);
-				}
+				table->SetValue(iii, 1, y[i][ii][iii]);
 			}
 		}
 
@@ -1269,13 +1269,14 @@ void plotDatasGeo(
 		vtkPlot *line;
 		for(int ii=0;ii<y[i].size();ii++)
 		{
+			if(ii!=i) continue;
 			line = chart->AddPlot(vtkChart::LINE);
 	#if VTK_MAJOR_VERSION <= 5
 			line->SetInput(table, 0, ii+1);
 	#else
-			line->SetInputData(table, 0, ii+1);
+			line->SetInputData(table, 0, 1);
 	#endif
-			line->SetColor(255, 0, 0, 255);
+			line->SetColor(cc[ii+1][0], cc[ii+1][1], cc[ii+1][2], 255);
 			line->SetWidth(2.0);
 		}
 	}

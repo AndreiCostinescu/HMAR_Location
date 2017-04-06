@@ -96,6 +96,7 @@
 #include <vtkSmoothPolyDataFilter.h>
 #include <vtkLight.h>
 #include <vtkRect.h>
+#include <vtkAxis.h>
 
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_bspline.h>
@@ -113,6 +114,9 @@ using namespace std;
 	#define InsertNextTypedTuple InsertNextTupleValue
 	#include <opencv2/opencv.hpp>
 	using namespace cv;
+	#define SCN "../Scene/"
+#else
+	#define SCN "Scene/"
 #endif
 
 #define CRED "\x1B[31m"
@@ -135,16 +139,21 @@ using namespace std;
 //3 : label only
 #define VERBOSE 3
 
-#define CLUSTER_LIMIT 0.2
+#define CLUSTER_LIMIT 0.15
 
 #define FILTER_WIN 15
 
 #define BOUNDARY_VAR 0.01
+#define P_WIN_VAR 0.001
+#define P_SEC_VAR 0.0005
+#define P_LOC_VAR 0.0005
+#define P_DDD_VAR 0.0005
+#define P_ERR_VAR 0.01
 
 #define CONTACT_TRIGGER_RATIO 0.65
 
 #define DBSCAN_EPS 0.015
-#define DBSCAN_MIN 10
+#define DBSCAN_MIN 5
 #define DBSCAN_EPS_MOV 0.015
 #define DBSCAN_MIN_MOV 8
 #define MAX_RANGE 0.05
@@ -289,13 +298,14 @@ typedef struct predict_s predict_t;
 struct predict_s
 {
 	double 			velocity; // velocity limit 0/1
-	vector<double> 	curvature; // curvature value : 1 for line
+	double 			curvature; // curvature value : 1 for line
 	vector<double>	range; // in or outside
 	vector<double> 	err; // prediction error = diff from the sectormap
 	vector<double> 	pct_err; // prob shared between multiple predictions of inside
 	vector<double>	err_diff; // change in the error compared to original
 	vector<double>	pct_err_diff; // change in the error compared to original
 	vector<double>	oscillate; // repetitive movement
+	vector<double>	ddl; // rate of change of loc int
 	vector<double>	window; // knot in trajectory
 };
 

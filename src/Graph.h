@@ -88,6 +88,12 @@ public:
 		x_ = prediction_reset;
 	}
 
+	void getPredictionInit(
+		map<string, double> &x_)
+	{
+		x_ = prediction_init;
+	}
+
 	void getPrediction(
 		vector<map<string, double> > &x_)
 	{
