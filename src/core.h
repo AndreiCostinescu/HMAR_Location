@@ -21,6 +21,19 @@ int decideBoundary(
 	point_d 		&point2_,
 	vector<point_d> locations_);
 
+int decideBoundary_(
+	point_d 				&point1_,
+	point_d 				&point2_,
+	vector<point_d> 		centroids_,
+	vector<int>				surfaces_flag_,
+	vector<vector<double> > surfaces_,
+	vector<double>			surfaces_limit);
+
+bool decideSurface(
+	point_d 		centroids_,
+	vector<double>	surfaces_,
+	double 			limit_);
+
 double dLI(
 	int &loc_idx_,
 	int loc_last_idx_,

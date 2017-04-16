@@ -45,6 +45,57 @@ int decideBoundary(
 	return EXIT_SUCCESS;
 }
 
+int decideBoundary_(
+	point_d 				&point1_,
+	point_d 				&point2_,
+	vector<point_d> 		centroids_,
+	vector<int>				surfaces_flag_,
+	vector<vector<double> > surfaces_,
+	vector<double>			surfaces_limit)
+{
+	point2_.l = UNCLASSIFIED;
+	for(int ii=0;ii<centroids_.size();ii++)
+	{
+		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
+		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
+		if (max_(location_contact, centroids_[ii].l)) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
+		{
+			point2_.l = ii;
+			if ( surfaces_flag_[point2_.l] > 0)
+			{
+				if (!decideSurface(
+						point2_,
+						surfaces_[surfaces_flag_[point2_.l]-1],
+						surfaces_limit[surfaces_flag_[point2_.l]-1]))
+				{
+					point2_.l = UNCLASSIFIED;
+				}
+			}
+		}
+	}
+	return EXIT_SUCCESS;
+}
+
+bool decideSurface(
+	point_d 		centroids_,
+	vector<double>	surfaces_,
+	double 			limit_)
+{
+//	cout << fabs(centroids_.x * surfaces_[0] +
+//			centroids_.y * surfaces_[1] +
+//			centroids_.z * surfaces_[2] -
+//			surfaces_[3]) << endl;
+	if(fabs(centroids_.x * surfaces_[0] +
+			centroids_.y * surfaces_[1] +
+			centroids_.z * surfaces_[2] -
+			surfaces_[3])<limit_)
+	{
+		return true;
+	}
+	return false;
+}
+
 double dLI(
 	int &loc_idx_,
 	int loc_last_idx_,
@@ -81,7 +132,7 @@ double dLI(
 				point2vector(tangent_[l])))
 		{
 			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2;}
-			if (d4<=d2 && (d3-d5) < 0.005) //### TODO small error deviation (deadzone)
+			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
 			{
 				d6 = d3-d5;
 			}
@@ -89,7 +140,7 @@ double dLI(
 		else
 		{
 			if (l == idx1)	{d6min2 = d4-d5; d6 = d6min2;}
-			if (d3<=d1 && (d4-d5) < 0.005)
+			if (d3<=d1 && (d4-d5) < 0.01)
 			{
 				d6 = d4-d5;
 			}
@@ -112,15 +163,15 @@ double dLI(
 			}
 		}
 
-		if (l==idx2-1)
-		{
-			d6min = d6min2;
-			loc_idx_ = idx1;
-		}
+//		if (l==idx2-1)
+//		{
+//			d6min = d6min2;
+//			loc_idx_ = idx1;
+//		}
 	}
 
 	// to prevent unknown locations at start and end
-	if (d6min > 0.001)
+	if (d6min > 0.001 && loc_init_)
 	{
 		loc_idx_ = loc_last_idx_;
 	}
@@ -435,6 +486,14 @@ int decideSectorInterval(
 					point2vector(multiPoint(delta_t_,1/l2Norm(delta_t_)))),
 			point2vector(tangent_[loc_idx_])))
 	{angle_tmp *= -1;}
+//	cout << "A: " << l2Norm(normal_[loc_idx_]) << endl;
+//	cout << "AA: " << l2Norm(
+//			crossProduct(
+//					point2vector(delta_t_),
+//					point2vector(normal_[loc_idx_]))) << endl;
+//	cout << "AB: " << dotProduct(
+//			point2vector(delta_t_),
+//			point2vector(normal_[loc_idx_])) << endl;
 	angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
 	sec_idx_ = ceil(angle_tmp*(SEC_INT/2)/M_PI) - 1 ;
 	return EXIT_SUCCESS;

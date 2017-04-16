@@ -141,14 +141,16 @@ using namespace std;
 
 #define CLUSTER_LIMIT 0.15
 
+//#define SURFACE_LIMIT 0.05
+
 #define FILTER_WIN 15
 
-#define BOUNDARY_VAR 0.01
+#define BOUNDARY_VAR 0.1
 #define P_WIN_VAR 0.001
 #define P_SEC_VAR 0.0005
 #define P_LOC_VAR 0.0005
 #define P_DDD_VAR 0.0005
-#define P_ERR_VAR 0.01
+#define P_ERR_VAR 0.001
 
 #define CONTACT_TRIGGER_RATIO 0.65
 
@@ -157,8 +159,8 @@ using namespace std;
 #define DBSCAN_EPS_MOV 0.015
 #define DBSCAN_MIN_MOV 8
 #define MAX_RANGE 0.05
-#define	LOC_INT 200
-#define	SEC_INT 72
+#define	LOC_INT 100
+#define	SEC_INT 36
 
 // number of fit coefficients
 // nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4 (for cubic b-spline)
@@ -248,10 +250,9 @@ struct node_ss
 {
 	string 			name;
 	int 			index;
-	int 			category; //moving???
-	point_d 		centroid;
 	int				surface;
-	double 			surface_boundary;
+	int				contact;
+	point_d 		centroid;
 	vector<data_t> 	data;
 };
 
@@ -298,7 +299,7 @@ typedef struct predict_s predict_t;
 struct predict_s
 {
 	double 			acc; // acc
-	double 			velocity; // velocity limit 0/1
+	double 			vel; // velocity limit 0/1
 	double 			curvature; // curvature value : 1 for line
 	vector<double>	range; // in or outside
 	vector<double> 	err; // prediction error = diff from the sectormap
@@ -328,6 +329,31 @@ struct limit_s
 	double vel;
 	double sur_dis;
 	double sur_ang;
+};
+
+typedef struct kb_s kb_t;
+struct kb_s
+{
+	map<int,vector<string> > 			label;
+	vector<double> 						surface_lim;
+	vector<vector<double> > 			surface_eq;
+	vector<point_d> 					surface;
+	map<string,pair<int,int> > 			ac;
+	vector<string> 						al;
+	map<string,pair<string,string> >	ol;
+};
+
+typedef struct state_s state_t;
+struct state_s
+{
+	bool grasp;		// if it is grasped
+	int label1;		// last node
+	int label2;		// next node
+	double pct_err;	// highest probability
+	map<string,double> goal;	// highest probability
+	double mov;		// whether it is moving
+	int con;		// surface contact
+	int sur;		// which surface
 };
 
 #endif /* DATADECLARATION_H_ */

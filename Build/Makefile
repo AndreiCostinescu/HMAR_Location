@@ -114,6 +114,30 @@ depend:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/build
 .PHONY : ../HMAR/fast
 
+src/Evaluate.o: src/Evaluate.cpp.o
+.PHONY : src/Evaluate.o
+
+# target to build an object file
+src/Evaluate.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Evaluate.cpp.o
+.PHONY : src/Evaluate.cpp.o
+
+src/Evaluate.i: src/Evaluate.cpp.i
+.PHONY : src/Evaluate.i
+
+# target to preprocess a source file
+src/Evaluate.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Evaluate.cpp.i
+.PHONY : src/Evaluate.cpp.i
+
+src/Evaluate.s: src/Evaluate.cpp.s
+.PHONY : src/Evaluate.s
+
+# target to generate assembly for a file
+src/Evaluate.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Evaluate.cpp.s
+.PHONY : src/Evaluate.cpp.s
+
 src/Graph.o: src/Graph.cpp.o
 .PHONY : src/Graph.o
 
@@ -137,6 +161,78 @@ src/Graph.s: src/Graph.cpp.s
 src/Graph.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Graph.cpp.s
 .PHONY : src/Graph.cpp.s
+
+src/Prediction.o: src/Prediction.cpp.o
+.PHONY : src/Prediction.o
+
+# target to build an object file
+src/Prediction.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.o
+.PHONY : src/Prediction.cpp.o
+
+src/Prediction.i: src/Prediction.cpp.i
+.PHONY : src/Prediction.i
+
+# target to preprocess a source file
+src/Prediction.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.i
+.PHONY : src/Prediction.cpp.i
+
+src/Prediction.s: src/Prediction.cpp.s
+.PHONY : src/Prediction.s
+
+# target to generate assembly for a file
+src/Prediction.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.s
+.PHONY : src/Prediction.cpp.s
+
+src/ReadFile.o: src/ReadFile.cpp.o
+.PHONY : src/ReadFile.o
+
+# target to build an object file
+src/ReadFile.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ReadFile.cpp.o
+.PHONY : src/ReadFile.cpp.o
+
+src/ReadFile.i: src/ReadFile.cpp.i
+.PHONY : src/ReadFile.i
+
+# target to preprocess a source file
+src/ReadFile.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ReadFile.cpp.i
+.PHONY : src/ReadFile.cpp.i
+
+src/ReadFile.s: src/ReadFile.cpp.s
+.PHONY : src/ReadFile.s
+
+# target to generate assembly for a file
+src/ReadFile.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ReadFile.cpp.s
+.PHONY : src/ReadFile.cpp.s
+
+src/TestCase.o: src/TestCase.cpp.o
+.PHONY : src/TestCase.o
+
+# target to build an object file
+src/TestCase.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/TestCase.cpp.o
+.PHONY : src/TestCase.cpp.o
+
+src/TestCase.i: src/TestCase.cpp.i
+.PHONY : src/TestCase.i
+
+# target to preprocess a source file
+src/TestCase.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/TestCase.cpp.i
+.PHONY : src/TestCase.cpp.i
+
+src/TestCase.s: src/TestCase.cpp.s
+.PHONY : src/TestCase.s
+
+# target to generate assembly for a file
+src/TestCase.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/TestCase.cpp.s
+.PHONY : src/TestCase.cpp.s
 
 src/algo.o: src/algo.cpp.o
 .PHONY : src/algo.o
@@ -411,9 +507,21 @@ help:
 	@echo "... ../HMAR"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... src/Evaluate.o"
+	@echo "... src/Evaluate.i"
+	@echo "... src/Evaluate.s"
 	@echo "... src/Graph.o"
 	@echo "... src/Graph.i"
 	@echo "... src/Graph.s"
+	@echo "... src/Prediction.o"
+	@echo "... src/Prediction.i"
+	@echo "... src/Prediction.s"
+	@echo "... src/ReadFile.o"
+	@echo "... src/ReadFile.i"
+	@echo "... src/ReadFile.s"
+	@echo "... src/TestCase.o"
+	@echo "... src/TestCase.i"
+	@echo "... src/TestCase.s"
 	@echo "... src/algo.o"
 	@echo "... src/algo.i"
 	@echo "... src/algo.s"

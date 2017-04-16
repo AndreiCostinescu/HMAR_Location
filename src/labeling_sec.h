@@ -79,10 +79,10 @@ int adjustCurve(
 int adjustCurveExt(
 	Graph *Graph_,
 	vector<point_d> coeffs_,
-	int point1_idx_,
-	int point2_idx_,
+	int integral_limit_,
 	int label1_,
-	int label2_);
+	int label2_,
+	vector<point_d> pts_);
 
 int fitSectorMap(
 	edge_tt &edge_,

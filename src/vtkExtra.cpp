@@ -81,13 +81,16 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 			if (picker->GetActor()!=0)
 			{
 				double* pos = picker->GetPickPosition();
+//				cout << pos[0] << " ";
+//				cout << pos[1] << " ";
+//				cout << pos[2] << endl;
 				picker->GetActor()
 					  ->GetMapper()->GetInput()
 					  ->GetPointData()->GetScalars()
 					  ->GetTuple(picker->GetPointId(),rgb);
 			}
 
-			for(int i = 0;i<num_locations;i++)
+			for(int i=0;i<num_locations;i++)
 			{
 				if (rgb[0]==color_[i+1][0] &&
 					rgb[1]==color_[i+1][1] &&
@@ -99,7 +102,7 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 					}
 					printf(">>>>> Select label from list by entering the number : ");
 					string mystr; getline (cin, mystr);
-					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) >= 6)
+					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) >= 5)
 					{
 						printf(CYEL ">>>>> [WARNING] : Please choose only from the listed numbers.\n" CNOR);
 						printf(">>>>> Pick a location with color.");
@@ -831,142 +834,6 @@ void showConnection(
 	renWinInter->SetInteractorStyle(style);
 	renWin->Render();
 	renWinInter->Start();
-}
-
-void showConnectionTest(
-	vector<point_d> points_,
-	vector<string> &labels_,
-	Graph Graph_,
-	vector<vector<unsigned char> > color_,
-	bool show_points)
-{
-	vector<node_tt> nodes 			= Graph_.getNodeList();
-	sector_para_t sector_para 		= Graph_.getSectorPara();
-	vector<vector<edge_tt> > sector = Graph_.getEdgeList();
-
-	double orientation[3];
-
-	int num_locations = nodes.size();
-
-	vector<point_d> locations; locations.resize(num_locations);
-	for(int i=0;i<num_locations;i++) {locations[i] = nodes[i].centroid;}
-
-
-	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
-	vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkDoubleArray> tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
-	vtkSmartPointer<vtkTubeFilter> tube = vtkSmartPointer<vtkTubeFilter>::New();
-	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-
-for(int iii=0;iii<20;iii++)
-{
-	points = vtkSmartPointer<vtkPoints>::New();
-	lines = vtkSmartPointer<vtkCellArray>::New();
-	polyData = vtkSmartPointer<vtkPolyData>::New();
-	tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
-	tube = vtkSmartPointer<vtkTubeFilter>::New();
-	mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-	actor = vtkSmartPointer<vtkActor>::New();
-
-	// Create points and cells for the spiral
-	for(int i = 0; i < 1; i++)
-	{
-		points->InsertPoint(i*2+0,
-			sector[1][0].loc_start[i+iii].x ,
-			sector[1][0].loc_start[i+iii].y,
-			sector[1][0].loc_start[i+iii].z);
-		points->InsertPoint(i*2+1,
-			sector[1][0].loc_end[i+iii].x ,
-			sector[1][0].loc_end[i+iii].y,
-			sector[1][0].loc_end[i+iii].z);
-	}
-
-//	for(int ii = 0; ii < 5; ii++)
-//	{
-//	cout << sector[1][0].loc_start[ii].x << " " <<
-//			sector[1][0].loc_start[ii].y << " " <<
-//			sector[1][0].loc_start[ii].z << " " <<
-//			sector[1][0].loc_end[ii].x << " " <<
-//			sector[1][0].loc_end[ii].y << " " <<
-//			sector[1][0].loc_end[ii].z << " " << endl;
-//	}
-
-	lines->InsertNextCell(2);
-	for (int i = 0; i < 2; i++)
-	{
-		lines->InsertCellPoint(i);
-	}
-
-	polyData->SetPoints(points);
-	polyData->SetLines(lines);
-
-	// Varying tube radius using sine-function
-	tubeRadius->SetName("TubeRadius");
-	tubeRadius->SetNumberOfTuples(2);
-	for (int i=0 ;i<2 ; i++)
-	{
-		tubeRadius->SetTuple1(i, 0.01);
-	}
-	polyData->GetPointData()->AddArray(tubeRadius);
-	polyData->GetPointData()->SetActiveScalars("TubeRadius");
-
-
-	#if VTK_MAJOR_VERSION <= 5
-	  tube->SetInput(polyData);
-	#else
-	  tube->SetInputData(polyData);
-	#endif
-	  tube->SetNumberOfSides(10);
-	  tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
-
-
-	mapper->SetInputConnection(tube->GetOutputPort());
-	mapper->ScalarVisibilityOn();
-	mapper->SetScalarModeToUsePointFieldData();
-
-	actor->SetMapper(mapper);
-
-
-	renderer->AddActor(actor);
-
-}
-
-// [ADDING DATA]***********************************************************
-if (show_points)
-{
-	vtkSmartPointer<vtkPolyDataMapper> 	mapper;
-	vtkSmartPointer<vtkActor> 			actor;
-	mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-	actor  = vtkSmartPointer<vtkActor>::New();
-	mapper =  dataPoints(points_, num_locations, color_, true);
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetPointSize(5);
-	renderer->AddActor(actor);
-}
-// ***********************************************************[ADDING DATA]
-
-
-	renderer->SetBackground(.2, .3, .4);
-
-	vtkSmartPointer<vtkRenderWindow> renWin =
-	vtkSmartPointer<vtkRenderWindow>::New();
-	vtkSmartPointer<vtkRenderWindowInteractor>
-	iren = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-
-	iren->SetRenderWindow(renWin);
-	renWin->AddRenderer(renderer);
-	renWin->SetSize(500, 500);
-	renWin->Render();
-
-	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
-	vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-	iren->SetInteractorStyle(style);
-
-	iren->Start();
-
 }
 
 void plotData(

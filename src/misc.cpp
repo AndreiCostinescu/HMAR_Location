@@ -98,10 +98,10 @@ int printer(
 			break;
 		case 25:
 			printf(CRED "# Folder with data is missing.................................................\n" CNOR);
-			printf(CRED "# Reading data folders..................................................FAILED\n" CNOR);
+			printf(CRED "# Reading data folder...................................................FAILED\n" CNOR);
 			break;
 		case 26:
-			printf("# Reading data folders.................................................SUCCESS\n");
+			printf("# Reading data folder..................................................SUCCESS\n");
 			break;
 		case 27:
 			printf(CRED "# Individual folder with data is missing......................................\n" CNOR);
@@ -118,6 +118,50 @@ int printer(
 			break;
 		case 31:
 			printf(CYEL "# Current action is creating a huge sector map, action will be ignored........\n" CNOR);
+			break;
+		case 32:
+			printf(CRED "# Subject folder is missing...................................................\n" CNOR);
+			printf(CRED "# Reading subject folder................................................FAILED\n" CNOR);
+			break;
+		case 33:
+			printf("# Reading subject folder...............................................SUCCESS\n");
+			break;
+		case 34:
+			printf(CRED "# Label is missing............................................................\n" CNOR);
+			printf(CRED "# Reading label.........................................................FAILED\n" CNOR);
+			break;
+		case 35:
+			printf("# Reading label........................................................SUCCESS\n");
+			break;
+		case 36:
+			printf(CRED "# Label is empty..............................................................\n" CNOR);
+			printf(CRED "# Reading label file....................................................FAILED\n" CNOR);
+			break;
+		case 37:
+			printf("# Reading label file...................................................SUCCESS\n");
+			break;
+		case 38:
+			printf(CRED "# Surface file is empty.......................................................\n" CNOR);
+			printf(CRED "# Reading surface file..................................................FAILED\n" CNOR);
+			break;
+		case 39:
+			printf("# Reading surface file.................................................SUCCESS\n");
+			break;
+		case 40:
+			printf("# Surface contact check................................................SUCCESS\n");
+			break;
+		case 41:
+			printf("# Reading saved data...................................................SUCCESS\n");
+			break;
+		case 42:
+			printf(CRED "# No saved data found.........................................................\n" CNOR);
+			printf(CRED "# Reading saved data....................................................FAILED\n" CNOR);
+			break;
+		case 43:
+			printf(CRED "# Testing process.......................................................FAILED\n" CNOR);
+			break;
+		case 44:
+			printf(CGRN "# Testing process......................................................SUCCESS\n" CNOR);
 			break;
 		default :
 			printf(CRED "# UNKNOWN COMMAND.............................................................\n" CNOR);

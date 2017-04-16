@@ -19,20 +19,78 @@ public:
 		string scene_,
 		string object_);
 
+	virtual ~Graph(){}
+
 	string getScene()
 	{
 		return scene;
 	}
 
-	string getObject()
+	string getTarget()
 	{
-		return object;
+		return target;
 	}
 
-	void getActionCategory(
-		map<string,pair<int,int> > &x_)
+	kb_t getKB()
 	{
-		x_ = action_cat;
+		kb_t kb_tmp = {};
+		kb_tmp.surface = surface;
+		kb_tmp.surface_eq = surface_eq;
+		kb_tmp.al = action_label;
+		kb_tmp.ac = action_cat;
+		kb_tmp.ol = object_label;
+		return kb_tmp;
+	}
+
+	void setKB(
+		kb_t x_);
+
+	vector<double> getSurfaceLimit()
+	{
+		return surface_lim;
+	}
+
+	void setSurfaceLimit(
+		vector<double> x_)
+	{
+		surface_lim = x_;
+	}
+
+	vector<vector<double> > getSurfaceEq()
+	{
+		return surface_eq;
+	}
+
+	void setSurfaceEq(
+		vector<vector<double> > x_)
+	{
+		surface_eq = x_;
+	}
+
+	vector<point_d> getSurface()
+	{
+		return surface;
+	}
+
+	void setSurface(
+		vector<point_d> x_)
+	{
+		surface = x_;
+	}
+
+	map<string,pair<string,string> > getObjectLabel()
+	{
+		return object_label;
+	}
+
+	void setObjectLabel(map<string,pair<string,string> > object_label_)
+	{
+		object_label = object_label_;
+	}
+
+	map<string,pair<int,int> > getActionCategory()
+	{
+		return action_cat;
 	}
 
 	void setActionCategory(
@@ -41,10 +99,9 @@ public:
 		action_cat = x_;
 	}
 
-	void getActionLabel(
-		vector<string> &x_)
+	vector<string> getActionLabel()
 	{
-		x_ = action_label;
+		return action_label;
 	}
 
 	void setActionLabel(
@@ -106,12 +163,20 @@ public:
 		prediction = x_;
 	}
 
-//	void setFilter(
-//		string name_,
-//		vector<int> val_);
-
 	void addSurface(
 		vector<vector<double> > surface_);
+
+	state_t getState()
+	{
+		return state;
+	}
+
+	void setState(
+		state_t x_)
+	{
+		state = x_;
+	}
+
 
 //=============================================================================
 // NODES
@@ -154,6 +219,8 @@ public:
 	}
 
 	vector<point_d> getCentroidList();
+
+	vector<int> getSurfaceFlagList();
 
 //=============================================================================
 // EDGES
@@ -309,150 +376,9 @@ public:
 		edge_list[n1_][n2_][edge_num_].nor = x_;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	void updateMovLabel(
-		vector<string> movLabel_);
-
-	void extendNode(
-		unsigned int 	node_num_,
-		vector<data_t> 	data_);
-
-	bool checkNode(
-		unsigned int node_index_);
-
-	void updateNodeName(
-		vector<string> names_);
-
-	void updateNodeLocation(
-		vector<point_d> loc_);
-
-
-	void addEdge(
-		vector<data_t>	data_,
-		vector<double>	sector_map_,
-		unsigned int	n1_,
-		unsigned int	n2_,
-		unsigned int	edge_num_);
-
-	void updateEdgeData(
-		vector<data_t>	data_,
-		unsigned int 	n1_,
-		unsigned int 	n2_,
-		unsigned int 	edge_num_);
-
-	void updateEdgeConst(
-		vector<double> 	sector_map_,
-		unsigned int  	n1_,
-		unsigned int  	n2_,
-		unsigned int 	edge_num_);
-
-	void updateEdgeSector(
-		vector<double>	sector_map_,
-		unsigned int  	n1_,
-		unsigned int  	n2_,
-		unsigned int 	edge_num_);
-
-	void updateEdgeNormal(
-		vector<point_d>  normal_,
-		unsigned int  	 n1_,
-		unsigned int  	 n2_,
-		unsigned int 	 edge_num_);
-
-	void updateEdgeTangent(
-		vector<point_d> 	tangent_,
-		unsigned int  		n1_,
-		unsigned int  		n2_,
-		unsigned int 		edge_num_);
-
-	void updateEdgeLocStartMidEnd(
-		vector<point_d> 	start_,
-		vector<point_d> 	mid_,
-		vector<point_d> 	end_,
-		unsigned int  		n1_,
-		unsigned int  		n2_,
-		unsigned int 		edge_num_);
-
-	void updateEdgeLocDist(
-		double 				total_,
-		unsigned int  		n1_,
-		unsigned int  		n2_,
-		unsigned int 		edge_num_);
-
-	void extendEdge(
-		vector<data_t> 	data_,
-		unsigned int 	node_index1_,
-		unsigned int 	node_index2_,
-		unsigned int 	edge_num_);
-
-	bool checkEdge(
-		unsigned int node_index1_,
-		unsigned int node_index2_);
-
-	void updateSectorPara(
-		sector_para_t sector_para_);
-
-	void incrementCounter(
-		int edge_,
-		int edge_num_)
-	{counter[edge_][edge_num_]++;}
-
-
-
-	vector<string> getNodeName();
-
-	vector<double> getInitSector()
-	{return sector_zero;}
-
-	vector<double> getInitSectorConst()
-	{return sector_zero;}
-
-	sector_para_t getSectorPara()
-	{return sector_para;}
-
-	vector<vector<edge_tt> > getEdgeList()
-	{return edges;}
-
-	vector<vector<double> > getNodeDataLabel(
-		bool pos_=false,
-		bool vel_=false,
-		bool acc_=false);
-
-	vector<vector<double> > getEdgeDataLabel(
-		bool pos_=false,
-		bool vel_=false,
-		bool acc_=false);
-
-	vector<vector<double> > getSurface()
-	{return surface;}
-
-
-
-	vector<string> getMovLabel()
-	{return movLabel;}
-
-	int getCounter(
-		int edge_,
-		int edge_num_)
-	{return counter[edge_][edge_num_];}
-
-	virtual ~Graph(){}
-
 private:
 	string 								scene;
-	string 								object;
+	string 								target; // what kind of action set is being evaluated
 	vector<node_tt> 					node_list;
 	vector<vector<vector<edge_tt> > > 	edge_list;
 	map<string, double>					filter_init;
@@ -463,26 +389,14 @@ private:
 	map<string,pair<int,int> >			action_cat;
 	vector<string>						action_label; //fixed given beforehand
 
+	map<string,pair<string,string> > 	object_label;
 
+	vector<point_d> 					surface;
+	vector<vector<double> > 			surface_eq;
+	vector<double> 						surface_lim;
 
-
-	vector<vector<int> >		counter;
-
-	vector<string>				movLabel;
-	vector<double> 				sector_zero;
-	sector_para_t 				sector_para;
-	vector<point_d>				tangent_zero;
-	vector<point_d>				normal_zero;
-	vector<point_d>				loc_start_zero;
-	vector<point_d>				loc_mid_zero;
-	vector<point_d>				loc_end_zero;
-
-	node_tt 					node;
-	edge_tt 					edge;
-	vector<node_tt> 			nodes;
-	vector<vector<edge_tt> > 	edges;
-	vector<vector<double> > 	surface;
-
+	kb_t 								kb;
+	state_t 							state;
 
 };
 

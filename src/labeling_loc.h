@@ -22,26 +22,36 @@ int decideBoundaryExt(
 	vector<point_d> locations_);
 
 int contactBoundary(
-	vector<point_d> &p,
-	vector<point_d> &locations,
-	bool 			learn);
+	vector<point_d> 		&points_,
+	vector<point_d> 		&centroids_,
+	vector<vector<double> > surfaces_eq_,
+	vector<int> 			&surface_flag_,
+	vector<double> 			&surfaces_limit_,
+	bool 					learn_);
 
 int contactCheck(
 	vector<point_d> &points_,
-	vector<int> 	contact_,
-	int 			num_locations_);
+	vector<point_d> &centroids_,
+	vector<int> centroids_flag_,
+	vector<point_d> surfaces_,
+	vector<vector<double> > surfaces_eq_,
+	vector<int> &surface_flag_,
+	vector<double> &surfaces_limit_);
 
 int clusteringExt(
-	vector<point_d> &points_,
-	vector<int> 	contact_,
-	vector<point_d> &locations_,
-	vector<string> 	&labels_,
-	vector<string> 	labels_ref_,
-	bool 			delete_=false);
+	vector<point_d> 		&points_,
+	vector<point_d> 		&centroids_,
+	vector<int> 			&centroids_flag_,
+	vector<int> 			contact_,
+	vector<point_d> 		surfaces_,
+	vector<vector<double> > surfaces_eq_,
+	vector<int> 			&surfaces_flag_,
+	vector<double> 			&surfaces_limit_);
 
 int buildLocationArea(
 	Graph 						*Graph_,
 	vector<vector<point_d> > 	&pos_vel_acc_,
-	vector<int> 				contact_);
+	vector<int> 				contact_,
+	bool						flag_);
 
 #endif /* LABELING_LOC_H_ */

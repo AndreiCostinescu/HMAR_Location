@@ -7,6 +7,8 @@
 
 #include "labeling_sec.h"
 
+bool flagg = false;
+
 stack<clock_t> tictoc_stack;
 void tic() {tictoc_stack.push(clock());}
 void toc()
@@ -628,7 +630,7 @@ int adjustCurve(
 					edge_, points_[1], loc_idx, loc_last_idx_,
 					loc_offset_, loc_init_);
 
-	if (tmpdlie > 0.001)
+	if (tmpdlie > 0.01)
 	{
 		if(mem || loc_last_idx_==LOC_INT-1)
 		{
@@ -652,7 +654,7 @@ int adjustCurve(
 
 	if (loc_idx>10) //offset because we shift back 10 at beginning
 	{
-		for(int l=loc_last_idx_+10;l<loc_idx;l++)
+		for(int l=loc_idx-2;l<loc_idx;l++)
 		{
 			decideSectorIntervalExt(
 					edge_, points_[1], delta_t_zero, sec_idx, l);
@@ -671,7 +673,8 @@ int adjustCurveExt(
 	vector<point_d> coeffs_,
 	int integral_limit_,
 	int label1_,
-	int label2_)
+	int label2_,
+	vector<point_d> pts_)
 {
 	double cx[DEGREE], cy[DEGREE], cz[DEGREE];
 	double N 				= Graph_->getEdgeCounter(label1_,label2_,0);
@@ -814,14 +817,17 @@ int adjustCurveExt(
 					tmpRTI[6]*edge_tmp_mem.nor[l].x +
 					tmpRTI[7]*edge_tmp_mem.nor[l].y +
 					tmpRTI[8]*edge_tmp_mem.nor[l].z;
+
 		}
 		// ***********************************************************[AVERAGE]
+
 		// [SECTOR MAP]********************************************************
 		reshapeVector(edge_tmp.sector_map, LOC_INT*SEC_INT);
 		vector<double> delta_t_mem; delta_t_mem.resize(3);
 
 		for(int l=0;l<LOC_INT;l++)
 		{
+			vector<point_d> p_tmp; int res;
 			for(int s=0;s<SEC_INT;s++)
 			{
 				vector<int> ind_loc;
@@ -850,23 +856,36 @@ int adjustCurveExt(
 										tmpN,
 										edge_tmp_mem.sector_map[l*SEC_INT+s]));
 				// *************************************************[OLD POINT]
-				for(int ii=2;ii<3;ii++)
+				for(int ii=1;ii<2;ii++)
 				{
 					vector<point_d> points_tmp = {p_old[ii],p_old[ii]};
 					bool tmp_init = false;
 					int last, curr; //##TODO
-					if (l<10) 	{ last = 0; 	curr = 0; }
-					else 		{ last = l-10; 	curr = l-10; }
-					adjustCurve(edge_tmp, points_tmp, last, tmp_init, 20);
+					if (l<20) 	{ last = 0; 	curr = 0; }
+					else 		{ last = l-20; 	curr = l-20; }
+					res = adjustCurve(edge_tmp, points_tmp, last, tmp_init, 40);
 				}
+				p_tmp.push_back(p_old[1]);
 			} //s
+
+//			Graph_->setEdge(label1_, label2_, 0, edge_tmp);
+//			//VISUALIZE
+//			if(flagg)
+//			{
+//				cout << res << endl;
+//				vector<point_d> point_zero; vector<string> label_zero;
+//				vector<vector<unsigned char> > color_code; colorCode(color_code);
+//				showConnection(Graph_, p_tmp, label_zero, color_code, true);
+//			}
 
 			//for(int i=1;i<3;i++) { if (loc_last[i-1]>loc_last[i]) { init[i]	= init[i-1]; loc_last[i] = loc_last[i-1]; } }
 
 		} //l
 		// ********************************************************[SECTOR MAP]
+
 	}
 	// ************************************************************[ADJUSTMENT]
+
 	Graph_->setEdge(label1_, label2_, 0, edge_tmp);
 	printer(19);
 	return EXIT_SUCCESS;
@@ -889,8 +908,12 @@ int fitSectorMap(
 	// required for the fitting part only
 	// also for the ending
 
-	if (dLIE(edge_, points_[1],
-			loc_idx, loc_last_idx_, loc_offset_, loc_init_) > 0.001)
+	double tmp =
+			dLIE(
+					edge_, points_[1], loc_idx, loc_last_idx_, loc_offset_,
+					loc_init_);
+
+	if (tmp > 0.01)
 	{
 		if(mem || loc_last_idx_==LOC_INT-1)
 		{
@@ -914,28 +937,28 @@ int fitSectorMap(
 	double delta_t_min	= 0.0;
 	int min_idx 		= 0;
 
-	if (loc_idx==loc_last_idx_)
+//	if (loc_idx==loc_last_idx_)
 	{
 		min_idx		= loc_idx*SEC_INT + sec_idx;
 		min_dist	= l2Norm(minusPoint(points_[1], edge_.loc_mid[loc_idx]));
 		delta_t_min	= l2Norm(delta_t);
 	}
-	else if (loc_idx>loc_last_idx_)
-	{
-		for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
-		{
-			decideSectorIntervalExt(
-					edge_, points_[1], delta_t_zero, sec_idx, ll);
-			int tmp_idx = ll*SEC_INT + sec_idx;
-			if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[ll])),
-					 min_dist))
-			{
-				min_dist	= l2Norm(minusPoint(points_[1], edge_.loc_mid[ll]));
-				delta_t_min	= l2Norm(delta_t_zero);
-				min_idx 	= tmp_idx;
-			}
-		}
-	}
+//	else if (loc_idx>loc_last_idx_)
+//	{
+//		for(int ll=loc_last_idx_+1;ll<loc_idx+1;ll++)
+//		{
+//			decideSectorIntervalExt(
+//					edge_, points_[1], delta_t_zero, sec_idx, ll);
+//			int tmp_idx = ll*SEC_INT + sec_idx;
+//			if (min_(l2Norm(minusPoint(points_[1], edge_.loc_mid[ll])),
+//					 min_dist))
+//			{
+//				min_dist	= l2Norm(minusPoint(points_[1], edge_.loc_mid[ll]));
+//				delta_t_min	= l2Norm(delta_t_zero);
+//				min_idx 	= tmp_idx;
+//			}
+//		}
+//	}
 	//else
 	// we do not consider going back for now
 
@@ -950,17 +973,17 @@ int fitSectorMap(
 										minusPoint(
 												points_[1],edge_.loc_mid[0])),
 								point2vector(edge_.tan[0])));
-		if (!vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(edge_.tan[0])))
+//		if (!vectorDirectionCheck(
+//				point2vector(proj_dir_tmp),
+//				point2vector(edge_.tan[0])))
+//		{
+//			loc_init_ = true;
+//			loc_last_idx_ = 0;
+//			return EXIT_SUCCESS;
+//		}
+//		else
 		{
-			loc_init_ = true;
-			loc_last_idx_ = 0;
-			return EXIT_SUCCESS;
-		}
-		else
-		{
-			loc_init_ = false;
+			if (loc_idx>0) loc_init_ = false;
 			edge_.sector_map[min_idx] =
 					max(edge_.sector_map[min_idx], delta_t_min);
 			if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
@@ -970,9 +993,9 @@ int fitSectorMap(
 	}
 
 	edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], delta_t_min);
-	if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
+	if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;} // change too big possible for new edge
 
-	if ((min_idx/SEC_INT) - loc_last_idx_ > 1)
+	if ((min_idx/SEC_INT) - loc_last_idx_ > 1 && !mem)
 	{
 		for(int l=loc_last_idx_+1;l<(min_idx/SEC_INT);l++)
 		{
@@ -1059,27 +1082,10 @@ int fitSectorMapExt(
 	int res				= -1;
 	for(int i=1;i<points_.size();i++)
 	{
-//		edge_tmp = Graph_->getEdge(label1_, label2_, 0);
+		edge_tmp = Graph_->getEdge(label1_, label2_, 0);
 
 		if (flag_init)	{offset = LOC_INT;}
 		else			{offset = loc_offset_;}
-
-//		// this helps to prevent if the trajectory begin is a curve
-//		if (
-//				i==0 &&
-//				dotProduct(
-//						point2vector(edge_tmp.tan[0]),
-//						point2vector(
-//								multiPoint(
-//										minusPoint(
-//												points_[1],
-//												points_[0]),
-//										1/l2Norm(
-//												minusPoint(
-//														points_[1],
-//														points_[0])))))<0.5)
-//		{loc_last_idx = 4; loc_last_init = 4;}
-
 
 		vector<point_d> points_tmp {points_[i-1], points_[i]};
 
@@ -1089,17 +1095,18 @@ int fitSectorMapExt(
 
 		if (res==EXIT_FAILURE) {printer(31); return EXIT_FAILURE;}
 
-//		Graph_->setEdge(label1_, label2_, 0, edge_tmp);
+		Graph_->setEdge(label1_, label2_, 0, edge_tmp);
 
 		vector<point_d> points_tmp2(points_.begin(),points_.begin()+i);
 
-		//VISUALIZE
-		if(0)
-		{
-			vector<point_d> point_zero; vector<string> label_zero;
-			vector<vector<unsigned char> > color_code; colorCode(color_code);
-			showConnection(Graph_, points_tmp2, label_zero, color_code, true);
-		}
+//		//VISUALIZE
+//		if(flagg)
+//		{
+//			cout << loc_last_idx << endl;
+//			vector<point_d> point_zero; vector<string> label_zero;
+//			vector<vector<unsigned char> > color_code; colorCode(color_code);
+//			showConnection(Graph_, points_tmp2, label_zero, color_code, true);
+//		}
 	}
 
 	Graph_->setEdge(label1_, label2_, 0, edge_tmp);
@@ -1149,39 +1156,41 @@ int updateSectorMap(
 
 	if (Graph_->getEdgeCounter(label1_,label2_,0) == 0)
 	{
+//		if (points_avg_.size()<20) {return EXIT_FAILURE;}
 		fitCurve(points_avg_, points_est, coeffs);
-		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_);
-		fitSectorMapInit(Graph_, points_est, label1_, label2_, 10);
+		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_, points_est);
+		fitSectorMapInit(Graph_, points_avg_, label1_, label2_, 10);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
 	}
 	else if (Graph_->getEdgeCounter(label1_,label2_,0) < 50)
 	{
+		if(label2_==4) flagg = true; else flagg=false;
 		fitCurve(points_avg_, points_est, coeffs);
-		res = fitSectorMapExt(Graph_, points_est, label1_, label2_, 20);
+		res = fitSectorMapExt(Graph_, points_avg_, label1_, label2_, 40);
 		if (res==EXIT_FAILURE) {return EXIT_FAILURE;}
 		//VISUALIZE
-		if(1)
+		if(0)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
-			showConnection(Graph_, points_est, label_zero, color_code, true);
+			showConnection(Graph_, points_avg_, label_zero, color_code, true);
 		}
-		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_);
+		adjustCurveExt(Graph_, coeffs, points_avg_.size(), label1_, label2_, points_avg_);
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
 	}
 	else
 	{
 		fitCurve(points_avg_, points_est, coeffs);
-		res = fitSectorMapExt(Graph_, points_est, label1_, label2_, 20);
+		res = fitSectorMapExt(Graph_, points_avg_, label1_, label2_, 20);
 		if (res==EXIT_FAILURE) {return EXIT_FAILURE;}
 		findSectorMapConstraint(Graph_, label1_, label2_);
 		Graph_->setEdgeCounter(label1_, label2_, 0, 1);
 	}
 
 	//VISUALIZE
-	if(1)
+	if(0)
 	{
 		vector<point_d> point_zero; vector<string> label_zero;
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
@@ -1295,9 +1304,9 @@ int buildSectorMap(
 		vel_avg.push_back(pva_avg_[i][1]);
 	}
 
-	// label1	: start location
-	// label2	: goal location
-	// label_idx: index of data point for label1
+	// label1	 : start location
+	// label2	 : goal location
+	// label_idx : index of data point for label1
 	int label1, label2, label_idx;
 	label1 = label2 = label_idx = -1;
 
@@ -1315,8 +1324,14 @@ int buildSectorMap(
 				if (label_idx > 0)
 				{
 					label2 = pts_avg[i].l;
-					if (label2==label1)	{ continue; }
-					if (i - label_idx > 5) // to prevent only a few points evaluated for curve, might not need this ###
+
+					if (label2==label1)
+					{
+						label_idx = -1;
+						continue;
+					}
+
+					if (i - label_idx > 10) // to prevent only a few points evaluated for curve, might not need this ###
 					{
 						vector<point_d> pts_avg_tmp(
 								pts_avg.begin()+label_idx,
@@ -1325,12 +1340,12 @@ int buildSectorMap(
 								vel_avg.begin()+label_idx,
 								vel_avg.begin()+i);
 
-						findMovementConstraint(
-								Graph_,
-								pts_avg_tmp,
-								vel_avg_tmp,
-								label1,
-								label2);
+//						findMovementConstraint(
+//								Graph_,
+//								pts_avg_tmp,
+//								vel_avg_tmp,
+//								label1,
+//								label2);
 						updateSectorMap(
 								Graph_,
 								pts_avg_tmp,
@@ -1341,13 +1356,13 @@ int buildSectorMap(
 								label1,
 								label2);
 
-//						//VISUALIZE
-//						if(Graph_->getEdgeCounter(label1, label2, 0)==10 && label1==0 && label2==1)
-//						{
-//							vector<point_d> point_zero; vector<string> label_zero;
-//							vector<vector<unsigned char> > color_code; colorCode(color_code);
-//							showConnection(Graph_, pts_avg_tmp, label_zero, color_code, true);
-//						}
+						//VISUALIZE
+						if(0)
+						{
+							vector<point_d> point_zero; vector<string> label_zero;
+							vector<vector<unsigned char> > color_code; colorCode(color_code);
+							showConnection(Graph_, pts_avg_tmp, label_zero, color_code, true);
+						}
 
 					}
 

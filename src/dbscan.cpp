@@ -204,6 +204,7 @@ void dbscanCluster(
 void combineNearCluster(
 	vector<point_d> &points_,
 	vector<point_d> &locations_,
+	vector<int> 	&locations_flag_,
 	vector<int> 	contact_)
 {
 	int num_points 		= points_.size();
@@ -321,6 +322,7 @@ void combineNearCluster(
 			num_locations2 = max((int)points_[i].l, num_locations2);
 		}
 		num_locations2 += 1;
+		reshapeVector(locations_flag_,num_locations2);
 		vector<double> c1; c1.resize(num_locations2);
 		vector<double> c2; c2.resize(num_locations2);
 		for(int i=0;i<num_points;i++)
@@ -335,32 +337,7 @@ void combineNearCluster(
 			if (c1[points_[i].l]/
 				c2[points_[i].l] < CONTACT_TRIGGER_RATIO)
 			{ continue; }
-			points_[i].l = UNCLASSIFIED;
-		}
-		// removing the missing cluster labels
-		p_tmp.clear(); p_tmp.resize(num_locations2);
-		c = 0;
-		for(int i=0;i<num_locations2;i++)
-		{
-			if(c1[i]/c2[i] < CONTACT_TRIGGER_RATIO)
-			{
-				p_tmp[i].l = c;
-				c++;
-			}
-			else
-			{
-				p_tmp[i].l = UNCLASSIFIED;
-			}
-			//printf("Location %02d: %02d\n", i, p_tmp1[i].l );
-		}
-		// updating cluster label
-		for(int i=0;i<num_points;i++)
-		{
-			if (points_[i].l >= 0)
-			{
-				points_[i].l = p_tmp[(int)points_[i].l].l;
-			}
-			//printf("Location %02d: %02d\n", i, points_[i].l );
+			locations_flag_[points_[i].l] = 1;
 		}
 	}
 #endif
@@ -380,7 +357,6 @@ void combineNearCluster(
 		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
 	}
 
-
 	for(int i=0;i<p_tmp.size();i++)
 	{
 		p_tmp[i]	= multiPoint(p_tmp[i],1/count[i]);
@@ -389,59 +365,7 @@ void combineNearCluster(
 		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
 	}
 
-	if(locations_.empty())
-	{
-		locations_ = p_tmp;
-	}
-	else
-	{
-		// fusing with the saved data
-		for(int i=0;i<num_locations;i++)
-		{
-			for(int ii=0;ii<num_locations2;ii++)
-			{
-				if(l2Norm(minusPoint(locations_[i],p_tmp[ii]))<CLUSTER_LIMIT)
-				{
-					double tmp_l = (locations_[i].l + p_tmp[ii].l) / 2.0;
-					locations_[i] = multiPoint(addPoint(locations_[i], p_tmp[ii]), 0.5);
-					locations_[i].l = tmp_l;
-					p_tmp[ii].l = 0.0;
-					count[ii]	= (double)ii;
-					break;
-				}
-			}
-		}
-//		// updating cluster label
-//		for(int i=0;i<num_points;i++)
-//		{
-//			if (points_[i].l < 0) 				{ continue; }
-//			if (p_tmp[(int)points_[i].l].l < 1)	{ continue; }
-//			points_[i].l = UNCLASSIFIED;
-//		}
-		// removing the missing cluster labels
-		c = 0;
-		for(int i=0;i<num_locations2;i++)
-		{
-			if (i==0 && count[i] == 0)	{ c++; }
-			else
-			{
-				if(count[i] > count[i-1] && count[i] == i)
-				{
-					count[i] = c;
-					for(int ii=i+1;ii<num_locations2;ii++)
-					{
-						if(count[ii] == i) { count[ii] = c; }
-					}
-					c++;
-				}
-			}
-		}
-		// updating cluster label
-		for(int i=0;i<num_points;i++)
-		{
-			if (points_[i].l >= 0) { points_[i].l = count[(int)points_[i].l]; }
-		}
-	}
+	locations_ = p_tmp;
 }
 
 

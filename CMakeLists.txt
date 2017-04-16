@@ -14,6 +14,7 @@ link_directories(/home/chen/gsl/lib)
 # FALSE for PC
 if(TRUE)
   add_executable(../HMAR 
+  	./src/Prediction.cpp 
   	./src/Graph.cpp 
   	./src/dbscan.cpp 
   	./src/util.cpp 
@@ -25,6 +26,9 @@ if(TRUE)
   	./src/predicting.cpp
   	./src/misc.cpp
   	./src/core.cpp
+  	./src/TestCase.cpp 
+  	./src/Evaluate.cpp 
+  	./src/ReadFile.cpp 
   	./src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(../HMAR ${VTK_LIBRARIES} gsl gslcblas)
@@ -33,6 +37,7 @@ if(TRUE)
   endif()
 else()
   add_executable(HMAR 
+  	../src/Prediction.cpp 
   	../src/Graph.cpp
   	../src/dbscan.cpp
   	../src/util.cpp
@@ -44,6 +49,9 @@ else()
   	../src/predicting.cpp
   	../src/misc.cpp
   	../src/core.cpp
+  	../src/TestCase.cpp 
+  	../src/Evaluate.cpp 
+  	../src/ReadFile.cpp 
   	../src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(HMAR ${VTK_LIBRARIES} gsl gslcblas)

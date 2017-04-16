@@ -140,7 +140,19 @@ double addFunction (
 double average(
 	vector<double> A);
 
+int movingAverage(
+	int a,
+	vector<int> &A);
+
+int movingAverageIncrement(
+	int a,
+	vector<int> &A);
+
 double movingAverage(
+	double a,
+	vector<double> &A);
+
+double movingAverageIncrement(
 	double a,
 	vector<double> &A);
 

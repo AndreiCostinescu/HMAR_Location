@@ -136,4 +136,9 @@
 - added printout analysis
 - new ideas on analysis based on d2l and curve together with slide
 
-
+[22]
+- 16/04/2017
+- revert back to before d2l
+- added evaluation, prediction, read datafile classes
+- evaluation is to evaluate during prediction
+- prediction is to gather the data and save it to be outputed

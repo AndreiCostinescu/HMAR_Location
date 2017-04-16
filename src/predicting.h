@@ -16,6 +16,7 @@
 #include "core.h"
 #include "misc.h"
 #include "labeling_sec.h"
+#include "Evaluate.h"
 
 int predictFromNode(
 	Graph *Graph_,
@@ -42,7 +43,6 @@ double decideLocSecInt(
 	edge_tt edge_,
 	point_d point_,
 	point_d &delta_t_,
-	vector<double> sectormap_,
 	int &sec_idx_,
 	int &loc_idx_,
 	int &loc_last_idx_,
@@ -61,13 +61,6 @@ int decideWindow(
 	int loc_idx_,
 	int label2_);
 
-int decideSectorMapChangeRate(
-	predict_t &predict_,
-	vector<double> sm_,
-	vector<double> sm2_,
-	int loc_idx_,
-	int label2_);
-
 int decideOscillate(
 	predict_t &predict_,
 	point_d vel_,
@@ -81,28 +74,22 @@ int decideOscillate(
 
 int predictFromSectorMap(
 	Graph &Graph_,
-	Graph &Graph_update_,
 	point_d point_,
-	point_d vel_,
-	point_d acc_,
 	predict_t &predict_,
 	vector<int> &loc_last_idxs_,
 	int label1_,
-	vector<point_d> &delta_t_mem_,
 	vector<bool> &init_);
 
 int evaluatePrediction(
 	Graph *Graph_,
-	vector<predict_t> predict_mem_);
+	vector<predict_t> predict_mem_,
+	int label1_);
 
 int predictFromEdge(
-	Graph &Graph_,
-	Graph &Graph_update_,
+	Graph *Graph_,
 	point_d pos_,
 	point_d vel_,
 	point_d acc_,
-	vector<point_d> &curve_mem_,
-	vector<point_d> &delta_t_mem_,
 	vector<predict_t> &predict_mem_,
 	vector<int> &last_loc_,
 	int label1_,
@@ -116,16 +103,13 @@ int rebuildSectorMap(
 
 int predictAction(
 	Graph *Graph_,
-	Graph *Graph_update_,
-	vector<point_d> &pva_avg_, //MOTION
+	vector<point_d> &pva_avg_,
 	vector<vector<point_d> > &pva_avg_mem_,
-	vector<point_d> &curve_mem_,
-	vector<point_d> &delta_t_mem_,
 	vector<predict_t> &predict_mem_,
 	int &label1_,
 	vector<int> &last_loc_,
 	vector<bool> &init_,
-	bool learn_=false);
+	bool learn_);
 
 
 #endif /* PREDICTING_H_ */

@@ -118,10 +118,35 @@ double addFunction (
 	return fabs(x)+fabs(y);
 }
 
+int average(
+	vector<int> A)
+{
+	return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
+}
+
 double average(
 	vector<double> A)
 {
 	return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
+}
+
+int movingAverage(
+	int a,
+	vector<int> &A)
+{
+	A.erase(A.begin());
+	A.push_back(a);
+	int avg = average(A);
+	return avg;
+}
+
+int movingAverageIncrement(
+	int a,
+	vector<int> &A)
+{
+	A.push_back(a);
+	int avg = average(A);
+	return avg;
 }
 
 double movingAverage(
@@ -129,6 +154,15 @@ double movingAverage(
 	vector<double> &A)
 {
 	A.erase(A.begin());
+	A.push_back(a);
+	double avg = average(A);
+	return avg;
+}
+
+double movingAverageIncrement(
+	double a,
+	vector<double> &A)
+{
 	A.push_back(a);
 	double avg = average(A);
 	return avg;
@@ -315,7 +349,7 @@ void reshapePredict(
 	int size)
 {
 	P_.acc		 = 0.0;
-	P_.velocity  = 0.0;
+	P_.vel		 = 0.0;
 	P_.curvature = 0.0;
 	reshapeVector(P_.range, 		size);
 	reshapeVector(P_.err, 			size);

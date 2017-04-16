@@ -62,6 +62,7 @@ void dbscanCluster(
 void combineNearCluster(
 	vector<point_d> &points_,
 	vector<point_d> &locations_,
+	vector<int> 	&locations_flag_,
 	vector<int> 	contact_);
 int clustering(
 	vector<point_d> &points_,

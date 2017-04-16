@@ -1,4 +1,5 @@
 FILE(REMOVE_RECURSE
+  "CMakeFiles/../HMAR.dir/src/Prediction.cpp.o"
   "CMakeFiles/../HMAR.dir/src/Graph.cpp.o"
   "CMakeFiles/../HMAR.dir/src/dbscan.cpp.o"
   "CMakeFiles/../HMAR.dir/src/util.cpp.o"
@@ -10,6 +11,9 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/../HMAR.dir/src/predicting.cpp.o"
   "CMakeFiles/../HMAR.dir/src/misc.cpp.o"
   "CMakeFiles/../HMAR.dir/src/core.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/TestCase.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/Evaluate.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/ReadFile.cpp.o"
   "CMakeFiles/../HMAR.dir/src/main.cpp.o"
   "../HMAR.pdb"
   "../HMAR"

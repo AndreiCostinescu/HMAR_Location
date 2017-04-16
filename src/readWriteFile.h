@@ -19,7 +19,7 @@ bool copyFile(
 bool directoryCheck(
 	string path_ );
 
-int folderSelect(
+int folderSelect1(
 	const struct dirent *entry);
 
 int folderSelect2(
@@ -34,7 +34,7 @@ int readFile(
 	char delimiter);
 
 void writeFile(
-	Graph Graph_,
+	Graph *Graph_,
 	const char *path_,
 	int option_);
 
@@ -43,15 +43,13 @@ int readFileExt(
 	const char *path_,
 	int option_);
 
+int readFileLabel(
+	string path_,
+	map<int,vector<string> > &label_);
 
-
-
-
-
-
-
-
-
+int readFileKB(
+	string path_,
+	kb_t &kb_);
 
 
 
