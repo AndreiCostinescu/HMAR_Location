@@ -133,6 +133,12 @@ using namespace std;
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
 #define v vector
 
+
+#define	TRN 0
+#define	TST 1
+#define	LBL 2
+
+
 //0 : all
 //1 : motion
 //2 : location
@@ -350,9 +356,10 @@ struct state_s
 	int label1;		// last node
 	int label2;		// next node
 	double pct_err;	// highest probability
-	map<string,double> goal;	// highest probability
+	map<string,double> goal;	// probabilities
+	map<string,double> window;	// probabilities
 	double mov;		// whether it is moving
-	int con;		// surface contact
+	int con;		// contact or not with hand
 	int sur;		// which surface
 };
 

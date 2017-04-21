@@ -54,6 +54,7 @@ int decideBoundary_(
 	vector<double>			surfaces_limit)
 {
 	point2_.l = UNCLASSIFIED;
+
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
 		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
@@ -62,6 +63,7 @@ int decideBoundary_(
 		if (max_(location_contact, centroids_[ii].l)) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
 		{
 			point2_.l = ii;
+
 			if ( surfaces_flag_[point2_.l] > 0)
 			{
 				if (!decideSurface(
@@ -74,6 +76,29 @@ int decideBoundary_(
 			}
 		}
 	}
+	return EXIT_SUCCESS;
+}
+
+int decideBoundaryClosest_(
+	point_d 				&point2_,
+	vector<point_d> 		centroids_)
+{
+	point2_.l = UNCLASSIFIED;
+
+	vector<double> tmp;
+	for(int ii=0;ii<centroids_.size();ii++)
+	{
+		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
+		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
+		tmp.push_back(fabs(location_contact-centroids_[ii].l));
+	}
+
+	point2_.l =
+			distance(
+					tmp.begin(),
+					min_element(tmp.begin(), tmp.end()));
+
 	return EXIT_SUCCESS;
 }
 
@@ -486,7 +511,6 @@ int decideSectorInterval(
 					point2vector(multiPoint(delta_t_,1/l2Norm(delta_t_)))),
 			point2vector(tangent_[loc_idx_])))
 	{angle_tmp *= -1;}
-//	cout << "A: " << l2Norm(normal_[loc_idx_]) << endl;
 //	cout << "AA: " << l2Norm(
 //			crossProduct(
 //					point2vector(delta_t_),
@@ -553,4 +577,27 @@ int decideRateOfChangeOfDeltaT(
 									delta_t_mem_[0  ])));
 	}
 	return EXIT_SUCCESS;
+}
+
+int folderSelect1(
+	const struct dirent *entry)
+{
+	if (entry->d_name[2] == '_')	{return 1;}
+	else							{return 0;}
+}
+
+int folderSelect2(
+	const struct dirent *entry)
+{
+	size_t found_extension = string(entry->d_name).find(".");
+	if ((int)found_extension == -1) {return 1;}
+	else							{return 0;}
+}
+
+int fileSelect(
+	const struct dirent *entry)
+{
+	size_t found_extension = string(entry->d_name).find(".txt");
+	if ((int)found_extension == -1) {return 0;}
+	else							{return 1;}
 }

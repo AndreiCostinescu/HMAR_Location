@@ -10,9 +10,9 @@
 
 #include "dataDeclaration.h"
 
-string obtainInput(
-	string msg_,
-	bool warning_=false);
+//string obtainInput(
+//	string msg_,
+//	bool warning_=false);
 
 int printer(
 	int x_);

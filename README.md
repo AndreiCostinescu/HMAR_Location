@@ -142,3 +142,9 @@
 - added evaluation, prediction, read datafile classes
 - evaluation is to evaluate during prediction
 - prediction is to gather the data and save it to be outputed
+
+[23]
+- 21/04/2017
+- added results
+- added new data recordings
+- encased everything in class except algo and core

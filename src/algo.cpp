@@ -121,7 +121,7 @@ double addFunction (
 int average(
 	vector<int> A)
 {
-	return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
+	return round(accumulate(A.begin(), A.end(), 0.0, addFunction)/A.size());
 }
 
 double average(

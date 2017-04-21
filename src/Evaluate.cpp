@@ -7,33 +7,39 @@
 
 #include "Evaluate.h"
 
-Evaluate::Evaluate()
+Evaluate::Evaluate(
+	Graph *Graph_)
 {
-	G = new Graph("A","A");
-	label1 = 0;
-	vel = 0;
+	label1_eval = 0;
+	vel_eval 	= 0.0;
+
+	win_eval.clear();
+	pct_err_eval.clear();
+
+	state_eval = {};
+	G = Graph_;
 }
 
 Evaluate::~Evaluate() {}
 
-void Evaluate::update()
+void Evaluate::UpdateEval()
 {
-	state = G->getState();
+	state_eval = G->getState();
 
-	double max_tmp = *max_element(pct_err.begin(), pct_err.end());
-	if (max_tmp<=0)	{state.pct_err = -1;}
-	else			{state.pct_err = max_tmp;}
+	double max_tmp = *max_element(pct_err_eval.begin(), pct_err_eval.end());
+	if (max_tmp<=0)	{state_eval.pct_err = -1;}
+	else			{state_eval.pct_err = max_tmp;}
 
 	int idx =
 			distance(
-					pct_err.begin(),
-					max_element(pct_err.begin(), pct_err.end()));
+					pct_err_eval.begin(),
+					max_element(pct_err_eval.begin(), pct_err_eval.end()));
 
 	vector<string> al_tmp = G->getActionLabel();
 	map<string,pair<int,int> > ac_tmp = G->getActionCategory();
 
 	node_tt node_tmp = {};
-	G->getNode(label1, node_tmp);
+	G->getNode(label1_eval, node_tmp);
 	string tmp1 = node_tmp.name;
 	G->getNode(idx, node_tmp);
 	string tmp2 = node_tmp.name;
@@ -43,25 +49,28 @@ void Evaluate::update()
 	{
 		if (!strcmp(tmp1.c_str(),al_tmp[i].c_str()))
 		{
-			state.label1 = i;
+			state_eval.label1 = i;
 			c++;
 		}
 		else if (!strcmp(tmp2.c_str(),al_tmp[i].c_str()))
 		{
-			state.label2 = i;
+			state_eval.label2 = i;
 			c++;
 		}
 		if (c==2) break;
 	}
 
-	state.con = node_tmp.contact;
-	state.sur = node_tmp.surface;
+	state_eval.con = node_tmp.contact;
+	state_eval.sur = node_tmp.surface;
 
-	state.mov = vel;
+	state_eval.mov = vel_eval;
 
 	for(int i=0;i<G->getNumberOfNodes();i++)
 	{
 		G->getNode(i, node_tmp);
-		state.goal[node_tmp.name] = pct_err[i];
+		state_eval.goal[node_tmp.name] = pct_err_eval[i];
+		state_eval.window[node_tmp.name] = win_eval[i];
 	}
+
+	G->setState(state_eval);
 }

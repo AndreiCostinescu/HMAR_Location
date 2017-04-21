@@ -10,7 +10,6 @@
 
 #include "dataDeclaration.h"
 #include "algo.h"
-#include "Graph.h"
 
 bool vectorDirectionCheck(
 	vector<double> A,
@@ -28,6 +27,10 @@ int decideBoundary_(
 	vector<int>				surfaces_flag_,
 	vector<vector<double> > surfaces_,
 	vector<double>			surfaces_limit);
+
+int decideBoundaryClosest_(
+	point_d 				&point2_,
+	vector<point_d> 		centroids_);
 
 bool decideSurface(
 	point_d 		centroids_,
@@ -97,5 +100,15 @@ int decideRateOfChangeOfDeltaT(
 	vector<point_d> &delta_t_mem_,
 	double &dd_delta_t_,
 	int num_points_);
+
+int folderSelect1(
+	const struct dirent *entry);
+
+int folderSelect2(
+	const struct dirent *entry);
+
+int fileSelect(
+	const struct dirent *entry);
+
 
 #endif /* CORE_H_ */

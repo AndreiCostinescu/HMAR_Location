@@ -233,7 +233,6 @@ int buildLocationArea(
 	vector<int> 				contact_,
 	bool 						flag_)
 {
-//	flaggg = flag_;
 	// [VARIABLES]*************************************************************
 	bool 			flag = false;
 	vector<point_d> points_avg;
@@ -267,6 +266,18 @@ int buildLocationArea(
 		showData(
 				points_avg, goal_action, Graph_->getActionLabel(),
 				loc_idx_zero, color_code, true, true, false);
+		goal_action[0] = "SHELF";
+		goal_action[1] = "DISPENSER";
+		goal_action[2] = "FACE";
+		goal_action[3] = "TABLE2";
+		goal_action[4] = "WASH";
+//		goal_action[0] = "SHELF";
+//		goal_action[1] = "FACE";
+//		goal_action[2] = "TABLE2";
+//		goal_action[3] = "THROW";
+//		goal_action[0] = "SHELF";
+//		goal_action[1] = "TABLE2";
+//		goal_action[2] = "WASH";
 		for(int i=0;i<locations.size();i++)
 		{
 			node_tt node_tmp;
@@ -367,6 +378,7 @@ int buildLocationArea(
 //											max(tmp1,tmp2)));
 					node_tmp.centroid = locations[ii];
 					Graph_->setNode(node_tmp);
+
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
 					{

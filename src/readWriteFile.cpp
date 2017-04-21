@@ -142,7 +142,6 @@ void writeFile(
 				{
 					for(int ii=0;ii<edges[i].size();ii++)
 					{
-
 						for(int iii=0;iii<edges[i][ii].size();iii++)
 						{
 							write_file << i << "," << ii << "," << iii << "\n";
@@ -175,14 +174,18 @@ void writeFile(
 										for(int iv=0;iv<sec.size();iv++)
 										{
 											write_file << sec[iv];
+//											if (iv%SEC_INT < SEC_INT-1)	{ write_file << ",";  }
+//											else 						{ write_file << "\n"; }
 											if (iv < sec.size()-1)	{ write_file << ",";  }
 											else 					{ write_file << "\n"; }
 										}
-										tmp = -2;
+										break;
+									default:
+										tmp = -10;
 										break;
 								}
 								tmp++;
-								if (tmp > 4) {continue;}
+								if (tmp > 5 || tmp < 0) {continue;}
 								for(int iv=0;iv<LOC_INT;iv++)
 								{
 									write_file << data[iv].x << ",";
@@ -623,11 +626,11 @@ int readFileKB(
 		{
 			kb_.surface_lim[i] = atof(data[i][0].c_str());
 		}
-		printer(39);
+		printer(46);
 	}
 	else
 	{
-		printer(38);
+		printer(45);
 		return EXIT_FAILURE;
 	}
 

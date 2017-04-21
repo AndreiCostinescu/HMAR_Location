@@ -8,17 +8,23 @@
 #ifndef TESTCASE_H_
 #define TESTCASE_H_
 
-#include "dataDeclaration.h"
-#include "util.h"
-#include "ReadFile.h"
+#include "Train.h"
 
-class TestCase {
-public:
-	TestCase();
-	virtual ~TestCase();
-	void choose(int x_);
-	int TC1(vector<int> idx_);
-	int TC2(vector<int> idx_);
+class TestCase : public Train
+{
+
+	public:
+		TestCase();
+		virtual ~TestCase();
+		void Choose(int x_, int y_);
+		int Trn(vector<int> idx_, string object_);
+		int Tst(vector<int> idx_, string object_);
+		int Lbl(vector<int> idx_);
+
+	private:
+		string EVAL, RESULT, DATA_DIR;
+		map<int,string> dict;
+
 };
 
 #endif /* TESTCASE_H_ */

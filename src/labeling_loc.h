@@ -15,6 +15,7 @@
 #include "dbscan.h"
 #include "misc.h"
 #include "core.h"
+#include "dbscan.h"
 
 int decideBoundaryExt(
 	point_d 		&point1_,

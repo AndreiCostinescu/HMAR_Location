@@ -21,6 +21,7 @@ string obtainInput(
 int printer(
 	int x_)
 {
+	if(1)
 	switch(x_)
 	{
 		case 1:
@@ -162,6 +163,19 @@ int printer(
 			break;
 		case 44:
 			printf(CGRN "# Testing process......................................................SUCCESS\n" CNOR);
+			break;
+		case 45:
+			printf(CRED "# Surface limit file is empty.................................................\n" CNOR);
+			printf(CRED "# Reading surface limit file............................................FAILED\n" CNOR);
+			break;
+		case 46:
+			printf("# Reading surface limit file...........................................SUCCESS\n");
+			break;
+		case 47:
+			printf("# Reading reference points for LA......................................SUCCESS\n");
+			break;
+		case 48:
+			printf("# Rewriting data file with label.......................................SUCCESS\n");
 			break;
 		default :
 			printf(CRED "# UNKNOWN COMMAND.............................................................\n" CNOR);

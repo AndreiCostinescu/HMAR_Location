@@ -17,18 +17,27 @@ if(TRUE)
   	./src/Prediction.cpp 
   	./src/Graph.cpp 
   	./src/dbscan.cpp 
-  	./src/util.cpp 
+ # 	./src/util.cpp 
   	./src/vtkExtra.cpp 
   	./src/algo.cpp 
-  	./src/readWriteFile.cpp 
+ #  	./src/readWriteFile.cpp 
   	./src/labeling_loc.cpp
-  	./src/labeling_sec.cpp
-  	./src/predicting.cpp
+ # 	./src/labeling_sec.cpp
+ #  	./src/predicting.cpp
   	./src/misc.cpp
   	./src/core.cpp
   	./src/TestCase.cpp 
   	./src/Evaluate.cpp 
   	./src/ReadFile.cpp 
+  	./src/WriteFile.cpp 
+  	./src/Parser.cpp 
+  	./src/Test.cpp 
+  	./src/Train.cpp 
+  	./src/TrainLA.cpp 
+  	./src/TrainSM.cpp 
+  	./src/Filter.cpp 
+  	./src/ActionPrediction.cpp 
+  	./src/DBSCAN.cpp 
   	./src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(../HMAR ${VTK_LIBRARIES} gsl gslcblas)
@@ -39,19 +48,28 @@ else()
   add_executable(HMAR 
   	../src/Prediction.cpp 
   	../src/Graph.cpp
-  	../src/dbscan.cpp
-  	../src/util.cpp
+ # 	../src/dbscan.cpp
+ # 	../src/util.cpp
   	../src/vtkExtra.cpp
   	../src/algo.cpp
-  	../src/readWriteFile.cpp
-  	../src/labeling_loc.cpp
-  	../src/labeling_sec.cpp
-  	../src/predicting.cpp
+ #  	../src/readWriteFile.cpp
+ # 	../src/labeling_loc.cpp
+#  	../src/labeling_sec.cpp
+ #  	../src/predicting.cpp
   	../src/misc.cpp
   	../src/core.cpp
   	../src/TestCase.cpp 
   	../src/Evaluate.cpp 
   	../src/ReadFile.cpp 
+  	../src/WriteFile.cpp 
+  	../src/Parser.cpp 
+  	../src/Test.cpp 
+  	../src/Train.cpp 
+  	../src/TrainLA.cpp 
+  	../src/TrainSM.cpp 
+  	../src/Filter.cpp 
+  	../src/ActionPrediction.cpp 
+  	../src/DBSCAN.cpp 
   	../src/main.cpp)
   if(VTK_LIBRARIES)
     target_link_libraries(HMAR ${VTK_LIBRARIES} gsl gslcblas)
