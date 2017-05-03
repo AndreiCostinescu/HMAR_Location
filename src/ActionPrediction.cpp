@@ -21,63 +21,76 @@ ActionPrediction::ActionPrediction(
 	pva_avg_mem.clear();
 	predict_mem.clear();
 
+	reshapeVector(range_in, G->getNumberOfNodes());
 	reshapeVector(last_loc, G->getNumberOfNodes());
+	reshapePredict(predict, G->getNumberOfNodes());
+
 	for(int is=0;is<G->getNumberOfNodes();is++) init.push_back(true);
 }
 
 ActionPrediction::~ActionPrediction() { }
 
-void ActionPrediction::PredictExt(
-	vector<point_d> pva_avg_,
-	int contact_)
+void ActionPrediction::PredictInit()
 {
-	pva_avg = pva_avg_;
-
-	if (contact_==1)
-	{
-		state = G->getState();
-		state.grasp = true;
-		G->setState(state);
-		this->Predict();
-	}
-	else
-	{
-		state = G->getState();
-		state.grasp = false;
-		G->setState(state);
-	}
-}
-
-void ActionPrediction::PredictInit(
-	point_d p_)
-{
-	decideBoundary_(
-			p_, p_, G->getCentroidList(),
-			G->getSurfaceFlagList(), G->getSurfaceEq(),
-			G->getSurfaceLimit());
-
-	label1_ap = p_.l;
-
 	state = G->getState();
-	state.grasp = false;
-	state.label1 = p_.l;
-	state.label2 = p_.l;
-	state.con = -1;
-	state.sur = -1;
-	state.pct_err = -1;
-	state.mov = 0;
+
+	state.grasp 	= RELEASE;
+	state.label1 	= label1_ap;
+	state.label2 	= label1_ap;
+	state.pct_err 	= -1;
+	state.mov 		=  0;
+	state.con 		= -1;
+	state.sur 		= -1;
 
 	vector<string> al_tmp = G->getActionLabel();
 	map<string,pair<int,int> > ac_tmp = G->getActionCategory();
 	for(int i=ac_tmp["GEOMETRIC"].first;i<ac_tmp["GEOMETRIC"].second+1;i++)
 	{
-		state.goal[al_tmp[i]] = 0.0;
-		state.window[al_tmp[i]] = -1.0;
+		state.ll	[al_tmp[i]] =   0;
+		state.goal	[al_tmp[i]] = 0.0;
+		state.window[al_tmp[i]] = 0.0;
 	}
 
 	G->setState(state);
 }
 
+void ActionPrediction::PredictExt(
+	vector<point_d> &pva_avg_,
+	int contact_)
+{
+	pva_avg = pva_avg_;
+	state = G->getState();
+	if (contact_==1)
+	{
+		if (state.grasp==RELEASE)
+		{
+			state.grasp = GRABBED_CLOSE;
+			G->setState(state);
+			this->Predict();
+		}
+		else
+		{
+			state.grasp = GRABBED;
+			G->setState(state);
+			this->Predict();
+		}
+	}
+	else
+	{
+		if (state.grasp==GRABBED)
+		{
+			state.grasp = RELEASE_CLOSE;
+			G->setState(state);
+			this->Predict();
+		}
+		else
+		{
+			state.grasp = RELEASE;
+			G->setState(state);
+		}
+	}
+	pva_avg_ = pva_avg;
+}
 
 int ActionPrediction::Predict()
 {
@@ -132,6 +145,7 @@ int ActionPrediction::Predict()
 				state.label2 = i;
 			}
 		}
+
 		state.con = nt.contact;
 		state.sur = nt.surface;
 		state.pct_err = -1;
@@ -139,7 +153,7 @@ int ActionPrediction::Predict()
 		for(int i=ac_tmp["GEOMETRIC"].first;i<ac_tmp["GEOMETRIC"].second+1;i++)
 		{
 			state.goal[al_tmp[i]] = 0.0;
-			state.window[al_tmp[i]] = -1.0;
+			state.window[al_tmp[i]] = 0.0;
 		}
 		G->setState(state);
 
@@ -152,13 +166,52 @@ int ActionPrediction::Predict()
 
 int ActionPrediction::PredictFromNode()
 {
-	if (label1_ap<0)
-		return decideBoundaryClosest_(pva_avg[0], G->getCentroidList());
+	// initial case
+	if (label1_ap < 0)
+	{
+		decideBoundaryClosest_(pva_avg[0], G->getCentroidList());
+		state = G->getState();
+		state.grasp = GRABBED_CLOSE;
+		G->setState(state);
+	}
 	else
-		return decideBoundary_(
-				pva_avg[0], pva_avg[0], G->getCentroidList(),
-				G->getSurfaceFlagList(), G->getSurfaceEq(),
-				G->getSurfaceLimit());
+	{
+		state = G->getState();
+		// give a starting location during change from release to move
+		if ((state.grasp==GRABBED_CLOSE) || (state.grasp==RELEASE_CLOSE))
+		{
+			decideBoundaryClosest_(pva_avg[0], G->getCentroidList());
+		}
+		else
+		{
+			decideBoundaryPredict(
+					pva_avg[0], pva_avg[0], G->getCentroidList(),
+					G->getSurfaceFlagList(), G->getSurfaceEq(),
+					G->getSurfaceLimit());
+
+			// prevent from going to unknown goal locations during middle of movement
+			for(int i=0;i<G->getNumberOfNodes();i++)
+			{
+				if (predict.pct_err[i]>0 && last_loc[i]>LOC_INT/10 && last_loc[i]<LOC_INT-(LOC_INT/10))
+				{
+					if (predict.pct_err[(int)pva_avg[0].l]==0 && predict.range[(int)pva_avg[0].l]!=RANGE_EXCEED)
+					{
+//						cout << last_loc[i] <<"  " << (int)pva_avg[0].l << " # ";
+						pva_avg[0].l = UNCLASSIFIED;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+//	for(int i=0;i<G->getNumberOfNodes();i++)
+//	{
+//		cout << i << " : " << pva_avg[0].l << "   ";
+//	}
+//	cout << G->getState().label2 << " : " << G->getState().grasp << endl;
+
+	return EXIT_SUCCESS;
 }
 
 int ActionPrediction::PredictFromEdge()
@@ -174,11 +227,20 @@ int ActionPrediction::PredictFromEdge()
 	// prediction average
 	{
 		predict_mem.push_back(predict);
-		if (predict_mem.size()>10) {predict_mem.erase(predict_mem.begin());}
+		if (predict_mem.size()>3) {predict_mem.erase(predict_mem.begin());}
 	}
 
 	// 2.X. Predict the goal based on the trajectory error from sector map
 	this->EvaluatePrediction();
+
+	if (label1_ap==0)
+	{
+		for(int i=0;i<G->getNumberOfNodes();i++)
+		{
+			cout << i << " : " << last_loc[i] << "," << pct_err_eval[i] << "," << predict.pct_err[i] << "," << predict.range[i] << "  ::  ";
+		}
+		cout << endl;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -201,6 +263,7 @@ int ActionPrediction::DecideMovement()
 
 int ActionPrediction::PredictFromSectorMap()
 {
+	reshapeVector(range_in,G->getNumberOfNodes());
 
 	for(int i=0;i<G->getNumberOfNodes();i++)
 	{
@@ -215,15 +278,8 @@ int ActionPrediction::PredictFromSectorMap()
 		if (label1_ap==i) {continue;}
 		if (G->getEdgeCounter(label1_ap, i, 0)==0) {continue;}
 
-		vector<point_d> tan_tmp, nor_tmp;
-		vector<double> sm_tmp;
-		G->getEdgeTan(label1_ap, i, 0, tan_tmp);
-		G->getEdgeNor(label1_ap, i, 0, nor_tmp);
-		G->getEdgeSectorMap(label1_ap, i, 0, sm_tmp);
-
 		point_d delta_t;
-		int loc_idx, sec_idx;
-		loc_idx = sec_idx = -1;
+		int loc_idx, sec_idx; loc_idx=sec_idx=-1;
 
 		// LOC SEC INT
 		bool init_tmp = init[i];
@@ -232,6 +288,15 @@ int ActionPrediction::PredictFromSectorMap()
 						G->getEdge(label1_ap, i, 0), delta_t, sec_idx, loc_idx,
 						last_loc[i], init_tmp);
 		init[i] = init_tmp;
+
+		if(last_loc[i]==0)
+		{
+			init[i] = true;
+//			continue;
+		}
+
+		vector<double> sm_tmp;
+		G->getEdgeSectorMap(label1_ap, i, 0, sm_tmp);
 
 		// GLA
 		bool flag =
@@ -246,6 +311,22 @@ int ActionPrediction::PredictFromSectorMap()
 
 	}
 
+
+
+	// give priority to range in
+	int sum_tmp = accumulate(range_in.begin(), range_in.end(), 0.0, addFunction);
+
+//	if (sum_tmp>0)
+//	{
+//		for(int i=0;i<G->getNumberOfNodes();i++)
+//		{
+//			if (predict.range[i]!=RANGE_IN)
+//			{
+//				predict.pct_err[i] *= 0.5;
+//			}
+//		}
+//	}
+
 	return EXIT_SUCCESS;
 }
 
@@ -259,8 +340,8 @@ double ActionPrediction::DecideLocSecInt(
 {
 	double tmp_dis, offset, last;
 
-	if (init_)	{offset = LOC_INT;}
-	else		{offset = LOC_INT;}
+	if (init_)	{offset = LOC_INT*1.00;}
+	else		{offset = LOC_INT*0.50;}
 
 	last = loc_last_idx_;
 
@@ -330,14 +411,17 @@ bool ActionPrediction::DecideGoal(
 	double delta_t_,
 	double loc_error_)
 {
-	if (loc_error_ > 2.075) //## TODO :NEED TO VERIFY
+	if (loc_error_ > 0.10) //## TODO :NEED TO VERIFY
 	{
 		predict.range[label2_] = RANGE_EXCEED;
+		predict.err[label2_] = delta_t_ - sm_i_;
+		predict.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, predict.err[label2_]);
 		return false;
 	}
 
 	if (delta_t_ <= sm_i_)
 	{
+		range_in[label2_] = 1;
 		predict.range[label2_] = RANGE_IN;
 		predict.pct_err[label2_]   = 0.999999;
 	}
@@ -347,6 +431,7 @@ bool ActionPrediction::DecideGoal(
 		predict.err[label2_] = delta_t_ - sm_i_;
 		predict.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, predict.err[label2_]);
 	}
+
 	return true;
 }
 
@@ -387,10 +472,54 @@ int ActionPrediction::EvaluatePrediction()
 		}
 	}
 
+	double sum_tmp = 0.0;
+	double counter = 0.0;
+	bool flag = false;
 	for(int i=0;i<G->getNumberOfNodes();i++)
 	{
 		win_eval[i] = average(win[i]);
 		pct_err_eval[i] = average(err[i]);
+		sum_tmp += pct_err_eval[i];
+
+		if (G->getEdgeCounter(label1_ap,i,0)>0)
+		{
+			counter += 1.0;
+		}
+
+		if (last_loc[i]>LOC_INT/10)
+		{
+			flag = true;
+		}
+	}
+
+	for(int i=0;i<G->getNumberOfNodes();i++)
+	{
+		if (flag)
+		{
+			if (sum_tmp == 0.0)
+				pct_err_eval[i] = 0.0;
+			else
+				pct_err_eval[i] /= sum_tmp;
+		}
+		else
+		{
+			// this will show zero probability but do we need it ????
+//			if (predict_mem.back().range[i]==RANGE_EXCEED)
+//			{
+//				pct_err_eval[i] = 0.0;
+//			}
+//			else
+//			{
+//				if (G->getEdgeCounter(label1_ap,i,0)>0)
+//				{
+//					pct_err_eval[i] = 1.0/counter;
+//				}
+//			}
+			if (G->getEdgeCounter(label1_ap,i,0)>0)
+			{
+				pct_err_eval[i] = 1.0/counter;
+			}
+		}
 	}
 
 	vel_eval = predict_mem.back().vel;

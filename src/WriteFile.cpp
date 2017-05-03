@@ -190,11 +190,36 @@ void WriteFile::RewriteDataFile(
 					<< data_[i][7] << ","
 					<< label[i]   << "\n";
 	}
+
+	// Visualize
+	if (1)
+	{
+		vector<point_d> point_zero = points_;
+		for(int ii=0;ii<point_zero.size();ii++)
+		{
+			if (!strcmp(label[ii].c_str(),"MOVE"))
+				point_zero[ii].l = -1;
+			else if (!strcmp(label[ii].c_str(),"RELEASE"))
+				point_zero[ii].l = -1;
+			else
+				point_zero[ii].l = 1;
+		}
+		vector<vector<unsigned char> > color_code; colorCode(color_code);
+		vector<string>  goal_action, al; goal_action.resize(5);
+		vector<int> 	loc_idx_zero;
+		showData(
+				point_zero, goal_action, al,
+				loc_idx_zero, color_code, true, false, false);
+	}
+
+
 	for(int i=0;i<label_list_.size();i++)
 	{
 		if(strcmp(label_list_[i].c_str(),label_list_local[i].c_str()))
 		{
+			cout << "*******************************************************************************" << endl;
 			cout << "File with inconsistent label sequence : " << path_ << endl;
+			cout << "*******************************************************************************" << endl;
 			break;
 		}
 	}
@@ -324,5 +349,67 @@ void WriteFile::WriteFilePrediction(
 		line.erase(line.size()-1);
 		line += "\n";
 		write_file << line;
+	}
+}
+
+void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
+{
+	string path2 = path_;
+	reverse(path2.begin(),path2.end());
+	path2.erase(path2.begin(),path2.begin()+path2.find(".")+1);
+	reverse(path2.begin(),path2.end());
+	path2 = path2 + "2.txt";
+
+	if (ifstream(path_)) { remove(path_.c_str()); }
+	if (ifstream(path2)) { remove(path2.c_str()); }
+
+	int s_tmp = -1;
+	double max_val = 0.0;
+	int num_location = Graph_->getNodeList().size();
+	vector<double> sec;
+	vector<point_d> data;
+	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+
+	ofstream write_file(path_, ios::app);
+	ofstream write_file2(path2, ios::app);
+
+	write_file << "Locations," 			<< num_location << "\n";
+	write_file << "Location Intervals," << LOC_INT		<< "\n";
+	write_file << "Sector Intervals," 	<< SEC_INT		<< "\n";
+	write_file2 << "Locations," 		<< num_location << "\n";
+	write_file2 << "Location Intervals,"<< LOC_INT		<< "\n";
+	write_file2 << "Sector Intervals," 	<< SEC_INT		<< "\n";
+	for(int i=0;i<edges.size();i++)
+	{
+		for(int ii=0;ii<edges[i].size();ii++)
+		{
+			for(int iii=0;iii<edges[i][ii].size();iii++)
+			{
+				write_file << i << "," << ii << "," << iii << "\n";
+				write_file2 << i << "," << ii << "," << iii << "\n";
+
+				sec.clear(); sec = edges[i][ii][0].sector_map;
+
+				for(int l=0;l<LOC_INT;l++)
+				{
+					max_val = 0.0;
+					for(int s=0;s<SEC_INT/2;s++)
+					{
+						max_val = max(sec[l*SEC_INT+s]+sec[l*SEC_INT+s+SEC_INT/2],max_val);
+						s_tmp = s;
+					}
+					write_file << max_val;
+					if (l < LOC_INT-1)	{ write_file << ",";  }
+					else 				{ write_file << "\n"; }
+
+					max_val =
+							sec[l*SEC_INT+(((s_tmp+(SEC_INT/4))+SEC_INT)%SEC_INT)] +
+							sec[l*SEC_INT+(((s_tmp-(SEC_INT/4))+SEC_INT)%SEC_INT)];
+					write_file2 << max_val;
+					if (l < LOC_INT-1)	{ write_file2 << ",";  }
+					else 				{ write_file2 << "\n"; }
+				}
+			}
+		}
 	}
 }

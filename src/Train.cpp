@@ -78,7 +78,6 @@ int Train::Learning(
 	// [LOCATION AND SECTOR-MAP]***********************************************
 	this->ClearLA();
 	this->BuildLocationArea(Graph_, pva_avg, contact, flag_);
-//	buildLocationArea(Graph_, pva_avg, contact, flag_);
 	printer(11);
 	this->ClearSM();
 	this->BuildSectorMap   (Graph_, pva_avg, contact);
@@ -95,9 +94,9 @@ int Train::Learning(
 			Graph_->getNode(i, node_tmp);
 			label_zero.push_back(node_tmp.name);
 		}
-		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
+//		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
-		showConnection(Graph_, point_zero, label_zero, color_code, true);
+		showConnectionTest(Graph_, point_zero, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;

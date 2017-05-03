@@ -18,27 +18,42 @@
 //=============================================================================
 int main(int argc, char *argv[])
 {
+	printf("==============================================================================\n");
+	printf("|| SYSTEM START                                                             ||\n");
+	printf("==============================================================================\n");
 
 	TestCase TC;
 
-	// Label
+//	// Label
 //	TC.Choose(0, LBL);
 
 //	// Train Cup
-	TC.Choose(1, TRN);
-	TC.Choose(1, TST);
-
+//	TC.Choose(1, TRN);
 //	// Train Org
 //	TC.Choose(2, TRN);
-//	TC.Choose(2, TST);
-
 //	// Train Spg
 //	TC.Choose(3, TRN);
-//	TC.Choose(3, TST);
-
 //	// Train Knf
 //	TC.Choose(4, TRN);
+
+//	// Train Cup
+//	TC.Choose(1, TST);
+//	// Train Org
+//	TC.Choose(2, TST);
+	// Train Spg
+	TC.Choose(3, TST);
+//	// Train Knf
 //	TC.Choose(4, TST);
+
+
+//	TC.Choose(3, TST);
+
+
+//	TC.Choose(5, DPL);
+
+	printf("==============================================================================\n");
+	printf("|| SYSTEM END                                                               ||\n");
+	printf("==============================================================================\n");
 
 	return 0;
 }

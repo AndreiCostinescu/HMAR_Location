@@ -8,15 +8,20 @@
 #include "Prediction.h"
 
 Prediction::Prediction(
-	int delay_,
+	string obj_,
 	map<string,pair<int,int> > ac_,
-	vector<string> al_)
+	vector<string> al_,
+	map<string,map<string,string> > ol_,
+	int delay_)
 {
 	grasp_flag 		= true;
 	start_loc		= true;
 
 	ac				= ac_;
 	al				= al_;
+	ol				= ol_;
+
+	obj				= obj_;
 
 	delay_factor	= delay_;
 	output			= "";
@@ -24,139 +29,149 @@ Prediction::Prediction(
 	label			= "";
 	label_mem		= "";
 	repeat			= "I think";
-}
 
+	this->Init();
+
+	dict[2]  = "Nothing is happening.";
+	dict[3]  = "You are moving the ";
+
+}
 
 Prediction::~Prediction() {}
 
-//int Prediction::CheckContact(int x_)
-//{
-//	if (x_==0)
-//	{
-//		output = "[---] NO CONTACT\n";
-//		this->Delay();
-//		return EXIT_FAILURE;
-//	}
-//	else
-//	{
-//		return EXIT_SUCCESS;
-//	}
-//}
+void Prediction::Init( )
+{
+//	dict[0]  = " ";
+//	dict[1]  = ".";
+//	dict[10] = "the";
+//	dict[11] = "has";
+//	dict[12] = "been";
+//	dict[13] = "released";
+//	dict[14] = "nothing";
+//	dict[15] = "is";
+//	dict[16] = "happening";
+//	dict[17] = "you";
+//	dict[18] = "are";
+//	dict[19] = "moving";
+//	dict[20] = "that";
+//	dict[21] = "was";
+//	dict[22] = "should";
+//	dict[23] = "be";
+//	dict[24] = "but";
+//	dict[25] = "grabbing";
+//	dict[26] = "have";
+//	dict[27] = "stopped";
+//	dict[28] = "i think";
+//	dict[29] = "going";
+//	dict[30] = "to";
+//	dict[31] = "i am";
+//	dict[32] = "not";
+//	dict[33] = "sure";
+//	dict[34] = "maybe";
+//	dict[35] = "i don't";
+//	dict[36] = "know";
+//	dict[37] = "whats";
+//	dict[38] = "happening";
+//
+//	int n = 11;
+//	reshapeVector(msg,n);
+//
+//	msg[0]  = {10,0,-1,0,11,0,12,0,13,1};
+//	msg[1]  = {14,0,15,0,16,1};
+//	msg[2]  = {17,0,18,0,19,0,10,0,-1,0,20,0,21,0,-3,1};
+//	msg[3]  = {17,0,18,0,25,0,10,0,-1,0,20,0,21,0,-3,1};
+//	msg[4]  = {17,0,18,0,-3,1};
+//	msg[5]  = {17,0,26,0,27,0,-3,1};
+//	msg[6]  = {28,0,17,0,18,0,29,0,30,0,-3,1};
+//	msg[7]  = {28,0,17,0,18,0,29,0,30,0,-3,1,24,0,17,0,26,0,27,1};
+//	msg[8]  = {34,0,17,0,18,0,29,0,30,0,-3,1,31,0,32,0,33,1};
+//	msg[9]  = {34,0,17,0,18,0,29,0,30,0,-3,1,24,0,17,0,26,0,27,1};
+//	msg[10] = {35,0,36,0,37,0,38,1};
 
+	string path = "kb/message.txt";
+	vector<vector<string> > data;
+	ifstream src_file(path);
+	while (src_file)
+	{
+		string file_line_;
+		if (!getline( src_file, file_line_ )) break;
+		istringstream line_( file_line_ );
+		vector <string> data_line_;
+		while (line_)
+		{
+		   string word;
+		   if (!getline( line_, word, ' ')) break;
+		   data_line_.push_back( word );
+		}
+		data.push_back( data_line_ );
+	}
 
-//void Prediction::Predict(
-//	int label_,
-//	string name_,
-//	vector<map<string, double> > prediction_)
-//{
-//	if (label_<0)
+	int n = 11;
+	reshapeVector(message,n);
+	for(int i=0;i<11;i++)
+	{
+		message[0]  = data[0];
+		message[1]  = data[1];
+		message[2]  = data[2];
+		message[3]  = data[3];
+		message[4]  = data[4];
+		message[5]  = data[5];
+		message[6]  = data[6];
+		message[7]  = data[7];
+		message[8]  = data[8];
+		message[9]  = data[9];
+		message[10] = data[10];
+	}
+
+}
+
+string Prediction::Decode(
+	string obj_,
+	string loc_,
+	vector<string> msg_)
+{
+	string output = "";
+
+//	for(int i=0;i<msg_.size();i++)
 //	{
-//		probability.clear();
-//		probability.resize(ac["GEOMETRIC"].second-ac["GEOMETRIC"].first+1);
-//		for(int iii=ac["GEOMETRIC"].first;
-//				iii<ac["GEOMETRIC"].second+1;
-//				iii++)
+//		if (msg_[i] == -1)
+//			output = output + obj_;
+//		else if (msg_[i] == -2)
+//			output = output + loc_;
+//		else if (msg_[i] == -3)
 //		{
-//			probability[iii] = prediction_[iii][al[iii]];
-//		}
-//		if (*max_element(probability.begin(), probability.end()) <= 0)
-//		{
-//			output = "[GLA] UNKNOWN GOAL ";
+//			output = output + ob_ac;
+//			if (msg_[i-2] == 18)
+//				output = output + "ing";
+//			else if (msg_[i-2] == 21)
+//				output = output + "ed";
 //		}
 //		else
-//		{
-//			decide =
-//					distance(
-//							probability.begin(),
-//							max_element(
-//									probability.begin(),
-//									probability.end()));
-//			output = "[GLA] " + al[decide] + " ";
-//		}
-//
-//		probability.clear();
-//		probability.resize(ac["MOVEMENT"].second-ac["MOVEMENT"].first+1);
-//		for(int iii=ac["MOVEMENT"].first;
-//				iii<ac["MOVEMENT"].second+1;
-//				iii++)
-//		{
-//			probability[iii-ac["MOVEMENT"].first] =
-//					prediction_[decide][al[iii]];
-//		}
-//		if (*max_element(probability.begin(), probability.end()) <= 0)
-//		{
-//			output += "[MOV] UNKNOWN MOV ";
-//		}
-//		else
-//		{
-//			output +=
-//					"[MOV] " +
-//					al[ ac["MOVEMENT"].first +
-//						distance(
-//								probability.begin(),
-//								max_element(
-//										probability.begin(),
-//										probability.end())) ] +
-//					" ";
-//		}
-//
-//		probability.clear();
-//		probability.resize(ac["GENERIC"].second-ac["GENERIC"].first+1);
-//		for(int iii=ac["GENERIC"].first;
-//				iii<ac["GENERIC"].second+1;
-//				iii++)
-//		{
-//			probability[iii-ac["GENERIC"].first] =
-//					prediction_[decide][al[iii]];
-//		}
-//		if (*max_element(probability.begin(), probability.end()) <= 0)
-//		{
-//			output += "[GEN] UNKNOWN GEN\n";
-//		}
-//		else
-//		{
-//			output +=
-//					"[GEN] " +
-//					al[ ac["GENERIC"].first +
-//						distance(
-//								probability.begin(),
-//								max_element(
-//										probability.begin(),
-//										probability.end()))] +
-//					"\n";
-//		}
+//			output = output + dict[msg_[i]];
 //	}
-//	else
-//	{
-//		output = "[CLA] " + name_ + "\n";
-//	}
-//	this->Delay();
-//}
-//
-//void Prediction::Delay()
-//{
-//	if(strcmp(output.c_str(),output_mem.c_str()))
-//	{
-//		mem_delay.first = output;
-//		mem_delay.second = 1;
-//	}
-//	else
-//	{
-//		if(mem_delay.second==delay_factor)
-//		{
-//			mem_delay.second+=1;
-//			printf("%s", output.c_str());
-//		}
-//		else
-//		{
-//			if(mem_delay.second<delay_factor)
-//			{
-//				mem_delay.second+=1;
-//			}
-//		}
-//	}
-//	output_mem = output;
-//}
+
+	for(int i=0;i<msg_.size();i++)
+	{
+		if (!strcmp(msg_[i].c_str(),"object"))
+			output = output + obj_;
+		else if (!strcmp(msg_[i].c_str(),"location"))
+			output = output + loc_;
+		else if (!strcmp(msg_[i].c_str(),"action"))
+		{
+			output = output + ob_ac;
+			if (!strcmp(msg_[i-2].c_str(),"are"))
+				output = output + "ing";
+			else if (!strcmp(msg_[i-2].c_str(),"was"))
+				output = output + "ed";
+		}
+		else
+			output = output + msg_[i];
+
+		output = output + " ";
+	}
+
+	return output;
+}
 
 void Prediction::Delay_(state_t s_)
 {
@@ -184,6 +199,7 @@ void Prediction::Parse(
 	state_t s_)
 {
 	this->Delay_(s_);
+	this->Display();
 }
 
 
@@ -232,11 +248,11 @@ void Prediction::DT0()
 		if(!grasp_flag)
 		{
 			grasp_flag = true;
-			output = "You have released an object...";
+			output = this->Decode(obj, "", message[0]);
 		}
 		else
 		{
-			output = "Nothing is happening...";
+			output = this->Decode(obj, "", message[1]);
 		}
 		start_loc = true;
 		label  = "RELEASE";
@@ -245,10 +261,14 @@ void Prediction::DT0()
 	{
 		if(grasp_flag)
 		{
-			printf("You grabbed an object.\n");
+			printf("the %s has been grabbed .\n", obj.c_str());
+			this->DT1();
 			grasp_flag = false;
 		}
-		this->DT1();
+		else
+		{
+			this->DT1();
+		}
 	}
 }
 
@@ -261,11 +281,13 @@ void Prediction::DT1()
 		this->DT2_1();
 		label  = al[state_mem.back().label2];
 	}
-	else if (state_mem.back().pct_err==0)
-	{
-		output = "This is strange. I do not know what you are doing. ";
-		label  = "UNKNOWN";
-	}
+
+//	else if (state_mem.back().pct_err==0)
+//	{
+//		output = dict[10];
+//		label  = "UNKNOWN";
+//	}
+
 	// in SM
 	else
 	{
@@ -277,32 +299,26 @@ void Prediction::DT1()
 // LA start loc?
 void Prediction::DT2_1()
 {
-	if(start_loc)
+	if(grasp_flag)
 	{
 		if(state_mem.back().mov>0)
 		{
-			output =
-					"You are moving an object that was previously " +
-					al[state_mem.back().label2] + ". ";
+			output = this->Decode(obj, "", message[2]);
 		}
 		else
 		{
-			output =
-					"You are grabbing an object that was previously " +
-					al[state_mem.back().label2] + ". ";
+			output = this->Decode(obj, "", message[3]);
 		}
 	}
 	else
 	{
 		if(state_mem.back().mov>0)
 		{
-			output = "You are " + al[state_mem.back().label2] + " something. ";
+			output = this->Decode(obj, "", message[4]);
 		}
 		else
 		{
-			output =
-					"You are grabbing an object. I think you should be " +
-					al[state_mem.back().label2] + " something. ";
+			output = this->Decode(obj, "", message[5]);
 		}
 	}
 }
@@ -310,17 +326,18 @@ void Prediction::DT2_1()
 // SM eval
 void Prediction::DT2_2()
 {
-	if(state_mem.back().mov>0)
-	{
-		this->DT3();
-	}
-	else
-	{
-		output =
-				"You are grabbing an object. I think you will be " +
-				al[state_mem.back().label2] + " something. ";
-		label  = "STOP";
-	}
+	this->DT3();
+//	if(state_mem.back().mov>0)
+//	{
+//		this->DT3();
+//	}
+//	else
+//	{
+//		output =
+//				"You are grabbing an object. I think you will be " +
+//				ol[obj].at(al[state_mem.back().label2]) + " something. ";
+//		label  = "STOP";
+//	}
 }
 
 // prediction on SM
@@ -340,18 +357,16 @@ void Prediction::DT3()
 	if(tmp.size()==1)
 	{
 		this->DT4_1(tmp.back());
-		label  = "MOVE";
 	}
 	// multiple confident traj
 	else if(tmp.size()>1)
 	{
 		this->DT4_2(tmp);
-		label  = "MOVE";
 	}
 	// unknown
 	else
 	{
-		output = "This is strange. I do not know what you are doing. ";
+		output = this->Decode(obj, "", message[10]);
 		label  = "UNKNOWN";
 	}
 }
@@ -360,17 +375,15 @@ void Prediction::DT3()
 void Prediction::DT4_1(
 	double x_)
 {
-	if(x_ > 0.5)
+	if(state_mem.back().mov>0)
 	{
-		output =
-				"I think you are going to " + al[state_mem.back().label2] +
-				" something. ";
+		output = this->Decode(obj, "", message[6]);
+		label  = "MOVE";
 	}
 	else
 	{
-		output =
-				"I think you are going to " + al[state_mem.back().label2] +
-				" something. But i am not so sure. ";
+		output = this->Decode(obj, "", message[7]);
+		label  = "STOP";
 	}
 }
 
@@ -386,9 +399,16 @@ void Prediction::DT4_2(
 
 	if(*max_element(x_.begin(), x_.end()) > 0.33)
 	{
-		output =
-				"I think you are going to " + al[state_mem.back().label2] +
-				" something. But there are other possibilities.";
+		if(state_mem.back().mov>0)
+		{
+			output = this->Decode(obj, "", message[6]);
+			label  = "MOVE";
+		}
+		else
+		{
+			output = this->Decode(obj, "", message[7]);
+			label  = "STOP";
+		}
 	}
 	else
 	{
@@ -401,64 +421,49 @@ void Prediction::DT4_2(
 					distance(
 							x_.begin(),
 							max_element(x_.begin(), x_.end()));
-		output =
-				"I think you are going to " + al[state_mem.back().label2] +
-				" something. But i am not so sure. " +
-				"Maybe you are going to " + al[idx] +
-				" something. ";
+		if(state_mem.back().mov>0)
+		{
+			output = this->Decode(obj, "", message[8]);
+			output = output + "Perhaps you are going to " + al[idx] + ".";
+//			output =
+//					"I think you are going to " + ob_ac +
+//					"ing. But i am not so sure. " +
+//					"Maybe you are going to " + al[idx] +
+//					". ";
+			label  = "MOVE";
+		}
+		else
+		{
+			output = this->Decode(obj, "", message[9]);
+//			output =
+//					"I think you are going to " + ob_ac +
+//					"ing. But i am not so sure. " +
+//					"Maybe you are going to " + al[idx] +
+//					". But i am sure you have stopped.";
+			label  = "STOP";
+		}
 	}
 }
 
 void Prediction::Display()
 {
-	state_t s = state_mem.back();
-
 	if (state_mem.size() >= delay_factor)
 	{
-//		if (!s.grasp)
-//		{
-//			output = "NOTHING\n";
-//		}
-//		else if (s.pct_err<0)
-//		{
-//			output = "IN LA\n";
-//		}
-//		else
-//		{
-//			if(s.grasp)	output = "Grasp ";
-//			else		output = "Release ";
-//
-//			if (s.label1 < 0)
-//				output += "from UNKNOWN ";
-//			else
-//				output += "from " + al[s.label1] + " ";
-//
-//			if (s.label2 < 0)
-//				output += "to UNKNOWN ";
-//			else
-//				output += "to " + al[s.label2] + " ";
-//
-//			output += "with " + to_string(s.pct_err) + " ";
-//			output += "moving at " + to_string(s.mov) + " ";
-//			output += "contact " + to_string(s.con) + " ";
-//			output += "surface " + to_string(s.sur) + "\n";
-//		}
-//		if (!s.grasp)
-//		{
-//			output = "RELEASE\n";
-//		}
-//		else if (s.pct_err<0)
-//		{
-//			output = al[s.label2] + "\n";
-//		}
-//		else
-//		{
-//			output = "MOVE\n";
-//		}
-
+		if(state_mem.back().label2 < 0)
+		{
+			ob_ac = "";
+		}
+		else
+		{
+			ob_ac =
+					(ol[obj][al[state_mem.back().label2]].empty() ?
+							al[state_mem.back().label2] :
+							ol[obj][al[state_mem.back().label2]]);
+		}
 		this->DT0();
 	}
 
+	// Extra info for transitions
 	if (strcmp(output_mem.c_str(),output.c_str()))
 	{
 		if (!strncmp(output_mem.c_str(),repeat.c_str(),strlen(repeat.c_str())) &&
@@ -476,7 +481,6 @@ void Prediction::Display()
 	if (strcmp(label_mem.c_str(),label.c_str()))
 	{
 		label_mem = label;
-//		cout << label << endl;
 	}
 
 

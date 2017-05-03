@@ -1,5 +1,5 @@
 /*
- * Prediction.h
+joi * Prediction.h
  *
  *  Created on: Apr 7, 2017
  *      Author: chen
@@ -14,10 +14,16 @@
 class Prediction {
 public:
 	Prediction(
-		int delay_,
+		string obj_,
 		map<string,pair<int,int> > ac_,
-		vector<string> al_);
+		vector<string> al_,
+		map<string,map<string,string> > ol_,
+		int delay_);
+
 	virtual ~Prediction();
+
+	void Init();
+	string Decode(string obj_, string loc_, vector<string> msg_);
 
 	void Delay_(state_t s_);
 	void Parse(state_t s_);
@@ -33,7 +39,13 @@ public:
 private:
 	map<string,pair<int,int> > 		ac;
 	vector<string> 					al;
+	map<string,map<string,string> > ol;
 
+	map<int,string> 	 dict;
+	vector<vector<int> > msg;
+	vector<vector<string> > message;
+
+	string 				obj;
 	int					delay_factor;
 	vector<state_t>		state_mem;
 	string 				output;
@@ -43,6 +55,8 @@ private:
 	string 				repeat;
 	bool				grasp_flag;
 	bool				start_loc;
+
+	string ob_ac;
 };
 
 #endif /* PREDICTION_H_ */

@@ -359,6 +359,7 @@ int TrainSM::AdjustCurveExt(
 		p_mid.y = gsl_poly_eval (cy, DEGREE, lim[1]);
 		p_mid.z = gsl_poly_eval (cz, DEGREE, lim[1]);
 
+		// TODO ERROR FOR initial tan and normal
 		edge_tmp.loc_mid  [i] = p_mid;
 		edge_tmp.loc_start[i] = addPoint(p_mid , multiPoint(p_tan, lim[0]-lim[1]));
 		edge_tmp.loc_end  [i] = addPoint(p_mid , multiPoint(p_tan, lim[2]-lim[1]));

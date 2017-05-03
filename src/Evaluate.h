@@ -22,9 +22,8 @@ class Evaluate
 		void setWindow(vector<double> x_) 	{win_eval = x_;}
 		void setPctErr(vector<double> x_)	{pct_err_eval = x_;}
 		void setGraph(Graph *x_) 			{G = x_;}
-		state_t getState() 					{return state_eval;}
 
-		void UpdateEval();
+		int UpdateEval();
 
 	protected:
 

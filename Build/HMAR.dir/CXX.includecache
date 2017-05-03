@@ -6,41 +6,19 @@
 
 #IncludeRegexTransform: 
 
-/home/chen/HMAR/HMAR_Location/src/DBSCAN.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-
 /home/chen/HMAR/HMAR_Location/src/Graph.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
 
-/home/chen/HMAR/HMAR_Location/src/TrainLA.cpp
-TrainLA.h
-/home/chen/HMAR/HMAR_Location/src/TrainLA.h
-
-/home/chen/HMAR/HMAR_Location/src/TrainLA.h
+/home/chen/HMAR/HMAR_Location/src/algo.h
 dataDeclaration.h
 /home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
 vtkExtra.h
 /home/chen/HMAR/HMAR_Location/src/vtkExtra.h
-misc.h
-/home/chen/HMAR/HMAR_Location/src/misc.h
+
+/home/chen/HMAR/HMAR_Location/src/core.cpp
 core.h
 /home/chen/HMAR/HMAR_Location/src/core.h
-DBSCAN.h
-/home/chen/HMAR/HMAR_Location/src/DBSCAN.h
-
-/home/chen/HMAR/HMAR_Location/src/algo.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-vtkExtra.h
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
 
 /home/chen/HMAR/HMAR_Location/src/core.h
 dataDeclaration.h
@@ -221,6 +199,8 @@ vtkRect.h
 -
 vtkAxis.h
 -
+vtkGL2PSExporter.h
+-
 gsl/gsl_integration.h
 -
 gsl/gsl_bspline.h
@@ -239,34 +219,6 @@ gsl/gsl_linalg.h
 -
 opencv2/opencv.hpp
 -
-
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-
-/home/chen/HMAR/HMAR_Location/src/labeling_loc.cpp
-labeling_loc.h
-/home/chen/HMAR/HMAR_Location/src/labeling_loc.h
-
-/home/chen/HMAR/HMAR_Location/src/labeling_loc.h
-dataDeclaration.h
-/home/chen/HMAR/HMAR_Location/src/dataDeclaration.h
-algo.h
-/home/chen/HMAR/HMAR_Location/src/algo.h
-Graph.h
-/home/chen/HMAR/HMAR_Location/src/Graph.h
-vtkExtra.h
-/home/chen/HMAR/HMAR_Location/src/vtkExtra.h
-dbscan.h
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
-misc.h
-/home/chen/HMAR/HMAR_Location/src/misc.h
-core.h
-/home/chen/HMAR/HMAR_Location/src/core.h
-dbscan.h
-/home/chen/HMAR/HMAR_Location/src/dbscan.h
 
 /home/chen/HMAR/HMAR_Location/src/misc.h
 dataDeclaration.h
@@ -1120,6 +1072,14 @@ vtkFiltersCoreModule.h
 
 /home/chen/vtksrc/VTK-build/Filters/Sources/vtkFiltersSourcesModule.h
 
+/home/chen/vtksrc/VTK-build/IO/Export/vtkIOExportModule.h
+vtkRenderingCoreModule.h
+/home/chen/vtksrc/VTK-build/IO/Export/vtkRenderingCoreModule.h
+vtkRenderingGL2PSOpenGL2Module.h
+/home/chen/vtksrc/VTK-build/IO/Export/vtkRenderingGL2PSOpenGL2Module.h
+vtkAutoInit.h
+/home/chen/vtksrc/VTK-build/IO/Export/vtkAutoInit.h
+
 /home/chen/vtksrc/VTK-build/Interaction/Style/vtkInteractionStyleModule.h
 vtkRenderingCoreModule.h
 /home/chen/vtksrc/VTK-build/Interaction/Style/vtkRenderingCoreModule.h
@@ -1145,6 +1105,26 @@ vtkFiltersCoreModule.h
 /home/chen/vtksrc/VTK-build/Rendering/Core/vtkFiltersCoreModule.h
 vtkAutoInit.h
 /home/chen/vtksrc/VTK-build/Rendering/Core/vtkAutoInit.h
+
+/home/chen/vtksrc/VTK-build/Rendering/GL2PSOpenGL2/vtkRenderingGL2PSOpenGL2Module.h
+vtkRenderingOpenGL2Module.h
+/home/chen/vtksrc/VTK-build/Rendering/GL2PSOpenGL2/vtkRenderingOpenGL2Module.h
+vtkRenderingOpenGL2Module.h
+/home/chen/vtksrc/VTK-build/Rendering/GL2PSOpenGL2/vtkRenderingOpenGL2Module.h
+vtkAutoInit.h
+/home/chen/vtksrc/VTK-build/Rendering/GL2PSOpenGL2/vtkAutoInit.h
+
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkRenderingOpenGL2Module.h
+vtkRenderingOpenGLConfigure.h
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkRenderingOpenGLConfigure.h
+vtkRenderingCoreModule.h
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkRenderingCoreModule.h
+vtkRenderingCoreModule.h
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkRenderingCoreModule.h
+vtkAutoInit.h
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkAutoInit.h
+
+/home/chen/vtksrc/VTK-build/Rendering/OpenGL2/vtkRenderingOpenGLConfigure.h
 
 /home/chen/vtksrc/VTK-build/Utilities/KWIML/vtk_kwiml.h
 vtkkwiml/abi.h
@@ -1423,6 +1403,10 @@ vtkMathConfigure.h
 /home/chen/vtksrc/VTK/Common/Core/vtkMathConfigure.h
 cassert
 -
+
+/home/chen/vtksrc/VTK/Common/Core/vtkNew.h
+vtkIOStream.h
+/home/chen/vtksrc/VTK/Common/Core/vtkIOStream.h
 
 /home/chen/vtksrc/VTK/Common/Core/vtkOStrStreamWrapper.h
 
@@ -1877,6 +1861,20 @@ vtkFiltersSourcesModule.h
 /home/chen/vtksrc/VTK/Filters/Sources/vtkFiltersSourcesModule.h
 vtkPolyDataAlgorithm.h
 /home/chen/vtksrc/VTK/Filters/Sources/vtkPolyDataAlgorithm.h
+
+/home/chen/vtksrc/VTK/IO/Export/vtkExporter.h
+vtkIOExportModule.h
+/home/chen/vtksrc/VTK/IO/Export/vtkIOExportModule.h
+vtkObject.h
+/home/chen/vtksrc/VTK/IO/Export/vtkObject.h
+
+/home/chen/vtksrc/VTK/IO/Export/vtkGL2PSExporter.h
+vtkIOExportModule.h
+/home/chen/vtksrc/VTK/IO/Export/vtkIOExportModule.h
+vtkExporter.h
+/home/chen/vtksrc/VTK/IO/Export/vtkExporter.h
+vtkNew.h
+/home/chen/vtksrc/VTK/IO/Export/vtkNew.h
 
 /home/chen/vtksrc/VTK/Interaction/Style/vtkInteractorStyleTrackballCamera.h
 vtkInteractionStyleModule.h

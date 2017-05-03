@@ -25,6 +25,11 @@ class Test : public ReadFile, public WriteFile, public Filter, public Parser
 			string filename_,
 			string resultdir_,
 			Graph *Graph_);
+
+		int Deploying(
+			string filename_,
+			string resultdir_,
+			Graph *Graph_);
 };
 
 #endif /* TEST_H_ */

@@ -79,26 +79,56 @@ int decideBoundary_(
 	return EXIT_SUCCESS;
 }
 
-int decideBoundaryClosest_(
+int decideBoundaryPredict(
+	point_d 				&point1_,
 	point_d 				&point2_,
-	vector<point_d> 		centroids_)
+	vector<point_d> 		centroids_,
+	vector<int>				surfaces_flag_,
+	vector<vector<double> > surfaces_,
+	vector<double>			surfaces_limit)
 {
 	point2_.l = UNCLASSIFIED;
-
-	vector<double> tmp;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
 		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
 		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
 		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
-		tmp.push_back(fabs(location_contact-centroids_[ii].l));
+		if (max_(location_contact, centroids_[ii].l))// || pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.8)
+		{
+			point2_.l = ii;
+			if (surfaces_flag_[point2_.l]>0)
+			{
+				if (!decideSurface(
+						point2_,
+						surfaces_[surfaces_flag_[point2_.l]-1],
+						surfaces_limit[surfaces_flag_[point2_.l]-1]))
+				{
+					point2_.l = UNCLASSIFIED;
+				}
+			}
+		}
 	}
+	return EXIT_SUCCESS;
+}
 
+int decideBoundaryClosest_(
+	point_d 				&point2_,
+	vector<point_d> 		centroids_)
+{
+	point2_.l = UNCLASSIFIED;
+	vector<double> tmp;
+	for(int ii=0;ii<centroids_.size();ii++)
+	{
+		tmp.push_back(
+				pdfExp(
+						BOUNDARY_VAR,
+						0.0,
+						l2Norm(minusPoint(point2_, centroids_[ii]))));
+	}
 	point2_.l =
 			distance(
 					tmp.begin(),
-					min_element(tmp.begin(), tmp.end()));
-
+					max_element(tmp.begin(), tmp.end()));
 	return EXIT_SUCCESS;
 }
 
@@ -110,7 +140,7 @@ bool decideSurface(
 //	cout << fabs(centroids_.x * surfaces_[0] +
 //			centroids_.y * surfaces_[1] +
 //			centroids_.z * surfaces_[2] -
-//			surfaces_[3]) << endl;
+//			surfaces_[3]) << " : " << limit_ <<endl;
 	if(fabs(centroids_.x * surfaces_[0] +
 			centroids_.y * surfaces_[1] +
 			centroids_.z * surfaces_[2] -
@@ -249,7 +279,7 @@ double dLIPredict(
 	point_d proj_dir_tmp;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
-	int idx1 = 0;//( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
+	int idx1 = ( loc_last_idx_-(loc_offset_/2) < 0 ? 0 : loc_last_idx_-(loc_offset_/2) );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
@@ -316,15 +346,40 @@ double dLIPredict(
 //		}
 	}
 
-//	// to prevent unknown locations at start and end
+	//	// to prevent unknown locations at start and end
 //	if (d6min > 0.001)
 //	{
 //		loc_idx_ = loc_last_idx_;
 //	}
 //	else
 //	{
-		loc_idx_ = idx_tmp;
+//		loc_idx_ = idx_tmp;
 //	}
+
+
+	if(loc_init_)
+	{
+		min_dist = 10;
+		int tmp = 0;
+		for(int i=idx1;i<idx2;i++)
+		{
+			if (min_(l2Norm(minusPoint(point_, mid_[i])), min_dist))
+			{
+				min_dist = l2Norm(minusPoint(point_, mid_[i]));
+				tmp = i;
+			}
+		}
+
+		if (tmp<idx_tmp)
+			loc_idx_ = tmp;
+		else
+			loc_idx_ = idx_tmp;
+	}
+	else
+	{
+		loc_idx_ = idx_tmp;
+	}
+
 	return d6;
 }
 

@@ -5,7 +5,66 @@
  *      Author: chen
  */
 
+#define DOC_DIR "/home/chen/HMAR/HMAR_Location/doc/"
+
 #include "vtkExtra.h"
+
+// ============================================================================
+// KEYBOARD
+// ============================================================================
+// Define interaction style
+class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
+{
+  public:
+    static KeyPressInteractorStyle* New();
+    vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
+
+	void setWin(vtkSmartPointer<vtkRenderWindow> x) {renwin = x;}
+
+    virtual void OnKeyPress()
+    {
+      // Get the keypress
+      vtkRenderWindowInteractor *rwi = this->Interactor;
+      string key = rwi->GetKeySym();
+
+      // Handle an arrow key
+      if(key == "l")
+      {
+    		vtkSmartPointer<vtkGL2PSExporter> exp;
+    		exp = vtkSmartPointer<vtkGL2PSExporter>::New();
+    		exp->SetRenderWindow(renwin);
+    		exp->SetFileFormatToEPS();
+    		exp->CompressOff();
+    		exp->SetSortToSimple();
+    		exp->TextAsPathOn();
+    		exp->DrawBackgroundOn();
+    		exp->SetFilePrefix((string(DOC_DIR) + "LA_drink").c_str());
+    		exp->Write();
+      }
+
+      if(key == "m")
+      {
+    		vtkSmartPointer<vtkGL2PSExporter> exp;
+    		exp = vtkSmartPointer<vtkGL2PSExporter>::New();
+    		exp->SetRenderWindow(renwin);
+    		exp->SetFileFormatToEPS();
+    		exp->CompressOff();
+    		exp->SetSortToSimple();
+    		exp->TextAsPathOn();
+    		exp->DrawBackgroundOn();
+    		exp->SetFilePrefix((string(DOC_DIR) + "SM_drink").c_str());
+    		exp->Write();
+      }
+
+      // Forward events
+      vtkInteractorStyleTrackballCamera::OnKeyPress();
+    }
+
+	private:
+    	vtkSmartPointer<vtkRenderWindow> renwin;
+
+};
+vtkStandardNewMacro(KeyPressInteractorStyle);
 
 // ============================================================================
 // MOUSE
@@ -275,13 +334,13 @@ void colorCode(
 		array2vector(cy, 	3, 	container_[12*i+1]);
 		array2vector(co, 	3, 	container_[12*i+2]);
 		array2vector(cr, 	3, 	container_[12*i+3]);
-		array2vector(clg, 	3,	container_[12*i+4]);
-		array2vector(cg, 	3, 	container_[12*i+5]);
+		array2vector(cc, 	3,	container_[12*i+4]);
+		array2vector(cpb, 	3, 	container_[12*i+5]);
 		array2vector(cgb, 	3, 	container_[12*i+6]);
-		array2vector(cc, 	3, 	container_[12*i+7]);
-		array2vector(clb, 	3, 	container_[12*i+8]);
-		array2vector(cb, 	3, 	container_[12*i+9]);
-		array2vector(cpb, 	3, 	container_[12*i+10]);
+		array2vector(clb, 	3, 	container_[12*i+7]);
+		array2vector(cb, 	3, 	container_[12*i+8]);
+		array2vector(cg, 	3, 	container_[12*i+9]);
+		array2vector(clg, 	3, 	container_[12*i+10]);
 		array2vector(cpr, 	3, 	container_[12*i+11]);
 	}
 }
@@ -390,6 +449,7 @@ void showData(
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
+	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
 	vtkSmartPointer<vtkTextActor> 				textActor;
 	vtkSmartPointer<vtkCamera>					camera;
 
@@ -399,6 +459,7 @@ void showData(
 	renWin 			= vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	style 			= vtkSmartPointer<customMouseInteractorStyle>::New();
+	style2			= vtkSmartPointer<KeyPressInteractorStyle>::New();
 //	textActor 		= vtkSmartPointer<vtkTextActor>::New();
 	camera 			= vtkSmartPointer<vtkCamera>::New();
 
@@ -406,6 +467,7 @@ void showData(
 	actor->GetProperty()->SetPointSize(3);
 //	actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
 
+	renWin->PointSmoothingOn();
 	renWin->SetSize(WIN_WIDTH, WIN_HEIGHT); //(width, height)
 	renWin->AddRenderer(renderer);
 	renWinInter->SetRenderWindow(renWin);
@@ -416,7 +478,7 @@ void showData(
 		textActor = vtkSmartPointer<vtkTextActor>::New();
 		printf(">>>>> Pick a location with color.\n");
 		if(!labels_.empty()) textActor->SetInput (labels_[0].c_str());
-		textActor->SetPosition ( 10, (WIN_HEIGHT-20) );
+		textActor->SetPosition ( 10, (WIN_HEIGHT-FONT_SIZE-10) );
 		textActor->GetTextProperty()->SetFontSize ( FONT_SIZE );
 		textActor->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
 		renderer->AddActor2D (textActor);
@@ -429,7 +491,7 @@ void showData(
 			if(labels_[i].empty()) continue;
 			textActor = vtkSmartPointer<vtkTextActor>::New();
 			textActor->SetInput(labels_[i].c_str());
-			textActor->SetPosition(10, (WIN_HEIGHT-20)-i*FONT_SIZE);
+			textActor->SetPosition(10, (WIN_HEIGHT-FONT_SIZE-10)-i*FONT_SIZE);
 			textActor->GetTextProperty()->SetFontSize(FONT_SIZE);
 			textActor->GetTextProperty()
 					 ->SetColor((double)color_[i+1][0]/255,
@@ -449,9 +511,6 @@ void showData(
 		}
 	}
 
-
-
-
 	renderer->AddActor(actor);
 	//renderer->SetBackground(nc->GetColor3d("MidnightBlue").GetData());
 	style->SetDefaultRenderer(renderer);
@@ -461,6 +520,11 @@ void showData(
 	style->setLocations(loc_idx_);
 	style->setColors(color_);
 	renWinInter->SetInteractorStyle( style );
+
+	style2->setWin(renWin);
+    style2->SetCurrentRenderer(renderer);
+	renWinInter->SetInteractorStyle( style2 );
+
 	renWin->Render();
 	renWinInter->Start();
 
@@ -502,9 +566,11 @@ void showConnection(
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
+	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
 	// *************************************************************[VARIABLES]
 
 	style 		= vtkSmartPointer<customMouseInteractorStyle>::New();
+	style2		= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	renderer    = vtkSmartPointer<vtkRenderer>::New();
 	renWin      = vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -564,62 +630,211 @@ void showConnection(
 								tmpN[s_tmp%2],
 								edges[n1][n2][0].sector_map[l*sec+s]);
 
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+0,
+						edges[n1][n2][0].loc_start[l].x + Nmax[s%2].x - init.x,
+						edges[n1][n2][0].loc_start[l].y + Nmax[s%2].y - init.y,
+						edges[n1][n2][0].loc_start[l].z + Nmax[s%2].z - init.z);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+1,
+						edges[n1][n2][0].loc_end  [l].x + Nmax[s%2].x - init.x,
+						edges[n1][n2][0].loc_end  [l].y + Nmax[s%2].y - init.y,
+						edges[n1][n2][0].loc_end  [l].z + Nmax[s%2].z - init.z);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+2,
+						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+3,
+						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+				ID[0] = (l*sec+s)*8+0;
+				ID[1] = (l*sec+s)*8+1;
+				ID[2] = (l*sec+s)*8+3;
+				ID[3] = (l*sec+s)*8+2;
+				polygons->InsertNextCell(4,ID);
 
-				// [TANGENT NORMAL LINES PER SECTOR]***************************
-//				if(l>75 && l<85)
-//				{
-//				lineSource = vtkSmartPointer<vtkLineSource>::New();
-//				lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//				lineActor  = vtkSmartPointer<vtkActor>::New();
-//				lineSource->SetPoint1(
-//						edges[n1][n2][0].loc_start[l].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z - init.z);
-//				lineSource->SetPoint2(
-//						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
-//				lineMapper->SetInputConnection(lineSource->GetOutputPort());
-//				lineActor->GetProperty()->SetLineWidth(5);
-//				lineActor->GetProperty()->SetColor(1.0,0.0,1.0);
-//				lineActor->SetMapper(lineMapper);
-//				renderer->AddActor(lineActor);
-//				lineSource = vtkSmartPointer<vtkLineSource>::New();
-//				lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//				lineActor  = vtkSmartPointer<vtkActor>::New();
-//				lineSource->SetPoint1(
-//						edges[n1][n2][0].loc_start[l].x + edges[n1][n2][0].nor[l].x*0.1 - init.x,
-//						edges[n1][n2][0].loc_start[l].y + edges[n1][n2][0].nor[l].y*0.1 - init.y,
-//						edges[n1][n2][0].loc_start[l].z + edges[n1][n2][0].nor[l].z*0.1 - init.z);
-//				lineSource->SetPoint2(
-//						edges[n1][n2][0].loc_start[l].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z - init.z);
-//				lineMapper->SetInputConnection(lineSource->GetOutputPort());
-//				lineActor->GetProperty()->SetLineWidth(5);
-//				lineActor->GetProperty()->SetColor(1.0,0.0,0.0);
-//				lineActor->SetMapper(lineMapper);
-//				renderer->AddActor(lineActor);
-//				}
-//				if(l==3)
-//				{
-//					lineSource = vtkSmartPointer<vtkLineSource>::New();
-//					lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//					lineActor  = vtkSmartPointer<vtkActor>::New();
-//					lineSource->SetPoint1(-0.19178,-0.208788,1.60406);
-////					lineSource->SetPoint1(-0.182012,-0.218845,1.61503);
-////					lineSource->SetPoint1(-0.187477,-0.221765,1.62085);
-//					lineSource->SetPoint2(
-//							edges[n1][n2][0].loc_mid[l].x - init.x,
-//							edges[n1][n2][0].loc_mid[l].y - init.y,
-//							edges[n1][n2][0].loc_mid[l].z - init.z);
-//					lineMapper->SetInputConnection(lineSource->GetOutputPort());
-//					lineActor->GetProperty()->SetLineWidth(5);
-//					lineActor->GetProperty()->SetColor(1.0,1.0,0.0);
-//					lineActor->SetMapper(lineMapper);
-//					renderer->AddActor(lineActor);
-//				}
-				// ***************************[TANGENT NORMAL LINES PER SECTOR]
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+4,
+						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+5,
+						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+				Nmax[s_tmp%2] =
+						multiPoint(
+								tmpN[s_tmp%2],
+								edges[n1][n2][0].sector_map[l*sec+s_tmp]);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+6,
+						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+				pointspoly->InsertPoint(
+						(l*sec+s)*8+7,
+						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
+						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
+						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+				ID[0] = (l*sec+s)*8+4;
+				ID[1] = (l*sec+s)*8+5;
+				ID[2] = (l*sec+s)*8+7;
+				ID[3] = (l*sec+s)*8+6;
+				polygons->InsertNextCell(4,ID);
+			}
+		}
+
+		polygonPolyData->SetPoints(pointspoly);
+		polygonPolyData->SetPolys(polygons);
+
+#if VTK_MAJOR_VERSION <= 5
+		mapperpoly->SetInput(polygonPolyData);
+#else
+		mapperpoly->SetInputData(polygonPolyData);
+#endif
+
+		actorpoly->SetMapper(mapperpoly);
+		actorpoly->GetProperty()->SetColor(0.0,1.0,0.0); //color
+		renderer->AddActor(actorpoly);
+		// ****************************************************[SECTOR POLYGON]
+	}
+
+	// [ADDING DATA]***********************************************************
+	if (show_points)
+	{
+		vtkSmartPointer<vtkTextActor> 		textActor;
+		vtkSmartPointer<vtkActor> 			actor;
+		actor  		= vtkSmartPointer<vtkActor>::New();
+		actor->SetMapper(dataPoints(points_, num_locations, color_, true));
+		actor->GetProperty()->SetPointSize(5);
+		renderer->AddActor(actor);
+		style->setNumberOfLabels(num_locations);
+		style->setLabels(labels_);
+		style->setColors(color_);
+		for(int i=0;i<num_locations;i++)
+		{
+			textActor 	= vtkSmartPointer<vtkTextActor>::New();
+			if(labels_.empty()) continue;
+			if(labels_[i].empty()) continue;
+			textActor->SetInput(labels_[i].c_str());
+			textActor->SetPosition(10, (WIN_HEIGHT-FONT_SIZE-10)-i*FONT_SIZE);
+			textActor->GetTextProperty()->SetFontSize(FONT_SIZE);
+			textActor->GetTextProperty()
+					 ->SetColor((double)color_[i+1][0]/255,
+								(double)color_[i+1][1]/255,
+								(double)color_[i+1][2]/255);
+			renderer->AddActor2D(textActor);
+		}
+	}
+	// ***********************************************************[ADDING DATA]
+
+	style->SetDefaultRenderer(renderer);
+	style->setLeftButton(CLICK_EMPTY);
+	renderer->SetBackground(0.0,0.0,0.0);
+	renWinInter->SetInteractorStyle(style);
+
+	style2->setWin(renWin);
+    style2->SetCurrentRenderer(renderer);
+	renWinInter->SetInteractorStyle( style2 );
+
+	renWin->Render();
+	renWinInter->Start();
+}
+
+void showConnectionTest(
+	Graph *Graph_,
+	vector<point_d> points_,
+	vector<string> &labels_,
+	vector<vector<unsigned char> > color_,
+	bool show_points)
+{
+	// [VARIABLES]*************************************************************
+	vector<node_tt> nodes 					= Graph_->getNodeList();
+	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+
+	int num_locations = nodes.size();
+
+	vector<point_d> locations; locations.resize(num_locations);
+	for(int i=0;i<num_locations;i++)
+	{
+		locations[i] = nodes[i].centroid;
+	}
+
+	vtkSmartPointer<vtkSphereSource> 			sphereSource;
+	vtkSmartPointer<vtkUnsignedCharArray> 		colors;
+	vtkSmartPointer<vtkRenderer> 				renderer;
+	vtkSmartPointer<vtkRenderWindow> 			renWin;
+	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
+	vtkSmartPointer<customMouseInteractorStyle> style;
+	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
+	vtkSmartPointer<vtkPolyDataMapper> mapper;
+	vtkSmartPointer<vtkActor> actor;
+	// *************************************************************[VARIABLES]
+
+	style 		= vtkSmartPointer<customMouseInteractorStyle>::New();
+	style2		= vtkSmartPointer<KeyPressInteractorStyle>::New();
+	renderer    = vtkSmartPointer<vtkRenderer>::New();
+	renWin      = vtkSmartPointer<vtkRenderWindow>::New();
+	renWinInter = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
+	renWin->SetSize(1280,800); //(width, height)
+	renWin->AddRenderer(renderer);
+	renWinInter->SetRenderWindow(renWin);
+
+	vtkSmartPointer<vtkPoints> pointspoly;
+	vtkSmartPointer<vtkPolygon> polygon;
+	vtkSmartPointer<vtkCellArray> polygons;
+	vtkSmartPointer<vtkPolyData> polygonPolyData;
+	vtkSmartPointer<vtkPolyDataMapper> mapperpoly;
+	vtkSmartPointer<vtkActor> actorpoly;
+
+	for(int i=0;i<Sqr(num_locations);i++)
+	{
+		if(i/num_locations==i%num_locations) continue;
+		if(edges[i/num_locations][i%num_locations][0].counter==0) continue;
+
+		// [SECTOR POLYGON]****************************************************
+		pointspoly = vtkSmartPointer<vtkPoints>::New();
+		polygons = vtkSmartPointer<vtkCellArray>::New();
+		polygonPolyData = vtkSmartPointer<vtkPolyData>::New();
+		mapperpoly = vtkSmartPointer<vtkPolyDataMapper>::New();
+		actorpoly = vtkSmartPointer<vtkActor>::New();
+
+		int loc = LOC_INT;
+		int sec = SEC_INT;
+		int n1  = i/num_locations;
+		int n2  = i%num_locations;
+
+		point_d tmpN[2], Nmax[2], init; init.x = init.y = init.z = 0;
+//		init = sector[i][0].loc_start[0];
+
+		vtkIdType ID[4];
+
+		for(int l=0;l<loc;l++)
+		{
+			tmpN[0] =
+					rodriguezVec((double)(2*M_PI*(0)/sec),
+							edges[n1][n2][0].tan[l],
+							edges[n1][n2][0].nor[l]);
+			Nmax[0] =
+					multiPoint(
+							tmpN[0],
+							edges[n1][n2][0].sector_map[l*sec+0]);
+			for (int s=0;s<sec;s++)
+			{
+				int s_tmp = (s+1)%sec;
+				tmpN[s_tmp%2] =
+						rodriguezVec((double)(2*M_PI*(s_tmp)/sec),
+								edges[n1][n2][0].tan[l],
+								edges[n1][n2][0].nor[l]);
+				Nmax[s_tmp%2] =
+						multiPoint(
+								tmpN[s_tmp%2],
+								edges[n1][n2][0].sector_map[l*sec+s]);
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+0,
@@ -690,113 +905,8 @@ void showConnection(
 
 		actorpoly->SetMapper(mapperpoly);
 		actorpoly->GetProperty()->SetColor(0.0,1.0,0.0);
-//		actorpoly->GetProperty()->LightingOff();
-//		actorpoly->SetOrigin(p_mid_tmp.x,p_mid_tmp.y,p_mid_tmp.z);
 		renderer->AddActor(actorpoly);
 		// ****************************************************[SECTOR POLYGON]
-
-//		// [SECTOR POLYGON]****************************************************
-//		pointspoly = vtkSmartPointer<vtkPoints>::New();
-//		polygons = vtkSmartPointer<vtkCellArray>::New();
-//		polygonPolyData = vtkSmartPointer<vtkPolyData>::New();
-//		mapperpoly = vtkSmartPointer<vtkPolyDataMapper>::New();
-//		actorpoly = vtkSmartPointer<vtkActor>::New();
-//
-//		for(int l=0;l<loc;l++)
-//		{
-//			tmpN[0] =
-//					rodriguezVec(
-//							(double)(2*M_PI*(0)/sec),
-//							edges[n1][n2][0].tan[l],
-//							edges[n1][n2][0].nor[l]);
-//			Nmax[0] = multiPoint(tmpN[0],
-//								 edges[n1][n2][0].sector_const[l*sec+0]);
-//			for (int s=0;s<sec;s++)
-//			{
-//				int s_tmp = (s+1)%sec;
-//				tmpN[s_tmp%2] = rodriguezVec((double)(2*M_PI*(s_tmp)/sec),
-//										  edges[n1][n2][0].tan[l],
-//										  edges[n1][n2][0].nor[l]);
-//				Nmax[s_tmp%2] =
-//						multiPoint(
-//								tmpN[s_tmp%2],
-//								edges[n1][n2][0].sector_const[l*sec+s]);
-//
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+0,
-//						edges[n1][n2][0].loc_start[l].x + Nmax[s%2].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y + Nmax[s%2].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z + Nmax[s%2].z - init.z);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+1,
-//						edges[n1][n2][0].loc_end  [l].x + Nmax[s%2].x - init.x,
-//						edges[n1][n2][0].loc_end  [l].y + Nmax[s%2].y - init.y,
-//						edges[n1][n2][0].loc_end  [l].z + Nmax[s%2].z - init.z);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+2,
-//						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+3,
-//						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
-//				ID[0] = (l*sec+s)*8+0;
-//				ID[1] = (l*sec+s)*8+1;
-//				ID[2] = (l*sec+s)*8+3;
-//				ID[3] = (l*sec+s)*8+2;
-//				polygons->InsertNextCell(4,ID);
-//
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+4,
-//						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+5,
-//						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
-//				Nmax[s_tmp%2] =
-//						multiPoint(
-//								tmpN[s_tmp%2],
-//								edges[n1][n2][0].sector_const[l*sec+s_tmp]);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+6,
-//						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
-//				pointspoly->InsertPoint(
-//						(l*sec+s)*8+7,
-//						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-//						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-//						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
-//
-//				ID[0] = (l*sec+s)*8+4;
-//				ID[1] = (l*sec+s)*8+5;
-//				ID[2] = (l*sec+s)*8+7;
-//				ID[3] = (l*sec+s)*8+6;
-//
-//				polygons->InsertNextCell(4,ID);
-//			}
-//		}
-//
-//		polygonPolyData->SetPoints(pointspoly);
-//		polygonPolyData->SetPolys(polygons);
-//
-//#if VTK_MAJOR_VERSION <= 5
-//		mapperpoly->SetInput(polygonPolyData);
-//#else
-//		mapperpoly->SetInputData(polygonPolyData);
-//#endif
-//
-//		actorpoly->SetMapper(mapperpoly);
-//		actorpoly->GetProperty()->SetColor(1.0,1.0,0.0);
-////		actorpoly->GetProperty()->LightingOff();
-////		actorpoly->SetOrigin(p_mid_tmp.x,p_mid_tmp.y,p_mid_tmp.z);
-//		renderer->AddActor(actorpoly);
-//		// ****************************************************[SECTOR POLYGON]
 	}
 
 	// [ADDING DATA]***********************************************************
@@ -804,7 +914,7 @@ void showConnection(
 	{
 		vtkSmartPointer<vtkTextActor> 		textActor;
 		vtkSmartPointer<vtkActor> 			actor;
-		actor  		= vtkSmartPointer<vtkActor>::New();
+		actor = vtkSmartPointer<vtkActor>::New();
 		actor->SetMapper(dataPoints(points_, num_locations, color_, true));
 		actor->GetProperty()->SetPointSize(5);
 		renderer->AddActor(actor);
@@ -817,7 +927,7 @@ void showConnection(
 			if(labels_.empty()) continue;
 			if(labels_[i].empty()) continue;
 			textActor->SetInput(labels_[i].c_str());
-			textActor->SetPosition(10, (WIN_HEIGHT-20)-i*FONT_SIZE);
+			textActor->SetPosition(10, (WIN_HEIGHT-FONT_SIZE-10)-i*FONT_SIZE);
 			textActor->GetTextProperty()->SetFontSize(FONT_SIZE);
 			textActor->GetTextProperty()
 					 ->SetColor((double)color_[i+1][0]/255,
@@ -828,13 +938,46 @@ void showConnection(
 	}
 	// ***********************************************************[ADDING DATA]
 
+	for(int i=0;i<nodes.size();i++)
+	{
+
+		sphereSource = vtkSmartPointer<vtkSphereSource> ::New();
+		mapper	= vtkSmartPointer<vtkPolyDataMapper>::New();
+		actor	= vtkSmartPointer<vtkActor>::New();
+
+		sphereSource->SetCenter(
+				nodes[i].centroid.x,
+				nodes[i].centroid.y,
+				nodes[i].centroid.z);
+		sphereSource->SetRadius(0.05);
+		mapper->SetInputConnection(sphereSource->GetOutputPort());
+		actor->SetMapper(mapper);
+		actor->GetProperty()->SetColor((double)color_[i+1][0]/255,
+										(double)color_[i+1][1]/255,
+										(double)color_[i+1][2]/255);
+		renderer->AddActor(actor);
+	}
+
 	style->SetDefaultRenderer(renderer);
 	style->setLeftButton(CLICK_EMPTY);
 	renderer->SetBackground(0.0,0.0,0.0);
 	renWinInter->SetInteractorStyle(style);
+
+	style2->setWin(renWin);
+    style2->SetCurrentRenderer(renderer);
+	renWinInter->SetInteractorStyle( style2 );
+
 	renWin->Render();
 	renWinInter->Start();
 }
+
+
+
+
+
+
+
+
 
 void plotData(
 	vector<double> x,
@@ -1007,7 +1150,7 @@ void plotDatas(
 		chart =	vtkSmartPointer<vtkChartXY>::New();
 		chart->SetTitle(title[i]);
 		chart->SetSize(tmp);
-		chart->SetAutoSize(false);
+//		chart->SetAutoSize(false);
 
 		// Create a table with some points in it
 		arrX  = vtkSmartPointer<vtkFloatArray>::New();

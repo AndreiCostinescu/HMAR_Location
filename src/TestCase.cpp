@@ -49,17 +49,10 @@ printf("========================================================================
 void TestCase::Choose(int x_, int y_)
 {
 	vector<int> idxs;
+	int tar = x_;
 
 	switch(x_)
 	{
-		case 0:
-		{
-			for(int idx=1;idx<10;idx++)
-			{
-				idxs.push_back(idx);
-			}
-			break;
-		}
 		case 1:
 		{
 			int idx = 1; // start with 001
@@ -86,6 +79,13 @@ void TestCase::Choose(int x_, int y_)
 			idxs.push_back(idx);
 			break;
 		}
+		case 5:
+		{
+			tar = 3;
+			int idx = 3;
+			idxs.push_back(idx);
+			break;
+		}
 		default:
 			break;
 	}
@@ -93,8 +93,9 @@ void TestCase::Choose(int x_, int y_)
 	switch(y_)
 	{
 		case LBL: this->Lbl(idxs);			break;
-		case TRN: this->Trn(idxs,dict[x_]); break;
-		case TST: this->Tst(idxs,dict[x_]); break;
+		case TRN: this->Trn(idxs,dict[tar]); break;
+		case TST: this->Tst(idxs,dict[tar]); break;
+		case DPL: this->Dpl(idxs,dict[tar]); break;
 		default :							break;
 	}
 }
@@ -204,7 +205,9 @@ int TestCase::Trn(vector<int> idx_, string object_)
 		}
 
 		path = 	EVAL + "/" + tar + "/" + to_string(f) + "/graph.txt";
-		this->WriteFileGraph(G, path.c_str());
+		this->WriteFileGraph(G, path);
+		path = 	EVAL + "/" + tar + "/" + to_string(f) + "/window.txt";
+		this->WriteFileWindow(G,path);
 
 		delete G;
 	}
@@ -218,15 +221,29 @@ int TestCase::Trn(vector<int> idx_, string object_)
 
 int TestCase::Tst(vector<int> idx_, string object_)
 {
-	string tar = object_;
+	int sub_num;
 
-	int f, ff, fff, res, n;
+	string tar = object_;
 	string dir_s, path;
 	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
 	map<int,vector<string> > label_list;
 
 	kb_t kb;
 	Graph *G;
+
+	int num_x = 5;
+	int num_y = 1;
+	vector<vector<double> > k_xy; k_xy.resize(num_x);
+	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
+	gaussKernel(k_xy, num_x, num_y, 1);
+//cout << k_xy[0][0] << " ";
+//cout << k_xy[1][0] << " ";
+//cout << k_xy[2][0] << endl;
+
+
+	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
+	double sum_tmp = 0.0;
 
 	printf("==============================================================================\n");
 	printf("|| TST START                                                                ||\n");
@@ -246,7 +263,7 @@ int TestCase::Tst(vector<int> idx_, string object_)
 
 	// Reading data files
 	file_list.clear();
-	this->ReadFileName(DATA_DIR, idx_, file_list, n);
+	this->ReadFileName(DATA_DIR, idx_, file_list, sub_num);
 
 	this->DirectoryCheck(EVAL + "/" + tar);
 
@@ -255,7 +272,7 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	printf("==============================================================================\n");
 
 	// Subject
-	for(f=0;f<n;f++)
+	for(int f=0;f<sub_num;f++)
 	{
 
 		G = new Graph(EVAL, tar);
@@ -269,6 +286,72 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		path = 	dir_s + "/graph.txt";
 		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
+//		path = 	dir_s + "/window.txt";
+//		this->WriteFileWindow(G,path);
+
+		// Visualize
+		if (0)
+		{
+			vector<point_d> point_zero; vector<string> label_zero;
+			for(int i=0;i<G->getNumberOfNodes();i++)
+			{
+				node_tt node_tmp = {};
+				G->getNode(i, node_tmp);
+				label_zero.push_back(node_tmp.name);
+			}
+			vector<vector<unsigned char> > color_code; colorCode(color_code);
+			showConnectionTest(G, point_zero, label_zero, color_code, true);
+		}
+
+		if(1)
+		{
+			for(int i=0;i<G->getNumberOfNodes();i++)
+			{
+				for(int ii=0;ii<G->getNumberOfNodes();ii++)
+				{
+					if (i==ii) { continue; }
+
+					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+					G->getEdgeSectorMap(i,ii,0,sm_tmp1);
+					sm_tmp2 = sm_tmp1;
+
+					for(int l=0;l<LOC_INT;l++)
+					{
+						for(int s=0;s<SEC_INT;s++)
+						{
+							sum_tmp = 0.0;
+							for(int gkx=0;gkx<num_x;gkx++)
+							{
+								sum_tmp +=
+										sm_tmp2
+										[l*SEC_INT +
+										 ((s-(num_x/2)+gkx+SEC_INT)%SEC_INT)] *
+										k_xy[gkx][0];
+							}
+
+							sm_tmp1[l*SEC_INT+s] = sum_tmp;
+						}
+					}
+
+					G->setEdgeSectorMap(i,ii,0,sm_tmp1);
+				}
+			}
+		}
+
+		// Visualize
+		if (0)
+		{
+			vector<point_d> point_zero; vector<string> label_zero;
+			for(int i=0;i<G->getNumberOfNodes();i++)
+			{
+				node_tt node_tmp = {};
+				G->getNode(i, node_tmp);
+				label_zero.push_back(node_tmp.name);
+			}
+			vector<vector<unsigned char> > color_code; colorCode(color_code);
+			showConnectionTest(G, point_zero, label_zero, color_code, true);
+		}
+
 
 		dir_s = RESULT + "/" + tar + "/";
 		this->DirectoryCheck(dir_s);
@@ -276,15 +359,27 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		this->DirectoryCheck(dir_s);
 
 		// Data per subject
-		for(ff=0;ff<file_list[f].size();ff++)
+		for(int ff=0;ff<file_list[f].size();ff++)
 		{
 			// action filename pair
 			// pair_tmp = file_list[ff][fff];
 
-			res = this->Testing(file_list[f][ff].second, dir_s, G);
+			char num[4]; sprintf(num,"%03d",file_list[f][ff].first);
 
-			if (res==EXIT_FAILURE)	{ printer(43); return EXIT_FAILURE;	}
-			else					{ printer(44);						}
+//			if(strcmp(num,"005")) continue;
+
+			path = dir_s + string(num) + "/";
+			this->DirectoryCheck(path);
+
+			if (this->Testing(file_list[f][ff].second, path, G)==EXIT_FAILURE)
+			{
+				printer(43);
+				return EXIT_FAILURE;
+			}
+			else
+			{
+				printer(44);
+			}
 		}
 
 		delete G;
@@ -292,6 +387,144 @@ int TestCase::Tst(vector<int> idx_, string object_)
 
 	printf("==============================================================================\n");
 	printf("|| TST END                                                                  ||\n");
+	printf("==============================================================================\n");
+
+	return EXIT_SUCCESS;
+}
+
+int TestCase::Dpl(vector<int> idx_, string object_)
+{
+	int sub_num;
+
+	string tar = object_;
+	string dir_s, path;
+	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
+	map<int,vector<string> > label_list;
+
+	kb_t kb;
+	Graph *G;
+
+	int num_x = 5;
+	int num_y = 1;
+	vector<vector<double> > k_xy; k_xy.resize(num_x);
+	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
+	gaussKernel(k_xy, num_x, num_y, 1);
+
+	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
+	double sum_tmp = 0.0;
+
+	printf("==============================================================================\n");
+	printf("|| DPL START                                                                ||\n");
+	printf("==============================================================================\n");
+
+	// Reading label
+	if (this->ReadFileLabel("./kb/", label_list)==EXIT_FAILURE)
+	{ return EXIT_FAILURE; }
+
+	// Reading surface
+	// Reading action labels
+	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
+	// Reading object specific labels
+	// - reads the object specific labels and saves them
+	if (this->ReadFileKB("./kb/", kb)==EXIT_FAILURE)
+	{ return EXIT_FAILURE; }
+
+	// Reading data files
+	file_list.clear();
+	this->ReadFileName(DATA_DIR, idx_, file_list, sub_num);
+
+	this->DirectoryCheck(EVAL + "/" + tar);
+
+	printf("==============================================================================\n");
+	printf("|| Deploying                                                                ||\n");
+	printf("==============================================================================\n");
+
+	// Subject
+	for(int f=0;f<sub_num;f++)
+	{
+
+		G = new Graph(EVAL, tar);
+		G->setKB(kb);
+
+		// read available location areas
+		dir_s = EVAL + "/" + tar + "/" + to_string(f);
+		path  = dir_s + "/location_area.txt";
+		if (this->ReadFileLA(G,path)==EXIT_FAILURE)
+		{return EXIT_FAILURE;}
+		path = 	dir_s + "/graph.txt";
+		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
+		{return EXIT_FAILURE;}
+//		path = 	dir_s + "/window.txt";
+//		this->WriteFileWindow(G,path);
+
+		if(1)
+		{
+			for(int i=0;i<G->getNumberOfNodes();i++)
+			{
+				for(int ii=0;ii<G->getNumberOfNodes();ii++)
+				{
+					if (i==ii) { continue; }
+
+					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+					G->getEdgeSectorMap(i,ii,0,sm_tmp1);
+					sm_tmp2 = sm_tmp1;
+
+					for(int l=0;l<LOC_INT;l++)
+					{
+						for(int s=0;s<SEC_INT;s++)
+						{
+							sum_tmp = 0.0;
+							for(int gkx=0;gkx<num_x;gkx++)
+							{
+								sum_tmp +=
+										sm_tmp2
+										[l*SEC_INT +
+										 ((s-(num_x/2)+gkx+SEC_INT)%SEC_INT)] *
+										k_xy[gkx][0];
+							}
+
+							sm_tmp1[l*SEC_INT+s] = sum_tmp;
+						}
+					}
+
+					G->setEdgeSectorMap(i,ii,0,sm_tmp1);
+				}
+			}
+		}
+
+
+		dir_s = RESULT + "/" + tar + "/";
+		this->DirectoryCheck(dir_s);
+		dir_s = RESULT + "/" + tar + "/" + to_string(f) + "/";
+		this->DirectoryCheck(dir_s);
+
+		// Data per subject
+		for(int ff=0;ff<file_list[f].size();ff++)
+		{
+			// action filename pair
+			// pair_tmp = file_list[ff][fff];
+
+			char num[4]; sprintf(num,"%03d",file_list[f][ff].first);
+			path = dir_s + string(num) + "/";
+			this->DirectoryCheck(path);
+
+			if (this->Deploying(file_list[f][ff].second, path, G)==EXIT_FAILURE)
+			{
+				printer(43);
+				return EXIT_FAILURE;
+			}
+			else
+			{
+				printer(44);
+			}
+		}
+
+		delete G;
+	}
+
+	printf("==============================================================================\n");
+	printf("|| DPL END                                                                  ||\n");
 	printf("==============================================================================\n");
 
 	return EXIT_SUCCESS;

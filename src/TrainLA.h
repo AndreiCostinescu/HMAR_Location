@@ -34,7 +34,8 @@ class TrainLA : public DBSCAN
 			vector<point_d> &centroids_,
 			bool learn_);
 
-		int ContactCheck();
+		int ContactCheck(
+			vector<point_d> centroids_);
 
 		int ClusteringExt(
 				vector<point_d> &centroids_);

@@ -19,6 +19,7 @@ class TestCase : public Train
 		void Choose(int x_, int y_);
 		int Trn(vector<int> idx_, string object_);
 		int Tst(vector<int> idx_, string object_);
+		int Dpl(vector<int> idx_, string object_);
 		int Lbl(vector<int> idx_);
 
 	private:

@@ -231,7 +231,7 @@ int ReadFile::ReadFileKB(
 		kb_.surface_lim.resize(data.size());
 		for(int i=0;i<data.size();i++)
 		{
-			kb_.surface_lim[i] = atof(data[i][0].c_str());
+			kb_.surface_lim[i] = atof(data[i][1].c_str());
 		}
 		printer(46);
 	}
@@ -267,12 +267,14 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		pair<string,string> tmp(".",".");
 		for(int i=0;i<data.size();i++)
 		{
-			tmp.first	= data[i][1];
-			tmp.second	= data[i][2];
-			kb_.ol[data[i][0]] = tmp;
+			map<string,string> tmp2;
+			for(int ii=0;ii<(data[i].size()-1)/2;ii++)
+			{
+				tmp2[data[i][ii*2+1]] = data[i][ii*2+2];
+			}
+			kb_.ol[data[i][0]] = tmp2;
 		}
 		printer(4);
 	}

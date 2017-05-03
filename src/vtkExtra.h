@@ -40,9 +40,9 @@ void showConnection(
 	bool show_points);
 
 void showConnectionTest(
+	Graph *Graph_,
 	vector<point_d> points_,
 	vector<string> &labels_,
-	Graph Graph_,
 	vector<vector<unsigned char> > color_,
 	bool show_points);
 

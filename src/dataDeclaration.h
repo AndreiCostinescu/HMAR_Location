@@ -97,6 +97,7 @@
 #include <vtkLight.h>
 #include <vtkRect.h>
 #include <vtkAxis.h>
+#include <vtkGL2PSExporter.h>
 
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_bspline.h>
@@ -133,11 +134,15 @@ using namespace std;
 #define Calloc(type,n) (type *)calloc( n, sizeof(type))
 #define v vector
 
-
 #define	TRN 0
 #define	TST 1
 #define	LBL 2
+#define	DPL 3
 
+#define RELEASE			0
+#define GRABBED			1
+#define RELEASE_CLOSE	2
+#define GRABBED_CLOSE	3
 
 //0 : all
 //1 : motion
@@ -145,18 +150,18 @@ using namespace std;
 //3 : label only
 #define VERBOSE 3
 
-#define CLUSTER_LIMIT 0.15
+#define CLUSTER_LIMIT 0.20
 
 //#define SURFACE_LIMIT 0.05
 
-#define FILTER_WIN 15
+#define FILTER_WIN 5
 
 #define BOUNDARY_VAR 0.1
 #define P_WIN_VAR 0.001
 #define P_SEC_VAR 0.0005
 #define P_LOC_VAR 0.0005
 #define P_DDD_VAR 0.0005
-#define P_ERR_VAR 0.001
+#define P_ERR_VAR 0.01
 
 #define CONTACT_TRIGGER_RATIO 0.65
 
@@ -185,8 +190,8 @@ using namespace std;
 #define MOV_CONST_STOP 	0
 
 #define WIN_HEIGHT		800
-#define WIN_WIDTH 		1200
-#define FONT_SIZE 		10
+#define WIN_WIDTH 		1280
+#define FONT_SIZE 		20
 
 #define CLICK_EMPTY		0
 #define CLICK_LABEL		1
@@ -346,21 +351,22 @@ struct kb_s
 	vector<point_d> 					surface;
 	map<string,pair<int,int> > 			ac;
 	vector<string> 						al;
-	map<string,pair<string,string> >	ol;
+	map<string,map<string,string> >	ol;
 };
 
 typedef struct state_s state_t;
 struct state_s
 {
-	bool grasp;		// if it is grasped
+	int grasp;		// if it is grasped
 	int label1;		// last node
 	int label2;		// next node
 	double pct_err;	// highest probability
-	map<string,double> goal;	// probabilities
-	map<string,double> window;	// probabilities
 	double mov;		// whether it is moving
 	int con;		// contact or not with hand
 	int sur;		// which surface
+	map<string,double> ll;	// last location probabilities
+	map<string,double> goal;	// probabilities
+	map<string,double> window;	// probabilities
 };
 
 #endif /* DATADECLARATION_H_ */

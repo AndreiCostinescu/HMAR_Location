@@ -78,12 +78,12 @@ public:
 		surface = x_;
 	}
 
-	map<string,pair<string,string> > getObjectLabel()
+	map<string,map<string,string> > getObjectLabel()
 	{
 		return object_label;
 	}
 
-	void setObjectLabel(map<string,pair<string,string> > object_label_)
+	void setObjectLabel(map<string,map<string,string> > object_label_)
 	{
 		object_label = object_label_;
 	}
@@ -389,7 +389,7 @@ private:
 	map<string,pair<int,int> >			action_cat;
 	vector<string>						action_label; //fixed given beforehand
 
-	map<string,pair<string,string> > 	object_label;
+	map<string,map<string,string> > 	object_label;
 
 	vector<point_d> 					surface;
 	vector<vector<double> > 			surface_eq;

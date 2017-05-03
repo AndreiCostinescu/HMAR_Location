@@ -148,3 +148,10 @@
 - added results
 - added new data recordings
 - encased everything in class except algo and core
+
+[24]
+- 03/05/2017
+- evaluated result and added matlab plots
+- final adjustment on code to handle cases exceeding the sectormap
+- added decision tree for parsing the data
+

@@ -121,13 +121,19 @@ double addFunction (
 int average(
 	vector<int> A)
 {
-	return round(accumulate(A.begin(), A.end(), 0.0, addFunction)/A.size());
+	if (accumulate( A.begin(), A.end(), 0.0, addFunction) == 0)
+		return 0;
+	else
+		return round(accumulate(A.begin(), A.end(), 0.0, addFunction)/A.size());
 }
 
 double average(
 	vector<double> A)
 {
-	return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
+	if (accumulate( A.begin(), A.end(), 0.0, addFunction) == 0)
+		return 0.0;
+	else
+		return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
 }
 
 int movingAverage(

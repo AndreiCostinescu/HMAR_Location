@@ -36,8 +36,8 @@ int Test::Testing(
 	vector<double> x;
 	vector<double> y;
 	vector<double> 						px;
-	vector<vector<double> > 			py;
-	vector<vector<vector<double> > > 	pyy;
+	vector<vector<double> > 			py; py.resize(7);
+	vector<vector<vector<double> > > 	pyy; pyy.push_back(py);
 
 	printer(1);
 	// *************************************************************[VARIABLES]
@@ -46,6 +46,9 @@ int Test::Testing(
 	if (this->ReadFile_(filename_,',')==EXIT_FAILURE)
 	{ return EXIT_FAILURE;	} printer(8);
 	// *************************************************************[READ FILE]
+
+//	if(strcmp(filename_.c_str(),"recording/04_Gregory/006/170419135904.txt"))
+//		return 0;
 
 	// [PARSE DATA]************************************************************
 	this->SetDataParser(this->GetDataRF());
@@ -79,28 +82,36 @@ int Test::Testing(
 
 	this->ResetFilter();
 
-	ActionPrediction AP(Graph_,false);
-	Prediction P(3,Graph_->getActionCategory(),Graph_->getActionLabel());
+	ActionPrediction AP(Graph_, false);
+//	Prediction P(Graph_->getActionCategory(), Graph_->getActionLabel(),3);
 	// ******************************************************* [Initialization]
 
 	for(int i=0;i<points.size();i++)
 	{
-
 		if (i==0)	{ pva_avg[i] = pva_avg1;		}
 		else		{ pva_avg[i] = pva_avg[i-1];	}
 		this->PreprocessDataLive(points[i], pva_avg[i], FILTER_WIN);
 		this->PreprocessContactLive(contact[i], FILTER_WIN);
 
-		if (i==0) 	{ AP.PredictInit(points[i]); }
-		else 		{ AP.PredictExt(pva_avg[i],contact[i]); }
+//		if (i==0) 	{ AP.PredictInit(points[i]); }
+//		else 		{ AP.PredictExt(pva_avg[i],contact[i]); }
+
+		AP.PredictExt(pva_avg[i],contact[i]);
 
 		x.push_back(i);
 		y.push_back((double)Graph_->getState().label2);
 
+		vector<string> al_tmp = Graph_->getActionLabel();
+		map<string,pair<int,int> > ac_tmp = Graph_->getActionCategory();
+		for(int i=ac_tmp["GEOMETRIC"].first;i<ac_tmp["GEOMETRIC"].second+1;i++)
+		{
+			pyy[0][i].push_back(Graph_->getState().goal[al_tmp[i]]);
+		}
+
 		goals[i] = Graph_->getState().goal;
 		windows[i] = Graph_->getState().window;
 
-		if (!Graph_->getState().grasp)
+		if (Graph_->getState().grasp==RELEASE)
 		{
 			labels_predict[i] = "RELEASE";
 		}
@@ -114,8 +125,18 @@ int Test::Testing(
 			labels_predict[i] = "MOVE";
 		}
 
-		//		P.Parse(Graph_->getState());
-		//		P.Display();
+//		P.Parse(Graph_->getState());
+//		P.Display();
+
+		// Visualize
+		if (0)
+		{
+			vector<point_d> point_zero; vector<string> label_zero;
+			for(int ii=0;ii<i+1;ii++) point_zero.push_back(pva_avg[ii][0]);
+			vector<vector<unsigned char> > color_code; colorCode(color_code);
+			showConnection(Graph_, point_zero, label_zero, color_code, true);
+		}
+
 	}
 
 	// writing results
@@ -129,10 +150,13 @@ int Test::Testing(
 				Graph_, name_tmp, labels, labels_predict, goals, windows);
 	}
 
-	//	plotData(x,y);
+//	plotData(x,y);
+
+//	vector<string> title; title.resize(1);
+//	plotDatas(title, x, pyy);
 
 	// Visualize
-	if (0)
+	if(0)
 	{
 		vector<string>goal_action;
 		for(int i=0;i<Graph_->getNumberOfNodes();i++)
@@ -145,6 +169,19 @@ int Test::Testing(
 		for(int ii=0;ii<pva_avg.size();ii++) {point_zero.push_back(pva_avg[ii][0]);}
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
 		vector<int> 	loc_idx_zero;
+		showData(
+				point_zero, goal_action, Graph_->getActionLabel(),
+				loc_idx_zero, color_code, true, false, false);
+
+		for(int ii=0;ii<pva_avg.size();ii++)
+		{
+			if (!strcmp(labels[ii].c_str(),"MOVE"))
+				point_zero[ii].l = -1;
+			else if (!strcmp(labels[ii].c_str(),"RELEASE"))
+				point_zero[ii].l = -1;
+			else
+				point_zero[ii].l = 1;
+		}
 		showData(
 				point_zero, goal_action, Graph_->getActionLabel(),
 				loc_idx_zero, color_code, true, false, false);
@@ -165,6 +202,58 @@ int Test::Testing(
 		showConnection(Graph_, point_zero, label_zero, color_code, true);
 	}
 
+
+	return EXIT_SUCCESS;
+}
+
+int Test::Deploying(
+	string filename_,
+	string resultdir_,
+	Graph *Graph_)
+{
+	// [VARIABLES]*************************************************************
+	vector<int> 				contact;
+	vector<point_d> 			points;
+	vector<point_d> 			pva_avg1; pva_avg1.resize(3);
+	vector<vector<point_d> > 	pva_avg; // length->motion
+	printer(1);
+	// *************************************************************[VARIABLES]
+
+	// [READ FILE]*************************************************************
+	if (this->ReadFile_(filename_,',')==EXIT_FAILURE)
+	{ return EXIT_FAILURE;	} printer(8);
+	// *************************************************************[READ FILE]
+
+	// [PARSE DATA]************************************************************
+	this->SetDataParser(this->GetDataRF());
+	if (this->ParseData()==EXIT_FAILURE) {return EXIT_FAILURE;}
+	points = this->GetPointParser();
+	contact = this->GetContactParser();
+	printer(9);
+	// ************************************************************[PARSE DATA]
+
+	// [Initialization] *******************************************************
+	reshapeVector(pva_avg, points.size());
+	this->ResetFilter();
+	ActionPrediction AP(Graph_, false);
+	Prediction P(Graph_->getTarget(), Graph_->getActionCategory(),
+					Graph_->getActionLabel(), Graph_->getObjectLabel(), 3);
+	// ******************************************************* [Initialization]
+
+	AP.PredictInit();
+
+	for(int i=0;i<points.size();i++)
+	{
+		if (i==0)	{ pva_avg[i] = pva_avg1;		}
+		else		{ pva_avg[i] = pva_avg[i-1];	}
+
+		this->PreprocessDataLive(points[i], pva_avg[i], FILTER_WIN);
+		this->PreprocessContactLive(contact[i], FILTER_WIN);
+
+		AP.PredictExt(pva_avg[i],contact[i]);
+
+		P.Parse(Graph_->getState());
+	}
 
 	return EXIT_SUCCESS;
 }

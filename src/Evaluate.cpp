@@ -22,46 +22,54 @@ Evaluate::Evaluate(
 
 Evaluate::~Evaluate() {}
 
-void Evaluate::UpdateEval()
+int Evaluate::UpdateEval()
 {
 	state_eval = G->getState();
 
 	double max_tmp = *max_element(pct_err_eval.begin(), pct_err_eval.end());
-	if (max_tmp<=0)	{state_eval.pct_err = -1;}
-	else			{state_eval.pct_err = max_tmp;}
-
-	int idx =
-			distance(
-					pct_err_eval.begin(),
-					max_element(pct_err_eval.begin(), pct_err_eval.end()));
-
-	vector<string> al_tmp = G->getActionLabel();
-	map<string,pair<int,int> > ac_tmp = G->getActionCategory();
 
 	node_tt node_tmp = {};
-	G->getNode(label1_eval, node_tmp);
-	string tmp1 = node_tmp.name;
-	G->getNode(idx, node_tmp);
-	string tmp2 = node_tmp.name;
 
-	int c= 0;
-	for(int i=0;i<al_tmp.size();i++)
+	if (max_tmp<=0)
 	{
-		if (!strcmp(tmp1.c_str(),al_tmp[i].c_str()))
-		{
-			state_eval.label1 = i;
-			c++;
-		}
-		else if (!strcmp(tmp2.c_str(),al_tmp[i].c_str()))
-		{
-			state_eval.label2 = i;
-			c++;
-		}
-		if (c==2) break;
+		state_eval.pct_err = 0;
 	}
+	else
+	{
+		state_eval.pct_err = max_tmp;
+		int idx =
+					distance(
+							pct_err_eval.begin(),
+							max_element(pct_err_eval.begin(), pct_err_eval.end()));
 
-	state_eval.con = node_tmp.contact;
-	state_eval.sur = node_tmp.surface;
+		vector<string> al_tmp = G->getActionLabel();
+		map<string,pair<int,int> > ac_tmp = G->getActionCategory();
+
+		node_tmp = {};
+		G->getNode(label1_eval, node_tmp);
+		string tmp1 = node_tmp.name;
+		G->getNode(idx, node_tmp);
+		string tmp2 = node_tmp.name;
+
+		int c= 0;
+		for(int i=0;i<al_tmp.size();i++)
+		{
+			if (!strcmp(tmp1.c_str(),al_tmp[i].c_str()))
+			{
+				state_eval.label1 = i;
+				c++;
+			}
+			else if (!strcmp(tmp2.c_str(),al_tmp[i].c_str()))
+			{
+				state_eval.label2 = i;
+				c++;
+			}
+			if (c==2) break;
+		}
+
+		state_eval.con = node_tmp.contact;
+		state_eval.sur = node_tmp.surface;
+	}
 
 	state_eval.mov = vel_eval;
 
@@ -73,4 +81,6 @@ void Evaluate::UpdateEval()
 	}
 
 	G->setState(state_eval);
+
+	return EXIT_SUCCESS;
 }

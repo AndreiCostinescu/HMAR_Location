@@ -21,7 +21,7 @@ string obtainInput(
 int printer(
 	int x_)
 {
-	if(1)
+	if (1)
 	switch(x_)
 	{
 		case 1:

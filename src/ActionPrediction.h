@@ -19,11 +19,10 @@ class ActionPrediction : public Evaluate, public TrainSM
 		virtual ~ActionPrediction();
 
 		void PredictExt(
-			vector<point_d> pva_avg_,
+			vector<point_d> &pva_avg_,
 			int contact_);
 
-		void PredictInit(
-			point_d p_);
+		void PredictInit();
 
 		int Predict();
 
@@ -75,6 +74,8 @@ class ActionPrediction : public Evaluate, public TrainSM
 		vector<point_d> pva_avg;
 		vector<predict_t> predict_mem;
 		vector<vector<point_d> > pva_avg_mem;
+
+		vector<int> range_in;
 
 };
 

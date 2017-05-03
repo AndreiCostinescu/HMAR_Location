@@ -28,6 +28,14 @@ int decideBoundary_(
 	vector<vector<double> > surfaces_,
 	vector<double>			surfaces_limit);
 
+int decideBoundaryPredict(
+	point_d 				&point1_,
+	point_d 				&point2_,
+	vector<point_d> 		centroids_,
+	vector<int>				surfaces_flag_,
+	vector<vector<double> > surfaces_,
+	vector<double>			surfaces_limit);
+
 int decideBoundaryClosest_(
 	point_d 				&point2_,
 	vector<point_d> 		centroids_);

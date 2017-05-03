@@ -44,6 +44,8 @@ class WriteFile
 
 		void WriteFileGraph(Graph *Graph_, string path_);
 
+		void WriteFileWindow(Graph *Graph_, string path_);
+
 		void WriteFilePrediction(
 			Graph *Graph_,
 			string path_,
@@ -51,6 +53,8 @@ class WriteFile
 			vector<string> labels_predict_,
 			vector<map<string,double> > goals_,
 			vector<map<string,double> > windows_);
+
+
 
 };
 
