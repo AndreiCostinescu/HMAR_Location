@@ -498,54 +498,6 @@ src/core.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/core.cpp.s
 .PHONY : src/core.cpp.s
 
-src/dbscan.o: src/dbscan.cpp.o
-.PHONY : src/dbscan.o
-
-# target to build an object file
-src/dbscan.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/dbscan.cpp.o
-.PHONY : src/dbscan.cpp.o
-
-src/dbscan.i: src/dbscan.cpp.i
-.PHONY : src/dbscan.i
-
-# target to preprocess a source file
-src/dbscan.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/dbscan.cpp.i
-.PHONY : src/dbscan.cpp.i
-
-src/dbscan.s: src/dbscan.cpp.s
-.PHONY : src/dbscan.s
-
-# target to generate assembly for a file
-src/dbscan.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/dbscan.cpp.s
-.PHONY : src/dbscan.cpp.s
-
-src/labeling_loc.o: src/labeling_loc.cpp.o
-.PHONY : src/labeling_loc.o
-
-# target to build an object file
-src/labeling_loc.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.o
-.PHONY : src/labeling_loc.cpp.o
-
-src/labeling_loc.i: src/labeling_loc.cpp.i
-.PHONY : src/labeling_loc.i
-
-# target to preprocess a source file
-src/labeling_loc.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.i
-.PHONY : src/labeling_loc.cpp.i
-
-src/labeling_loc.s: src/labeling_loc.cpp.s
-.PHONY : src/labeling_loc.s
-
-# target to generate assembly for a file
-src/labeling_loc.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.s
-.PHONY : src/labeling_loc.cpp.s
-
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -675,12 +627,6 @@ help:
 	@echo "... src/core.o"
 	@echo "... src/core.i"
 	@echo "... src/core.s"
-	@echo "... src/dbscan.o"
-	@echo "... src/dbscan.i"
-	@echo "... src/dbscan.s"
-	@echo "... src/labeling_loc.o"
-	@echo "... src/labeling_loc.i"
-	@echo "... src/labeling_loc.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

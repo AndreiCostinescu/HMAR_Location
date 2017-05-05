@@ -21,18 +21,18 @@ ActionPrediction::ActionPrediction(
 	pva_avg_mem.clear();
 	predict_mem.clear();
 
-	reshapeVector(range_in, G->getNumberOfNodes());
-	reshapeVector(last_loc, G->getNumberOfNodes());
-	reshapePredict(predict, G->getNumberOfNodes());
+	reshapeVector(range_in, G->GetNumberOfNodes());
+	reshapeVector(last_loc, G->GetNumberOfNodes());
+	reshapePredict(predict, G->GetNumberOfNodes());
 
-	for(int is=0;is<G->getNumberOfNodes();is++) init.push_back(true);
+	for(int is=0;is<G->GetNumberOfNodes();is++) init.push_back(true);
 }
 
 ActionPrediction::~ActionPrediction() { }
 
 void ActionPrediction::PredictInit()
 {
-	state = G->getState();
+	state = G->GetActionState();
 
 	state.grasp 	= RELEASE;
 	state.label1 	= label1_ap;
@@ -42,8 +42,8 @@ void ActionPrediction::PredictInit()
 	state.con 		= -1;
 	state.sur 		= -1;
 
-	vector<string> al_tmp = G->getActionLabel();
-	map<string,pair<int,int> > ac_tmp = G->getActionCategory();
+	vector<string> al_tmp = G->GetActionLabel();
+	map<string,pair<int,int> > ac_tmp = G->GetActionCategory();
 	for(int i=ac_tmp["GEOMETRIC"].first;i<ac_tmp["GEOMETRIC"].second+1;i++)
 	{
 		state.ll	[al_tmp[i]] =   0;
@@ -51,7 +51,7 @@ void ActionPrediction::PredictInit()
 		state.window[al_tmp[i]] = 0.0;
 	}
 
-	G->setState(state);
+	G->SetActionState(state);
 }
 
 void ActionPrediction::PredictExt(
@@ -59,19 +59,19 @@ void ActionPrediction::PredictExt(
 	int contact_)
 {
 	pva_avg = pva_avg_;
-	state = G->getState();
+	state = G->GetActionState();
 	if (contact_==1)
 	{
 		if (state.grasp==RELEASE)
 		{
 			state.grasp = GRABBED_CLOSE;
-			G->setState(state);
+			G->SetActionState(state);
 			this->Predict();
 		}
 		else
 		{
 			state.grasp = GRABBED;
-			G->setState(state);
+			G->SetActionState(state);
 			this->Predict();
 		}
 	}
@@ -80,13 +80,13 @@ void ActionPrediction::PredictExt(
 		if (state.grasp==GRABBED)
 		{
 			state.grasp = RELEASE_CLOSE;
-			G->setState(state);
+			G->SetActionState(state);
 			this->Predict();
 		}
 		else
 		{
 			state.grasp = RELEASE;
-			G->setState(state);
+			G->SetActionState(state);
 		}
 	}
 	pva_avg_ = pva_avg;
@@ -109,14 +109,14 @@ int ActionPrediction::Predict()
 	else
 	{
 		init.clear();
-		for(int is=0;is<G->getNumberOfNodes();is++) { init.push_back(true); }
+		for(int is=0;is<G->GetNumberOfNodes();is++) { init.push_back(true); }
 
 		// ### TODO not really correct because the clusters are still there
 		// just to show how the sectormap changes with time
 		if (label1_ap!=pva_avg[0].l && label1_ap>=0)
 		{
 			predict_mem.clear();
-			reshapeVector(last_loc, G->getNumberOfNodes());
+			reshapeVector(last_loc, G->GetNumberOfNodes());
 
 			if (learn)
 			{
@@ -129,14 +129,14 @@ int ActionPrediction::Predict()
 
 		// there is a problem where the object gets out of bound for a while and return again
 		vector<map<string, double> > p_tmp;
-		G->getPredictionReset(p_tmp);
-		G->setPrediction(p_tmp);
+		G->GetPredictionReset(p_tmp);
+		G->SetPrediction(p_tmp);
 
 		node_tt nt{};
-		G->getNode(label1_ap,nt);
-		state = G->getState();
-		vector<string> al_tmp = G->getActionLabel();
-		map<string,pair<int,int> > ac_tmp = G->getActionCategory();
+		G->GetNode(label1_ap,nt);
+		state = G->GetActionState();
+		vector<string> al_tmp = G->GetActionLabel();
+		map<string,pair<int,int> > ac_tmp = G->GetActionCategory();
 		for(int i=0;i<al_tmp.size();i++)
 		{
 			if (!strcmp(nt.name.c_str(),al_tmp[i].c_str()))
@@ -155,7 +155,7 @@ int ActionPrediction::Predict()
 			state.goal[al_tmp[i]] = 0.0;
 			state.window[al_tmp[i]] = 0.0;
 		}
-		G->setState(state);
+		G->SetActionState(state);
 
 	}
 
@@ -169,28 +169,28 @@ int ActionPrediction::PredictFromNode()
 	// initial case
 	if (label1_ap < 0)
 	{
-		decideBoundaryClosest_(pva_avg[0], G->getCentroidList());
-		state = G->getState();
+		decideBoundaryClosest_(pva_avg[0], G->GetCentroidList());
+		state = G->GetActionState();
 		state.grasp = GRABBED_CLOSE;
-		G->setState(state);
+		G->SetActionState(state);
 	}
 	else
 	{
-		state = G->getState();
+		state = G->GetActionState();
 		// give a starting location during change from release to move
 		if ((state.grasp==GRABBED_CLOSE) || (state.grasp==RELEASE_CLOSE))
 		{
-			decideBoundaryClosest_(pva_avg[0], G->getCentroidList());
+			decideBoundaryClosest_(pva_avg[0], G->GetCentroidList());
 		}
 		else
 		{
 			decideBoundaryPredict(
-					pva_avg[0], pva_avg[0], G->getCentroidList(),
-					G->getSurfaceFlagList(), G->getSurfaceEq(),
-					G->getSurfaceLimit());
+					pva_avg[0], pva_avg[0], G->GetCentroidList(),
+					G->GetSurfaceFlagList(), G->GetSurfaceEq(),
+					G->GetSurfaceLimit());
 
 			// prevent from going to unknown goal locations during middle of movement
-			for(int i=0;i<G->getNumberOfNodes();i++)
+			for(int i=0;i<G->GetNumberOfNodes();i++)
 			{
 				if (predict.pct_err[i]>0 && last_loc[i]>LOC_INT/10 && last_loc[i]<LOC_INT-(LOC_INT/10))
 				{
@@ -205,18 +205,18 @@ int ActionPrediction::PredictFromNode()
 		}
 	}
 
-//	for(int i=0;i<G->getNumberOfNodes();i++)
+//	for(int i=0;i<G->GetNumberOfNodes();i++)
 //	{
 //		cout << i << " : " << pva_avg[0].l << "   ";
 //	}
-//	cout << G->getState().label2 << " : " << G->getState().grasp << endl;
+//	cout << G->GetActionState().label2 << " : " << G->GetActionState().grasp << endl;
 
 	return EXIT_SUCCESS;
 }
 
 int ActionPrediction::PredictFromEdge()
 {
-	reshapePredict(predict, G->getNumberOfNodes());
+	reshapePredict(predict, G->GetNumberOfNodes());
 
 	// 2.1. Check for motion
 	this->DecideMovement();
@@ -233,14 +233,14 @@ int ActionPrediction::PredictFromEdge()
 	// 2.X. Predict the goal based on the trajectory error from sector map
 	this->EvaluatePrediction();
 
-	if (label1_ap==0)
-	{
-		for(int i=0;i<G->getNumberOfNodes();i++)
-		{
-			cout << i << " : " << last_loc[i] << "," << pct_err_eval[i] << "," << predict.pct_err[i] << "," << predict.range[i] << "  ::  ";
-		}
-		cout << endl;
-	}
+//	if (label1_ap==0)
+//	{
+//		for(int i=0;i<G->GetNumberOfNodes();i++)
+//		{
+//			cout << i << " : " << last_loc[i] << "," << pct_err_eval[i] << "," << predict.pct_err[i] << "," << predict.range[i] << "  ::  ";
+//		}
+//		cout << endl;
+//	}
 
 	return EXIT_SUCCESS;
 }
@@ -263,9 +263,9 @@ int ActionPrediction::DecideMovement()
 
 int ActionPrediction::PredictFromSectorMap()
 {
-	reshapeVector(range_in,G->getNumberOfNodes());
+	reshapeVector(range_in,G->GetNumberOfNodes());
 
-	for(int i=0;i<G->getNumberOfNodes();i++)
+	for(int i=0;i<G->GetNumberOfNodes();i++)
 	{
 		predict.range[i] 		= RANGE_NULL;
 		predict.err[i] 			= 0.0;
@@ -276,7 +276,7 @@ int ActionPrediction::PredictFromSectorMap()
 		predict.window[i]		= 0.0;
 
 		if (label1_ap==i) {continue;}
-		if (G->getEdgeCounter(label1_ap, i, 0)==0) {continue;}
+		if (G->GetEdgeCounter(label1_ap, i, 0)==0) {continue;}
 
 		point_d delta_t;
 		int loc_idx, sec_idx; loc_idx=sec_idx=-1;
@@ -285,7 +285,7 @@ int ActionPrediction::PredictFromSectorMap()
 		bool init_tmp = init[i];
 		double tmp_dis =
 				this->DecideLocSecInt(
-						G->getEdge(label1_ap, i, 0), delta_t, sec_idx, loc_idx,
+						G->GetEdge(label1_ap, i, 0), delta_t, sec_idx, loc_idx,
 						last_loc[i], init_tmp);
 		init[i] = init_tmp;
 
@@ -296,7 +296,7 @@ int ActionPrediction::PredictFromSectorMap()
 		}
 
 		vector<double> sm_tmp;
-		G->getEdgeSectorMap(label1_ap, i, 0, sm_tmp);
+		G->GetEdgeSectorMap(label1_ap, i, 0, sm_tmp);
 
 		// GLA
 		bool flag =
@@ -318,7 +318,7 @@ int ActionPrediction::PredictFromSectorMap()
 
 //	if (sum_tmp>0)
 //	{
-//		for(int i=0;i<G->getNumberOfNodes();i++)
+//		for(int i=0;i<G->GetNumberOfNodes();i++)
 //		{
 //			if (predict.range[i]!=RANGE_IN)
 //			{
@@ -458,14 +458,14 @@ int ActionPrediction::DecideWindow(
 
 int ActionPrediction::EvaluatePrediction()
 {
-	vector<vector<double> > err; err.resize(G->getNumberOfNodes());
-	vector<vector<double> > win; win.resize(G->getNumberOfNodes());
-	reshapeVector(pct_err_eval,G->getNumberOfNodes());
-	reshapeVector(win_eval,G->getNumberOfNodes());
+	vector<vector<double> > err; err.resize(G->GetNumberOfNodes());
+	vector<vector<double> > win; win.resize(G->GetNumberOfNodes());
+	reshapeVector(pct_err_eval,G->GetNumberOfNodes());
+	reshapeVector(win_eval,G->GetNumberOfNodes());
 
 	for(int i=0;i<predict_mem.size();i++)
 	{
-		for(int ii=0;ii<G->getNumberOfNodes();ii++)
+		for(int ii=0;ii<G->GetNumberOfNodes();ii++)
 		{
 			win[ii].push_back(predict_mem[i].window[ii]);
 			err[ii].push_back(predict_mem[i].pct_err[ii]);
@@ -475,13 +475,13 @@ int ActionPrediction::EvaluatePrediction()
 	double sum_tmp = 0.0;
 	double counter = 0.0;
 	bool flag = false;
-	for(int i=0;i<G->getNumberOfNodes();i++)
+	for(int i=0;i<G->GetNumberOfNodes();i++)
 	{
 		win_eval[i] = average(win[i]);
 		pct_err_eval[i] = average(err[i]);
 		sum_tmp += pct_err_eval[i];
 
-		if (G->getEdgeCounter(label1_ap,i,0)>0)
+		if (G->GetEdgeCounter(label1_ap,i,0)>0)
 		{
 			counter += 1.0;
 		}
@@ -492,7 +492,7 @@ int ActionPrediction::EvaluatePrediction()
 		}
 	}
 
-	for(int i=0;i<G->getNumberOfNodes();i++)
+	for(int i=0;i<G->GetNumberOfNodes();i++)
 	{
 		if (flag)
 		{
@@ -510,12 +510,12 @@ int ActionPrediction::EvaluatePrediction()
 //			}
 //			else
 //			{
-//				if (G->getEdgeCounter(label1_ap,i,0)>0)
+//				if (G->GetEdgeCounter(label1_ap,i,0)>0)
 //				{
 //					pct_err_eval[i] = 1.0/counter;
 //				}
 //			}
-			if (G->getEdgeCounter(label1_ap,i,0)>0)
+			if (G->GetEdgeCounter(label1_ap,i,0)>0)
 			{
 				pct_err_eval[i] = 1.0/counter;
 			}

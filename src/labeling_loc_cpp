@@ -162,9 +162,9 @@ int clusteringExt(
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	vector<int> loc_idx_zero;
 
-	clustering(points_, DBSCAN_EPS, DBSCAN_MIN);
+	this->clustering(points_, DBSCAN_EPS, DBSCAN_MIN);
 
-	combineNearCluster(points_, centroids_, centroids_flag_, contact_);
+	this->combineNearCluster(points_, centroids_, centroids_flag_, contact_);
 	centroids_flag_[0] = 0; // hack TODO
 	printer(14);
 
@@ -242,7 +242,7 @@ int buildLocationArea(
 
 	vector<int> 	locations_flag;
 	vector<int> 	surfaces_flag;
-	vector<double> 	surfaces_limit = Graph_->getSurfaceLimit();
+	vector<double> 	surfaces_limit = Graph_->GetSurfaceLimit();
 
 	vector<vector<unsigned char> > color_code; colorCode(color_code);
 	// *************************************************************[VARIABLES]
@@ -254,17 +254,17 @@ int buildLocationArea(
 	}
 
 	// Graph is empty
-	if (Graph_->getNumberOfNodes()==0)
+	if (Graph_->GetNumberOfNodes()==0)
 	{
 		clusteringExt(
 				points_avg, locations, locations_flag, contact_,
-				Graph_->getSurface(), Graph_->getSurfaceEq(), surfaces_flag,
+				Graph_->GetSurface(), Graph_->GetSurfaceEq(), surfaces_flag,
 				surfaces_limit);
 
 		reshapeVector(goal_action, locations.size());
 		printer(15);
 		showData(
-				points_avg, goal_action, Graph_->getActionLabel(),
+				points_avg, goal_action, Graph_->GetActionLabel(),
 				loc_idx_zero, color_code, true, true, false);
 		goal_action[0] = "SHELF";
 		goal_action[1] = "DISPENSER";
@@ -286,17 +286,17 @@ int buildLocationArea(
 			node_tmp.surface 	= surfaces_flag[i];
 			node_tmp.contact 	= locations_flag[i];
 			node_tmp.centroid 	= locations[i];
-			Graph_->setNode(node_tmp);
+			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
 		}
 	}
 	else
 	{
 		// Graph is not empty
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			goal_action.push_back(node_tmp.name);
 			locations.push_back(node_tmp.centroid);
 		}
@@ -304,7 +304,7 @@ int buildLocationArea(
 		vector<point_d> locations_; // new ones
 		clusteringExt(
 				points_avg, locations_, locations_flag, contact_,
-				Graph_->getSurface(), Graph_->getSurfaceEq(), surfaces_flag,
+				Graph_->GetSurface(), Graph_->GetSurfaceEq(), surfaces_flag,
 				surfaces_limit);
 		reshapeVector(goal_action, locations_.size());
 		printer(15);
@@ -315,13 +315,13 @@ int buildLocationArea(
 //		cout << surfaces_flag[3] << " ";
 //		cout << surfaces_flag[4] << " ";
 //		cout << goal_action.size() << " ";
-//		cout << Graph_->getActionLabel().size() << endl;
+//		cout << Graph_->GetActionLabel().size() << endl;
 
 		// when new label is present
 		if (flag_)
 		{
 			showData(
-					points_avg, goal_action, Graph_->getActionLabel(),
+					points_avg, goal_action, Graph_->GetActionLabel(),
 					loc_idx_zero, color_code, true, true, false);
 		}
 
@@ -338,7 +338,7 @@ int buildLocationArea(
 										locations_[i])) < CLUSTER_LIMIT*1.5)
 				{
 					node_tt node_tmp = {};
-					Graph_->getNode(ii, node_tmp);
+					Graph_->GetNode(ii, node_tmp);
 					double tmp1 = locations_[i].l;
 					tmp1 = sqrt(-log(tmp1)*BOUNDARY_VAR*2);
 					point_d loc_tmp =
@@ -377,7 +377,7 @@ int buildLocationArea(
 //											0.0,
 //											max(tmp1,tmp2)));
 					node_tmp.centroid = locations[ii];
-					Graph_->setNode(node_tmp);
+					Graph_->SetNode(node_tmp);
 
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
@@ -395,11 +395,11 @@ int buildLocationArea(
 					flag = true;
 					node_tt node_tmp 	= {};
 					node_tmp.name 		= goal_action[i];
-					node_tmp.index 		= Graph_->getNodeList().size();
+					node_tmp.index 		= Graph_->GetNodeList().size();
 					node_tmp.surface 	= surfaces_flag[i];
 					node_tmp.contact 	= locations_flag[i];
 					node_tmp.centroid 	= locations_[i];
-					Graph_->setNode(node_tmp);
+					Graph_->SetNode(node_tmp);
 					Graph_->addEmptyEdgeForNewNode(node_tmp.index);
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
@@ -427,14 +427,14 @@ int buildLocationArea(
 	if (0)
 	{
 		goal_action.clear();
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			goal_action.push_back(node_tmp.name);
 		}
 		showData(
-				points_avg, goal_action, Graph_->getActionLabel(),
+				points_avg, goal_action, Graph_->GetActionLabel(),
 				loc_idx_zero, color_code, true, false, false);
 	}
 	return EXIT_SUCCESS;

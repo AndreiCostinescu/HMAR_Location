@@ -10,6 +10,7 @@
 
 #include "vtkExtra.h"
 #include "Prediction.h"
+#include "Parser.h"
 #include "Filter.h"
 #include "ReadFile.h"
 #include "WriteFile.h"

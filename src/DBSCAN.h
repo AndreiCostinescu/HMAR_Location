@@ -63,16 +63,15 @@ class DBSCAN
 			unsigned int 	minpts,
 			unsigned int 	num_points,
 			point_d 		*p);
+		void Clustering(
+			vector<point_d> &points_,
+			double 			epsilon,
+			unsigned int 	minpts);
 		void CombineNearCluster(
 			vector<point_d> &points_,
 			vector<point_d> &locations_,
 			vector<int> 	&locations_flags_,
 			vector<int> 	contact_);
-		void Clustering(
-			vector<point_d> &points_,
-			double 			epsilon,
-			unsigned int 	minpts);
-
 };
 
 #endif /* DBSCAN_H_ */

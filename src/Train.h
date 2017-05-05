@@ -11,7 +11,6 @@
 #include "Test.h"
 #include "TrainLA.h"
 #include "TrainSM.h"
-#include "labeling_loc.h"
 
 class Train : public Test, public TrainLA, public TrainSM
 {

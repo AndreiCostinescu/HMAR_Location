@@ -15,7 +15,6 @@
 
 class WriteFile
 {
-
 	public:
 		WriteFile();
 		virtual ~WriteFile();
@@ -33,7 +32,7 @@ class WriteFile
 		void RewriteDataFile(
 			string path_,
 			vector<vector<string> > data_,
-			vector<point_d> &points_,
+			vector<point_d> points_,
 			vector<int>	contact_,
 			point_d face_,
 			vector<point_d> label_ref_write_, // points in label reference
@@ -53,9 +52,6 @@ class WriteFile
 			vector<string> labels_predict_,
 			vector<map<string,double> > goals_,
 			vector<map<string,double> > windows_);
-
-
-
 };
 
 #endif /* WRITEFILE_H_ */

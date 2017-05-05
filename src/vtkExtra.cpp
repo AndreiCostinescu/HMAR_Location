@@ -19,7 +19,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     static KeyPressInteractorStyle* New();
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
 
-	void setWin(vtkSmartPointer<vtkRenderWindow> x) {renwin = x;}
+	void SetWin(vtkSmartPointer<vtkRenderWindow> x) {renwin = x;}
 
     virtual void OnKeyPress()
     {
@@ -77,21 +77,21 @@ class customMouseInteractorStyle : public vtkInteractorStyleTrackballCamera
 		vtkTypeMacro(
 				customMouseInteractorStyle, vtkInteractorStyleTrackballCamera);
 
-		void setLeftButton(int option_)	{left_click_ = option_;}
+		void SetLeftButton(int option_)	{left_click_ = option_;}
 
-		void setColors(vector<vector<unsigned char> > color) {color_ = color;}
+		void SetColors(vector<vector<unsigned char> > color) {color_ = color;}
 
-		void setLabels(vector<string> label_) {label = label_;}
+		void SetLabels(vector<string> label_) {label = label_;}
 
-		void setRefLabels(vector<string> label_) {label_ref = label_;}
+		void SetRefLabels(vector<string> label_) {label_ref = label_;}
 
-		void setLocations(vector<int> x) {location = x;}
+		void SetLocations(vector<int> x) {location = x;}
 
-		vector<string> getLabels() {return label;}
+		vector<string> GetLabels() {return label;}
 
-		vector<int> getLocations() {return location;}
+		vector<int> GetLocations() {return location;}
 
-		void setNumberOfLabels(int x) {num_locations = x;}
+		void SetNumberOfLabels(int x) {num_locations = x;}
 
 		virtual void OnLeftButtonDown();
 
@@ -474,7 +474,7 @@ void showData(
 
 	if (labeling_)
 	{
-		style->setLeftButton(CLICK_LABEL);
+		style->SetLeftButton(CLICK_LABEL);
 		textActor = vtkSmartPointer<vtkTextActor>::New();
 		printf(">>>>> Pick a location with color.\n");
 		if(!labels_.empty()) textActor->SetInput (labels_[0].c_str());
@@ -503,33 +503,33 @@ void showData(
 		if (deleting_)
 		{
 			printf(">>>>> Pick a location with color to delete.\n");
-			style->setLeftButton(CLICK_DELETE);
+			style->SetLeftButton(CLICK_DELETE);
 		}
 		else
 		{
-			style->setLeftButton(CLICK_EMPTY);
+			style->SetLeftButton(CLICK_EMPTY);
 		}
 	}
 
 	renderer->AddActor(actor);
 	//renderer->SetBackground(nc->GetColor3d("MidnightBlue").GetData());
 	style->SetDefaultRenderer(renderer);
-	style->setNumberOfLabels(num_locations);
-	style->setLabels(labels_);
-	style->setRefLabels(labels_ref_);
-	style->setLocations(loc_idx_);
-	style->setColors(color_);
+	style->SetNumberOfLabels(num_locations);
+	style->SetLabels(labels_);
+	style->SetRefLabels(labels_ref_);
+	style->SetLocations(loc_idx_);
+	style->SetColors(color_);
 	renWinInter->SetInteractorStyle( style );
 
-	style2->setWin(renWin);
+	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
 
 	renWin->Render();
 	renWinInter->Start();
 
-	labels_ = style->getLabels();
-	loc_idx_ = style->getLocations();
+	labels_ = style->GetLabels();
+	loc_idx_ = style->GetLocations();
 }
 
 void showConnection(
@@ -540,8 +540,8 @@ void showConnection(
 	bool show_points)
 {
 	// [VARIABLES]*************************************************************
-	vector<node_tt> nodes 					= Graph_->getNodeList();
-	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+	vector<node_tt> nodes 					= Graph_->GetNodeList();
+	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	int num_locations = nodes.size();
 
@@ -712,9 +712,9 @@ void showConnection(
 		actor->SetMapper(dataPoints(points_, num_locations, color_, true));
 		actor->GetProperty()->SetPointSize(5);
 		renderer->AddActor(actor);
-		style->setNumberOfLabels(num_locations);
-		style->setLabels(labels_);
-		style->setColors(color_);
+		style->SetNumberOfLabels(num_locations);
+		style->SetLabels(labels_);
+		style->SetColors(color_);
 		for(int i=0;i<num_locations;i++)
 		{
 			textActor 	= vtkSmartPointer<vtkTextActor>::New();
@@ -733,11 +733,11 @@ void showConnection(
 	// ***********************************************************[ADDING DATA]
 
 	style->SetDefaultRenderer(renderer);
-	style->setLeftButton(CLICK_EMPTY);
+	style->SetLeftButton(CLICK_EMPTY);
 	renderer->SetBackground(0.0,0.0,0.0);
 	renWinInter->SetInteractorStyle(style);
 
-	style2->setWin(renWin);
+	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
 
@@ -753,8 +753,8 @@ void showConnectionTest(
 	bool show_points)
 {
 	// [VARIABLES]*************************************************************
-	vector<node_tt> nodes 					= Graph_->getNodeList();
-	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+	vector<node_tt> nodes 					= Graph_->GetNodeList();
+	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	int num_locations = nodes.size();
 
@@ -918,9 +918,9 @@ void showConnectionTest(
 		actor->SetMapper(dataPoints(points_, num_locations, color_, true));
 		actor->GetProperty()->SetPointSize(5);
 		renderer->AddActor(actor);
-		style->setNumberOfLabels(num_locations);
-		style->setLabels(labels_);
-		style->setColors(color_);
+		style->SetNumberOfLabels(num_locations);
+		style->SetLabels(labels_);
+		style->SetColors(color_);
 		for(int i=0;i<num_locations;i++)
 		{
 			textActor 	= vtkSmartPointer<vtkTextActor>::New();
@@ -959,11 +959,11 @@ void showConnectionTest(
 	}
 
 	style->SetDefaultRenderer(renderer);
-	style->setLeftButton(CLICK_EMPTY);
+	style->SetLeftButton(CLICK_EMPTY);
 	renderer->SetBackground(0.0,0.0,0.0);
 	renWinInter->SetInteractorStyle(style);
 
-	style2->setWin(renWin);
+	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
 

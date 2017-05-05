@@ -12,7 +12,7 @@ ReadFile::ReadFile()
 	n=nn=nnn=0;
 	list0=list1=list2={};
 	pair_tmp=make_pair(-1,"");
-	data.clear();
+	data_rf.clear();
 	idx.clear();
 	map_tmp.clear();
 }
@@ -85,16 +85,24 @@ int ReadFile::ReadLabelFileName(
 	string dir_name_,
 	map<string, string> &label_list_)
 {
-	{ n=0; list0={}; }
+	n=0; list0={};
 
 	n = scandir(dir_name_.c_str(), &list0, fileSelect, alphasort);
-	for(int f=0;f<n;f++)
+
+	if (n==0)
 	{
-		string tmp = string(list0[f]->d_name);
-		tmp.erase(tmp.begin()+(tmp.find(".")),tmp.end());
-		label_list_[tmp] = dir_name_ + string(list0[f]->d_name);
+		return EXIT_FAILURE;
 	}
-	return EXIT_SUCCESS;
+	else
+	{
+		for(int f=0;f<n;f++)
+		{
+			string tmp = string(list0[f]->d_name);
+			tmp.erase(tmp.begin()+(tmp.find(".")),tmp.end());
+			label_list_[tmp] = dir_name_ + string(list0[f]->d_name);
+		}
+		return EXIT_SUCCESS;
+	}
 }
 
 void ReadFile::ClearRF()
@@ -102,7 +110,7 @@ void ReadFile::ClearRF()
 	n=nn=nnn=0;
 	list0=list1=list2={};
 	pair_tmp=make_pair(-1,"");
-	data.clear();
+	data_rf.clear();
 	idx.clear();
 	map_tmp.clear();
 }
@@ -143,7 +151,7 @@ int ReadFile::ReadFile_(
 	string path_,
 	char delimiter)
 {
-	data.clear();
+	data_rf.clear();
 
 	ifstream src_file(path_);
 	while (src_file)
@@ -158,7 +166,7 @@ int ReadFile::ReadFile_(
 		   if (!getline( line_, word, delimiter)) break;
 		   data_line_.push_back( word );
 		}
-		data.push_back( data_line_ );
+		data_rf.push_back( data_line_ );
 	}
 
 	if (!src_file.eof()) {return EXIT_FAILURE;}
@@ -178,14 +186,14 @@ int ReadFile::ReadFileLabel(
 	}
 	else
 	{
-		for(n=0;n<data.size();n++)
+		for(n=0;n<data_rf.size();n++)
 		{
 			vector<string> tmp;
-			for(int nn=1;nn<data[n].size();nn++)
+			for(int nn=1;nn<data_rf[n].size();nn++)
 			{
-				tmp.push_back(data[n][nn]);
+				tmp.push_back(data_rf[n][nn]);
 			}
-			label_[atoi(data[n][0].c_str())] = tmp;
+			label_[atoi(data_rf[n][0].c_str())] = tmp;
 		}
 		printer(37);
 		return EXIT_SUCCESS;
@@ -205,17 +213,17 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		kb_.surface.resize(data.size());
-		kb_.surface_eq.resize(data.size());
-		for(int i=0;i<data.size();i++)
+		kb_.surface.resize(data_rf.size());
+		kb_.surface_eq.resize(data_rf.size());
+		for(int i=0;i<data_rf.size();i++)
 		{
 			for(int ii=1;ii<5;ii++)
 			{
-				kb_.surface_eq[i].push_back(atof(data[i][ii].c_str()));
+				kb_.surface_eq[i].push_back(atof(data_rf[i][ii].c_str()));
 			}
-			kb_.surface[i].x = atof(data[i][5].c_str());
-			kb_.surface[i].y = atof(data[i][6].c_str());
-			kb_.surface[i].z = atof(data[i][7].c_str());
+			kb_.surface[i].x = atof(data_rf[i][5].c_str());
+			kb_.surface[i].y = atof(data_rf[i][6].c_str());
+			kb_.surface[i].z = atof(data_rf[i][7].c_str());
 			kb_.surface[i].l = UNCLASSIFIED;
 		}
 		printer(39);
@@ -228,10 +236,10 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		kb_.surface_lim.resize(data.size());
-		for(int i=0;i<data.size();i++)
+		kb_.surface_lim.resize(data_rf.size());
+		for(int i=0;i<data_rf.size();i++)
 		{
-			kb_.surface_lim[i] = atof(data[i][1].c_str());
+			kb_.surface_lim[i] = atof(data_rf[i][1].c_str());
 		}
 		printer(46);
 	}
@@ -243,18 +251,18 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		for(int i=0;i<data.size();i++)
+		for(int i=0;i<data_rf.size();i++)
 		{
-			if (data[i].size()>1)
+			if (data_rf[i].size()>1)
 			{
 				pair<int,int> tmp_pair(
-						atoi(data[i][1].c_str()),
-						atoi(data[i][2].c_str()));
-				kb_.ac[data[i][0]] = tmp_pair;
+						atoi(data_rf[i][1].c_str()),
+						atoi(data_rf[i][2].c_str()));
+				kb_.ac[data_rf[i][0]] = tmp_pair;
 			}
 			else
 			{
-				kb_.al.push_back(data[i][0]);
+				kb_.al.push_back(data_rf[i][0]);
 			}
 		}
 		printer(2);
@@ -267,14 +275,14 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		for(int i=0;i<data.size();i++)
+		for(int i=0;i<data_rf.size();i++)
 		{
 			map<string,string> tmp2;
-			for(int ii=0;ii<(data[i].size()-1)/2;ii++)
+			for(int ii=0;ii<(data_rf[i].size()-1)/2;ii++)
 			{
-				tmp2[data[i][ii*2+1]] = data[i][ii*2+2];
+				tmp2[data_rf[i][ii*2+1]] = data_rf[i][ii*2+2];
 			}
-			kb_.ol[data[i][0]] = tmp2;
+			kb_.ol[data_rf[i][0]] = tmp2;
 		}
 		printer(4);
 	}
@@ -293,19 +301,19 @@ int ReadFile::ReadFileLA(
 	else
 	{
 		node_tt node_tmp = {};
-		for(int i=0;i<data.size();i++)
+		for(int i=0;i<data_rf.size();i++)
 		{
-			if (Graph_->getNode(i,node_tmp)==EXIT_SUCCESS)
+			if (Graph_->GetNode(i,node_tmp)==EXIT_SUCCESS)
 			{return EXIT_SUCCESS;}
-			node_tmp.name 		=      data[i][0];
-			node_tmp.centroid.x	= atof(data[i][1].c_str());
-			node_tmp.centroid.y	= atof(data[i][2].c_str());
-			node_tmp.centroid.z	= atof(data[i][3].c_str());
-			node_tmp.centroid.l	= atof(data[i][4].c_str());
+			node_tmp.name 		=      data_rf[i][0];
+			node_tmp.centroid.x	= atof(data_rf[i][1].c_str());
+			node_tmp.centroid.y	= atof(data_rf[i][2].c_str());
+			node_tmp.centroid.z	= atof(data_rf[i][3].c_str());
+			node_tmp.centroid.l	= atof(data_rf[i][4].c_str());
 			node_tmp.index    	= i;
-			node_tmp.surface 	= atoi(data[i][5].c_str());
-			node_tmp.contact 	= atoi(data[i][6].c_str());
-			Graph_->setNode(node_tmp);
+			node_tmp.surface 	= atoi(data_rf[i][5].c_str());
+			node_tmp.contact 	= atoi(data_rf[i][6].c_str());
+			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(i);
 		}
 		printer(6);
@@ -325,73 +333,73 @@ int ReadFile::ReadFileGraph(
 	else
 	{
 		int num_locations, num_location_intervals, num_sector_intervals;
-		num_locations 			= atoi(data[0][1].c_str());
-		num_location_intervals 	= atoi(data[1][1].c_str());
-		num_sector_intervals 	= atoi(data[2][1].c_str());
+		num_locations 			= atoi(data_rf[0][1].c_str());
+		num_location_intervals 	= atoi(data_rf[1][1].c_str());
+		num_sector_intervals 	= atoi(data_rf[2][1].c_str());
 
 		int c,l1,l2,l3; c=l1=l2=l3=0;
-		for(int i=3;i<data.size();i++)
+		for(int i=3;i<data_rf.size();i++)
 		{
 			c=(i-3)%8;
-			edge_tt edge_tmp = Graph_->getEdge(l1,l2,l3);
+			edge_tt edge_tmp = Graph_->GetEdge(l1,l2,l3);
 			switch (c)
 			{
 				case 0:
-					l1 = atoi(data[i][0].c_str());
-					l2 = atoi(data[i][1].c_str());
-					l3 = atoi(data[i][2].c_str());
+					l1 = atoi(data_rf[i][0].c_str());
+					l2 = atoi(data_rf[i][1].c_str());
+					l3 = atoi(data_rf[i][2].c_str());
 					break;
 				case 1:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_start[iii].x = atof(data[i][iii*3+0].c_str());
-						edge_tmp.loc_start[iii].y = atof(data[i][iii*3+1].c_str());
-						edge_tmp.loc_start[iii].z = atof(data[i][iii*3+2].c_str());
+						edge_tmp.loc_start[iii].x = atof(data_rf[i][iii*3+0].c_str());
+						edge_tmp.loc_start[iii].y = atof(data_rf[i][iii*3+1].c_str());
+						edge_tmp.loc_start[iii].z = atof(data_rf[i][iii*3+2].c_str());
 					}
 					break;
 				case 2:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_mid[iii].x = atof(data[i][iii*3+0].c_str());
-						edge_tmp.loc_mid[iii].y = atof(data[i][iii*3+1].c_str());
-						edge_tmp.loc_mid[iii].z = atof(data[i][iii*3+2].c_str());
+						edge_tmp.loc_mid[iii].x = atof(data_rf[i][iii*3+0].c_str());
+						edge_tmp.loc_mid[iii].y = atof(data_rf[i][iii*3+1].c_str());
+						edge_tmp.loc_mid[iii].z = atof(data_rf[i][iii*3+2].c_str());
 					}
 					break;
 				case 3:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_end[iii].x = atof(data[i][iii*3+0].c_str());
-						edge_tmp.loc_end[iii].y = atof(data[i][iii*3+1].c_str());
-						edge_tmp.loc_end[iii].z = atof(data[i][iii*3+2].c_str());
+						edge_tmp.loc_end[iii].x = atof(data_rf[i][iii*3+0].c_str());
+						edge_tmp.loc_end[iii].y = atof(data_rf[i][iii*3+1].c_str());
+						edge_tmp.loc_end[iii].z = atof(data_rf[i][iii*3+2].c_str());
 					}
 					break;
 				case 4:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.tan[iii].x = atof(data[i][iii*3+0].c_str());
-						edge_tmp.tan[iii].y = atof(data[i][iii*3+1].c_str());
-						edge_tmp.tan[iii].z = atof(data[i][iii*3+2].c_str());
+						edge_tmp.tan[iii].x = atof(data_rf[i][iii*3+0].c_str());
+						edge_tmp.tan[iii].y = atof(data_rf[i][iii*3+1].c_str());
+						edge_tmp.tan[iii].z = atof(data_rf[i][iii*3+2].c_str());
 					}
 					break;
 				case 5:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.nor[iii].x = atof(data[i][iii*3+0].c_str());
-						edge_tmp.nor[iii].y = atof(data[i][iii*3+1].c_str());
-						edge_tmp.nor[iii].z = atof(data[i][iii*3+2].c_str());
+						edge_tmp.nor[iii].x = atof(data_rf[i][iii*3+0].c_str());
+						edge_tmp.nor[iii].y = atof(data_rf[i][iii*3+1].c_str());
+						edge_tmp.nor[iii].z = atof(data_rf[i][iii*3+2].c_str());
 					}
 					break;
 				case 6:
-					edge_tmp.counter = atoi(data[i][0].c_str());
+					edge_tmp.counter = atoi(data_rf[i][0].c_str());
 					break;
 				case 7:
 					for(int iii=0;iii<num_location_intervals*num_sector_intervals;iii++)
 					{
-						edge_tmp.sector_map[iii] = atof(data[i][iii].c_str());
+						edge_tmp.sector_map[iii] = atof(data_rf[i][iii].c_str());
 					}
 					break;
 			}
-			Graph_->setEdge(l1,l2,l3,edge_tmp);
+			Graph_->SetEdge(l1,l2,l3,edge_tmp);
 		}
 		printer(41);
 		return EXIT_SUCCESS;

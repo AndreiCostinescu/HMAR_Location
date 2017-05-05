@@ -46,23 +46,36 @@ printf("========================================================================
 // CHOOSING
 //=============================================================================
 
-void TestCase::Choose(int x_, int y_)
+void TestCase::Choose(int x_)
 {
 	vector<int> idxs;
-	int tar = x_;
+
+//	0 	: labelling of dataSet
+//	1-4 : training
+//	5-8 : testing
 
 	switch(x_)
 	{
+		case 0:
+		{
+			// start with 001
+			for(int i=1;i<9;i++) idxs.push_back(i);
+			this->Lbl(idxs);
+			break;
+		}
 		case 1:
 		{
-			int idx = 1; // start with 001
+			// start with 001
+			int idx = 1;
 			idxs.push_back(idx);
+			this->TrnInd(idxs, dict[1]);
 			break;
 		}
 		case 2:
 		{
 			int idx = 2;
 			idxs.push_back(idx);
+			this->TrnInd(idxs, dict[2]);
 			break;
 		}
 		case 3:
@@ -71,32 +84,49 @@ void TestCase::Choose(int x_, int y_)
 			{
 				idxs.push_back(idx);
 			}
+			this->TrnInd(idxs, dict[3]);
 			break;
 		}
 		case 4:
 		{
 			int idx = 9;
 			idxs.push_back(idx);
+			this->TrnInd(idxs, dict[4]);
 			break;
 		}
 		case 5:
 		{
-			tar = 3;
-			int idx = 3;
+			// start with 001
+			int idx = 1;
 			idxs.push_back(idx);
+			this->Tst(idxs, dict[1]);
+			break;
+		}
+		case 6:
+		{
+			int idx = 2;
+			idxs.push_back(idx);
+			this->Tst(idxs, dict[2]);
+			break;
+		}
+		case 7:
+		{
+			for(int idx=3;idx<9;idx++)
+			{
+				idxs.push_back(idx);
+			}
+			this->Tst(idxs, dict[3]);
+			break;
+		}
+		case 8:
+		{
+			int idx = 9;
+			idxs.push_back(idx);
+			this->Tst(idxs, dict[4]);
 			break;
 		}
 		default:
 			break;
-	}
-
-	switch(y_)
-	{
-		case LBL: this->Lbl(idxs);			break;
-		case TRN: this->Trn(idxs,dict[tar]); break;
-		case TST: this->Tst(idxs,dict[tar]); break;
-		case DPL: this->Dpl(idxs,dict[tar]); break;
-		default :							break;
 	}
 }
 
@@ -104,13 +134,10 @@ void TestCase::Choose(int x_, int y_)
 // TEST CASES
 //=============================================================================
 
-int TestCase::Trn(vector<int> idx_, string object_)
+int TestCase::TrnInd(vector<int> idx_, string object_)
 {
-
-	string tar = object_;
-
 	bool flag;
-	int f, ff, fff, res, n, i, ii;
+	int n=0;
 	string dir_s, path;
 	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
 	map<int,vector<string> > label_list;
@@ -120,7 +147,7 @@ int TestCase::Trn(vector<int> idx_, string object_)
 	Graph *G;
 
 	printf("==============================================================================\n");
-	printf("|| TRN START                                                                ||\n");
+	printf("|| TrnInd START                                                             ||\n");
 	printf("==============================================================================\n");
 
 	// Reading label
@@ -136,35 +163,30 @@ int TestCase::Trn(vector<int> idx_, string object_)
 	{ return EXIT_FAILURE; }
 
 	// Reading data files
-	file_list.clear();
-	this->ReadFileName(DATA_DIR, idx_, file_list, n);
+	if (this->ReadFileName(DATA_DIR, idx_, file_list, n)==EXIT_FAILURE)
+	{ return EXIT_FAILURE; } printer(26);
 
-	this->DirectoryCheck(EVAL + "/" + tar);
-
-	printf("==============================================================================\n");
-	printf("|| TRAINNING                                                                ||\n");
-	printf("==============================================================================\n");
+	this->DirectoryCheck(EVAL + "/" + object_);
 
 	// Subject
-	for(f=0;f<n;f++)
+	for(int f=0;f<n;f++)
 	{
-		G = new Graph(EVAL, tar);
-		G->setKB(kb);
+		G = new Graph(object_);
+		G->SetKB(kb);
 
-		vector<string> al_tmp; al_tmp = kb.al;
-		vector<int> al_tmp_idx; al_tmp_idx.resize(al_tmp.size());
+		vector<int> al_tmp_idx; al_tmp_idx.resize(kb.al.size());
 
-		for(ff=0;ff<n;ff++)
+		for(int ff=0;ff<n;ff++)
 		{
-			if(f == ff) continue;
+			if (f == ff) continue;
 
 			// Data per subject
-			for(fff=0;fff<file_list[ff].size();fff++)
+			for(int fff=0;fff<file_list[ff].size();fff++)
 			{
 				flag = false;
 
 				// create directory if not valid
-				dir_s = EVAL + "/" + tar + "/" + to_string(f);
+				dir_s = EVAL + "/" + object_ + "/" + to_string(f);
 				this->DirectoryCheck(dir_s);
 
 				// read available location areas
@@ -177,12 +199,12 @@ int TestCase::Trn(vector<int> idx_, string object_)
 				// for initial labelling
 				if (1)
 				{
-					for(i=0;i<al_tmp.size();i++)
+					for(int i=0;i<kb.al.size();i++)
 					{
 						if (al_tmp_idx[i]>0) continue;
-						for(ii=0;ii<label_list[pair_tmp.first].size();ii++)
+						for(int ii=0;ii<label_list[pair_tmp.first].size();ii++)
 						{
-							if (!strcmp(al_tmp[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
+							if (!strcmp(kb.al[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
 							{
 								flag = true;
 								al_tmp_idx[i] = 1;
@@ -191,12 +213,12 @@ int TestCase::Trn(vector<int> idx_, string object_)
 					}
 				}
 
-				res = this->Learning(pair_tmp.second, G, flag);
+				// learning process
+				if (this->Learning(pair_tmp.second, G, flag)==EXIT_FAILURE)
+				{ printer(29); return EXIT_FAILURE;	} printer(30);
 
-				if (res==EXIT_FAILURE)	{ printer(29); return EXIT_FAILURE;	}
-				else					{ printer(30);						}
-
-				if(G->getNumberOfNodes()>0)
+				// writing location areas data
+				if(G->GetNumberOfNodes()>0)
 				{
 					remove(path.c_str());
 					this->WriteFileLA(G, path.c_str());
@@ -204,16 +226,16 @@ int TestCase::Trn(vector<int> idx_, string object_)
 			}
 		}
 
-		path = 	EVAL + "/" + tar + "/" + to_string(f) + "/graph.txt";
+		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/graph.txt";
 		this->WriteFileGraph(G, path);
-		path = 	EVAL + "/" + tar + "/" + to_string(f) + "/window.txt";
+		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
 		this->WriteFileWindow(G,path);
 
 		delete G;
 	}
 
 	printf("==============================================================================\n");
-	printf("|| TRN END                                                                  ||\n");
+	printf("|| TrnInd END                                                               ||\n");
 	printf("==============================================================================\n");
 
 	return EXIT_SUCCESS;
@@ -231,15 +253,14 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	kb_t kb;
 	Graph *G;
 
-	int num_x = 5;
-	int num_y = 1;
+	int num_x = 9;
+	int num_y = 9;
 	vector<vector<double> > k_xy; k_xy.resize(num_x);
 	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
-	gaussKernel(k_xy, num_x, num_y, 1);
+	gaussKernel(k_xy, num_x, num_y, 3);
 //cout << k_xy[0][0] << " ";
 //cout << k_xy[1][0] << " ";
 //cout << k_xy[2][0] << endl;
-
 
 	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
 	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
@@ -275,8 +296,8 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	for(int f=0;f<sub_num;f++)
 	{
 
-		G = new Graph(EVAL, tar);
-		G->setKB(kb);
+		G = new Graph(tar);
+		G->SetKB(kb);
 
 		// read available location areas
 		dir_s = EVAL + "/" + tar + "/" + to_string(f);
@@ -286,17 +307,15 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		path = 	dir_s + "/graph.txt";
 		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
-//		path = 	dir_s + "/window.txt";
-//		this->WriteFileWindow(G,path);
 
 		// Visualize
 		if (0)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
-			for(int i=0;i<G->getNumberOfNodes();i++)
+			for(int i=0;i<G->GetNumberOfNodes();i++)
 			{
 				node_tt node_tmp = {};
-				G->getNode(i, node_tmp);
+				G->GetNode(i, node_tmp);
 				label_zero.push_back(node_tmp.name);
 			}
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
@@ -305,14 +324,14 @@ int TestCase::Tst(vector<int> idx_, string object_)
 
 		if(1)
 		{
-			for(int i=0;i<G->getNumberOfNodes();i++)
+			for(int i=0;i<G->GetNumberOfNodes();i++)
 			{
-				for(int ii=0;ii<G->getNumberOfNodes();ii++)
+				for(int ii=0;ii<G->GetNumberOfNodes();ii++)
 				{
 					if (i==ii) { continue; }
 
 					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
-					G->getEdgeSectorMap(i,ii,0,sm_tmp1);
+					G->GetEdgeSectorMap(i,ii,0,sm_tmp1);
 					sm_tmp2 = sm_tmp1;
 
 					for(int l=0;l<LOC_INT;l++)
@@ -322,18 +341,17 @@ int TestCase::Tst(vector<int> idx_, string object_)
 							sum_tmp = 0.0;
 							for(int gkx=0;gkx<num_x;gkx++)
 							{
-								sum_tmp +=
-										sm_tmp2
-										[l*SEC_INT +
-										 ((s-(num_x/2)+gkx+SEC_INT)%SEC_INT)] *
-										k_xy[gkx][0];
+								for(int gky=0;gky<num_y;gky++)
+								{
+									int tmpl = l-(num_y/2)+gky; if(tmpl < 0 || tmpl>=LOC_INT) continue;
+									int tmps = (s-(num_x/2)+gkx+SEC_INT)%SEC_INT;
+									sum_tmp += sm_tmp2[tmpl*SEC_INT + tmps] * k_xy[gkx][gky];
+								}
 							}
-
 							sm_tmp1[l*SEC_INT+s] = sum_tmp;
 						}
 					}
-
-					G->setEdgeSectorMap(i,ii,0,sm_tmp1);
+					G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
 				}
 			}
 		}
@@ -342,15 +360,19 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		if (0)
 		{
 			vector<point_d> point_zero; vector<string> label_zero;
-			for(int i=0;i<G->getNumberOfNodes();i++)
+			for(int i=0;i<G->GetNumberOfNodes();i++)
 			{
 				node_tt node_tmp = {};
-				G->getNode(i, node_tmp);
+				G->GetNode(i, node_tmp);
 				label_zero.push_back(node_tmp.name);
 			}
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
 			showConnectionTest(G, point_zero, label_zero, color_code, true);
 		}
+
+
+		path = 	dir_s + "/window.txt";
+		this->WriteFileWindow(G,path);
 
 
 		dir_s = RESULT + "/" + tar + "/";
@@ -444,8 +466,8 @@ int TestCase::Dpl(vector<int> idx_, string object_)
 	for(int f=0;f<sub_num;f++)
 	{
 
-		G = new Graph(EVAL, tar);
-		G->setKB(kb);
+		G = new Graph(tar);
+		G->SetKB(kb);
 
 		// read available location areas
 		dir_s = EVAL + "/" + tar + "/" + to_string(f);
@@ -460,14 +482,14 @@ int TestCase::Dpl(vector<int> idx_, string object_)
 
 		if(1)
 		{
-			for(int i=0;i<G->getNumberOfNodes();i++)
+			for(int i=0;i<G->GetNumberOfNodes();i++)
 			{
-				for(int ii=0;ii<G->getNumberOfNodes();ii++)
+				for(int ii=0;ii<G->GetNumberOfNodes();ii++)
 				{
 					if (i==ii) { continue; }
 
 					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
-					G->getEdgeSectorMap(i,ii,0,sm_tmp1);
+					G->GetEdgeSectorMap(i,ii,0,sm_tmp1);
 					sm_tmp2 = sm_tmp1;
 
 					for(int l=0;l<LOC_INT;l++)
@@ -488,7 +510,7 @@ int TestCase::Dpl(vector<int> idx_, string object_)
 						}
 					}
 
-					G->setEdgeSectorMap(i,ii,0,sm_tmp1);
+					G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
 				}
 			}
 		}
@@ -533,82 +555,87 @@ int TestCase::Dpl(vector<int> idx_, string object_)
 int TestCase::Lbl(vector<int> idx_)
 {
 
-	int f, fff, res, n, b, e; f=fff=res=n=b=e=0;
+	int n, b, e; n=b=e=0;
+
 	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
 	map<string, string> label_ref_list;
 	vector<point_d> labels_ref;
 	vector<string> labels_ref_name;
 	map<int,vector<string> > label_list;
 
+	ReadFile RF;
+	WriteFile WF;
+	Parser P;
+
 	printf("==============================================================================\n");
-	printf("|| LBL START                                                                ||\n");
+	printf("|| LABELLING START                                                          ||\n");
 	printf("==============================================================================\n");
 
 	// Reading label_list
-	if (this->ReadFileLabel("./kb/", label_list)==EXIT_FAILURE)
+	if (RF.ReadFileLabel("./kb/", label_list)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
-	label_ref_list.clear();
-	this->ReadLabelFileName("./label/", label_ref_list);
+	// Reading file names for location references of the labels
+	if (RF.ReadLabelFileName("./label/", label_ref_list)==EXIT_FAILURE)
+	{ return EXIT_FAILURE; }
 
+	// Parsing the data from the reference files
 	typedef map<string, string>::iterator it_type;
 	for(it_type itr=label_ref_list.begin();itr!=label_ref_list.end();itr++)
 	{
-		b = e;
-
-		if (this->ReadFile_(itr->second, ',')==EXIT_FAILURE)
+		if (RF.ReadFile_(itr->second, ',')==EXIT_FAILURE)
 		{ return EXIT_FAILURE; } printer(47);
 
-		e = b + this->GetDataRF().size();
-
-		this->SetDataParser(this->GetDataRF());
-		this->ParseDataNoLabel();
-		vector<point_d> tmp = this->GetPointParser();
+		b = e;
+		e = b + RF.GetDataRF().size();
+		P.SetDataParser(RF.GetDataRF());
+		P.ParseDataNoLabel();
+		vector<point_d> tmp = P.GetPointParser();
 		labels_ref.insert(labels_ref.end(),tmp.begin(),tmp.end());
-
 		for(int i=b;i<e;i++) { labels_ref_name.push_back(itr->first); }
 	}
 
-	// Reading data files
-	file_list.clear();
-	this->ReadFileName(DATA_DIR, idx_, file_list, n);
+	// Reading data file name
+	if (RF.ReadFileName(DATA_DIR, idx_, file_list, n)==EXIT_FAILURE)
+	{ return EXIT_FAILURE; } printer(26);
 
 	// Subject
-	for(f=0;f<n;f++)
+	for(int f=0;f<n;f++)
 	{
 		// Data per subject
-		for(fff=0;fff<file_list[f].size();fff++)
+		for(int ff=0;ff<file_list[f].size();ff++)
 		{
-
-			if (this->ReadFile_(file_list[f][fff].second, ',')==EXIT_FAILURE)
+			if (RF.ReadFile_(file_list[f][ff].second, ',')==EXIT_FAILURE)
 			{ return EXIT_FAILURE; } printer(8);
 
-			this->SetDataParser(this->GetDataRF());
-			this->ParseDataNoLabel();
-
-			vector<point_d> p_tmp = this->GetPointParser();
-			this->RewriteDataFile(
-				file_list[f][fff].second, this->GetDataRF(), p_tmp,
-				this->GetContactParser(), this->GetFaceParser(),
-				labels_ref, labels_ref_name, label_list[file_list[f][fff].first]);
-
+			P.SetDataParser(RF.GetDataRF());
+			P.ParseDataNoLabel();
+			WF.RewriteDataFile(
+				file_list[f][ff].second,
+				RF.GetDataRF(),
+				P.GetPointParser(),
+				P.GetContactParser(),
+				P.GetFaceParser(),
+				labels_ref,
+				labels_ref_name,
+				label_list[file_list[f][ff].first]);
 			printer(48);
 
-			// Visualize
-			if (0)
-			{
-				vector<vector<unsigned char> > color_code; colorCode(color_code);
-				vector<string>  goal_action, al; goal_action.resize(5);
-				vector<int> 	loc_idx_zero;
-				showData(
-						p_tmp, goal_action, al,
-						loc_idx_zero, color_code, true, false, false);
-			}
+//			// Visualize
+//			if (0)
+//			{
+//				vector<vector<unsigned char> > color_code; colorCode(color_code);
+//				vector<string>  goal_action, al; goal_action.resize(5);
+//				vector<int> 	loc_idx_zero;
+//				showData(
+//						p_tmp, goal_action, al,
+//						loc_idx_zero, color_code, true, false, false);
+//			}
 		}
 	}
 
 	printf("==============================================================================\n");
-	printf("|| LBL END                                                                  ||\n");
+	printf("|| LABELLING END                                                            ||\n");
 	printf("==============================================================================\n");
 
 	return EXIT_SUCCESS;

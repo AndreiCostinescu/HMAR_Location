@@ -9,14 +9,12 @@
 
 
 Graph::Graph(
-	string scene_,
-	string target_)
+	string object_)
 {
-	scene 	= scene_;
-	target 	= target_;
+	object 	= object_;
 }
 
-void Graph::setKB(
+void Graph::SetKB(
 		kb_t x_)
 {
 	surface 	= x_.surface;
@@ -27,57 +25,26 @@ void Graph::setKB(
 	object_label= x_.ol;
 	for(int i=action_cat["GEOMETRIC"].first;i<action_cat["GEOMETRIC"].second+1;i++)
 	{
-		state.goal[action_label[i]] = 0.0;
+		action_state.goal[action_label[i]] = 0.0;
 	}
 }
 
-void Graph::initFilter()
+kb_t Graph::GetKB()
 {
-	map<string,double> mask;
-	for(int i=0;i<action_label.size();i++)
-	{
-		filter_init[action_label[i]] 		= 0.0;
-		prediction_init[action_label[i]] 	= 0.0;
-	}
-}
-
-void Graph::setInitFilter(
-	vector<int> val_)
-{
-	if (val_.size()!=filter_init.size())
-	{
-		cerr << "[WARNING] : DIM(FILTER MASK) != DIM(ACTION LABEL)" << endl;
-	}
-	else
-	{
-		for(int i=0;i<val_.size();i++)
-		{
-			filter_init[action_label[i]] = val_[i];
-		}
-	}
-}
-
-void Graph::expandFilter(
-	int x_)
-{
-	while (filter.size() < x_)
-	{
-		filter.push_back(filter_init);
-		prediction_reset.push_back(prediction_init);
-	}
-}
-
-void Graph::updateFilter(
-	int x_)
-{
-	filter[x_][node_list[x_].name] = 1.0;
+	kb_t kb_tmp = {};
+	kb_tmp.surface = surface;
+	kb_tmp.surface_eq = surface_eq;
+	kb_tmp.al = action_label;
+	kb_tmp.ac = action_cat;
+	kb_tmp.ol = object_label;
+	return kb_tmp;
 }
 
 //=============================================================================
 // NODES
 //=============================================================================
 
-vector<point_d> Graph::getCentroidList()
+vector<point_d> Graph::GetCentroidList()
 {
 	vector<point_d> tmp;
 	tmp.resize(node_list.size());
@@ -88,7 +55,7 @@ vector<point_d> Graph::getCentroidList()
 	return tmp;
 }
 
-vector<int> Graph::getSurfaceFlagList()
+vector<int> Graph::GetSurfaceFlagList()
 {
 	vector<int> tmp;
 	tmp.resize(node_list.size());
@@ -111,9 +78,9 @@ void Graph::addEmptyEdgeForNewNode(
 		edge_list.resize(idx_+1);
 		for(int i=0;i<edge_list.size();i++)
 		{
-			if(edge_list[i].size()<=getNumberOfNodes())
+			if(edge_list[i].size()<=GetNumberOfNodes())
 			{
-				edge_list[i].resize(getNumberOfNodes());
+				edge_list[i].resize(GetNumberOfNodes());
 				for(int ii=0;ii<edge_list[i].size();ii++)
 				{
 					if (edge_list[i][ii].size()==0)

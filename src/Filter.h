@@ -20,13 +20,13 @@ class Filter
 		void ResetFilter();
 
 		int PreprocessDataLive(
-			point_d 					pos_,
-			vector<point_d> 			&pos_vel_acc_avg_, //motion
-			unsigned int				window_);
+			point_d pos_,
+			vector<point_d> &pos_vel_acc_avg_, //motion
+			unsigned int window_);
 
 		int PreprocessContactLive(
-			int 						&contact_,
-			unsigned int 				window_);
+			int &contact_,
+			unsigned int window_);
 
 	private:
 		vector< vector< point_d > > pos_vel_acc_mem;

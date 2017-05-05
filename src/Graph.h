@@ -15,174 +15,50 @@ class Graph
 
 public:
 
-	Graph(
-		string scene_,
-		string object_);
-
+	Graph(string object_);
 	virtual ~Graph(){}
 
-	string getScene()
-	{
-		return scene;
-	}
+//=============================================================================
+// Set/Get
+//=============================================================================
 
-	string getTarget()
-	{
-		return target;
-	}
+	string GetObject() {return object;}
+	void SetObject(string object_) {object = object_;}
 
-	kb_t getKB()
-	{
-		kb_t kb_tmp = {};
-		kb_tmp.surface = surface;
-		kb_tmp.surface_eq = surface_eq;
-		kb_tmp.al = action_label;
-		kb_tmp.ac = action_cat;
-		kb_tmp.ol = object_label;
-		return kb_tmp;
-	}
+	kb_t GetKB();
+	void SetKB(kb_t x_);
 
-	void setKB(
-		kb_t x_);
+	vector<double> GetSurfaceLimit() {return surface_lim;}
+	void SetSurfaceLimit(vector<double> x_) {surface_lim = x_;}
 
-	vector<double> getSurfaceLimit()
-	{
-		return surface_lim;
-	}
+	vector<vector<double> > GetSurfaceEq() {return surface_eq;}
+	void SetSurfaceEq(vector<vector<double> > x_) {surface_eq = x_;}
 
-	void setSurfaceLimit(
-		vector<double> x_)
-	{
-		surface_lim = x_;
-	}
+	vector<point_d> GetSurface() {return surface;}
+	void SetSurface(vector<point_d> x_) {surface = x_;}
 
-	vector<vector<double> > getSurfaceEq()
-	{
-		return surface_eq;
-	}
+	map<string,map<string,string> > GetObjectLabel() {return object_label;}
+	void SetObjectLabel(map<string,map<string,string> > object_label_) {object_label = object_label_;}
 
-	void setSurfaceEq(
-		vector<vector<double> > x_)
-	{
-		surface_eq = x_;
-	}
+	map<string,pair<int,int> > GetActionCategory() {return action_cat;}
+	void SetActionCategory(map<string,pair<int,int> > x_) {action_cat = x_;}
 
-	vector<point_d> getSurface()
-	{
-		return surface;
-	}
+	vector<string> GetActionLabel() {return action_label;}
+	void SetActionLabel(vector<string> x_) {action_label = x_;}
 
-	void setSurface(
-		vector<point_d> x_)
-	{
-		surface = x_;
-	}
+	void GetPredictionReset(vector<map<string, double> > &x_) {x_ = prediction_reset;}
 
-	map<string,map<string,string> > getObjectLabel()
-	{
-		return object_label;
-	}
+	void GetPrediction(vector<map<string, double> > &x_) {x_ = prediction;}
+	void SetPrediction(vector<map<string, double> > x_) {prediction = x_;}
 
-	void setObjectLabel(map<string,map<string,string> > object_label_)
-	{
-		object_label = object_label_;
-	}
-
-	map<string,pair<int,int> > getActionCategory()
-	{
-		return action_cat;
-	}
-
-	void setActionCategory(
-		map<string,pair<int,int> > x_)
-	{
-		action_cat = x_;
-	}
-
-	vector<string> getActionLabel()
-	{
-		return action_label;
-	}
-
-	void setActionLabel(
-		vector<string> x_)
-	{
-		action_label = x_;
-	}
-
-	void initFilter();
-
-	void setInitFilter(
-		vector<int> val_);
-
-	void getInitFilter(
-		map<string, double> &x_)
-	{
-		x_ = filter_init;
-	}
-
-	void expandFilter(
-		int x_);
-
-	void updateFilter(
-		int x_);
-
-	void getFilter(
-		vector<map<string, double> > &x_)
-	{
-		x_ = filter;
-	}
-
-	void setFilter(
-		vector<map<string, double> > x_)
-	{
-		filter = x_;
-	}
-
-	void getPredictionReset(
-		vector<map<string, double> > &x_)
-	{
-		x_ = prediction_reset;
-	}
-
-	void getPredictionInit(
-		map<string, double> &x_)
-	{
-		x_ = prediction_init;
-	}
-
-	void getPrediction(
-		vector<map<string, double> > &x_)
-	{
-		x_ = prediction;
-	}
-
-	void setPrediction(
-		vector<map<string, double> > x_)
-	{
-		prediction = x_;
-	}
-
-	void addSurface(
-		vector<vector<double> > surface_);
-
-	state_t getState()
-	{
-		return state;
-	}
-
-	void setState(
-		state_t x_)
-	{
-		state = x_;
-	}
-
+	state_t GetActionState() {return action_state;}
+	void SetActionState(state_t x_) {action_state = x_;}
 
 //=============================================================================
 // NODES
 //=============================================================================
 
-	int getNode(
+	int GetNode(
 		int  idx_,
 		node_tt &x_)
 	{
@@ -197,7 +73,7 @@ public:
 		}
 	}
 
-	int setNode(
+	int SetNode(
 		node_tt	node_)
 	{
 		if (node_list.size() < node_.index+1)
@@ -208,19 +84,19 @@ public:
 		return EXIT_SUCCESS;
 	}
 
-	int getNumberOfNodes()
+	int GetNumberOfNodes()
 	{
 		return node_list.size();
 	}
 
-	vector<node_tt> getNodeList()
+	vector<node_tt> GetNodeList()
 	{
 		return node_list;
 	}
 
-	vector<point_d> getCentroidList();
+	vector<point_d> GetCentroidList();
 
-	vector<int> getSurfaceFlagList();
+	vector<int> GetSurfaceFlagList();
 
 //=============================================================================
 // EDGES
@@ -229,12 +105,12 @@ public:
 	void addEmptyEdgeForNewNode(
 		int	idx_);
 
-	vector<vector<vector<edge_tt> > > getListOfEdges()
+	vector<vector<vector<edge_tt> > > GetListOfEdges()
 	{
 		return edge_list;
 	}
 
-	edge_tt getEdge(
+	edge_tt GetEdge(
 		int n1_,
 		int n2_,
 		int edge_num_)
@@ -242,7 +118,7 @@ public:
 		return edge_list[n1_][n2_][edge_num_];
 	}
 
-	void setEdge(
+	void SetEdge(
 		int 	n1_,
 		int 	n2_,
 		int 	edge_num_,
@@ -251,7 +127,7 @@ public:
 		edge_list[n1_][n2_][edge_num_] = edge_;
 	}
 
-	int getEdgeCounter(
+	int GetEdgeCounter(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_)
@@ -259,7 +135,7 @@ public:
 		return edge_list[n1_][n2_][edge_num_].counter;
 	}
 
-	void setEdgeCounter(
+	void SetEdgeCounter(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -268,7 +144,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].counter += x_;
 	}
 
-	void getEdgeMovementConstraint(
+	void GetEdgeMovementConstraint(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -277,7 +153,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].mov_const;
 	}
 
-	void setEdgeMovementConstraint(
+	void SetEdgeMovementConstraint(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -286,7 +162,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].mov_const = x_;
 	}
 
-	void getEdgeLocMem(
+	void GetEdgeLocMem(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -295,7 +171,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].loc_mem;
 	}
 
-	void setEdgeLocMem(
+	void SetEdgeLocMem(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -304,7 +180,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].loc_mem = x_;
 	}
 
-	void getEdgeSecMem(
+	void GetEdgeSecMem(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -313,7 +189,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].sec_mem;
 	}
 
-	void setEdgeSecMem(
+	void SetEdgeSecMem(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -322,7 +198,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].sec_mem = x_;
 	}
 
-	void getEdgeSectorMap(
+	void GetEdgeSectorMap(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -331,7 +207,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].sector_map;
 	}
 
-	void setEdgeSectorMap(
+	void SetEdgeSectorMap(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -340,7 +216,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].sector_map = x_;
 	}
 
-	void getEdgeTan(
+	void GetEdGetan(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -349,7 +225,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].tan;
 	}
 
-	void setEdgeTan(
+	void SetEdGetan(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -358,7 +234,7 @@ public:
 		edge_list[n1_][n2_][edge_num_].tan = x_;
 	}
 
-	void getEdgeNor(
+	void GetEdgeNor(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -367,7 +243,7 @@ public:
 		x_ = edge_list[n1_][n2_][edge_num_].nor;
 	}
 
-	void setEdgeNor(
+	void SetEdgeNor(
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
@@ -376,9 +252,9 @@ public:
 		edge_list[n1_][n2_][edge_num_].nor = x_;
 	}
 
+
 private:
-	string 								scene;
-	string 								target; // what kind of action set is being evaluated
+	string 								object; // what kind of action Set is being evaluated
 	vector<node_tt> 					node_list;
 	vector<vector<vector<edge_tt> > > 	edge_list;
 	map<string, double>					filter_init;
@@ -396,7 +272,7 @@ private:
 	vector<double> 						surface_lim;
 
 	kb_t 								kb;
-	state_t 							state;
+	state_t 							action_state;
 
 };
 

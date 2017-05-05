@@ -24,7 +24,7 @@ Evaluate::~Evaluate() {}
 
 int Evaluate::UpdateEval()
 {
-	state_eval = G->getState();
+	state_eval = G->GetActionState();
 
 	double max_tmp = *max_element(pct_err_eval.begin(), pct_err_eval.end());
 
@@ -42,13 +42,13 @@ int Evaluate::UpdateEval()
 							pct_err_eval.begin(),
 							max_element(pct_err_eval.begin(), pct_err_eval.end()));
 
-		vector<string> al_tmp = G->getActionLabel();
-		map<string,pair<int,int> > ac_tmp = G->getActionCategory();
+		vector<string> al_tmp = G->GetActionLabel();
+		map<string,pair<int,int> > ac_tmp = G->GetActionCategory();
 
 		node_tmp = {};
-		G->getNode(label1_eval, node_tmp);
+		G->GetNode(label1_eval, node_tmp);
 		string tmp1 = node_tmp.name;
-		G->getNode(idx, node_tmp);
+		G->GetNode(idx, node_tmp);
 		string tmp2 = node_tmp.name;
 
 		int c= 0;
@@ -73,14 +73,14 @@ int Evaluate::UpdateEval()
 
 	state_eval.mov = vel_eval;
 
-	for(int i=0;i<G->getNumberOfNodes();i++)
+	for(int i=0;i<G->GetNumberOfNodes();i++)
 	{
-		G->getNode(i, node_tmp);
+		G->GetNode(i, node_tmp);
 		state_eval.goal[node_tmp.name] = pct_err_eval[i];
 		state_eval.window[node_tmp.name] = win_eval[i];
 	}
 
-	G->setState(state_eval);
+	G->SetActionState(state_eval);
 
 	return EXIT_SUCCESS;
 }

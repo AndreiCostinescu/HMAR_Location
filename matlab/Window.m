@@ -14,7 +14,6 @@ DICT2 = DICT;
 remove(DICT2,'MOVE');
 remove(DICT2,'RELEASE');
 remove(DICT2,'STOP');
-remove(DICT2,'WINDOW');
 DICT3 = containers.Map(values(DICT2),keys(DICT2));
 
 %% Window
@@ -101,12 +100,14 @@ for i=1:length(DIR)
             if (sum(Y{ii}(iii,:))==0)
                 continue;
             end
-            windowSize = 10; 
+            windowSize = 3; 
             b = (1/windowSize)*ones(1,windowSize);
             a = 1;
             y  = filter(b,a,Y {ii}(iii,:));
             y2 = filter(b,a,Y2{ii}(iii,:));
-            plot(X{ii}(iii,:),y2./y); 
+            y2 = smooth(Y2{ii}(iii,:));
+%             plot(X{ii}(iii,:),y2./y); 
+            plot(X{ii}(iii,:),y2); 
             L = [L ; iii];
             hold on;
         end
@@ -116,7 +117,12 @@ for i=1:length(DIR)
             LL = [LL; {[LA{ii}{ceil(L(iii)/nn)} ' to ' LA{ii}{mod(L(iii)-1,nn)+1}]}];
         end
         legend(LL);
+        axis([0 100 0 0.2]);
         hold off;
+        title(['Subject ' num2str(ii)]);
+        ylabel('Variation [m]');
+        xlabel('Trajectory of sector-map [sector]');
+        print(gcf,['Window_' DIR(i).name '_' num2str(ii)],'-depsc');
     end
     
 %     for ii=1:length(X)

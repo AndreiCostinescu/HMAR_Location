@@ -123,7 +123,7 @@ int TrainLA::ContactCheck(
 			if (decideSurface(
 					points_avg[i], surfaces_eq[ii], surfaces_limit[ii]) &&
 				l2Norm(
-					minusPoint(surfaces[ii],centroids_[points_avg[i].l])) < 0.2)
+					minusPoint(surfaces[ii],centroids_[points_avg[i].l])) < 0.2) // HACK: to prevent arbitrary surface detection
 			{
 				surfaces_flag[points_avg[i].l] = ii+1;
 				break;
@@ -157,10 +157,14 @@ int TrainLA::ClusteringExt(
 
 	this->Clustering(points_avg, DBSCAN_EPS, DBSCAN_MIN);
 
-//	vector<string>goal_action, al;goal_action.resize(10);
-//	showData(
-//			points_avg, goal_action, al,
-//			loc_idx_zero, color_code, true, false, false);
+	// Visualize
+	if (0)
+	{
+		vector<string>goal_action, al;goal_action.resize(10);
+		showData(
+				points_avg, goal_action, al,
+				loc_idx_zero, color_code, true, false, false);
+	}
 
 	this->CombineNearCluster(points_avg, centroids_, locations_flag, contact);
 
@@ -175,15 +179,14 @@ int TrainLA::ClusteringExt(
 	this->ContactBoundary(centroids_,true);
 	this->ContactBoundary(centroids_,false);
 
-//	// Visualize
-//	if (flaggg)
-//	{
-//		cout << centroids_.size()<<endl;
-//		vector<string>goal_action, al;goal_action.resize(10);
-//		showData(
-//				points_, goal_action, al,
-//				loc_idx_zero, color_code, true, false, false);
-//	}
+	// Visualize
+	if (0)
+	{
+		vector<string>goal_action, al;goal_action.resize(10);
+		showData(
+				points_avg, goal_action, al,
+				loc_idx_zero, color_code, true, false, false);
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -199,19 +202,19 @@ int TrainLA::BuildLocationArea(
 	{ points_avg.push_back(pos_vel_acc_[i][0]); }
 
 	contact			= contact_;
-	surfaces 		= Graph_->getSurface();
-	surfaces_eq		= Graph_->getSurfaceEq();
-	surfaces_limit	= Graph_->getSurfaceLimit();
+	surfaces 		= Graph_->GetSurface();
+	surfaces_eq		= Graph_->GetSurfaceEq();
+	surfaces_limit	= Graph_->GetSurfaceLimit();
 
 	// Graph is empty
-	if (Graph_->getNumberOfNodes()==0)
+	if (Graph_->GetNumberOfNodes()==0)
 	{
 		this->ClusteringExt(locations);
 
 		reshapeVector(goal_action, locations.size());
 		printer(15);
 
-		if(!strcmp(Graph_->getTarget().c_str(),"CUP"))
+		if(!strcmp(Graph_->GetObject().c_str(),"CUP"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "DISPENSER";
@@ -219,20 +222,20 @@ int TrainLA::BuildLocationArea(
 			goal_action[3] = "TABLE2";
 			goal_action[4] = "WASH";
 		}
-		else if(!strcmp(Graph_->getTarget().c_str(),"ORG"))
+		else if(!strcmp(Graph_->GetObject().c_str(),"ORG"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "FACE";
 			goal_action[2] = "TABLE2";
 			goal_action[3] = "THROW";
 		}
-		else if(!strcmp(Graph_->getTarget().c_str(),"KNF"))
+		else if(!strcmp(Graph_->GetObject().c_str(),"KNF"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "TABLE2";
 			goal_action[2] = "WASH";
 		}
-		else if(!strcmp(Graph_->getTarget().c_str(),"SPG"))
+		else if(!strcmp(Graph_->GetObject().c_str(),"SPG"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "TABLE2";
@@ -240,7 +243,7 @@ int TrainLA::BuildLocationArea(
 		}
 		else
 			showData(
-					points_avg, goal_action, Graph_->getActionLabel(),
+					points_avg, goal_action, Graph_->GetActionLabel(),
 					loc_idx_zero, color_code, true, true, false);
 
 		for(int i=0;i<locations.size();i++)
@@ -251,17 +254,17 @@ int TrainLA::BuildLocationArea(
 			node_tmp.surface 	= surfaces_flag[i];
 			node_tmp.contact 	= locations_flag[i];
 			node_tmp.centroid 	= locations[i];
-			Graph_->setNode(node_tmp);
+			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
 		}
 	}
 	else
 	{
 		// Graph is not empty
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			goal_action.push_back(node_tmp.name);
 			locations.push_back(node_tmp.centroid);
 		}
@@ -274,26 +277,26 @@ int TrainLA::BuildLocationArea(
 		// when new label is present
 		if (flag_)
 		{
-			if(Graph_->getNumberOfNodes()==3)
+			if(Graph_->GetNumberOfNodes()==3)
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "TABLE2";
 				goal_action[2] = "THROW";
 			}
-			if(Graph_->getNumberOfNodes()==4)
+			if(Graph_->GetNumberOfNodes()==4)
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "TABLE1";
 				goal_action[2] = "WASH";
 			}
-			if(Graph_->getNumberOfNodes()==5)
+			if(Graph_->GetNumberOfNodes()==5)
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "DISPENSER";
 				goal_action[2] = "WASH";
 			}
 //			showData(
-//					points_avg, goal_action, Graph_->getActionLabel(),
+//					points_avg, goal_action, Graph_->GetActionLabel(),
 //					loc_idx_zero, color_code, true, true, false);
 		}
 
@@ -310,7 +313,7 @@ int TrainLA::BuildLocationArea(
 										locations_[i])) < CLUSTER_LIMIT*1.5)
 				{
 					node_tt node_tmp = {};
-					Graph_->getNode(ii, node_tmp);
+					Graph_->GetNode(ii, node_tmp);
 
 //					// not stable the values
 //					double tmp1 = locations_[i].l; //new
@@ -342,7 +345,7 @@ int TrainLA::BuildLocationArea(
 					locations[ii].l = pdfExp(BOUNDARY_VAR, 0.0, tmp1);
 
 					node_tmp.centroid = locations[ii];
-					Graph_->setNode(node_tmp);
+					Graph_->SetNode(node_tmp);
 
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
@@ -359,11 +362,11 @@ int TrainLA::BuildLocationArea(
 				{
 					node_tt node_tmp 	= {};
 					node_tmp.name 		= goal_action[i];
-					node_tmp.index 		= Graph_->getNodeList().size();
+					node_tmp.index 		= Graph_->GetNodeList().size();
 					node_tmp.surface 	= surfaces_flag[i];
 					node_tmp.contact 	= locations_flag[i];
 					node_tmp.centroid 	= locations_[i];
-					Graph_->setNode(node_tmp);
+					Graph_->SetNode(node_tmp);
 					Graph_->addEmptyEdgeForNewNode(node_tmp.index);
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
@@ -391,14 +394,14 @@ int TrainLA::BuildLocationArea(
 	if (0)
 	{
 		goal_action.clear();
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			goal_action.push_back(node_tmp.name);
 		}
 		showData(
-				points_avg, goal_action, Graph_->getActionLabel(),
+				points_avg, goal_action, Graph_->GetActionLabel(),
 				loc_idx_zero, color_code, true, false, false);
 	}
 

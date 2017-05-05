@@ -8,9 +8,10 @@
 #ifndef READFILE_H_
 #define READFILE_H_
 
+#include "dataDeclaration.h"
+#include "algo.h"
 #include "misc.h"
 #include "core.h"
-#include "Parser.h"
 
 class ReadFile
 {
@@ -57,7 +58,7 @@ class ReadFile
 			string dir_name_,
 			map<string, string> &label_list_);
 
-		vector<vector<string> > GetDataRF() {return data;}
+		vector<vector<string> > GetDataRF() {return data_rf;}
 
 	private:
 		int n, nn, nnn;
@@ -66,7 +67,8 @@ class ReadFile
 		pair<int,string> pair_tmp;
 		map<int,pair<int,string> > map_tmp; // file number, action, filename
 
-		vector<vector<string> > data;
+	protected:
+		vector<vector<string> > data_rf;
 };
 
 #endif /* READFILE_H_ */

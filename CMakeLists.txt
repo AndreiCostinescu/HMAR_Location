@@ -16,12 +16,12 @@ if(TRUE)
   add_executable(../HMAR 
   	./src/Prediction.cpp 
   	./src/Graph.cpp 
-  	./src/dbscan.cpp 
+#  	./src/dbscan.cpp 
  # 	./src/util.cpp 
   	./src/vtkExtra.cpp 
   	./src/algo.cpp 
  #  	./src/readWriteFile.cpp 
-  	./src/labeling_loc.cpp
+ # 	./src/labeling_loc.cpp
  # 	./src/labeling_sec.cpp
  #  	./src/predicting.cpp
   	./src/misc.cpp

@@ -110,12 +110,12 @@ class TrainSM
 			vector<vector<point_d> > pva_avg_,
 			vector<int> contact_);
 
-		void SetLabel1SM(int label1_) {label1 = label1_;}
-		void SetLabel2SM(int label2_) {label2 = label2_;}
+		void SetLabel1SM(int label1_) {label1_sm = label1_;}
+		void SetLabel2SM(int label2_) {label2_sm = label2_;}
 
 	private:
-		int label1, label2, label_idx;
-		vector<point_d> pts_avg, vel_avg;
+		int label1_sm, label2_sm, label_idx_sm;
+		vector<point_d> pts_avg_sm, vel_avg_sm;
 };
 
 #endif /* TRAINSM_H_ */

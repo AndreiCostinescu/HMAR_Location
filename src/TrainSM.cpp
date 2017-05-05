@@ -9,7 +9,7 @@
 
 TrainSM::TrainSM()
 {
-	label1=label2=label_idx=0;
+	label1_sm=label2_sm=label_idx_sm=-1;
 }
 
 TrainSM::~TrainSM() {
@@ -28,9 +28,9 @@ TrainSM::~TrainSM() {
 
 void TrainSM::ClearSM()
 {
-	label1=label2=label_idx=0;
-	pts_avg.clear();
-	vel_avg.clear();
+	label1_sm=label2_sm=label_idx_sm=-1;
+	pts_avg_sm.clear();
+	vel_avg_sm.clear();
 }
 
 int TrainSM::FitCurve(
@@ -307,9 +307,9 @@ int TrainSM::AdjustCurveExt(
 	vector<point_d> pts_)
 {
 	double cx[DEGREE], cy[DEGREE], cz[DEGREE];
-	double N 				= Graph_->getEdgeCounter(label1,label2,0);
+	double N 				= Graph_->GetEdgeCounter(label1_sm,label2_sm,0);
 	double total_len 		= 0;
-	edge_tt edge_tmp 		= Graph_->getEdge(label1, label2, 0);
+	edge_tt edge_tmp 		= Graph_->GetEdge(label1_sm, label2_sm, 0);
 	edge_tt edge_tmp_mem	= edge_tmp;
 
 	// [CURVE FIT]*************************************************************
@@ -351,6 +351,7 @@ int TrainSM::AdjustCurveExt(
 			polyCurveLength(tmplen, 0.0, lim[2], coeffs_);
 			printf("length : %.4f %.4f %.4f \n", len[2], tmplen, lim[2]);
 		}
+		exit(1);
 
 		if (lim[2]<0) {lim[2] = integral_limit_;}
 
@@ -358,11 +359,6 @@ int TrainSM::AdjustCurveExt(
 		p_mid.x = gsl_poly_eval (cx, DEGREE, lim[1]);
 		p_mid.y = gsl_poly_eval (cy, DEGREE, lim[1]);
 		p_mid.z = gsl_poly_eval (cz, DEGREE, lim[1]);
-
-		// TODO ERROR FOR initial tan and normal
-		edge_tmp.loc_mid  [i] = p_mid;
-		edge_tmp.loc_start[i] = addPoint(p_mid , multiPoint(p_tan, lim[0]-lim[1]));
-		edge_tmp.loc_end  [i] = addPoint(p_mid , multiPoint(p_tan, lim[2]-lim[1]));
 
 		// N : counter
 		if (N==0)
@@ -404,6 +400,11 @@ int TrainSM::AdjustCurveExt(
 			edge_tmp.nor  	  [i] = multiPoint(p_nor , 1/l2Norm(p_nor));
 			edge_tmp.tan  	  [i] = multiPoint(p_tan , 1/l2Norm(p_tan));
 		}
+
+		// TODO ERROR FOR initial tan and normal
+		edge_tmp.loc_mid  [i] = p_mid;
+		edge_tmp.loc_start[i] = addPoint(p_mid , multiPoint(p_tan, lim[0]-lim[1]));
+		edge_tmp.loc_end  [i] = addPoint(p_mid , multiPoint(p_tan, lim[2]-lim[1]));
 	}
 	// *************************************************************[CURVE FIT]
 
@@ -511,7 +512,7 @@ int TrainSM::AdjustCurveExt(
 	}
 	// ************************************************************[ADJUSTMENT]
 
-	Graph_->setEdge(label1, label2, 0, edge_tmp);
+	Graph_->SetEdge(label1_sm, label2_sm, 0, edge_tmp);
 	printer(19);
 	return EXIT_SUCCESS;
 }
@@ -657,14 +658,14 @@ int TrainSM::FitSectorMapInit(
 	int offset	= loc_offset_;
 	for(int i=1;i<points_.size();i++)
 	{
-		edge_tt edge_tmp = Graph_->getEdge(label1, label2, 0);
+		edge_tt edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
 		vector<point_d> points_tmp {points_[i-1], points_[i]};
 		if (init)	{offset = LOC_INT;}
 		else		{offset = loc_offset_;}
 		this->AdjustSectorMap(
 				edge_tmp, points_tmp, loc_last_idx, loc_curr_idx,
 				delta_t_mem, init, offset);
-		Graph_->setEdge(label1, label2, 0, edge_tmp);
+		Graph_->SetEdge(label1_sm, label2_sm, 0, edge_tmp);
 	}
 	printer(22);
 	return EXIT_SUCCESS;
@@ -675,7 +676,7 @@ int TrainSM::FitSectorMapExt(
 	vector<point_d> &points_,
 	int loc_offset_)
 {
-	edge_tt edge_tmp = Graph_->getEdge(label1, label2, 0);
+	edge_tt edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
 
 	// add the option to check if the curve is too much
 	// how to handle with it ??? ####
@@ -694,27 +695,26 @@ int TrainSM::FitSectorMapExt(
 	bool flag_init		= true;
 	int offset			= loc_offset_;
 	int loc_last_idx	= 0;
-	int res				= -1;
 	for(int i=1;i<points_.size();i++)
 	{
-		edge_tmp = Graph_->getEdge(label1, label2, 0);
+		edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
 
 		if (flag_init)	{offset = LOC_INT;}
 		else			{offset = loc_offset_;}
 
 		vector<point_d> points_tmp {points_[i-1], points_[i]};
 
-		res =
-				this->FitSectorMap(
-						edge_tmp, points_tmp, loc_last_idx, offset, flag_init);
+		if (this->FitSectorMap(
+				edge_tmp,
+				points_tmp,
+				loc_last_idx,
+				offset,
+				flag_init)==EXIT_FAILURE)
+		{printer(31); return EXIT_FAILURE;}
 
-		if (res==EXIT_FAILURE) {printer(31); return EXIT_FAILURE;}
-
-		Graph_->setEdge(label1, label2, 0, edge_tmp);
+		Graph_->SetEdge(label1_sm, label2_sm, 0, edge_tmp);
 	}
-
-	Graph_->setEdge(label1, label2, 0, edge_tmp);
-
+//	Graph_->SetEdge(label1_sm, label2_sm, 0, edge_tmp);
 	printer(20);
 	return EXIT_SUCCESS;
 }
@@ -735,14 +735,14 @@ int TrainSM::UpdateSectorMap(
 	vector<point_d> points_est, coeffs;
 	int res = -1;
 
-	if (Graph_->getEdgeCounter(label1,label2,0) == 0)
+	if (Graph_->GetEdgeCounter(label1_sm,label2_sm,0) == 0)
 	{
 		this->FitCurve(points_avg_, points_est, coeffs);
 		this->AdjustCurveExt(Graph_, coeffs, points_avg_.size(), points_est);
 		this->FitSectorMapInit(Graph_, points_avg_, 10);
-		Graph_->setEdgeCounter(label1, label2, 0, 1);
+		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
-	else if (Graph_->getEdgeCounter(label1,label2,0) < 50)
+	else if (Graph_->GetEdgeCounter(label1_sm,label2_sm,0) < 50)
 	{
 		this->FitCurve(points_avg_, points_est, coeffs);
 		res = this->FitSectorMapExt(Graph_, points_avg_, 40);
@@ -755,14 +755,14 @@ int TrainSM::UpdateSectorMap(
 			showConnection(Graph_, points_avg_, label_zero, color_code, true);
 		}
 		this->AdjustCurveExt(Graph_, coeffs, points_avg_.size(), points_avg_);
-		Graph_->setEdgeCounter(label1, label2, 0, 1);
+		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
 	else
 	{
 		this->FitCurve(points_avg_, points_est, coeffs);
 		res = this->FitSectorMapExt(Graph_, points_avg_, 20);
 		if (res==EXIT_FAILURE) {return EXIT_FAILURE;}
-		Graph_->setEdgeCounter(label1, label2, 0, 1);
+		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
 
 	//VISUALIZE
@@ -785,42 +785,42 @@ int TrainSM::BuildSectorMap(
 
 	for(int i=0;i<pva_avg_.size();i++)
 	{
-		pts_avg.push_back(pva_avg_[i][0]);
-		vel_avg.push_back(pva_avg_[i][1]);
+		pts_avg_sm.push_back(pva_avg_[i][0]);
+		vel_avg_sm.push_back(pva_avg_[i][1]);
 	}
 
-	// label1	 : start location
-	// label2	 : goal location
-	// label_idx : index of data point for label1
-	label1 = label2 = label_idx = -1;
+	// label1_sm	 : start location
+	// label2_sm	 : goal location
+	// label_idx_sm : index of data point for label1_sm
+	label1_sm = label2_sm = label_idx_sm = -1;
 
-	for(int i=0;i<pts_avg.size();i++)
+	for(int i=0;i<pts_avg_sm.size();i++)
 	{
-		if (pts_avg[i].l >= 0)
+		if (pts_avg_sm[i].l >= 0)
 		{
 			// Initial location
-			if	(label1 < 0) { label1 = pts_avg[i].l; continue; }
+			if	(label1_sm < 0) { label1_sm = pts_avg_sm[i].l; continue; }
 			else
 			{
 				// Check if location has changed
-				if (label_idx > 0)
+				if (label_idx_sm > 0)
 				{
-					label2 = pts_avg[i].l;
+					label2_sm = pts_avg_sm[i].l;
 
-					if (label2==label1)
+					if (label2_sm==label1_sm)
 					{
-						label_idx = -1;
+						label_idx_sm = -1;
 						continue;
 					}
 
-					if (i - label_idx > 10) // to prevent only a few points evaluated for curve, might not need this ###
+					if (i - label_idx_sm > 10) // to prevent only a few points evaluated for curve, might not need this ###
 					{
 						vector<point_d> pts_avg_tmp(
-								pts_avg.begin()+label_idx,
-								pts_avg.begin()+i);
+								pts_avg_sm.begin()+label_idx_sm,
+								pts_avg_sm.begin()+i);
 						vector<point_d> vel_avg_tmp(
-								vel_avg.begin()+label_idx,
-								vel_avg.begin()+i);
+								vel_avg_sm.begin()+label_idx_sm,
+								vel_avg_sm.begin()+i);
 
 						this->UpdateSectorMap(Graph_, pts_avg_tmp);
 						this->FindWindowConstraint(Graph_);
@@ -835,14 +835,14 @@ int TrainSM::BuildSectorMap(
 
 					}
 
-					label1 		= label2;
-					label2 		= -1;
-					label_idx 	= -1;
+					label1_sm 		= label2_sm;
+					label2_sm 		= -1;
+					label_idx_sm 	= -1;
 				}
 			}
 		}
 		// saves the data number of initial location
-		else { if (label1 >=0 && label_idx < 0) { label_idx = i; } }
+		else { if (label1_sm >=0 && label_idx_sm < 0) { label_idx_sm = i; } }
 	}
 	return EXIT_SUCCESS;
 }

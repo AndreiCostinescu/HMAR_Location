@@ -65,7 +65,7 @@ for i=1:length(DIR)
 %             continue;
 %         end
 %         
-%         if (strcmp(DIR_S(ii).name,'0'))
+%         if (strcmp(DIR_S(ii).name,'3'))
 %             continue;
 %         end
         
@@ -211,7 +211,11 @@ for i=1:length(DIR)
         end
 
         figure(ii);
-
+        
+        c = 1;
+        
+        flag = ones(7,1);
+        plot_handles = [];
         close_flag = 0;
 
         for iii = 1:7
@@ -222,31 +226,80 @@ for i=1:length(DIR)
                 switch(iii)
                     case 1
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'color',[1,0.65,0]); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'color',[1,0.65,0]);
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 2
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'m'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'m');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 3
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'c'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'c');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 4
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'r'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'r');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 5
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'g'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'g');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 6
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'b'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'b');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                     case 7
                         if (mean(PROB{ii,iii}{iv}(:,2)==0)~=1)
-                            plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'k'); hold on;
+                            h = plot(PROB{ii,iii}{iv}(:,1),PROB{ii,iii}{iv}(:,2),'k');
+                            if (flag(iii))
+                                plot_handles = [plot_handles h];
+                                legend_name{c} = DICT3(iii);
+                                c = c + 1;
+                                flag(iii) = 0;
+                            end
+                            hold on;
                         end
                 end
             end
@@ -261,8 +314,9 @@ for i=1:length(DIR)
         if(close_flag/length(PROB{ii,iii})==6)
             close(figure(ii));
         else
+            legend(plot_handles, legend_name');
             title([DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1)]);
-            print(figure(ii),['EdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
+            print(figure(ii),['0503_gauss/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
         end
         
 
@@ -272,10 +326,3 @@ for i=1:length(DIR)
     
 end
     
-
-
-
-
-
-% shelf to table 1 for 3
-% shelf to wash/throw for 0 caused by wrong label mismatch.

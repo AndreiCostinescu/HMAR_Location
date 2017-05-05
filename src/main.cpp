@@ -22,10 +22,22 @@ int main(int argc, char *argv[])
 	printf("|| SYSTEM START                                                             ||\n");
 	printf("==============================================================================\n");
 
-	TestCase TC;
+	TestCase *TC = new TestCase();
 
 //	// Label
-//	TC.Choose(0, LBL);
+//	TC->Choose(0);
+
+	// Train Ind.
+	TC->Choose(1);
+//	TC->Choose(2);
+//	TC->Choose(3);
+//	TC->Choose(4);
+
+//	// Test
+//	TC->Choose(5);
+//	TC->Choose(6);
+//	TC->Choose(7);
+//	TC->Choose(8);
 
 //	// Train Cup
 //	TC.Choose(1, TRN);
@@ -40,8 +52,8 @@ int main(int argc, char *argv[])
 //	TC.Choose(1, TST);
 //	// Train Org
 //	TC.Choose(2, TST);
-	// Train Spg
-	TC.Choose(3, TST);
+//	// Train Spg
+//	TC.Choose(3, TST);
 //	// Train Knf
 //	TC.Choose(4, TST);
 
@@ -50,6 +62,8 @@ int main(int argc, char *argv[])
 
 
 //	TC.Choose(5, DPL);
+
+	delete TC;
 
 	printf("==============================================================================\n");
 	printf("|| SYSTEM END                                                               ||\n");

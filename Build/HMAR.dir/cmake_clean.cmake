@@ -1,10 +1,8 @@
 FILE(REMOVE_RECURSE
   "CMakeFiles/../HMAR.dir/src/Prediction.cpp.o"
   "CMakeFiles/../HMAR.dir/src/Graph.cpp.o"
-  "CMakeFiles/../HMAR.dir/src/dbscan.cpp.o"
   "CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o"
   "CMakeFiles/../HMAR.dir/src/algo.cpp.o"
-  "CMakeFiles/../HMAR.dir/src/labeling_loc.cpp.o"
   "CMakeFiles/../HMAR.dir/src/misc.cpp.o"
   "CMakeFiles/../HMAR.dir/src/core.cpp.o"
   "CMakeFiles/../HMAR.dir/src/TestCase.cpp.o"

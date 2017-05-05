@@ -95,7 +95,7 @@ void WriteFile::RewriteDataFileFilter(
 void WriteFile::RewriteDataFile(
 		string path_,
 		vector<vector<string> > data_,
-		vector<point_d> &points_,
+		vector<point_d> points_,
 		vector<int>	contact_,
 		point_d face_,
 		vector<point_d> label_ref_write_,
@@ -192,7 +192,7 @@ void WriteFile::RewriteDataFile(
 	}
 
 	// Visualize
-	if (1)
+	if (0)
 	{
 		vector<point_d> point_zero = points_;
 		for(int ii=0;ii<point_zero.size();ii++)
@@ -229,7 +229,7 @@ void WriteFile::WriteFileLA(Graph *Graph_, string path_)
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
-	vector<node_tt> node_tmp = Graph_->getNodeList();
+	vector<node_tt> node_tmp = Graph_->GetNodeList();
 	ofstream write_file(path_, ios::app);
 	for(int i=0;i<node_tmp.size();i++)
 	{
@@ -248,10 +248,10 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
-	int num_location = Graph_->getNodeList().size();
+	int num_location = Graph_->GetNodeList().size();
 	vector<double> sec;
 	vector<point_d> data;
-	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	ofstream write_file(path_, ios::app);
 	write_file << "Locations," 			<< num_location << "\n";
@@ -286,7 +286,7 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 							data = edges[i][ii][0].nor;
 							break;
 						case 5:
-							write_file << Graph_->getEdgeCounter(i,ii,0) << "\n";
+							write_file << Graph_->GetEdgeCounter(i,ii,0) << "\n";
 							break;
 						case 6:
 							sec = edges[i][ii][0].sector_map;
@@ -327,8 +327,8 @@ void WriteFile::WriteFilePrediction(
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
-	vector<string> al_tmp = Graph_->getActionLabel();
-	map<string,pair<int,int> > ac_tmp = Graph_->getActionCategory();
+	vector<string> al_tmp = Graph_->GetActionLabel();
+	map<string,pair<int,int> > ac_tmp = Graph_->GetActionCategory();
 
 	string line;
 
@@ -365,10 +365,10 @@ void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
 
 	int s_tmp = -1;
 	double max_val = 0.0;
-	int num_location = Graph_->getNodeList().size();
+	int num_location = Graph_->GetNodeList().size();
 	vector<double> sec;
 	vector<point_d> data;
-	vector<vector<vector<edge_tt> > > edges = Graph_->getListOfEdges();
+	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	ofstream write_file(path_, ios::app);
 	ofstream write_file2(path2, ios::app);
@@ -402,9 +402,14 @@ void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
 					if (l < LOC_INT-1)	{ write_file << ",";  }
 					else 				{ write_file << "\n"; }
 
-					max_val =
-							sec[l*SEC_INT+(((s_tmp+(SEC_INT/4))+SEC_INT)%SEC_INT)] +
-							sec[l*SEC_INT+(((s_tmp-(SEC_INT/4))+SEC_INT)%SEC_INT)];
+					max_val = 0.0;
+					for(int s=0;s<SEC_INT/2;s++)
+					{
+						max_val =
+								max(
+									sec[l*SEC_INT+(((s+(SEC_INT/4))+SEC_INT)%SEC_INT)] +
+									sec[l*SEC_INT+(((s-(SEC_INT/4))+SEC_INT)%SEC_INT)], max_val);
+					}
 					write_file2 << max_val;
 					if (l < LOC_INT-1)	{ write_file2 << ",";  }
 					else 				{ write_file2 << "\n"; }

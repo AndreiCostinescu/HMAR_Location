@@ -153,5 +153,8 @@
 - 03/05/2017
 - evaluated result and added matlab plots
 - final adjustment on code to handle cases exceeding the sectormap
-- added decision tree
+- added decision tree for parsing the data
 
+[25]
+- 05/05/2017
+- first draft version

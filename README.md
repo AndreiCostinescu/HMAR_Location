@@ -155,3 +155,7 @@
 - final adjustment on code to handle cases exceeding the sectormap
 - added decision tree for parsing the data
 
+[25]
+- 05/05/2017
+- first draft version
+- code and system is working as of time of writing with results

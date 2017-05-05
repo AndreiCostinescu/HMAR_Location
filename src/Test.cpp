@@ -22,12 +22,7 @@ int Test::Testing(
 	Graph *Graph_)
 {
 	// [VARIABLES]*************************************************************
-	point_d 					face;
-	vector<int> 				contact;
-	vector<int> 				last_loc;
-	vector<string> 				labels;
 	vector<string> 				labels_predict;
-	vector<point_d> 			points;
 	vector<point_d> 			pva_avg1; pva_avg1.resize(3);
 	vector<vector<point_d> > 	pva_avg; // length->motion
 	vector<map<string,double> > goals;
@@ -43,6 +38,7 @@ int Test::Testing(
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
+	this->ClearRF();
 	if (this->ReadFile_(filename_,',')==EXIT_FAILURE)
 	{ return EXIT_FAILURE;	} printer(8);
 	// *************************************************************[READ FILE]
@@ -51,81 +47,78 @@ int Test::Testing(
 //		return 0;
 
 	// [PARSE DATA]************************************************************
-	this->SetDataParser(this->GetDataRF());
+	this->ClearParser();
+	this->SetDataParser(data_rf);
 	if (this->ParseData()==EXIT_FAILURE) {return EXIT_FAILURE;}
-	points = this->GetPointParser();
-	contact = this->GetContactParser();
-	face = this->GetFaceParser();
-	labels = this->GetLabelParser();
 	printer(9);
 	// ************************************************************[PARSE DATA]
 
 	// [FACE ADJUST]***********************************************************
-//	for(int ii=0;ii<Graph_->getNumberOfNodes();ii++)
-//	{
-//		node_tt node_tmp = {};
-//		Graph_->getNode(ii, node_tmp);
-//		if (!strcmp(node_tmp.name.c_str(),"FACE"))
-//		{
-//			face.l = 0.10;
-//			node_tmp.centroid = face;
-//			Graph_->setNode(node_tmp);
-//		}
-//	}
+	if(0)
+	{
+		for(int ii=0;ii<Graph_->GetNumberOfNodes();ii++)
+		{
+			node_tt node_tmp = {};
+			Graph_->GetNode(ii, node_tmp);
+			if (!strcmp(node_tmp.name.c_str(),"FACE"))
+			{
+				face_parser.l = 0.10;
+				node_tmp.centroid = face_parser;
+				Graph_->SetNode(node_tmp);
+			}
+		}
+	}
 	// ********************************************************** [FACE ADJUST]
 
 	// [Initialization] *******************************************************
-	reshapeVector(pva_avg, points.size());
-	labels_predict.resize(points.size());
-	goals.resize(points.size());
-	windows.resize(points.size());
+	reshapeVector(pva_avg, points_parser.size());
+	labels_predict.resize(points_parser.size());
+	goals.resize(points_parser.size());
+	windows.resize(points_parser.size());
 
 	this->ResetFilter();
 
 	ActionPrediction AP(Graph_, false);
-//	Prediction P(Graph_->getActionCategory(), Graph_->getActionLabel(),3);
+//	Prediction P(Graph_->GetActionCategory(), Graph_->GetActionLabel(),3);
 	// ******************************************************* [Initialization]
 
-	for(int i=0;i<points.size();i++)
+	for(int i=0;i<points_parser.size();i++)
 	{
 		if (i==0)	{ pva_avg[i] = pva_avg1;		}
 		else		{ pva_avg[i] = pva_avg[i-1];	}
-		this->PreprocessDataLive(points[i], pva_avg[i], FILTER_WIN);
-		this->PreprocessContactLive(contact[i], FILTER_WIN);
+		this->PreprocessDataLive(points_parser[i], pva_avg[i], FILTER_WIN);
+		this->PreprocessContactLive(contact_parser[i], FILTER_WIN);
 
-//		if (i==0) 	{ AP.PredictInit(points[i]); }
-//		else 		{ AP.PredictExt(pva_avg[i],contact[i]); }
-
-		AP.PredictExt(pva_avg[i],contact[i]);
+		AP.PredictExt(pva_avg[i], contact_parser[i]);
 
 		x.push_back(i);
-		y.push_back((double)Graph_->getState().label2);
+		y.push_back((double)Graph_->GetActionState().label2);
 
-		vector<string> al_tmp = Graph_->getActionLabel();
-		map<string,pair<int,int> > ac_tmp = Graph_->getActionCategory();
+		vector<string> al_tmp = Graph_->GetActionLabel();
+		map<string,pair<int,int> > ac_tmp = Graph_->GetActionCategory();
 		for(int i=ac_tmp["GEOMETRIC"].first;i<ac_tmp["GEOMETRIC"].second+1;i++)
 		{
-			pyy[0][i].push_back(Graph_->getState().goal[al_tmp[i]]);
+			pyy[0][i].push_back(Graph_->GetActionState().goal[al_tmp[i]]);
 		}
 
-		goals[i] = Graph_->getState().goal;
-		windows[i] = Graph_->getState().window;
+		goals[i] = Graph_->GetActionState().goal;
+		windows[i] = Graph_->GetActionState().window;
 
-		if (Graph_->getState().grasp==RELEASE)
+		if (Graph_->GetActionState().grasp==RELEASE)
 		{
 			labels_predict[i] = "RELEASE";
 		}
-		else if (Graph_->getState().pct_err<0)
+		else if (Graph_->GetActionState().pct_err<0)
 		{
 			labels_predict[i] =
-					Graph_->getActionLabel()[Graph_->getState().label2];
+					Graph_->GetActionLabel()[Graph_->GetActionState().label2];
 		}
 		else
 		{
 			labels_predict[i] = "MOVE";
 		}
 
-//		P.Parse(Graph_->getState());
+//		P.Parse(Graph_->GetActionState());
 //		P.Display();
 
 		// Visualize
@@ -147,7 +140,7 @@ int Test::Testing(
 		reverse(name_tmp.begin(),name_tmp.end());
 		name_tmp = resultdir_ + name_tmp;
 		this->WriteFilePrediction(
-				Graph_, name_tmp, labels, labels_predict, goals, windows);
+				Graph_, name_tmp, labels_parser, labels_predict, goals, windows);
 	}
 
 //	plotData(x,y);
@@ -159,10 +152,10 @@ int Test::Testing(
 	if(0)
 	{
 		vector<string>goal_action;
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			goal_action.push_back(node_tmp.name);
 		}
 		vector<point_d> point_zero; vector<string> label_zero;
@@ -170,20 +163,20 @@ int Test::Testing(
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
 		vector<int> 	loc_idx_zero;
 		showData(
-				point_zero, goal_action, Graph_->getActionLabel(),
+				point_zero, goal_action, Graph_->GetActionLabel(),
 				loc_idx_zero, color_code, true, false, false);
 
 		for(int ii=0;ii<pva_avg.size();ii++)
 		{
-			if (!strcmp(labels[ii].c_str(),"MOVE"))
+			if (!strcmp(labels_parser[ii].c_str(),"MOVE"))
 				point_zero[ii].l = -1;
-			else if (!strcmp(labels[ii].c_str(),"RELEASE"))
+			else if (!strcmp(labels_parser[ii].c_str(),"RELEASE"))
 				point_zero[ii].l = -1;
 			else
 				point_zero[ii].l = 1;
 		}
 		showData(
-				point_zero, goal_action, Graph_->getActionLabel(),
+				point_zero, goal_action, Graph_->GetActionLabel(),
 				loc_idx_zero, color_code, true, false, false);
 	}
 
@@ -191,10 +184,10 @@ int Test::Testing(
 	if (0)
 	{
 		vector<point_d> point_zero; vector<string> label_zero;
-		for(int i=0;i<Graph_->getNumberOfNodes();i++)
+		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
 			node_tt node_tmp = {};
-			Graph_->getNode(i, node_tmp);
+			Graph_->GetNode(i, node_tmp);
 			label_zero.push_back(node_tmp.name);
 		}
 		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
@@ -220,12 +213,14 @@ int Test::Deploying(
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
+	this->ClearRF();
 	if (this->ReadFile_(filename_,',')==EXIT_FAILURE)
 	{ return EXIT_FAILURE;	} printer(8);
 	// *************************************************************[READ FILE]
 
 	// [PARSE DATA]************************************************************
-	this->SetDataParser(this->GetDataRF());
+	this->ClearParser();
+	this->SetDataParser(data_rf);
 	if (this->ParseData()==EXIT_FAILURE) {return EXIT_FAILURE;}
 	points = this->GetPointParser();
 	contact = this->GetContactParser();
@@ -236,8 +231,8 @@ int Test::Deploying(
 	reshapeVector(pva_avg, points.size());
 	this->ResetFilter();
 	ActionPrediction AP(Graph_, false);
-	Prediction P(Graph_->getTarget(), Graph_->getActionCategory(),
-					Graph_->getActionLabel(), Graph_->getObjectLabel(), 3);
+	Prediction P(Graph_->GetObject(), Graph_->GetActionCategory(),
+					Graph_->GetActionLabel(), Graph_->GetObjectLabel(), 3);
 	// ******************************************************* [Initialization]
 
 	AP.PredictInit();
@@ -252,7 +247,7 @@ int Test::Deploying(
 
 		AP.PredictExt(pva_avg[i],contact[i]);
 
-		P.Parse(Graph_->getState());
+		P.Parse(Graph_->GetActionState());
 	}
 
 	return EXIT_SUCCESS;
