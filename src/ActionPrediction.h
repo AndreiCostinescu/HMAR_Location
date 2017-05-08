@@ -26,21 +26,35 @@ class ActionPrediction : public Evaluate, public TrainSM
 
 		int Predict();
 
-		int PredictFromNode();
+		int ContactTrigger();
 
-		int PredictFromEdge();
+		int DecideBoundaryClosestExt(
+			point_d &point_,
+			vector<point_d> centroids_);
 
-		int DecideMovement();
+		int DecideBoundarySphereExt(
+			point_d &point_,
+			vector<point_d> centroids_);
+
+		int DecideBoundaryCuboidExt(
+			point_d &point_,
+			point_d box_min_,
+			point_d box_max_);
+
+		int NodePrediction();
+
+		int EdgePrediction();
+
+		int DecideMovement(bool x_);
 
 		int PredictFromSectorMap();
 
 		double DecideLocSecInt(
-			edge_tt edge_,
 			point_d &delta_t_,
 			int &sec_idx_,
 			int &loc_idx_,
 			int &loc_last_idx_,
-			bool &init_);
+			int &init_);
 
 		bool DecideGoal(
 			int label2_,
@@ -53,7 +67,9 @@ class ActionPrediction : public Evaluate, public TrainSM
 			int loc_idx_,
 			int label2_);
 
-		int EvaluatePrediction();
+		int EvaluateNodePrediction();
+
+		int EvaluateEdgePrediction();
 
 		int RebuildSectorMap(
 			vector<vector<point_d> > pva_avg_,
@@ -63,16 +79,23 @@ class ActionPrediction : public Evaluate, public TrainSM
 	private:
 
 		int label1_ap;
+		int label2_ap;
 		bool learn;
+		bool la_sm_change; // change flag from sm to la
 
-		predict_t predict;
-		state_t state;
+		node_tt node_ap; //from label1
+
+		predict_e pred_sm; // edge_prediction
+		predict_n pred_la; // node_prediction
+
+		state_t state; // action state
 
 		vector<int> last_loc;
-		vector<bool> init;
+		vector<int> init;
 
 		vector<point_d> pva_avg;
-		vector<predict_t> predict_mem;
+		vector<predict_e> pred_sm_mem;
+		vector<predict_n> pred_la_mem;
 		vector<vector<point_d> > pva_avg_mem;
 
 		vector<int> range_in;

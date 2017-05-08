@@ -229,16 +229,32 @@ void WriteFile::WriteFileLA(Graph *Graph_, string path_)
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
+	vector<string> al_tmp = Graph_->GetActionLabel();
 	vector<node_tt> node_tmp = Graph_->GetNodeList();
+
 	ofstream write_file(path_, ios::app);
+
 	for(int i=0;i<node_tmp.size();i++)
 	{
-		write_file << node_tmp[i].name      	<< ","
-				   << node_tmp[i].centroid.x	<< ","
+		for(int ii=0;ii<al_tmp.size();ii++)
+		{
+			if(!strcmp(node_tmp[i].name.c_str(),al_tmp[ii].c_str()))
+			{
+				write_file << ii << ",";
+				break;
+			}
+		}
+		write_file << node_tmp[i].centroid.x	<< ","
 				   << node_tmp[i].centroid.y 	<< ","
 				   << node_tmp[i].centroid.z 	<< ","
 				   << node_tmp[i].centroid.l 	<< ","
 				   << node_tmp[i].surface 		<< ","
+				   << node_tmp[i].box_min.x 	<< ","
+				   << node_tmp[i].box_min.y 	<< ","
+				   << node_tmp[i].box_min.z 	<< ","
+				   << node_tmp[i].box_max.x 	<< ","
+				   << node_tmp[i].box_max.y 	<< ","
+				   << node_tmp[i].box_max.z 	<< ","
 				   << node_tmp[i].contact;
 		write_file << "\n";
 	}
@@ -271,24 +287,26 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 					switch (tmp)
 					{
 						case 0:
-							data = edges[i][ii][0].loc_start;
-							break;
-						case 1:
-							data = edges[i][ii][0].loc_mid;
-							break;
-						case 2:
-							data = edges[i][ii][0].loc_end;
-							break;
-						case 3:
-							data = edges[i][ii][0].tan;
-							break;
-						case 4:
 							data = edges[i][ii][0].nor;
 							break;
-						case 5:
+						case 1:
+							data = edges[i][ii][0].tan;
+							break;
+						case 2:
+							data = edges[i][ii][0].loc_mid;
+							break;
+						case 3:
+							for(int iv=0;iv<LOC_INT;iv++)
+							{
+								write_file << edges[i][ii][0].loc_len[iv];
+								if (iv<LOC_INT-1) 	{ write_file << ",";  }
+								else 				{ write_file << "\n"; }
+							}
+							break;
+						case 4:
 							write_file << Graph_->GetEdgeCounter(i,ii,0) << "\n";
 							break;
-						case 6:
+						case 5:
 							sec = edges[i][ii][0].sector_map;
 							for(int iv=0;iv<sec.size();iv++)
 							{
@@ -302,12 +320,13 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 							break;
 					}
 					tmp++;
-					if (tmp > 5 || tmp < 0) {continue;}
+					if (tmp > 3 || tmp < 0) {continue;}
 					for(int iv=0;iv<LOC_INT;iv++)
 					{
 						write_file << data[iv].x << ",";
 						write_file << data[iv].y << ",";
-						write_file << data[iv].z;
+						write_file << data[iv].z << ",";
+						write_file << data[iv].l;
 						if (iv<data.size()-1) 	{ write_file << ",";  }
 						else 					{ write_file << "\n"; }
 					}
@@ -415,6 +434,61 @@ void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
 					else 				{ write_file2 << "\n"; }
 				}
 			}
+		}
+	}
+}
+
+void WriteFile::WriteFileSurface(
+		string path_,
+		vector<vector<double> > rotation_,
+		vector<point_d> planeeq_,
+		vector<point_d> boxmin_,
+		vector<point_d> boxmid_,
+		vector<point_d> boxmax_)
+{
+	if (ifstream(path_)) { remove(path_.c_str()); }
+
+	ofstream write_file(path_, ios::app);
+	for(int i=0;i<rotation_.size();i++)
+	{
+		write_file << i	<< ","
+				   << planeeq_[i].x	<< ","
+				   << planeeq_[i].y << ","
+				   << planeeq_[i].z << ","
+				   << planeeq_[i].l << ","
+				   << boxmid_[i].x << ","
+				   << boxmid_[i].y << ","
+				   << boxmid_[i].z << ","
+				   << boxmin_[i].x << ","
+				   << boxmin_[i].y << ","
+				   << boxmin_[i].z << ","
+				   << boxmax_[i].x << ","
+				   << boxmax_[i].y << ","
+				   << boxmax_[i].z << ",";
+
+		for(int ii=0;ii<rotation_[i].size();ii++)
+		{
+			write_file << rotation_[i][ii] << ",";
+		}
+		write_file << "\n";
+	}
+}
+
+void WriteFile::WriteFile_(
+	string path_,
+	vector<vector<double> > data_)
+{
+	if (ifstream(path_)) { remove(path_.c_str()); }
+
+	ofstream write_file(path_, ios::app);
+	for(int i=0;i<data_.size();i++)
+	{
+		for(int ii=0;ii<data_[i].size();ii++)
+		{
+			if(ii<data_[i].size()-1)
+				write_file << data_[i][ii] << ",";
+			else
+				write_file << data_[i][ii] << "\n";
 		}
 	}
 }

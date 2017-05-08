@@ -30,12 +30,13 @@ if(TRUE)
   	./src/Evaluate.cpp 
   	./src/ReadFile.cpp 
   	./src/WriteFile.cpp 
-  	./src/Parser.cpp 
+  	./src/DataParser.cpp 
   	./src/Test.cpp 
   	./src/Train.cpp 
   	./src/TrainLA.cpp 
   	./src/TrainSM.cpp 
-  	./src/Filter.cpp 
+  	./src/DataFilter.cpp 
+  	./src/DataContainer.cpp 
   	./src/ActionPrediction.cpp 
   	./src/DBSCAN.cpp 
   	./src/main.cpp)
@@ -62,12 +63,13 @@ else()
   	../src/Evaluate.cpp 
   	../src/ReadFile.cpp 
   	../src/WriteFile.cpp 
-  	../src/Parser.cpp 
+  	../src/DataParser.cpp 
   	../src/Test.cpp 
   	../src/Train.cpp 
   	../src/TrainLA.cpp 
   	../src/TrainSM.cpp 
-  	../src/Filter.cpp 
+  	../src/DataFilter.cpp 
+  	../src/DataContainer.cpp 
   	../src/ActionPrediction.cpp 
   	../src/DBSCAN.cpp 
   	../src/main.cpp)

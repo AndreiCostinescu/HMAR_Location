@@ -233,25 +233,8 @@ struct point_sd
     double x, y, z, l;
 };
 
-typedef struct sector_s sector_t;
-struct sector_s
-{
-	double max;
-	double min;
-};
-
-typedef struct sector_para_s sector_para_t;
-struct sector_para_s
-{
-	vector<point_d> dir;
-	vector<point_d> dir_n;
-	vector<double>  dist;
-	int loc_int;
-	int sec_int;
-};
-
-typedef struct data_s data_t;
-struct data_s
+typedef struct pva_s pva_t;
+struct pva_s
 {
 	point_d pos, vel, acc;
 };
@@ -260,11 +243,12 @@ typedef struct node_ss node_tt;
 struct node_ss
 {
 	string 			name;
-	int 			index;
-	int				surface;
+	int				index; // used to check for new nodes
 	int				contact;
 	point_d 		centroid;
-	vector<data_t> 	data;
+	int				surface;
+	point_d			box_max;
+	point_d			box_min;
 };
 
 typedef struct edge_ss edge_tt;
@@ -273,14 +257,12 @@ struct edge_ss
 	string 			name;
 	unsigned int 	idx1;
 	unsigned int 	idx2;
-	vector<data_t> 	data;
 	vector<double> 	sector_map; // locations int * sectors int
 	vector<double> 	sector_const;
 	vector<point_d> tan; // locations int
 	vector<point_d> nor; // locations int
-	vector<point_d> loc_start; // locations int
 	vector<point_d> loc_mid; // locations int
-	vector<point_d> loc_end; // locations int
+	vector<double>  loc_len; // locations int
 	double 			total_len;
 	int 			counter;
 	vector<int> 	mov_const; // 0/1 activation of the mov_const labels
@@ -289,25 +271,28 @@ struct edge_ss
 	vector<double> 	err_mem; // to calculate d2(err)
 };
 
-typedef struct label_s label_t;
-struct label_s
+// prediction for node
+typedef struct predict_sn predict_n;
+struct predict_sn
 {
-	int 		mov;
-	vector<int> loc;
-	vector<int> sur; // surface
+	double 			acc; // acc
+	double 			vel; // velocity limit 0/1
+	double 			surface_dist; // surface distance
+
+	double 			curvature; // curvature value : 1 for line
+	vector<double>	range; // in or outside
+	vector<double> 	err; // prediction error = diff from the sectormap
+	vector<double> 	pct_err; // prob shared between multiple predictions of inside
+	vector<double>	err_diff; // change in the error compared to original
+	vector<double>	pct_err_diff; // change in the error compared to original
+	vector<double>	oscillate; // repetitive movement
+	vector<double>	ddl; // rate of change of loc int
+	vector<double>	window; // knot in trajectory
 };
 
-typedef struct pred_s pred_t;
-struct pred_s
-{
-	vector<int> 	pred; // in or outside
-	vector<double> 	pred_in; // prob shared between multiple predictions of inside
-	vector<double> 	pred_in_last; // prob shared between multiple predictions of inside
-	vector<double> 	pred_err; // prediction error = diff from the sectormap
-};
-
-typedef struct predict_s predict_t;
-struct predict_s
+// prediction for edge
+typedef struct predict_se predict_e;
+struct predict_se
 {
 	double 			acc; // acc
 	double 			vel; // velocity limit 0/1
@@ -322,51 +307,34 @@ struct predict_s
 	vector<double>	window; // knot in trajectory
 };
 
-typedef struct msg_s msg_t;
-struct msg_s
-{
-	int 	msg; // msg option
-	int 	idx;
-	int 	loc_idx;
-	int 	num_loc; // location
-	int 	num_sur; // surface
-	label_t label;
-	pred_t 	pred;
-};
-
-typedef struct limit_s limit_t;
-struct limit_s
-{
-	double vel;
-	double sur_dis;
-	double sur_ang;
-};
-
 typedef struct kb_s kb_t;
 struct kb_s
 {
-	map<int,vector<string> > 			label;
-	vector<double> 						surface_lim;
-	vector<vector<double> > 			surface_eq;
-	vector<point_d> 					surface;
-	map<string,pair<int,int> > 			ac;
-	vector<string> 						al;
+	vector<point_d>		 			surface_eq;
+	vector<point_d> 				surface_mid;
+	vector<point_d> 				surface_min;
+	vector<point_d> 				surface_max;
+	vector<vector<double> > 		surface_rot;
+	vector<double> 					surface_lim;
+	map<int,vector<string> > 		label;
+	map<string,pair<int,int> > 		ac;
+	vector<string> 					al;
 	map<string,map<string,string> >	ol;
 };
 
 typedef struct state_s state_t;
 struct state_s
 {
-	int grasp;		// if it is grasped
-	int label1;		// last node
-	int label2;		// next node
-	double pct_err;	// highest probability
-	double mov;		// whether it is moving
-	int con;		// contact or not with hand
-	int sur;		// which surface
-	map<string,double> ll;	// last location probabilities
+	int grasp;					// if it is grasped
+	int label1;					// last node
+	int label2;					// next node
+	double mov;					// velocity
+	double pct_err;				// highest probability
+	int sur;					// which surface
+	double sur_dist;			// surface distance
+//	map<string,double> ll;		// last location probabilities
 	map<string,double> goal;	// probabilities
-	map<string,double> window;	// probabilities
+	map<string,double> window;	// window radius
 };
 
 #endif /* DATADECLARATION_H_ */

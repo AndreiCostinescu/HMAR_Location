@@ -20,6 +20,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
 
 	void SetWin(vtkSmartPointer<vtkRenderWindow> x) {renwin = x;}
+	void SetWinInter(vtkSmartPointer<vtkRenderWindowInteractor> x) {renwinintr = x;}
 
     virtual void OnKeyPress()
     {
@@ -56,12 +57,19 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     		exp->Write();
       }
 
+      if(key == "q")
+      {
+    	  renwinintr->GetRenderWindow()->Finalize();
+    	  renwinintr->TerminateApp();
+      }
+
       // Forward events
       vtkInteractorStyleTrackballCamera::OnKeyPress();
     }
 
 	private:
     	vtkSmartPointer<vtkRenderWindow> renwin;
+    	vtkSmartPointer<vtkRenderWindowInteractor> renwinintr;
 
 };
 vtkStandardNewMacro(KeyPressInteractorStyle);
@@ -523,7 +531,7 @@ void showData(
 
 	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
-	renWinInter->SetInteractorStyle( style2 );
+//	renWinInter->SetInteractorStyle( style2 );
 
 	renWin->Render();
 	renWinInter->Start();
@@ -603,7 +611,8 @@ void showConnection(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		point_d tmpN[2], Nmax[2], init; init.x = init.y = init.z = 0;
+		point_d tmpN[2], Nmax[2], init, beg, end;
+		init.x = init.y = init.z = 0;
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
@@ -618,6 +627,37 @@ void showConnection(
 					multiPoint(
 							tmpN[0],
 							edges[n1][n2][0].sector_map[l*sec+0]);
+			beg = addPoint(
+						minusPoint(
+								multiPoint(
+										edges[n1][n2][0].loc_mid[l],
+										edges[n1][n2][0].loc_mid[l].l),
+								multiPoint(
+										edges[n1][n2][0].tan[l],
+										edges[n1][n2][0].loc_len[l]/2)),
+						locations[n1]);
+			end = addPoint(
+						addPoint(
+								multiPoint(
+										edges[n1][n2][0].loc_mid[l],
+										edges[n1][n2][0].loc_mid[l].l),
+								multiPoint(
+										edges[n1][n2][0].tan[l],
+										edges[n1][n2][0].loc_len[l]/2)),
+						locations[n1]);
+//			beg =
+//					minusPoint(
+//							edges[n1][n2][0].loc_mid[l],
+//							multiPoint(
+//									edges[n1][n2][0].tan[l],
+//									edges[n1][n2][0].loc_len[l]/2));
+//			end =
+//					addPoint(
+//							edges[n1][n2][0].loc_mid[l],
+//							multiPoint(
+//									edges[n1][n2][0].tan[l],
+//									edges[n1][n2][0].loc_len[l]/2));
+
 			for (int s=0;s<sec;s++)
 			{
 				int s_tmp = (s+1)%sec;
@@ -632,24 +672,24 @@ void showConnection(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+0,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s%2].z - init.z);
+						beg.x + Nmax[s%2].x - init.x,
+						beg.y + Nmax[s%2].y - init.y,
+						beg.z + Nmax[s%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+1,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s%2].z - init.z);
+						end.x + Nmax[s%2].x - init.x,
+						end.y + Nmax[s%2].y - init.y,
+						end.z + Nmax[s%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+2,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+3,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				ID[0] = (l*sec+s)*8+0;
 				ID[1] = (l*sec+s)*8+1;
 				ID[2] = (l*sec+s)*8+3;
@@ -658,28 +698,28 @@ void showConnection(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+4,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+5,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				Nmax[s_tmp%2] =
 						multiPoint(
 								tmpN[s_tmp%2],
 								edges[n1][n2][0].sector_map[l*sec+s_tmp]);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+6,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+7,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				ID[0] = (l*sec+s)*8+4;
 				ID[1] = (l*sec+s)*8+5;
 				ID[2] = (l*sec+s)*8+7;
@@ -738,8 +778,9 @@ void showConnection(
 	renWinInter->SetInteractorStyle(style);
 
 	style2->SetWin(renWin);
+	style2->SetWinInter(renWinInter);
     style2->SetCurrentRenderer(renderer);
-	renWinInter->SetInteractorStyle( style2 );
+//	renWinInter->SetInteractorStyle( style2 );
 
 	renWin->Render();
 	renWinInter->Start();
@@ -809,7 +850,8 @@ void showConnectionTest(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		point_d tmpN[2], Nmax[2], init; init.x = init.y = init.z = 0;
+		point_d tmpN[2], Nmax[2], init, beg, end;
+		init.x = init.y = init.z = 0;
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
@@ -824,6 +866,25 @@ void showConnectionTest(
 					multiPoint(
 							tmpN[0],
 							edges[n1][n2][0].sector_map[l*sec+0]);
+			beg = addPoint(
+						minusPoint(
+								multiPoint(
+										edges[n1][n2][0].loc_mid[l],
+										edges[n1][n2][0].loc_mid[l].l),
+								multiPoint(
+										edges[n1][n2][0].tan[l],
+										edges[n1][n2][0].loc_len[l]/2)),
+						locations[n1]);
+			end = addPoint(
+						addPoint(
+								multiPoint(
+										edges[n1][n2][0].loc_mid[l],
+										edges[n1][n2][0].loc_mid[l].l),
+								multiPoint(
+										edges[n1][n2][0].tan[l],
+										edges[n1][n2][0].loc_len[l]/2)),
+						locations[n1]);
+
 			for (int s=0;s<sec;s++)
 			{
 				int s_tmp = (s+1)%sec;
@@ -838,24 +899,24 @@ void showConnectionTest(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+0,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s%2].z - init.z);
+						beg.x + Nmax[s%2].x - init.x,
+						beg.y + Nmax[s%2].y - init.y,
+						beg.z + Nmax[s%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+1,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s%2].z - init.z);
+						end.x + Nmax[s%2].x - init.x,
+						end.y + Nmax[s%2].y - init.y,
+						end.z + Nmax[s%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+2,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+3,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				ID[0] = (l*sec+s)*8+0;
 				ID[1] = (l*sec+s)*8+1;
 				ID[2] = (l*sec+s)*8+3;
@@ -864,28 +925,28 @@ void showConnectionTest(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+4,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+5,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				Nmax[s_tmp%2] =
 						multiPoint(
 								tmpN[s_tmp%2],
 								edges[n1][n2][0].sector_map[l*sec+s_tmp]);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+6,
-						edges[n1][n2][0].loc_start[l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_start[l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_start[l].z + Nmax[s_tmp%2].z - init.z);
+						beg.x + Nmax[s_tmp%2].x - init.x,
+						beg.y + Nmax[s_tmp%2].y - init.y,
+						beg.z + Nmax[s_tmp%2].z - init.z);
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+7,
-						edges[n1][n2][0].loc_end  [l].x + Nmax[s_tmp%2].x - init.x,
-						edges[n1][n2][0].loc_end  [l].y + Nmax[s_tmp%2].y - init.y,
-						edges[n1][n2][0].loc_end  [l].z + Nmax[s_tmp%2].z - init.z);
+						end.x + Nmax[s_tmp%2].x - init.x,
+						end.y + Nmax[s_tmp%2].y - init.y,
+						end.z + Nmax[s_tmp%2].z - init.z);
 				ID[0] = (l*sec+s)*8+4;
 				ID[1] = (l*sec+s)*8+5;
 				ID[2] = (l*sec+s)*8+7;
@@ -965,7 +1026,7 @@ void showConnectionTest(
 
 	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
-	renWinInter->SetInteractorStyle( style2 );
+//	renWinInter->SetInteractorStyle( style2 );
 
 	renWin->Render();
 	renWinInter->Start();

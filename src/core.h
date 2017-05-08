@@ -15,43 +15,44 @@ bool vectorDirectionCheck(
 	vector<double> A,
 	vector<double> B);
 
-int decideBoundary(
-	point_d 		&point1_,
-	point_d 		&point2_,
-	vector<point_d> locations_);
+int checkBoundarySphere(
+	point_d &point1_,
+	point_d &point2_,
+	vector<point_d> centroids_);
 
-int decideBoundary_(
-	point_d 				&point1_,
-	point_d 				&point2_,
-	vector<point_d> 		centroids_,
-	vector<int>				surfaces_flag_,
-	vector<vector<double> > surfaces_,
-	vector<double>			surfaces_limit);
+int checkBoundaryCuboid(
+	point_d &point_,
+	point_d box_min_,
+	point_d box_max_);
 
-int decideBoundaryPredict(
-	point_d 				&point1_,
-	point_d 				&point2_,
-	vector<point_d> 		centroids_,
-	vector<int>				surfaces_flag_,
-	vector<vector<double> > surfaces_,
-	vector<double>			surfaces_limit);
+int decideBoundarySphere(
+	point_d &point_,
+	vector<point_d> centroids_);
 
-int decideBoundaryClosest_(
-	point_d 				&point2_,
-	vector<point_d> 		centroids_);
+int decideBoundaryCuboid(
+	point_d &point_,
+	point_d box_min_,
+	point_d box_max_);
+
+int decideBoundaryClosest(
+	point_d &point2_,
+	vector<point_d> centroids_);
+
+double checkSurfaceDistance(
+	point_d centroids_,
+	point_d	surfaces_);
 
 bool decideSurface(
-	point_d 		centroids_,
-	vector<double>	surfaces_,
-	double 			limit_);
+	point_d centroids_,
+	point_d	surfaces_,
+	double limit_);
 
 double dLI(
 	int &loc_idx_,
 	int loc_last_idx_,
 	point_d point_,
-	vector<point_d> beg_,
+	vector<double> len_,
 	vector<point_d> mid_,
-	vector<point_d> end_,
 	vector<point_d> tangent_,
 	int loc_offset_,
 	bool loc_init_);
@@ -60,12 +61,11 @@ double dLIPredict(
 	int &loc_idx_,
 	int loc_last_idx_,
 	point_d point_,
-	vector<point_d> beg_,
 	vector<point_d> mid_,
-	vector<point_d> end_,
+	vector<double> len_,
 	vector<point_d> tangent_,
 	int loc_offset_,
-	bool loc_init_);
+	int loc_init_);
 
 double decideLocationInterval(
 	vector<int> &loc_idxs_,

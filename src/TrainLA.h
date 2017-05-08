@@ -25,16 +25,13 @@ class TrainLA : public DBSCAN
 
 		void ClearLA();
 
-		int DecideBoundaryExt(
-			point_d 		&point1_,
-			point_d 		&point2_,
-			vector<point_d> locations_);
+		int LearnBoundary(
+			vector<point_d> &centroids_);
 
 		int ContactBoundary(
-			vector<point_d> &centroids_,
-			bool learn_);
+			vector<point_d> &centroids_);
 
-		int ContactCheck(
+		int SurfaceContactCheck(
 			vector<point_d> centroids_);
 
 		int ClusteringExt(
@@ -48,14 +45,18 @@ class TrainLA : public DBSCAN
 
 	private:
 
-		vector<int> contact, locations_flag, surfaces_flag, loc_idx_zero; // loc_idx_zero unused at all
+		vector<int> contact, locations_flag, loc_idx_zero; // loc_idx_zero unused at all
 
 		vector<point_d> points_avg, locations; // centroids
 		vector<string>  goal_action;
 
-		vector<point_d> surfaces;
-		vector<vector<double> > surfaces_eq;
-		vector<double> surfaces_limit;
+		vector<point_d> 		surfaces_mid;
+		vector<point_d> 		surfaces_min;
+		vector<point_d> 		surfaces_max;
+		vector<point_d> 		surfaces_eq; // equation of plane
+		vector<double> 			surfaces_limit; // surface distance limit
+		vector<int>				surfaces_flag;  // flag if surface is detected
+		vector<vector<double> >	surfaces_rot;  // surface rotation
 
 		vector<vector<unsigned char> > 	color_code;
 };

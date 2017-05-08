@@ -36,6 +36,14 @@ class ReadFile
 			string path_,
 			map<int,vector<string> > &label_);
 
+		int ReadSurfaceFile(
+			string path_,
+			vector<vector<double> > &rotation_,
+			vector<point_d> &planeeq_,
+			vector<point_d> &boxmin_,
+			vector<point_d> &boxmid_,
+			vector<point_d> &boxmax_);
+
 		int ReadFileKB(
 			string path_,
 			kb_t &kb_);

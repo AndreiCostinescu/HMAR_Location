@@ -350,8 +350,8 @@ void cal_tangent_normal(
 	}
 }
 
-void reshapePredict(
-	predict_t &P_,
+void reshapePredictEdge(
+	predict_e &P_,
 	int size)
 {
 	P_.acc		 = 0.0;
@@ -365,6 +365,15 @@ void reshapePredict(
 	reshapeVector(P_.oscillate, 	size);
 	reshapeVector(P_.ddl, 			size);
 	reshapeVector(P_.window,	 	size);
+}
+
+void reshapePredictNode(
+	predict_n &P_,
+	int size)
+{
+	P_.acc		 	= 0.0;
+	P_.vel		 	= 0.0;
+	P_.surface_dist = 0.0;
 }
 
 double determinant(

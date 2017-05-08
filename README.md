@@ -159,3 +159,9 @@
 - 05/05/2017
 - first draft version
 - code and system is working as of time of writing with results
+
+[26]
+- 08/05/2017
+- changed the way the tables are modelled, using OBB representation.
+- added the surface boundary with new kinect data.
+

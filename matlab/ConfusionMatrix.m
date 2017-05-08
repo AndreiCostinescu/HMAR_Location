@@ -31,6 +31,10 @@ for i=1:length(DIR)
         continue;
     end
     
+%     if (~strcmp(DIR(i).name,'CUP'))
+%         continue;
+%     end
+    
     % Subject left out in cross validation
     file_name = [dir_name '/' DIR(i).name];
     DIR_S = dir(file_name);
@@ -54,7 +58,7 @@ for i=1:length(DIR)
             DIR_F = dir(file_name);
             for iv=1:length(DIR_F)
 
-                if (strcmp(DIR_F(iv).name,'.') || strcmp(DIR_F(iv).name,'..'))
+                if (strcmp(DIR_F(iv).name,'.') || strcmp(DIR_F(iv).name,'..') || strcmp(DIR_F(iv).name(1),'_'))
                     continue;
                 end
 
@@ -150,7 +154,7 @@ set(findobj(gcf,'facecolor',[230,140,140]./255),'facecolor',red)
 set(findobj(gcf,'facecolor',[0.5,0.5,0.5]),'facecolor',white)
 set(findobj(gcf,'facecolor',[120,150,230]./255),'facecolor',blue)
 
-print(fig,'ConfusionMatrix','-depsc');
+% print(fig,'ConfusionMatrix','-depsc');
 
 res_t = zeros(DICT.Count,100000);
 res_y = zeros(DICT.Count,100000);

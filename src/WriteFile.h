@@ -45,6 +45,14 @@ class WriteFile
 
 		void WriteFileWindow(Graph *Graph_, string path_);
 
+		void WriteFileSurface(
+				string path_,
+				vector<vector<double> > rotation_,
+				vector<point_d> planeeq_,
+				vector<point_d> boxmin_,
+				vector<point_d> boxmid_,
+				vector<point_d> boxmax_);
+
 		void WriteFilePrediction(
 			Graph *Graph_,
 			string path_,
@@ -52,6 +60,11 @@ class WriteFile
 			vector<string> labels_predict_,
 			vector<map<string,double> > goals_,
 			vector<map<string,double> > windows_);
+
+		void WriteFile_(
+			string path_,
+			vector<vector<double> > data_);
+
 };
 
 #endif /* WRITEFILE_H_ */

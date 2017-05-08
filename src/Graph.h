@@ -28,14 +28,23 @@ public:
 	kb_t GetKB();
 	void SetKB(kb_t x_);
 
+	vector<vector<double> > GetSurfaceRot() {return surface_rot;}
+	void SetSurfaceRot(vector<vector<double> > x_) {surface_rot = x_;}
+
 	vector<double> GetSurfaceLimit() {return surface_lim;}
 	void SetSurfaceLimit(vector<double> x_) {surface_lim = x_;}
 
-	vector<vector<double> > GetSurfaceEq() {return surface_eq;}
-	void SetSurfaceEq(vector<vector<double> > x_) {surface_eq = x_;}
+	vector<point_d> GetSurfaceEq() {return surface_eq;}
+	void SetSurfaceEq(vector<point_d> x_) {surface_eq = x_;}
 
-	vector<point_d> GetSurface() {return surface;}
-	void SetSurface(vector<point_d> x_) {surface = x_;}
+	vector<point_d> GetSurfaceMid() {return surface_mid;}
+	void SetSurfaceMid(vector<point_d> x_) {surface_mid = x_;}
+
+	vector<point_d> GetSurfaceMin() {return surface_min;}
+	void SetSurfaceMin(vector<point_d> x_) {surface_min = x_;}
+
+	vector<point_d> GetSurfaceMax() {return surface_max;}
+	void SetSurfaceMax(vector<point_d> x_) {surface_max = x_;}
 
 	map<string,map<string,string> > GetObjectLabel() {return object_label;}
 	void SetObjectLabel(map<string,map<string,string> > object_label_) {object_label = object_label_;}
@@ -46,10 +55,9 @@ public:
 	vector<string> GetActionLabel() {return action_label;}
 	void SetActionLabel(vector<string> x_) {action_label = x_;}
 
-	void GetPredictionReset(vector<map<string, double> > &x_) {x_ = prediction_reset;}
-
-	void GetPrediction(vector<map<string, double> > &x_) {x_ = prediction;}
-	void SetPrediction(vector<map<string, double> > x_) {prediction = x_;}
+//	void GetPredictionReset(vector<map<string, double> > &x_) {x_ = prediction_reset;}
+//	void GetPrediction(vector<map<string, double> > &x_) {x_ = prediction;}
+//	void SetPrediction(vector<map<string, double> > x_) {prediction = x_;}
 
 	state_t GetActionState() {return action_state;}
 	void SetActionState(state_t x_) {action_state = x_;}
@@ -105,6 +113,7 @@ public:
 	void addEmptyEdgeForNewNode(
 		int	idx_);
 
+	// edge_list = [#loc1] [#loc2] [#edges] [#sec*#loc]
 	vector<vector<vector<edge_tt> > > GetListOfEdges()
 	{
 		return edge_list;
@@ -267,9 +276,12 @@ private:
 
 	map<string,map<string,string> > 	object_label;
 
-	vector<point_d> 					surface;
-	vector<vector<double> > 			surface_eq;
+	vector<point_d> 					surface_min;
+	vector<point_d> 					surface_mid;
+	vector<point_d> 					surface_max;
+	vector<point_d > 					surface_eq;
 	vector<double> 						surface_lim;
+	vector<vector<double> >				surface_rot;
 
 	kb_t 								kb;
 	state_t 							action_state;

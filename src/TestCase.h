@@ -17,6 +17,7 @@ class TestCase : public Train
 		virtual ~TestCase();
 		void Choose(int x_);
 		int TrnInd(vector<int> idx_, string object_);
+		int TrnIndLA(vector<int> idx_, string object_);
 		int Tst(vector<int> idx_, string object_);
 		int Dpl(vector<int> idx_, string object_);
 		int Lbl(vector<int> idx_);

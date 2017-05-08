@@ -200,6 +200,209 @@ int ReadFile::ReadFileLabel(
 	}
 }
 
+int ReadFile::ReadSurfaceFile(
+	string path_,
+	vector<vector<double> > &rotation_,
+	vector<point_d> &planeeq_,
+	vector<point_d> &boxmin_,
+	vector<point_d> &boxmid_,
+	vector<point_d> &boxmax_)
+{
+	if (this->ReadFile_(path_, ',')==EXIT_FAILURE)
+	{
+		printer(38);
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		int c = 0;
+		point_d planeeq_tmp, boxmin_tmp, boxmid_tmp, boxmax_tmp;
+		planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+		for(int i=0;i<data_rf.size();i++)
+		{
+			if(c != atoi(data_rf[i][0].c_str()))
+			{
+				// boxmid_tmp.l is a counter.
+				c = atoi(data_rf[i][0].c_str());
+				double tmp = planeeq_tmp.l/boxmid_tmp.l;
+				planeeq_tmp = multiPoint(planeeq_tmp,1/boxmid_tmp.l);
+				planeeq_tmp = multiPoint(planeeq_tmp,1/l2Norm(planeeq_tmp));
+				planeeq_tmp.l = tmp;
+				boxmin_tmp = multiPoint(boxmin_tmp,1/boxmid_tmp.l);
+				boxmax_tmp = multiPoint(boxmax_tmp,1/boxmid_tmp.l);
+				boxmid_tmp = multiPoint(boxmid_tmp,1/boxmid_tmp.l);
+
+				point_d tmp0 = {}, tmp2 = {}; tmp0.x=tmp0.y=tmp0.z=tmp0.l=0.0; tmp0.y=1.0;
+				vector<double> tmp1 = rodriguezRot(tmp0, planeeq_tmp);
+				rotation_.push_back(tmp1);
+
+				tmp2.x =
+						tmp1[0]*boxmid_tmp.x +
+						tmp1[1]*boxmid_tmp.y +
+						tmp1[2]*boxmid_tmp.z;
+				tmp2.y =
+						tmp1[3]*boxmid_tmp.x +
+						tmp1[4]*boxmid_tmp.y +
+						tmp1[5]*boxmid_tmp.z;
+				tmp2.z =
+						tmp1[6]*boxmid_tmp.x +
+						tmp1[7]*boxmid_tmp.y +
+						tmp1[8]*boxmid_tmp.z;
+
+				tmp0.x =
+						tmp1[0]*boxmin_tmp.x +
+						tmp1[1]*boxmin_tmp.y +
+						tmp1[2]*boxmin_tmp.z;
+				tmp0.y =
+						tmp1[3]*boxmin_tmp.x +
+						tmp1[4]*boxmin_tmp.y +
+						tmp1[5]*boxmin_tmp.z;
+				tmp0.z =
+						tmp1[6]*boxmin_tmp.x +
+						tmp1[7]*boxmin_tmp.y +
+						tmp1[8]*boxmin_tmp.z;
+				boxmin_tmp = tmp0;
+
+				tmp0.x =
+						tmp1[0]*boxmax_tmp.x +
+						tmp1[1]*boxmax_tmp.y +
+						tmp1[2]*boxmax_tmp.z;
+				tmp0.y =
+						tmp1[3]*boxmax_tmp.x +
+						tmp1[4]*boxmax_tmp.y +
+						tmp1[5]*boxmax_tmp.z;
+				tmp0.z =
+						tmp1[6]*boxmax_tmp.x +
+						tmp1[7]*boxmax_tmp.y +
+						tmp1[8]*boxmax_tmp.z;
+				boxmax_tmp = tmp0;
+
+				boxmin_tmp = minusPoint(boxmin_tmp,tmp2);
+				boxmax_tmp = minusPoint(boxmax_tmp,tmp2);
+
+				tmp = boxmin_tmp.x;
+				if (boxmax_tmp.x < boxmin_tmp.x)
+				{ boxmin_tmp.x = boxmax_tmp.x; boxmax_tmp.x = tmp; }
+				tmp = boxmin_tmp.y;
+				if (boxmax_tmp.y < boxmin_tmp.y)
+				{ boxmin_tmp.y = boxmax_tmp.y; boxmax_tmp.y = tmp; }
+				tmp = boxmin_tmp.z;
+				if (boxmax_tmp.z < boxmin_tmp.z)
+				{ boxmin_tmp.z = boxmax_tmp.z; boxmax_tmp.z = tmp; }
+				tmp = boxmax_tmp.x - boxmin_tmp.x;
+				boxmin_tmp.x -= tmp/3.0; boxmax_tmp.x += tmp/3.0;
+				tmp = boxmax_tmp.y - boxmin_tmp.y;
+				boxmin_tmp.y -= tmp/3.0; boxmax_tmp.y += tmp/3.0;
+				tmp = boxmax_tmp.z - boxmin_tmp.z;
+				boxmin_tmp.z -= tmp/3.0; boxmax_tmp.z += tmp/3.0;
+
+				planeeq_.push_back(planeeq_tmp);
+				boxmin_.push_back(boxmin_tmp);
+				boxmid_.push_back(boxmid_tmp);
+				boxmax_.push_back(boxmax_tmp);
+				planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+			}
+
+			planeeq_tmp.x += atof(data_rf[i][1].c_str());
+			planeeq_tmp.y += atof(data_rf[i][2].c_str());
+			planeeq_tmp.z += atof(data_rf[i][3].c_str());
+			planeeq_tmp.l += atof(data_rf[i][4].c_str());
+			boxmid_tmp.x  += atof(data_rf[i][5].c_str());
+			boxmid_tmp.y  += atof(data_rf[i][6].c_str());
+			boxmid_tmp.z  += atof(data_rf[i][7].c_str());
+			boxmid_tmp.l  += 1;
+			boxmin_tmp.x  += atof(data_rf[i][8].c_str());
+			boxmin_tmp.y  += atof(data_rf[i][9].c_str());
+			boxmin_tmp.z  += atof(data_rf[i][10].c_str());
+			boxmax_tmp.x  += atof(data_rf[i][11].c_str());
+			boxmax_tmp.y  += atof(data_rf[i][12].c_str());
+			boxmax_tmp.z  += atof(data_rf[i][13].c_str());
+
+			if(i==data_rf.size()-1)
+			{
+				double tmp = planeeq_tmp.l/boxmid_tmp.l;
+				planeeq_tmp = multiPoint(planeeq_tmp,1/boxmid_tmp.l);
+				planeeq_tmp = multiPoint(planeeq_tmp,1/l2Norm(planeeq_tmp));
+				planeeq_tmp.l = tmp;
+				boxmin_tmp = multiPoint(boxmin_tmp,1/boxmid_tmp.l);
+				boxmax_tmp = multiPoint(boxmax_tmp,1/boxmid_tmp.l);
+				boxmid_tmp = multiPoint(boxmid_tmp,1/boxmid_tmp.l);
+
+				point_d tmp0 = {}, tmp2 = {}; tmp0.x=tmp0.y=tmp0.z=tmp0.l=0.0; tmp0.y=1.0;
+				vector<double> tmp1 = rodriguezRot(tmp0, planeeq_tmp);
+				rotation_.push_back(tmp1);
+
+				tmp2.x =
+						tmp1[0]*boxmid_tmp.x +
+						tmp1[1]*boxmid_tmp.y +
+						tmp1[2]*boxmid_tmp.z;
+				tmp2.y =
+						tmp1[3]*boxmid_tmp.x +
+						tmp1[4]*boxmid_tmp.y +
+						tmp1[5]*boxmid_tmp.z;
+				tmp2.z =
+						tmp1[6]*boxmid_tmp.x +
+						tmp1[7]*boxmid_tmp.y +
+						tmp1[8]*boxmid_tmp.z;
+
+				tmp0.x =
+						tmp1[0]*boxmin_tmp.x +
+						tmp1[1]*boxmin_tmp.y +
+						tmp1[2]*boxmin_tmp.z;
+				tmp0.y =
+						tmp1[3]*boxmin_tmp.x +
+						tmp1[4]*boxmin_tmp.y +
+						tmp1[5]*boxmin_tmp.z;
+				tmp0.z =
+						tmp1[6]*boxmin_tmp.x +
+						tmp1[7]*boxmin_tmp.y +
+						tmp1[8]*boxmin_tmp.z;
+				boxmin_tmp = tmp0;
+
+				tmp0.x =
+						tmp1[0]*boxmax_tmp.x +
+						tmp1[1]*boxmax_tmp.y +
+						tmp1[2]*boxmax_tmp.z;
+				tmp0.y =
+						tmp1[3]*boxmax_tmp.x +
+						tmp1[4]*boxmax_tmp.y +
+						tmp1[5]*boxmax_tmp.z;
+				tmp0.z =
+						tmp1[6]*boxmax_tmp.x +
+						tmp1[7]*boxmax_tmp.y +
+						tmp1[8]*boxmax_tmp.z;
+				boxmax_tmp = tmp0;
+
+				boxmin_tmp = minusPoint(boxmin_tmp,tmp2);
+				boxmax_tmp = minusPoint(boxmax_tmp,tmp2);
+
+				tmp = boxmin_tmp.x;
+				if (boxmax_tmp.x < boxmin_tmp.x)
+				{ boxmin_tmp.x = boxmax_tmp.x; boxmax_tmp.x = tmp; }
+				tmp = boxmin_tmp.y;
+				if (boxmax_tmp.y < boxmin_tmp.y)
+				{ boxmin_tmp.y = boxmax_tmp.y; boxmax_tmp.y = tmp; }
+				tmp = boxmin_tmp.z;
+				if (boxmax_tmp.z < boxmin_tmp.z)
+				{ boxmin_tmp.z = boxmax_tmp.z; boxmax_tmp.z = tmp; }
+				tmp = boxmax_tmp.x - boxmin_tmp.x;
+				boxmin_tmp.x -= tmp/3.0; boxmax_tmp.x += tmp/3.0;
+				tmp = boxmax_tmp.y - boxmin_tmp.y;
+				boxmin_tmp.y -= tmp/3.0; boxmax_tmp.y += tmp/3.0;
+				tmp = boxmax_tmp.z - boxmin_tmp.z;
+				boxmin_tmp.z -= tmp/3.0; boxmax_tmp.z += tmp/3.0;
+
+				planeeq_.push_back(planeeq_tmp);
+				boxmin_.push_back(boxmin_tmp);
+				boxmid_.push_back(boxmid_tmp);
+				boxmax_.push_back(boxmax_tmp);
+				planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+			}
+		}
+		return EXIT_SUCCESS;
+	}
+}
+
 int ReadFile::ReadFileKB(
 	string path_,
 	kb_t &kb_)
@@ -213,18 +416,33 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		kb_.surface.resize(data_rf.size());
+		kb_.surface_mid.resize(data_rf.size());
+		kb_.surface_min.resize(data_rf.size());
+		kb_.surface_max.resize(data_rf.size());
 		kb_.surface_eq.resize(data_rf.size());
+		kb_.surface_rot.resize(data_rf.size());
 		for(int i=0;i<data_rf.size();i++)
 		{
-			for(int ii=1;ii<5;ii++)
+			kb_.surface_eq[i].x = atof(data_rf[i][1].c_str());
+			kb_.surface_eq[i].y = atof(data_rf[i][2].c_str());
+			kb_.surface_eq[i].z = atof(data_rf[i][3].c_str());
+			kb_.surface_eq[i].l = atof(data_rf[i][4].c_str());
+			kb_.surface_mid[i].x = atof(data_rf[i][5].c_str());
+			kb_.surface_mid[i].y = atof(data_rf[i][6].c_str());
+			kb_.surface_mid[i].z = atof(data_rf[i][7].c_str());
+			kb_.surface_mid[i].l = UNCLASSIFIED;
+			kb_.surface_min[i].x = atof(data_rf[i][8].c_str());
+			kb_.surface_min[i].y = atof(data_rf[i][9].c_str());
+			kb_.surface_min[i].z = atof(data_rf[i][10].c_str());
+			kb_.surface_min[i].l = UNCLASSIFIED;
+			kb_.surface_max[i].x = atof(data_rf[i][11].c_str());
+			kb_.surface_max[i].y = atof(data_rf[i][12].c_str());
+			kb_.surface_max[i].z = atof(data_rf[i][13].c_str());
+			kb_.surface_max[i].l = UNCLASSIFIED;
+			for(int ii=14;ii<data_rf[i].size();ii++)
 			{
-				kb_.surface_eq[i].push_back(atof(data_rf[i][ii].c_str()));
+				kb_.surface_rot[i].push_back(atof(data_rf[i][ii].c_str()));
 			}
-			kb_.surface[i].x = atof(data_rf[i][5].c_str());
-			kb_.surface[i].y = atof(data_rf[i][6].c_str());
-			kb_.surface[i].z = atof(data_rf[i][7].c_str());
-			kb_.surface[i].l = UNCLASSIFIED;
 		}
 		printer(39);
 	}
@@ -305,14 +523,24 @@ int ReadFile::ReadFileLA(
 		{
 			if (Graph_->GetNode(i,node_tmp)==EXIT_SUCCESS)
 			{return EXIT_SUCCESS;}
-			node_tmp.name 		=      data_rf[i][0];
+
+			vector<string> al_tmp = Graph_->GetActionLabel();
+
+			node_tmp.name 		= al_tmp[atof(data_rf[i][0].c_str())];
+			node_tmp.index    	= i;
 			node_tmp.centroid.x	= atof(data_rf[i][1].c_str());
 			node_tmp.centroid.y	= atof(data_rf[i][2].c_str());
 			node_tmp.centroid.z	= atof(data_rf[i][3].c_str());
 			node_tmp.centroid.l	= atof(data_rf[i][4].c_str());
-			node_tmp.index    	= i;
 			node_tmp.surface 	= atoi(data_rf[i][5].c_str());
-			node_tmp.contact 	= atoi(data_rf[i][6].c_str());
+			node_tmp.box_min.x	= atof(data_rf[i][6].c_str());
+			node_tmp.box_min.y	= atof(data_rf[i][7].c_str());
+			node_tmp.box_min.z	= atof(data_rf[i][8].c_str());
+			node_tmp.box_max.x	= atof(data_rf[i][9].c_str());
+			node_tmp.box_max.y	= atof(data_rf[i][10].c_str());
+			node_tmp.box_max.z	= atof(data_rf[i][11].c_str());
+			node_tmp.contact 	= atoi(data_rf[i][12].c_str());
+
 			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(i);
 		}
@@ -340,7 +568,7 @@ int ReadFile::ReadFileGraph(
 		int c,l1,l2,l3; c=l1=l2=l3=0;
 		for(int i=3;i<data_rf.size();i++)
 		{
-			c=(i-3)%8;
+			c=(i-3)%7;
 			edge_tt edge_tmp = Graph_->GetEdge(l1,l2,l3);
 			switch (c)
 			{
@@ -352,47 +580,40 @@ int ReadFile::ReadFileGraph(
 				case 1:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_start[iii].x = atof(data_rf[i][iii*3+0].c_str());
-						edge_tmp.loc_start[iii].y = atof(data_rf[i][iii*3+1].c_str());
-						edge_tmp.loc_start[iii].z = atof(data_rf[i][iii*3+2].c_str());
+						edge_tmp.nor[iii].x = atof(data_rf[i][iii*4+0].c_str());
+						edge_tmp.nor[iii].y = atof(data_rf[i][iii*4+1].c_str());
+						edge_tmp.nor[iii].z = atof(data_rf[i][iii*4+2].c_str());
+						edge_tmp.nor[iii].l = atof(data_rf[i][iii*4+3].c_str());
 					}
 					break;
 				case 2:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_mid[iii].x = atof(data_rf[i][iii*3+0].c_str());
-						edge_tmp.loc_mid[iii].y = atof(data_rf[i][iii*3+1].c_str());
-						edge_tmp.loc_mid[iii].z = atof(data_rf[i][iii*3+2].c_str());
+						edge_tmp.tan[iii].x = atof(data_rf[i][iii*4+0].c_str());
+						edge_tmp.tan[iii].y = atof(data_rf[i][iii*4+1].c_str());
+						edge_tmp.tan[iii].z = atof(data_rf[i][iii*4+2].c_str());
+						edge_tmp.tan[iii].l = atof(data_rf[i][iii*4+3].c_str());
 					}
 					break;
 				case 3:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_end[iii].x = atof(data_rf[i][iii*3+0].c_str());
-						edge_tmp.loc_end[iii].y = atof(data_rf[i][iii*3+1].c_str());
-						edge_tmp.loc_end[iii].z = atof(data_rf[i][iii*3+2].c_str());
+						edge_tmp.loc_mid[iii].x = atof(data_rf[i][iii*4+0].c_str());
+						edge_tmp.loc_mid[iii].y = atof(data_rf[i][iii*4+1].c_str());
+						edge_tmp.loc_mid[iii].z = atof(data_rf[i][iii*4+2].c_str());
+						edge_tmp.loc_mid[iii].l = atof(data_rf[i][iii*4+3].c_str());
 					}
 					break;
 				case 4:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.tan[iii].x = atof(data_rf[i][iii*3+0].c_str());
-						edge_tmp.tan[iii].y = atof(data_rf[i][iii*3+1].c_str());
-						edge_tmp.tan[iii].z = atof(data_rf[i][iii*3+2].c_str());
+						edge_tmp.loc_len[iii] = atof(data_rf[i][iii].c_str());
 					}
 					break;
 				case 5:
-					for(int iii=0;iii<num_location_intervals;iii++)
-					{
-						edge_tmp.nor[iii].x = atof(data_rf[i][iii*3+0].c_str());
-						edge_tmp.nor[iii].y = atof(data_rf[i][iii*3+1].c_str());
-						edge_tmp.nor[iii].z = atof(data_rf[i][iii*3+2].c_str());
-					}
-					break;
-				case 6:
 					edge_tmp.counter = atoi(data_rf[i][0].c_str());
 					break;
-				case 7:
+				case 6:
 					for(int iii=0;iii<num_location_intervals*num_sector_intervals;iii++)
 					{
 						edge_tmp.sector_map[iii] = atof(data_rf[i][iii].c_str());

@@ -23,12 +23,15 @@ class Evaluate
 		void setPctErr(vector<double> x_)	{pct_err_eval = x_;}
 		void setGraph(Graph *x_) 			{G = x_;}
 
-		int UpdateEval();
+		int UpdateStateNode();
+		int UpdateStateEdge();
 
 	protected:
 
 		int label1_eval;
 		double vel_eval;
+
+		double surface_dist_eval;
 
 		vector<double> win_eval;
 		vector<double> pct_err_eval;

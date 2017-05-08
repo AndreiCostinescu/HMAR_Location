@@ -11,32 +11,41 @@ Evaluate::Evaluate(
 	Graph *Graph_)
 {
 	label1_eval = 0;
-	vel_eval 	= 0.0;
-
+	vel_eval = 0.0;
+	surface_dist_eval = 0.0;
 	win_eval.clear();
 	pct_err_eval.clear();
-
 	state_eval = {};
 	G = Graph_;
 }
 
 Evaluate::~Evaluate() {}
 
-int Evaluate::UpdateEval()
+int Evaluate::UpdateStateNode()
+{
+	state_eval = G->GetActionState();
+	state_eval.mov = vel_eval;
+	state_eval.sur_dist = surface_dist_eval;
+	G->SetActionState(state_eval);
+	return EXIT_SUCCESS;
+}
+
+int Evaluate::UpdateStateEdge()
 {
 	state_eval = G->GetActionState();
 
-	double max_tmp = *max_element(pct_err_eval.begin(), pct_err_eval.end());
+	double max_val = *max_element(pct_err_eval.begin(), pct_err_eval.end());
 
 	node_tt node_tmp = {};
 
-	if (max_tmp<=0)
+	if (max_val<=0)
 	{
-		state_eval.pct_err = 0;
+		state_eval.pct_err 	= 0.0;
+		state_eval.sur 		= 0;
 	}
 	else
 	{
-		state_eval.pct_err = max_tmp;
+		state_eval.pct_err = max_val;
 		int idx =
 					distance(
 							pct_err_eval.begin(),
@@ -45,7 +54,6 @@ int Evaluate::UpdateEval()
 		vector<string> al_tmp = G->GetActionLabel();
 		map<string,pair<int,int> > ac_tmp = G->GetActionCategory();
 
-		node_tmp = {};
 		G->GetNode(label1_eval, node_tmp);
 		string tmp1 = node_tmp.name;
 		G->GetNode(idx, node_tmp);
@@ -67,7 +75,6 @@ int Evaluate::UpdateEval()
 			if (c==2) break;
 		}
 
-		state_eval.con = node_tmp.contact;
 		state_eval.sur = node_tmp.surface;
 	}
 

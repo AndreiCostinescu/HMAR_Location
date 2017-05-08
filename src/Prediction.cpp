@@ -281,13 +281,6 @@ void Prediction::DT1()
 		this->DT2_1();
 		label  = al[state_mem.back().label2];
 	}
-
-//	else if (state_mem.back().pct_err==0)
-//	{
-//		output = dict[10];
-//		label  = "UNKNOWN";
-//	}
-
 	// in SM
 	else
 	{
@@ -327,17 +320,6 @@ void Prediction::DT2_1()
 void Prediction::DT2_2()
 {
 	this->DT3();
-//	if(state_mem.back().mov>0)
-//	{
-//		this->DT3();
-//	}
-//	else
-//	{
-//		output =
-//				"You are grabbing an object. I think you will be " +
-//				ol[obj].at(al[state_mem.back().label2]) + " something. ";
-//		label  = "STOP";
-//	}
 }
 
 // prediction on SM
@@ -425,21 +407,11 @@ void Prediction::DT4_2(
 		{
 			output = this->Decode(obj, "", message[8]);
 			output = output + "Perhaps you are going to " + al[idx] + ".";
-//			output =
-//					"I think you are going to " + ob_ac +
-//					"ing. But i am not so sure. " +
-//					"Maybe you are going to " + al[idx] +
-//					". ";
 			label  = "MOVE";
 		}
 		else
 		{
 			output = this->Decode(obj, "", message[9]);
-//			output =
-//					"I think you are going to " + ob_ac +
-//					"ing. But i am not so sure. " +
-//					"Maybe you are going to " + al[idx] +
-//					". But i am sure you have stopped.";
 			label  = "STOP";
 		}
 	}
@@ -482,13 +454,6 @@ void Prediction::Display()
 	{
 		label_mem = label;
 	}
-
-
-//	for(int i=ac["GEOMETRIC"].first;i<ac["GEOMETRIC"].second+1;i++)
-//	{
-//		cout << s.goal[al[i]] << " ";
-//	}
-//	cout << endl;
 
 }
 

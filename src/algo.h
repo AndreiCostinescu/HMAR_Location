@@ -193,8 +193,12 @@ void cal_tangent_normal(
 	int dim,
 	bool normal);
 
-void reshapePredict(
-	predict_t &P,
+void reshapePredictEdge(
+	predict_e &P_,
+	int size);
+
+void reshapePredictNode(
+	predict_n &P_,
 	int size);
 
 double determinant(

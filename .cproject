@@ -42,7 +42,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src/Copy of main.cpp|src/svm-train.c|src_backup|src/util.cpp|src/Module.cpp|src/svm-predict.c|src/prediction.cpp|src/labeling.cpp|src/svm.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="src/svm-train.c|src/Copy of main.cpp|src_backup|src/util.cpp|src/Module.cpp|src/svm-predict.c|src/prediction.cpp|src/labeling.cpp|src/svm.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

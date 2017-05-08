@@ -25,97 +25,150 @@ void TrainLA::ClearLA()
 	points_avg.clear();
 	locations.clear();
 	goal_action.clear();
-	surfaces.clear();
+	surfaces_mid.clear();
+	surfaces_min.clear();
+	surfaces_max.clear();
 	surfaces_eq.clear();
 	surfaces_limit.clear();
 }
 
-int TrainLA::DecideBoundaryExt(
-	point_d 		&point1_,
-	point_d 		&point2_,
-	vector<point_d> centroids_)
-{
-	return decideBoundary(point1_, point2_, centroids_);
-}
-
-int TrainLA::ContactBoundary(
-	vector<point_d> &centroids_,
-	bool learn_)
+int TrainLA::LearnBoundary(
+	vector<point_d> &centroids_)
 {
 	for (int i=0;i<points_avg.size();i++)
 	{
-		if (learn_)
+		if (points_avg[i].l < 0.0) { continue; }
+
+		centroids_[points_avg[i].l].l =
+				min(pdfExp(
+							BOUNDARY_VAR,
+							0.0,
+							l2Norm(
+									minusPoint(
+											points_avg[i],
+											centroids_[points_avg[i].l]))),
+					centroids_[points_avg[i].l].l);
+
+		centroids_[points_avg[i].l].l =
+				max(0.50, centroids_[points_avg[i].l].l);
+		centroids_[points_avg[i].l].l =
+				min(0.98, centroids_[points_avg[i].l].l);
+
+		if (surfaces_flag[points_avg[i].l] > 0)
 		{
-			if (points_avg[i].l < 0.0) { continue; }
+			// point transform to the coord system of the surface
+			point_d point_rot={}, point_rot2={};
+			point_rot.x =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*points_avg[i].z;
+			point_rot.y =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*points_avg[i].z;
+			point_rot.z =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*points_avg[i].z;
+			point_rot2.x =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*centroids_[points_avg[i].l].z;
+			point_rot2.y =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*centroids_[points_avg[i].l].z;
+			point_rot2.z =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*centroids_[points_avg[i].l].z;
 
-			if (surfaces_flag[points_avg[i].l] > 0)
-			{
-				if ( !decideSurface(
-							centroids_[points_avg[i].l],
-							surfaces_eq[surfaces_flag[points_avg[i].l]-1],
-							surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
-				{
-					points_avg[i].l = UNCLASSIFIED;
-					continue;
-				}
-			}
+			point_rot = minusPoint(point_rot, point_rot2);
 
-			centroids_[points_avg[i].l].l =
-					min(pdfExp(
-								BOUNDARY_VAR,
-								0.0,
-								l2Norm(
-										minusPoint(
-												points_avg[i],
-												centroids_[points_avg[i].l]))),
-						centroids_[points_avg[i].l].l);
+			if(	point_rot.y > surfaces_max[points_avg[i].l].y )
+				surfaces_max[surfaces_flag[points_avg[i].l]-1].y = point_rot.y;
 
-			centroids_[points_avg[i].l].l =
-					max(0.50, centroids_[points_avg[i].l].l);
-			centroids_[points_avg[i].l].l =
-					min(0.98, centroids_[points_avg[i].l].l);
-		}
-		else
-		{
-			if (i > 0)
-			{
-				decideBoundary_(
-						points_avg[i-1], points_avg[i], centroids_,
-						surfaces_flag, surfaces_eq, surfaces_limit);
-			}
-			else
-			{
-				decideBoundary_(
-						points_avg[i], points_avg[i], centroids_,
-						surfaces_flag, surfaces_eq, surfaces_limit);
-			}
-
-			if (points_avg[i].l < 0.0) { continue; }
-
-			if (surfaces_flag[points_avg[i].l] > 0)
-			{
-				if ( !decideSurface(
-						centroids_[points_avg[i].l],
-							surfaces_eq[surfaces_flag[points_avg[i].l]-1],
-							surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
-				{
-					points_avg[i].l = UNCLASSIFIED;
-				}
-			}
+			if(	point_rot.y < surfaces_min[points_avg[i].l].y )
+				surfaces_min[surfaces_flag[points_avg[i].l]-1].y = point_rot.y;
 		}
 	}
 	return EXIT_SUCCESS;
 }
 
-int TrainLA::ContactCheck(
+int TrainLA::ContactBoundary(
+	vector<point_d> &centroids_)
+{
+	for (int i=0;i<points_avg.size();i++)
+	{
+		if (i > 0)
+		{ checkBoundarySphere(points_avg[i-1], points_avg[i], centroids_); }
+		else
+		{ checkBoundarySphere(points_avg[i]  , points_avg[i], centroids_); }
+
+		if (points_avg[i].l < 0.0) { continue; }
+
+		if (surfaces_flag[points_avg[i].l] > 0)
+		{
+			point_d point_rot={}, point_rot2={};
+			point_rot.x =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*points_avg[i].z;
+			point_rot.y =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*points_avg[i].z;
+			point_rot.z =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*points_avg[i].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*points_avg[i].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*points_avg[i].z;
+			point_rot2.x =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*centroids_[points_avg[i].l].z;
+			point_rot2.y =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*centroids_[points_avg[i].l].z;
+			point_rot2.z =
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*centroids_[points_avg[i].l].x +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*centroids_[points_avg[i].l].y +
+					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*centroids_[points_avg[i].l].z;
+
+			point_rot = minusPoint(point_rot, point_rot2);
+
+			checkBoundaryCuboid(
+					point_rot,
+					surfaces_min[surfaces_flag[points_avg[i].l]-1],
+					surfaces_max[surfaces_flag[points_avg[i].l]-1]);
+		}
+
+//		if (points_avg[i].l < 0.0) { continue; }
+//
+//		if (surfaces_flag[points_avg[i].l] > 0)
+//		{
+//			if ( !decideSurface(
+//					centroids_[points_avg[i].l],
+//						surfaces_eq[surfaces_flag[points_avg[i].l]-1],
+//						surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
+//			{
+//				points_avg[i].l = UNCLASSIFIED;
+//			}
+//		}
+	}
+	return EXIT_SUCCESS;
+}
+
+int TrainLA::SurfaceContactCheck(
 	vector<point_d> centroids_)
 {
 
+	// label the surface involved
 	for(int i=0;i<points_avg.size();i++)
 	{
 		if (points_avg[i].l < 0) continue;
 
-		for(int ii=0;ii<surfaces.size();ii++)
+		for(int ii=0;ii<surfaces_mid.size();ii++)
 		{
 			// surface already known
 			if (surfaces_flag[points_avg[i].l] > 0) continue;
@@ -123,7 +176,7 @@ int TrainLA::ContactCheck(
 			if (decideSurface(
 					points_avg[i], surfaces_eq[ii], surfaces_limit[ii]) &&
 				l2Norm(
-					minusPoint(surfaces[ii],centroids_[points_avg[i].l])) < 0.2) // HACK: to prevent arbitrary surface detection
+					minusPoint(surfaces_mid[ii],centroids_[points_avg[i].l])) < 0.2) // HACK: to prevent arbitrary surface detection
 			{
 				surfaces_flag[points_avg[i].l] = ii+1;
 				break;
@@ -131,6 +184,7 @@ int TrainLA::ContactCheck(
 		}
 	}
 
+	// uodate the data
 	for(int i=0;i<points_avg.size();i++)
 	{
 		if (points_avg[i].l < 0) continue;
@@ -152,20 +206,20 @@ int TrainLA::ContactCheck(
 int TrainLA::ClusteringExt(
 		vector<point_d> &centroids_)
 {
-	vector<vector<unsigned char> > color_code; colorCode(color_code);
-	vector<int> loc_idx_zero;
-
+	// 1. Clustering of data
 	this->Clustering(points_avg, DBSCAN_EPS, DBSCAN_MIN);
 
 	// Visualize
 	if (0)
 	{
+		vector<int> loc_idx_zero;
 		vector<string>goal_action, al;goal_action.resize(10);
 		showData(
 				points_avg, goal_action, al,
 				loc_idx_zero, color_code, true, false, false);
 	}
 
+	// 2. Combine nearby clusters
 	this->CombineNearCluster(points_avg, centroids_, locations_flag, contact);
 
 	locations_flag[0] = 0; // hack TODO
@@ -173,15 +227,22 @@ int TrainLA::ClusteringExt(
 
 	reshapeVector(surfaces_flag, locations_flag.size());
 
-	this->ContactCheck(centroids_);
+	// 3. Possible surface contact check.
+	//    Surface plane is known beforehand.
+	//    Assign flag to node representing the surfaces.
+	this->SurfaceContactCheck(centroids_);
 	printer(40);
 
-	this->ContactBoundary(centroids_,true);
-	this->ContactBoundary(centroids_,false);
+	// 4. Learn boundary values
+	this->LearnBoundary(centroids_);
+
+	// 5. Update contact check for the data
+	this->ContactBoundary(centroids_);
 
 	// Visualize
 	if (0)
 	{
+		vector<int> loc_idx_zero;
 		vector<string>goal_action, al;goal_action.resize(10);
 		showData(
 				points_avg, goal_action, al,
@@ -197,14 +258,19 @@ int TrainLA::BuildLocationArea(
 	vector<int> 				contact_,
 	bool 						flag_)
 {
+	this->ClearLA();
+
 	// Gathering points
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{ points_avg.push_back(pos_vel_acc_[i][0]); }
 
 	contact			= contact_;
-	surfaces 		= Graph_->GetSurface();
+	surfaces_mid 	= Graph_->GetSurfaceMid();
+	surfaces_min 	= Graph_->GetSurfaceMin();
+	surfaces_max 	= Graph_->GetSurfaceMax();
 	surfaces_eq		= Graph_->GetSurfaceEq();
 	surfaces_limit	= Graph_->GetSurfaceLimit();
+	surfaces_rot	= Graph_->GetSurfaceRot();
 
 	// Graph is empty
 	if (Graph_->GetNumberOfNodes()==0)
@@ -220,26 +286,26 @@ int TrainLA::BuildLocationArea(
 			goal_action[1] = "DISPENSER";
 			goal_action[2] = "FACE";
 			goal_action[3] = "TABLE2";
-			goal_action[4] = "WASH";
+			goal_action[4] = "SINK";
 		}
 		else if(!strcmp(Graph_->GetObject().c_str(),"ORG"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "FACE";
 			goal_action[2] = "TABLE2";
-			goal_action[3] = "THROW";
+			goal_action[3] = "BIN";
 		}
 		else if(!strcmp(Graph_->GetObject().c_str(),"KNF"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "TABLE2";
-			goal_action[2] = "WASH";
+			goal_action[2] = "SINK";
 		}
 		else if(!strcmp(Graph_->GetObject().c_str(),"SPG"))
 		{
 			goal_action[0] = "SHELF";
 			goal_action[1] = "TABLE2";
-			goal_action[2] = "WASH";
+			goal_action[2] = "SINK";
 		}
 		else
 			showData(
@@ -254,6 +320,16 @@ int TrainLA::BuildLocationArea(
 			node_tmp.surface 	= surfaces_flag[i];
 			node_tmp.contact 	= locations_flag[i];
 			node_tmp.centroid 	= locations[i];
+			if(surfaces_flag[i]>0)
+			{
+				node_tmp.box_max 	= surfaces_max[surfaces_flag[i]-1];
+				node_tmp.box_min 	= surfaces_min[surfaces_flag[i]-1];
+			}
+			else
+			{
+				node_tmp.box_max 	= {};
+				node_tmp.box_min 	= {};
+			}
 			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
 		}
@@ -281,19 +357,19 @@ int TrainLA::BuildLocationArea(
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "TABLE2";
-				goal_action[2] = "THROW";
+				goal_action[2] = "BIN";
 			}
 			if(Graph_->GetNumberOfNodes()==4)
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "TABLE1";
-				goal_action[2] = "WASH";
+				goal_action[2] = "SINK";
 			}
 			if(Graph_->GetNumberOfNodes()==5)
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "DISPENSER";
-				goal_action[2] = "WASH";
+				goal_action[2] = "SINK";
 			}
 //			showData(
 //					points_avg, goal_action, Graph_->GetActionLabel(),
@@ -360,10 +436,21 @@ int TrainLA::BuildLocationArea(
 				// add new LA
 				if (ii==locations.size()-1 && flag_)
 				{
+
 					node_tt node_tmp 	= {};
 					node_tmp.name 		= goal_action[i];
 					node_tmp.index 		= Graph_->GetNodeList().size();
 					node_tmp.surface 	= surfaces_flag[i];
+					if(surfaces_flag[i]>0)
+					{
+						node_tmp.box_max 	= surfaces_max[surfaces_flag[i]-1];
+						node_tmp.box_min 	= surfaces_min[surfaces_flag[i]-1];
+					}
+					else
+					{
+						node_tmp.box_max 	= {};
+						node_tmp.box_min 	= {};
+					}
 					node_tmp.contact 	= locations_flag[i];
 					node_tmp.centroid 	= locations_[i];
 					Graph_->SetNode(node_tmp);

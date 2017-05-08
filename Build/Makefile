@@ -162,6 +162,78 @@ src/DBSCAN.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DBSCAN.cpp.s
 .PHONY : src/DBSCAN.cpp.s
 
+src/DataContainer.o: src/DataContainer.cpp.o
+.PHONY : src/DataContainer.o
+
+# target to build an object file
+src/DataContainer.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.o
+.PHONY : src/DataContainer.cpp.o
+
+src/DataContainer.i: src/DataContainer.cpp.i
+.PHONY : src/DataContainer.i
+
+# target to preprocess a source file
+src/DataContainer.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.i
+.PHONY : src/DataContainer.cpp.i
+
+src/DataContainer.s: src/DataContainer.cpp.s
+.PHONY : src/DataContainer.s
+
+# target to generate assembly for a file
+src/DataContainer.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.s
+.PHONY : src/DataContainer.cpp.s
+
+src/DataFilter.o: src/DataFilter.cpp.o
+.PHONY : src/DataFilter.o
+
+# target to build an object file
+src/DataFilter.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataFilter.cpp.o
+.PHONY : src/DataFilter.cpp.o
+
+src/DataFilter.i: src/DataFilter.cpp.i
+.PHONY : src/DataFilter.i
+
+# target to preprocess a source file
+src/DataFilter.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataFilter.cpp.i
+.PHONY : src/DataFilter.cpp.i
+
+src/DataFilter.s: src/DataFilter.cpp.s
+.PHONY : src/DataFilter.s
+
+# target to generate assembly for a file
+src/DataFilter.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataFilter.cpp.s
+.PHONY : src/DataFilter.cpp.s
+
+src/DataParser.o: src/DataParser.cpp.o
+.PHONY : src/DataParser.o
+
+# target to build an object file
+src/DataParser.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataParser.cpp.o
+.PHONY : src/DataParser.cpp.o
+
+src/DataParser.i: src/DataParser.cpp.i
+.PHONY : src/DataParser.i
+
+# target to preprocess a source file
+src/DataParser.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataParser.cpp.i
+.PHONY : src/DataParser.cpp.i
+
+src/DataParser.s: src/DataParser.cpp.s
+.PHONY : src/DataParser.s
+
+# target to generate assembly for a file
+src/DataParser.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataParser.cpp.s
+.PHONY : src/DataParser.cpp.s
+
 src/Evaluate.o: src/Evaluate.cpp.o
 .PHONY : src/Evaluate.o
 
@@ -186,30 +258,6 @@ src/Evaluate.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Evaluate.cpp.s
 .PHONY : src/Evaluate.cpp.s
 
-src/Filter.o: src/Filter.cpp.o
-.PHONY : src/Filter.o
-
-# target to build an object file
-src/Filter.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Filter.cpp.o
-.PHONY : src/Filter.cpp.o
-
-src/Filter.i: src/Filter.cpp.i
-.PHONY : src/Filter.i
-
-# target to preprocess a source file
-src/Filter.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Filter.cpp.i
-.PHONY : src/Filter.cpp.i
-
-src/Filter.s: src/Filter.cpp.s
-.PHONY : src/Filter.s
-
-# target to generate assembly for a file
-src/Filter.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Filter.cpp.s
-.PHONY : src/Filter.cpp.s
-
 src/Graph.o: src/Graph.cpp.o
 .PHONY : src/Graph.o
 
@@ -233,30 +281,6 @@ src/Graph.s: src/Graph.cpp.s
 src/Graph.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Graph.cpp.s
 .PHONY : src/Graph.cpp.s
-
-src/Parser.o: src/Parser.cpp.o
-.PHONY : src/Parser.o
-
-# target to build an object file
-src/Parser.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Parser.cpp.o
-.PHONY : src/Parser.cpp.o
-
-src/Parser.i: src/Parser.cpp.i
-.PHONY : src/Parser.i
-
-# target to preprocess a source file
-src/Parser.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Parser.cpp.i
-.PHONY : src/Parser.cpp.i
-
-src/Parser.s: src/Parser.cpp.s
-.PHONY : src/Parser.s
-
-# target to generate assembly for a file
-src/Parser.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Parser.cpp.s
-.PHONY : src/Parser.cpp.s
 
 src/Prediction.o: src/Prediction.cpp.o
 .PHONY : src/Prediction.o
@@ -585,18 +609,21 @@ help:
 	@echo "... src/DBSCAN.o"
 	@echo "... src/DBSCAN.i"
 	@echo "... src/DBSCAN.s"
+	@echo "... src/DataContainer.o"
+	@echo "... src/DataContainer.i"
+	@echo "... src/DataContainer.s"
+	@echo "... src/DataFilter.o"
+	@echo "... src/DataFilter.i"
+	@echo "... src/DataFilter.s"
+	@echo "... src/DataParser.o"
+	@echo "... src/DataParser.i"
+	@echo "... src/DataParser.s"
 	@echo "... src/Evaluate.o"
 	@echo "... src/Evaluate.i"
 	@echo "... src/Evaluate.s"
-	@echo "... src/Filter.o"
-	@echo "... src/Filter.i"
-	@echo "... src/Filter.s"
 	@echo "... src/Graph.o"
 	@echo "... src/Graph.i"
 	@echo "... src/Graph.s"
-	@echo "... src/Parser.o"
-	@echo "... src/Parser.i"
-	@echo "... src/Parser.s"
 	@echo "... src/Prediction.o"
 	@echo "... src/Prediction.i"
 	@echo "... src/Prediction.s"

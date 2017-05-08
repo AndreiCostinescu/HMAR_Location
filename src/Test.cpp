@@ -7,14 +7,9 @@
 
 #include "Test.h"
 
-Test::Test() {
-	// TODO Auto-generated constructor stub
+Test::Test() { }
 
-}
-
-Test::~Test() {
-	// TODO Auto-generated destructor stub
-}
+Test::~Test() { }
 
 int Test::Testing(
 	string filename_,
@@ -28,6 +23,7 @@ int Test::Testing(
 	vector<map<string,double> > goals;
 	vector<map<string,double> > windows;
 
+	vector<vector<double> > data_writeout;
 	vector<double> x;
 	vector<double> y;
 	vector<double> 						px;
@@ -82,6 +78,8 @@ int Test::Testing(
 //	Prediction P(Graph_->GetActionCategory(), Graph_->GetActionLabel(),3);
 	// ******************************************************* [Initialization]
 
+	AP.PredictInit();
+
 	for(int i=0;i<points_parser.size();i++)
 	{
 		if (i==0)	{ pva_avg[i] = pva_avg1;		}
@@ -90,6 +88,24 @@ int Test::Testing(
 		this->PreprocessContactLive(contact_parser[i], FILTER_WIN);
 
 		AP.PredictExt(pva_avg[i], contact_parser[i]);
+
+//		if(Graph_->GetActionState().label1>=0)
+		{
+			vector<double> tmp;
+			tmp.push_back(i);
+			tmp.push_back(Graph_->GetActionState().grasp);
+			tmp.push_back(Graph_->GetActionState().label1);
+			tmp.push_back(Graph_->GetActionState().label2);
+			tmp.push_back(Graph_->GetActionState().mov);
+			tmp.push_back(Graph_->GetActionState().sur);
+			tmp.push_back(fabs(checkSurfaceDistance(pva_avg[i][0],Graph_->GetSurfaceEq()[1])));
+			tmp.push_back(pva_avg[i][0].x);
+			tmp.push_back(pva_avg[i][0].y);
+			tmp.push_back(pva_avg[i][0].z);
+			data_writeout.push_back(tmp);
+		}
+
+		//decideBoundarySphere(pva_avg[i][0], pva_avg[i][0], Graph_->GetCentroidList());
 
 		x.push_back(i);
 		y.push_back((double)Graph_->GetActionState().label2);
@@ -138,9 +154,10 @@ int Test::Testing(
 		reverse(name_tmp.begin(),name_tmp.end());
 		name_tmp.erase(name_tmp.begin()+name_tmp.find("/"),name_tmp.end());
 		reverse(name_tmp.begin(),name_tmp.end());
-		name_tmp = resultdir_ + name_tmp;
 		this->WriteFilePrediction(
-				Graph_, name_tmp, labels_parser, labels_predict, goals, windows);
+				Graph_, (resultdir_ + name_tmp), labels_parser, labels_predict,
+				goals, windows);
+		this->WriteFile_((resultdir_ + "_" + name_tmp), data_writeout);
 	}
 
 //	plotData(x,y);

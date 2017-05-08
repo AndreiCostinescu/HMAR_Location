@@ -22,13 +22,22 @@ int main(int argc, char *argv[])
 	printf("|| SYSTEM START                                                             ||\n");
 	printf("==============================================================================\n");
 
+	if(0)
+	{
+		ReadFile RF; WriteFile WF;
+		vector<point_d> peq,bmin,bmid,bmax;
+		vector<vector<double> > rot;
+		RF.ReadSurfaceFile("kb/surface_.txt",rot,peq,bmin,bmid,bmax);
+		WF.WriteFileSurface("kb/surface.txt",rot,peq,bmin,bmid,bmax);
+	}
+
 	TestCase *TC = new TestCase();
 
 //	// Label
 //	TC->Choose(0);
 
-	// Train Ind.
-	TC->Choose(1);
+//	// Train Ind.
+//	TC->Choose(1);
 //	TC->Choose(2);
 //	TC->Choose(3);
 //	TC->Choose(4);
@@ -38,6 +47,8 @@ int main(int argc, char *argv[])
 //	TC->Choose(6);
 //	TC->Choose(7);
 //	TC->Choose(8);
+
+	TC->Choose(1);
 
 //	// Train Cup
 //	TC.Choose(1, TRN);

@@ -40,9 +40,9 @@ for i=1:length(DIR)
     PROB = cell(49,7);
     WINDOW = cell(49,7);
     
-%     if (~strcmp(DIR(i).name,'SPG'))
-%         continue;
-%     end
+    if (~strcmp(DIR(i).name,'SPG'))
+        continue;
+    end
     
     if (strcmp(DIR(i).name,'.') || strcmp(DIR(i).name,'..'))
         continue;
@@ -57,15 +57,15 @@ for i=1:length(DIR)
             continue;
         end
                 
-%         if (strcmp(DIR_S(ii).name,'1'))
-%             continue;
-%         end
-%         
 %         if (strcmp(DIR_S(ii).name,'2'))
 %             continue;
 %         end
 %         
-%         if (strcmp(DIR_S(ii).name,'3'))
+%         if (strcmp(DIR_S(ii).name,'1'))
+%             continue;
+%         end
+%         
+%         if (strcmp(DIR_S(ii).name,'0'))
 %             continue;
 %         end
         
@@ -83,7 +83,7 @@ for i=1:length(DIR)
             DIR_F = dir(file_name);
             for iv=1:length(DIR_F)
 
-                if (strcmp(DIR_F(iv).name,'.') || strcmp(DIR_F(iv).name,'..'))
+                if (strcmp(DIR_F(iv).name,'.') || strcmp(DIR_F(iv).name,'..') || strcmp(DIR_F(iv).name(1),'_'))
                     continue;
                 end
 
@@ -316,7 +316,7 @@ for i=1:length(DIR)
         else
             legend(plot_handles, legend_name');
             title([DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1)]);
-            print(figure(ii),['0503_gauss/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
+%             print(figure(ii),['0505/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
         end
         
 

@@ -17,9 +17,12 @@ Graph::Graph(
 void Graph::SetKB(
 		kb_t x_)
 {
-	surface 	= x_.surface;
+	surface_mid	= x_.surface_mid;
+	surface_min	= x_.surface_min;
+	surface_max	= x_.surface_max;
 	surface_eq	= x_.surface_eq;
 	surface_lim	= x_.surface_lim;
+	surface_rot	= x_.surface_rot;
 	action_label= x_.al;
 	action_cat	= x_.ac;
 	object_label= x_.ol;
@@ -32,7 +35,9 @@ void Graph::SetKB(
 kb_t Graph::GetKB()
 {
 	kb_t kb_tmp = {};
-	kb_tmp.surface = surface;
+	kb_tmp.surface_mid = surface_mid;
+	kb_tmp.surface_min = surface_min;
+	kb_tmp.surface_max = surface_max;
 	kb_tmp.surface_eq = surface_eq;
 	kb_tmp.al = action_label;
 	kb_tmp.ac = action_cat;
@@ -85,9 +90,8 @@ void Graph::addEmptyEdgeForNewNode(
 				{
 					if (edge_list[i][ii].size()==0)
 						edge_list[i][ii].push_back({});
-					edge_list[i][ii][0].loc_start.resize(LOC_INT);
 					edge_list[i][ii][0].loc_mid.resize(LOC_INT);
-					edge_list[i][ii][0].loc_end.resize(LOC_INT);
+					edge_list[i][ii][0].loc_len.resize(LOC_INT);
 					edge_list[i][ii][0].tan.resize(LOC_INT);
 					edge_list[i][ii][0].nor.resize(LOC_INT);
 					edge_list[i][ii][0].sector_map.resize(LOC_INT*SEC_INT);

@@ -18,43 +18,73 @@ bool vectorDirectionCheck(
 	return true;
 }
 
-int decideBoundary(
+//int decideBoundary(
+//	point_d 		&point1_,
+//	point_d 		&point2_,
+//	vector<point_d> centroids_)
+//{
+//	point2_.l = UNCLASSIFIED;
+//	for(int ii=0;ii<centroids_.size();ii++)
+//	{
+//		double location_contact = 0.0;
+//		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+//		if (
+//				max_(
+//						pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
+//						location_contact ))
+//		{
+//			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
+//			if (max_(location_contact, centroids_[ii].l))
+//			{
+////				double tmpvel = l2Norm(minusPoint(point2_,point1_));
+////				if (tmpvel > 0.005) continue;
+//				point2_.l = ii;
+//			}
+//		}
+//	}
+//	return EXIT_SUCCESS;
+//}
+
+//int decideBoundary_(
+//	point_d 		&point1_,
+//	point_d 		&point2_,
+//	vector<point_d> centroids_,
+//	vector<int>		surfaces_flag_,
+//	vector<point_d> surfaces_,
+//	vector<double>	surfaces_limit)
+//{
+//	point2_.l = UNCLASSIFIED;
+//
+//	for(int ii=0;ii<centroids_.size();ii++)
+//	{
+//		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+//		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
+//		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
+//		if (max_(location_contact, centroids_[ii].l)) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
+//		{
+//			point2_.l = ii;
+//
+//			if ( surfaces_flag_[point2_.l] > 0)
+//			{
+//				if (!decideSurface(
+//						point2_,
+//						surfaces_[surfaces_flag_[point2_.l]-1],
+//						surfaces_limit[surfaces_flag_[point2_.l]-1]))
+//				{
+//					point2_.l = UNCLASSIFIED;
+//				}
+//			}
+//		}
+//	}
+//	return EXIT_SUCCESS;
+//}
+
+int checkBoundarySphere(
 	point_d 		&point1_,
 	point_d 		&point2_,
 	vector<point_d> centroids_)
 {
 	point2_.l = UNCLASSIFIED;
-	for(int ii=0;ii<centroids_.size();ii++)
-	{
-		double location_contact = 0.0;
-		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
-		if (
-				max_(
-						pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff)),
-						location_contact ))
-		{
-			location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
-			if (max_(location_contact, centroids_[ii].l))
-			{
-//				double tmpvel = l2Norm(minusPoint(point2_,point1_));
-//				if (tmpvel > 0.005) continue;
-				point2_.l = ii;
-			}
-		}
-	}
-	return EXIT_SUCCESS;
-}
-
-int decideBoundary_(
-	point_d 				&point1_,
-	point_d 				&point2_,
-	vector<point_d> 		centroids_,
-	vector<int>				surfaces_flag_,
-	vector<vector<double> > surfaces_,
-	vector<double>			surfaces_limit)
-{
-	point2_.l = UNCLASSIFIED;
-
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
 		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
@@ -63,55 +93,92 @@ int decideBoundary_(
 		if (max_(location_contact, centroids_[ii].l)) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
 		{
 			point2_.l = ii;
-
-			if ( surfaces_flag_[point2_.l] > 0)
-			{
-				if (!decideSurface(
-						point2_,
-						surfaces_[surfaces_flag_[point2_.l]-1],
-						surfaces_limit[surfaces_flag_[point2_.l]-1]))
-				{
-					point2_.l = UNCLASSIFIED;
-				}
-			}
 		}
 	}
 	return EXIT_SUCCESS;
 }
 
-int decideBoundaryPredict(
-	point_d 				&point1_,
-	point_d 				&point2_,
-	vector<point_d> 		centroids_,
-	vector<int>				surfaces_flag_,
-	vector<vector<double> > surfaces_,
-	vector<double>			surfaces_limit)
+int checkBoundaryCuboid(
+	point_d &point_,
+	point_d box_min_,
+	point_d box_max_)
 {
-	point2_.l = UNCLASSIFIED;
+	if(	point_.x < box_max_.x &&
+		point_.y < box_max_.y &&
+		point_.z < box_max_.z &&
+		point_.x > box_min_.x &&
+		point_.y > box_min_.y &&
+		point_.z > box_min_.z )
+//	if( point_.y < box_max_.y )
+	{
+		return EXIT_SUCCESS;
+	}
+	else
+	{
+		point_.l = UNCLASSIFIED;
+		return EXIT_FAILURE;
+	}
+}
+
+//int decideBoundaryPredict(
+//	point_d 		&point1_,
+//	point_d 		&point2_,
+//	vector<point_d> centroids_,
+//	vector<int>		surfaces_flag_,
+//	vector<point_d> surfaces_,
+//	vector<double>	surfaces_limit)
+//{
+//	point2_.l = UNCLASSIFIED;
+//	for(int ii=0;ii<centroids_.size();ii++)
+//	{
+//		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+//		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
+//		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
+//		if (max_(location_contact, centroids_[ii].l))// || pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.8)
+//		{
+//			point2_.l = ii;
+//			if (surfaces_flag_[point2_.l]>0)
+//			{
+//				if (!decideSurface(
+//						point2_,
+//						surfaces_[surfaces_flag_[point2_.l]-1],
+//						surfaces_limit[surfaces_flag_[point2_.l]-1]))
+//				{
+//					point2_.l = UNCLASSIFIED;
+//				}
+//			}
+//		}
+//	}
+//	return EXIT_SUCCESS;
+//}
+
+int decideBoundarySphere(
+	point_d 		&point_,
+	vector<point_d> centroids_)
+{
+	point_.l = UNCLASSIFIED;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
-		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
+		point_d tmp_diff = minusPoint(point_, centroids_[ii]);
 		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
 		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
 		if (max_(location_contact, centroids_[ii].l))// || pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.8)
 		{
-			point2_.l = ii;
-			if (surfaces_flag_[point2_.l]>0)
-			{
-				if (!decideSurface(
-						point2_,
-						surfaces_[surfaces_flag_[point2_.l]-1],
-						surfaces_limit[surfaces_flag_[point2_.l]-1]))
-				{
-					point2_.l = UNCLASSIFIED;
-				}
-			}
+			point_.l = ii;
 		}
 	}
 	return EXIT_SUCCESS;
 }
 
-int decideBoundaryClosest_(
+int decideBoundaryCuboid(
+	point_d &point_,
+	point_d box_min_,
+	point_d box_max_)
+{
+	return checkBoundaryCuboid(point_, box_min_, box_max_);
+}
+
+int decideBoundaryClosest(
 	point_d 				&point2_,
 	vector<point_d> 		centroids_)
 {
@@ -132,56 +199,60 @@ int decideBoundaryClosest_(
 	return EXIT_SUCCESS;
 }
 
-bool decideSurface(
-	point_d 		centroids_,
-	vector<double>	surfaces_,
-	double 			limit_)
+double checkSurfaceDistance(
+	point_d centroids_,
+	point_d	surfaces_)
 {
-//	cout << fabs(centroids_.x * surfaces_[0] +
-//			centroids_.y * surfaces_[1] +
-//			centroids_.z * surfaces_[2] -
-//			surfaces_[3]) << " : " << limit_ <<endl;
-	if(fabs(centroids_.x * surfaces_[0] +
-			centroids_.y * surfaces_[1] +
-			centroids_.z * surfaces_[2] -
-			surfaces_[3])<limit_)
-	{
-		return true;
-	}
-	return false;
+	return 	centroids_.x *  surfaces_.x +
+			centroids_.y *  surfaces_.y +
+			centroids_.z *  surfaces_.z -
+							surfaces_.l;
+}
+
+bool decideSurface(
+	point_d centroids_,
+	point_d	surfaces_,
+	double 	limit_)
+{
+	if(fabs(checkSurfaceDistance(centroids_,surfaces_))<limit_)
+	{ return true; }
+	else
+	{ return false; }
 }
 
 double dLI(
 	int &loc_idx_,
 	int loc_last_idx_,
 	point_d point_,
-	vector<point_d> beg_,
+	vector<double> len_,
 	vector<point_d> mid_,
-	vector<point_d> end_,
 	vector<point_d> tangent_,
 	int loc_offset_,
 	bool loc_init_)
 {
 	int idx_tmp;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
-	point_d proj_dir_tmp;
+	point_d proj_dir_tmp, beg, mid, end;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
+		mid = multiPoint(mid_[l],mid_[l].l);
+		beg = minusPoint(mid, multiPoint(tangent_[l],len_[l]/2));
+		end =   addPoint(mid, multiPoint(tangent_[l],len_[l]/2));
 		proj_dir_tmp =
 				multiPoint(
 						tangent_[l],
 						dotProduct(
-								point2vector(minusPoint(point_,mid_[l])),
+								point2vector(minusPoint(point_, mid)),
 								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
-		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
-		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+		d1 = l2Norm(minusPoint(beg, mid));
+		d2 = l2Norm(minusPoint(end, mid));
+		d3 = l2Norm(minusPoint(beg, addPoint(mid,proj_dir_tmp)));
+		d4 = l2Norm(minusPoint(end, addPoint(mid,proj_dir_tmp)));
+		d5 = l2Norm(minusPoint(beg, end));
 		if (vectorDirectionCheck(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
@@ -217,12 +288,6 @@ double dLI(
 				break;
 			}
 		}
-
-//		if (l==idx2-1)
-//		{
-//			d6min = d6min2;
-//			loc_idx_ = idx1;
-//		}
 	}
 
 	// to prevent unknown locations at start and end
@@ -232,33 +297,8 @@ double dLI(
 	}
 	else
 	{
-		if (loc_init_)
-		{
-			loc_idx_ = idx_tmp;
-//			loc_last_idx_ = loc_idx_;
-		}
-		else
-		{
-			loc_idx_ = idx_tmp;
-//			if (idx_tmp>loc_last_idx_)
-//			{
-//				for(int i=loc_last_idx_+1;i<idx_tmp+1;i++)
-//				{
-//					loc_idxs_.push_back(i);
-//				}
-//				loc_last_idx_ = idx_tmp;
-//			}
-//			else
-//			{
-//				for(int i=idx_tmp+1;i<loc_last_idx_+1;i++)
-//				{
-//					loc_idxs_.push_back(i);
-//				}
-//				loc_last_idx_ = idx_tmp;
-//			}
-		}
+		loc_idx_ = idx_tmp;
 	}
-//	cout << d6min << " " << loc_idx_ << endl;
 	return d6min;
 }
 
@@ -266,34 +306,36 @@ double dLIPredict(
 	int &loc_idx_,
 	int loc_last_idx_,
 	point_d point_,
-	vector<point_d> beg_,
 	vector<point_d> mid_,
-	vector<point_d> end_,
+	vector<double> len_,
 	vector<point_d> tangent_,
 	int loc_offset_,
-	bool loc_init_)
+	int loc_init_) //0 for true
 {
 	int idx_tmp=loc_last_idx_;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2,min_dist;
 	d1=d2=d3=d4=d5=d6=0.0; d6min = min_dist = 10;
-	point_d proj_dir_tmp;
+	point_d proj_dir_tmp, beg, mid, end;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_-(loc_offset_/2) < 0 ? 0 : loc_last_idx_-(loc_offset_/2) );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
+		mid = multiPoint(mid_[l],mid_[l].l);
+		beg = minusPoint(mid, multiPoint(tangent_[l],len_[l]/2));
+		end =   addPoint(mid, multiPoint(tangent_[l],len_[l]/2));
 		proj_dir_tmp =
 				multiPoint(
 						tangent_[l],
 						dotProduct(
-								point2vector(minusPoint(point_,mid_[l])),
+								point2vector(minusPoint(point_, mid)),
 								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
-		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
-		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+		d1 = l2Norm(minusPoint(beg, mid));
+		d2 = l2Norm(minusPoint(end, mid));
+		d3 = l2Norm(minusPoint(beg, addPoint(mid,proj_dir_tmp)));
+		d4 = l2Norm(minusPoint(end, addPoint(mid,proj_dir_tmp)));
+		d5 = l2Norm(minusPoint(beg, end));
 		if (vectorDirectionCheck(
 				point2vector(proj_dir_tmp),
 				point2vector(tangent_[l])))
@@ -324,26 +366,6 @@ double dLIPredict(
 				}
 			}
 		}
-
-//		if (min_(d6,d6min))
-//		{
-//			d6min = d6;
-//			idx_tmp = l;
-//		}
-//		else
-//		{
-//			// breaks only when the location is larger than the current one
-//			if(d6min < 0.0001 && l>idx1) // inside
-//			{
-//				break;
-//			}
-//		}
-//
-//		if (l==idx2-1)
-//		{
-//			d6min = d6min2;
-//			loc_idx_ = idx1;
-//		}
 	}
 
 	//	// to prevent unknown locations at start and end
@@ -356,8 +378,7 @@ double dLIPredict(
 //		loc_idx_ = idx_tmp;
 //	}
 
-
-	if(loc_init_)
+	if(loc_init_==0)
 	{
 		min_dist = 10;
 		int tmp = 0;
@@ -544,13 +565,24 @@ int decideSectorInterval(
 	vector<point_d> tangent_,
 	vector<point_d> normal_)
 {
+	//projection of point onto the tangent at mid
 	point_d proj_dir =
 			multiPoint(
 					tangent_[loc_idx_],
 					dotProduct(
-							point2vector(minusPoint(point_, mid_[loc_idx_])),
+							point2vector(
+									minusPoint(
+											point_,
+											multiPoint(
+													mid_[loc_idx_],
+													mid_[loc_idx_].l))),
 							point2vector(tangent_[loc_idx_])));
-	delta_t_ = minusPoint(point_, addPoint(proj_dir, mid_[loc_idx_]));
+	delta_t_ =
+			minusPoint(
+					point_,
+					addPoint(
+							proj_dir,
+							multiPoint(mid_[loc_idx_], mid_[loc_idx_].l)));
 	double angle_tmp =
 			atan2(
 					l2Norm(
@@ -565,14 +597,9 @@ int decideSectorInterval(
 					point2vector(normal_[loc_idx_]),
 					point2vector(multiPoint(delta_t_,1/l2Norm(delta_t_)))),
 			point2vector(tangent_[loc_idx_])))
-	{angle_tmp *= -1;}
-//	cout << "AA: " << l2Norm(
-//			crossProduct(
-//					point2vector(delta_t_),
-//					point2vector(normal_[loc_idx_]))) << endl;
-//	cout << "AB: " << dotProduct(
-//			point2vector(delta_t_),
-//			point2vector(normal_[loc_idx_])) << endl;
+	{
+		angle_tmp *= -1;
+	}
 	angle_tmp = fmod((2*M_PI + angle_tmp),(2*M_PI));
 	sec_idx_ = ceil(angle_tmp*(SEC_INT/2)/M_PI) - 1 ;
 	return EXIT_SUCCESS;

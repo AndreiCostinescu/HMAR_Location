@@ -10,13 +10,14 @@
 
 #include "vtkExtra.h"
 #include "Prediction.h"
-#include "Parser.h"
-#include "Filter.h"
+#include "DataParser.h"
+#include "DataFilter.h"
+#include "DataContainer.h"
 #include "ReadFile.h"
 #include "WriteFile.h"
 #include "ActionPrediction.h"
 
-class Test : public ReadFile, public WriteFile, public Filter, public Parser
+class Test : public ReadFile, public WriteFile, public DataContainer, public DataFilter, public DataParser
 {
 	public:
 		Test();

@@ -7,14 +7,9 @@
 
 #include "Train.h"
 
-Train::Train() {
-	// TODO Auto-generated constructor stub
+Train::Train() { }
 
-}
-
-Train::~Train() {
-	// TODO Auto-generated destructor stub
-}
+Train::~Train() { }
 
 int Train::Learning(
 	string filename_,
@@ -25,7 +20,6 @@ int Train::Learning(
 	vector<point_d> 			pva_avg1; pva_avg1.resize(3);
 	vector<vector<point_d> > 	pva_avg; // length->motion
 	vector<vector<point_d> > 	pva_mem; // motion->length
-	vector<vector<int> >		filter_mask;
 	printer(1);
 	// *************************************************************[VARIABLES]
 
@@ -73,10 +67,8 @@ int Train::Learning(
 	// ****************************************************** [PREPROCESS DATA]
 
 	// [LOCATION AND SECTOR-MAP]***********************************************
-	this->ClearLA();
 	this->BuildLocationArea(Graph_, pva_avg, contact_parser, flag_);
 	printer(11);
-	this->ClearSM();
 	this->BuildSectorMap   (Graph_, pva_avg, contact_parser);
 	printer(12);
 	// ***************************************[LOCATION AND SECTOR-MAP]
@@ -93,7 +85,7 @@ int Train::Learning(
 		}
 //		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
-		showConnectionTest(Graph_, point_zero, label_zero, color_code, true);
+		showConnectionTest(Graph_, points_parser, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;

@@ -39,29 +39,13 @@ class TrainSM
 			edge_tt	edge_,
 			point_d point_,
 			int &loc_idx_,
-			int &loc_last_idx_,
-			int loc_offset_,
-			bool loc_init_);
-
-		double DecideLocationIntervalExt(
-			edge_tt	edge_,
-			point_d point_,
-			vector<int> &loc_idxs_,
-			int &loc_last_idx_,
-			int loc_offset_,
-			bool loc_init_);
-
-		double DLIE(
-			edge_tt	edge_,
-			point_d point_,
-			int &loc_idx_,
 			int loc_last_idx_,
 			int loc_offset_,
 			bool loc_init_);
 
 		int AdjustSectorMap(
 			edge_tt &edge_,
-			vector<point_d> &points_,
+			point_d &point_,
 			int &loc_last_idx_,
 			int &loc_curr_idx_,
 			double &delta_t_mem_,
@@ -70,7 +54,7 @@ class TrainSM
 
 		int AdjustCurve(
 			edge_tt &edge_,
-			vector<point_d> &points_,
+			point_d &point_,
 			int &loc_last_idx_,
 			bool &loc_init_,
 			int loc_offset_);
@@ -78,12 +62,11 @@ class TrainSM
 		int AdjustCurveExt(
 			Graph *Graph_,
 			vector<point_d> coeffs_,
-			int integral_limit_,
 			vector<point_d> pts_);
 
 		int FitSectorMap(
 			edge_tt &edge_,
-			vector<point_d> &points_,
+			point_d point_,
 			int &loc_last_idx_,
 			int loc_offset_,
 			bool &loc_init_);
@@ -114,8 +97,11 @@ class TrainSM
 		void SetLabel2SM(int label2_) {label2_sm = label2_;}
 
 	private:
+		// label1_sm	 : start location
+		// label2_sm	 : goal location
+		// label_idx_sm : index of data point for label1_sm
 		int label1_sm, label2_sm, label_idx_sm;
-		vector<point_d> pts_avg_sm, vel_avg_sm;
+		vector<point_d> pos_sm, pos_ind_sm, vel_sm;
 };
 
 #endif /* TRAINSM_H_ */
