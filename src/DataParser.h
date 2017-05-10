@@ -25,15 +25,15 @@ class DataParser
 
 		vector<int>		GetFrameParser() 	{return frames_parser;}
 		vector<int>		GetContactParser()	{return contact_parser;}
-		point_d 		GetFaceParser() 	{return face_parser;}
+		Vector4d 		GetFaceParser() 	{return face_parser;}
 		vector<string> 	GetLabelParser() 	{return labels_parser;}
-		vector<point_d>	GetPointParser() 	{return points_parser;}
+		vector<Vector4d>	GetPointParser() 	{return points_parser;}
 
 	protected:
 		vector<int>				frames_parser;
 		vector<int>				contact_parser;
-		vector<point_d>			points_parser;
-		point_d 				face_parser;
+		vector<Vector4d>		points_parser;
+		Vector4d 				face_parser;
 		vector<string> 			labels_parser;
 
 	private:

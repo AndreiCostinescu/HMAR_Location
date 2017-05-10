@@ -160,6 +160,41 @@ void TestCase::Choose(int x_)
 			this->TrnIndLA(idxs, dict[4]);
 			break;
 		}
+		case 13:
+		{
+			EVAL = "Scene2";
+			// start with 001
+			int idx = 1;
+			idxs.push_back(idx);
+			this->Tst(idxs, dict[1]);
+			break;
+		}
+		case 14:
+		{
+			EVAL = "Scene2";
+			int idx = 2;
+			idxs.push_back(idx);
+			this->Tst(idxs, dict[2]);
+			break;
+		}
+		case 15:
+		{
+			EVAL = "Scene2";
+			for(int idx=3;idx<9;idx++)
+			{
+				idxs.push_back(idx);
+			}
+			this->Tst(idxs, dict[3]);
+			break;
+		}
+		case 16:
+		{
+			EVAL = "Scene2";
+			int idx = 9;
+			idxs.push_back(idx);
+			this->Tst(idxs, dict[4]);
+			break;
+		}
 		default:
 			break;
 	}
@@ -178,9 +213,6 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 	map<int,vector<string> > label_list;
 	pair<int,string> pair_tmp(-1,"");
 
-	kb_t kb;
-	Graph *G;
-
 	printf("==============================================================================\n");
 	printf("|| TrnInd START                                                             ||\n");
 	printf("==============================================================================\n");
@@ -194,7 +226,7 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
 	// Reading object specific labels
 	// - reads the object specific labels and saves them
-	if (this->ReadFileKB("./kb/", kb)==EXIT_FAILURE)
+	if (this->ReadFileKB("./kb/", KB)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
 	// Reading data files
@@ -207,9 +239,8 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 	for(int f=0;f<n;f++)
 	{
 		G = new Graph(object_);
-		G->SetKB(kb);
 
-		vector<int> al_tmp_idx; al_tmp_idx.resize(kb.al.size());
+		vector<int> al_tmp_idx; al_tmp_idx.resize(KB.al.size());
 
 		for(int ff=0;ff<n;ff++)
 		{
@@ -226,7 +257,7 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 
 				// read available location areas
 				path = dir_s + "/location_area.txt";
-				this->ReadFileLA(G,path);
+				this->ReadFileLA(G,KB.al,path);
 
 				// action filename pair
 				pair_tmp = file_list[ff][fff];
@@ -234,12 +265,12 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 				// for initial labelling
 				if (1)
 				{
-					for(int i=0;i<kb.al.size();i++)
+					for(int i=0;i<KB.al.size();i++)
 					{
 						if (al_tmp_idx[i]>0) continue;
 						for(int ii=0;ii<label_list[pair_tmp.first].size();ii++)
 						{
-							if (!strcmp(kb.al[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
+							if (!strcmp(KB.al[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
 							{
 								flag = true;
 								al_tmp_idx[i] = 1;
@@ -249,14 +280,14 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 				}
 
 				// learning process
-				if (this->Learning(pair_tmp.second, G, flag)==EXIT_FAILURE)
+				if (this->Learning(pair_tmp.second, path, flag)==EXIT_FAILURE)
 				{ printer(29); return EXIT_FAILURE;	} printer(30);
 
 				// writing location areas data
 				if(G->GetNumberOfNodes()>0)
 				{
 					remove(path.c_str());
-					this->WriteFileLA(G, path.c_str());
+					this->WriteFileLA(G, KB, path.c_str());
 				}
 			}
 		}
@@ -266,7 +297,7 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
 		this->WriteFileWindow(G,path);
 
-		delete G;
+		delete G; G = NULL;
 	}
 
 	printf("==============================================================================\n");
@@ -285,9 +316,6 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 	map<int,vector<string> > label_list;
 	pair<int,string> pair_tmp(-1,"");
 
-	kb_t kb;
-	Graph *G;
-
 	printf("==============================================================================\n");
 	printf("|| TrnIndLA START                                                           ||\n");
 	printf("==============================================================================\n");
@@ -301,7 +329,7 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
 	// Reading object specific labels
 	// - reads the object specific labels and saves them
-	if (this->ReadFileKB("./kb/", kb)==EXIT_FAILURE)
+	if (this->ReadFileKB("./kb/", KB)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
 	// Reading data files
@@ -314,9 +342,8 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 	for(int f=0;f<n;f++)
 	{
 		G = new Graph(object_);
-		G->SetKB(kb);
 
-		vector<int> al_tmp_idx; al_tmp_idx.resize(kb.al.size());
+		vector<int> al_tmp_idx; al_tmp_idx.resize(KB.al.size());
 
 		for(int ff=0;ff<n;ff++)
 		{
@@ -333,7 +360,7 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 
 				// read available location areas
 				path = dir_s + "/location_area.txt";
-				this->ReadFileLA(G,path);
+				this->ReadFileLA(G,KB.al,path);
 
 				// action filename pair
 				pair_tmp = file_list[ff][fff];
@@ -341,12 +368,12 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 				// for initial labelling
 				if (1)
 				{
-					for(int i=0;i<kb.al.size();i++)
+					for(int i=0;i<KB.al.size();i++)
 					{
 						if (al_tmp_idx[i]>0) continue;
 						for(int ii=0;ii<label_list[pair_tmp.first].size();ii++)
 						{
-							if (!strcmp(kb.al[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
+							if (!strcmp(KB.al[i].c_str(),label_list[pair_tmp.first][ii].c_str()))
 							{
 								flag = true;
 								al_tmp_idx[i] = 1;
@@ -356,14 +383,14 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 				}
 
 				// learning process
-				if (this->Learning(pair_tmp.second, G, flag)==EXIT_FAILURE)
+				if (this->Learning(pair_tmp.second, path, flag)==EXIT_FAILURE)
 				{ printer(29); return EXIT_FAILURE;	} printer(30);
 
 				// writing location areas data
 				if(G->GetNumberOfNodes()>0)
 				{
 					remove(path.c_str());
-					this->WriteFileLA(G, path.c_str());
+					this->WriteFileLA(G, KB, path.c_str());
 				}
 			}
 		}
@@ -373,7 +400,7 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
 		this->WriteFileWindow(G,path);
 
-		delete G;
+		delete G; G = NULL;
 	}
 
 	printf("==============================================================================\n");
@@ -387,22 +414,15 @@ int TestCase::Tst(vector<int> idx_, string object_)
 {
 	int sub_num;
 
-	string tar = object_;
 	string dir_s, path;
 	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
 	map<int,vector<string> > label_list;
-
-	kb_t kb;
-	Graph *G;
 
 	int num_x = 9;
 	int num_y = 9;
 	vector<vector<double> > k_xy; k_xy.resize(num_x);
 	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
 	gaussKernel(k_xy, num_x, num_y, 3);
-//cout << k_xy[0][0] << " ";
-//cout << k_xy[1][0] << " ";
-//cout << k_xy[2][0] << endl;
 
 	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
 	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
@@ -421,14 +441,14 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
 	// Reading object specific labels
 	// - reads the object specific labels and saves them
-	if (this->ReadFileKB("./kb/", kb)==EXIT_FAILURE)
+	if (this->ReadFileKB("./kb/", KB)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
 	// Reading data files
 	file_list.clear();
 	this->ReadFileName(DATA_DIR, idx_, file_list, sub_num);
 
-	this->DirectoryCheck(EVAL + "/" + tar);
+	this->DirectoryCheck(EVAL + "/" + object_);
 
 	printf("==============================================================================\n");
 	printf("|| TESTING                                                                  ||\n");
@@ -438,13 +458,12 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	for(int f=0;f<sub_num;f++)
 	{
 
-		G = new Graph(tar);
-		G->SetKB(kb);
+		G = new Graph(object_);
 
 		// read available location areas
-		dir_s = EVAL + "/" + tar + "/" + to_string(f);
+		dir_s = EVAL + "/" + object_ + "/" + to_string(f);
 		path  = dir_s + "/location_area.txt";
-		if (this->ReadFileLA(G,path)==EXIT_FAILURE)
+		if (this->ReadFileLA(G,KB.al,path)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
 		path = 	dir_s + "/graph.txt";
 		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
@@ -453,13 +472,9 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		// Visualize
 		if (0)
 		{
-			vector<point_d> point_zero; vector<string> label_zero;
+			vector<Vector4d> point_zero; vector<string> label_zero;
 			for(int i=0;i<G->GetNumberOfNodes();i++)
-			{
-				node_tt node_tmp = {};
-				G->GetNode(i, node_tmp);
-				label_zero.push_back(node_tmp.name);
-			}
+			{ label_zero.push_back(G->GetNode(i).name); }
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
 			showConnectionTest(G, point_zero, label_zero, color_code, true);
 		}
@@ -501,13 +516,9 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		// Visualize
 		if (0)
 		{
-			vector<point_d> point_zero; vector<string> label_zero;
+			vector<Vector4d> point_zero; vector<string> label_zero;
 			for(int i=0;i<G->GetNumberOfNodes();i++)
-			{
-				node_tt node_tmp = {};
-				G->GetNode(i, node_tmp);
-				label_zero.push_back(node_tmp.name);
-			}
+			{ label_zero.push_back(G->GetNode(i).name); }
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
 			showConnectionTest(G, point_zero, label_zero, color_code, true);
 		}
@@ -515,9 +526,9 @@ int TestCase::Tst(vector<int> idx_, string object_)
 		path = 	dir_s + "/window.txt";
 		this->WriteFileWindow(G,path);
 
-		dir_s = RESULT + "/" + tar + "/";
+		dir_s = RESULT + "/" + object_ + "/";
 		this->DirectoryCheck(dir_s);
-		dir_s = RESULT + "/" + tar + "/" + to_string(f) + "/";
+		dir_s = RESULT + "/" + object_ + "/" + to_string(f) + "/";
 		this->DirectoryCheck(dir_s);
 
 		// Data per subject
@@ -528,18 +539,18 @@ int TestCase::Tst(vector<int> idx_, string object_)
 
 			char num[4]; sprintf(num,"%03d",file_list[f][ff].first);
 
-//			if(strcmp(num,"004")) continue;
+//			if(strcmp(num,"006")) continue;
 
 			path = dir_s + string(num) + "/";
 			this->DirectoryCheck(path);
 
-			if (this->Testing(file_list[f][ff].second, path, G)==EXIT_FAILURE)
+			if (this->Testing(file_list[f][ff].second, path)==EXIT_FAILURE)
 			{ printer(43); return EXIT_FAILURE; }
 			else
 			{ printer(44); }
 		}
 
-		delete G;
+		delete G; G = NULL;
 	}
 
 	printf("==============================================================================\n");
@@ -549,143 +560,138 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	return EXIT_SUCCESS;
 }
 
-int TestCase::Dpl(vector<int> idx_, string object_)
-{
-	int sub_num;
-
-	string tar = object_;
-	string dir_s, path;
-	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
-	map<int,vector<string> > label_list;
-
-	kb_t kb;
-	Graph *G;
-
-	int num_x = 5;
-	int num_y = 1;
-	vector<vector<double> > k_xy; k_xy.resize(num_x);
-	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
-	gaussKernel(k_xy, num_x, num_y, 1);
-
-	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
-	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
-	double sum_tmp = 0.0;
-
-	printf("==============================================================================\n");
-	printf("|| DPL START                                                                ||\n");
-	printf("==============================================================================\n");
-
-	// Reading label
-	if (this->ReadFileLabel("./kb/", label_list)==EXIT_FAILURE)
-	{ return EXIT_FAILURE; }
-
-	// Reading surface
-	// Reading action labels
-	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
-	// Reading object specific labels
-	// - reads the object specific labels and saves them
-	if (this->ReadFileKB("./kb/", kb)==EXIT_FAILURE)
-	{ return EXIT_FAILURE; }
-
-	// Reading data files
-	file_list.clear();
-	this->ReadFileName(DATA_DIR, idx_, file_list, sub_num);
-
-	this->DirectoryCheck(EVAL + "/" + tar);
-
-	printf("==============================================================================\n");
-	printf("|| Deploying                                                                ||\n");
-	printf("==============================================================================\n");
-
-	// Subject
-	for(int f=0;f<sub_num;f++)
-	{
-
-		G = new Graph(tar);
-		G->SetKB(kb);
-
-		// read available location areas
-		dir_s = EVAL + "/" + tar + "/" + to_string(f);
-		path  = dir_s + "/location_area.txt";
-		if (this->ReadFileLA(G,path)==EXIT_FAILURE)
-		{return EXIT_FAILURE;}
-		path = 	dir_s + "/graph.txt";
-		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
-		{return EXIT_FAILURE;}
-//		path = 	dir_s + "/window.txt";
-//		this->WriteFileWindow(G,path);
-
-		if(1)
-		{
-			for(int i=0;i<G->GetNumberOfNodes();i++)
-			{
-				for(int ii=0;ii<G->GetNumberOfNodes();ii++)
-				{
-					if (i==ii) { continue; }
-
-					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
-					G->GetEdgeSectorMap(i,ii,0,sm_tmp1);
-					sm_tmp2 = sm_tmp1;
-
-					for(int l=0;l<LOC_INT;l++)
-					{
-						for(int s=0;s<SEC_INT;s++)
-						{
-							sum_tmp = 0.0;
-							for(int gkx=0;gkx<num_x;gkx++)
-							{
-								sum_tmp +=
-										sm_tmp2
-										[l*SEC_INT +
-										 ((s-(num_x/2)+gkx+SEC_INT)%SEC_INT)] *
-										k_xy[gkx][0];
-							}
-
-							sm_tmp1[l*SEC_INT+s] = sum_tmp;
-						}
-					}
-
-					G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
-				}
-			}
-		}
-
-
-		dir_s = RESULT + "/" + tar + "/";
-		this->DirectoryCheck(dir_s);
-		dir_s = RESULT + "/" + tar + "/" + to_string(f) + "/";
-		this->DirectoryCheck(dir_s);
-
-		// Data per subject
-		for(int ff=0;ff<file_list[f].size();ff++)
-		{
-			// action filename pair
-			// pair_tmp = file_list[ff][fff];
-
-			char num[4]; sprintf(num,"%03d",file_list[f][ff].first);
-			path = dir_s + string(num) + "/";
-			this->DirectoryCheck(path);
-
-			if (this->Deploying(file_list[f][ff].second, path, G)==EXIT_FAILURE)
-			{
-				printer(43);
-				return EXIT_FAILURE;
-			}
-			else
-			{
-				printer(44);
-			}
-		}
-
-		delete G;
-	}
-
-	printf("==============================================================================\n");
-	printf("|| DPL END                                                                  ||\n");
-	printf("==============================================================================\n");
-
-	return EXIT_SUCCESS;
-}
+//int TestCase::Dpl(vector<int> idx_, string object_)
+//{
+//	int sub_num;
+//
+//	string dir_s, path;
+//	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
+//	map<int,vector<string> > label_list;
+//
+//	int num_x = 5;
+//	int num_y = 1;
+//	vector<vector<double> > k_xy; k_xy.resize(num_x);
+//	for(int i=0;i<num_x;i++) { k_xy[i].resize(num_y); }
+//	gaussKernel(k_xy, num_x, num_y, 1);
+//
+//	vector<double> sm_tmp1; reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+//	vector<double> sm_tmp2; reshapeVector(sm_tmp2, LOC_INT*SEC_INT);
+//	double sum_tmp = 0.0;
+//
+//	printf("==============================================================================\n");
+//	printf("|| DPL START                                                                ||\n");
+//	printf("==============================================================================\n");
+//
+//	// Reading label
+//	if (this->ReadFileLabel("./kb/", label_list)==EXIT_FAILURE)
+//	{ return EXIT_FAILURE; }
+//
+//	// Reading surface
+//	// Reading action labels
+//	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
+//	// Reading object specific labels
+//	// - reads the object specific labels and saves them
+//	if (this->ReadFileKB("./kb/", KB)==EXIT_FAILURE)
+//	{ return EXIT_FAILURE; }
+//
+//	// Reading data files
+//	file_list.clear();
+//	this->ReadFileName(DATA_DIR, idx_, file_list, sub_num);
+//
+//	this->DirectoryCheck(EVAL + "/" + object_);
+//
+//	printf("==============================================================================\n");
+//	printf("|| Deploying                                                                ||\n");
+//	printf("==============================================================================\n");
+//
+//	// Subject
+//	for(int f=0;f<sub_num;f++)
+//	{
+//
+//		G = new Graph(object_);
+//
+//		// read available location areas
+//		dir_s = EVAL + "/" + object_ + "/" + to_string(f);
+//		path  = dir_s + "/location_area.txt";
+//		if (this->ReadFileLA(G,path)==EXIT_FAILURE)
+//		{return EXIT_FAILURE;}
+//		path = 	dir_s + "/graph.txt";
+//		if (this->ReadFileGraph(G,path)==EXIT_FAILURE)
+//		{return EXIT_FAILURE;}
+////		path = 	dir_s + "/window.txt";
+////		this->WriteFileWindow(G,path);
+//
+//		if(1)
+//		{
+//			for(int i=0;i<G->GetNumberOfNodes();i++)
+//			{
+//				for(int ii=0;ii<G->GetNumberOfNodes();ii++)
+//				{
+//					if (i==ii) { continue; }
+//
+//					reshapeVector(sm_tmp1, LOC_INT*SEC_INT);
+//					G->GetEdgeSectorMap(i,ii,0,sm_tmp1);
+//					sm_tmp2 = sm_tmp1;
+//
+//					for(int l=0;l<LOC_INT;l++)
+//					{
+//						for(int s=0;s<SEC_INT;s++)
+//						{
+//							sum_tmp = 0.0;
+//							for(int gkx=0;gkx<num_x;gkx++)
+//							{
+//								sum_tmp +=
+//										sm_tmp2
+//										[l*SEC_INT +
+//										 ((s-(num_x/2)+gkx+SEC_INT)%SEC_INT)] *
+//										k_xy[gkx][0];
+//							}
+//
+//							sm_tmp1[l*SEC_INT+s] = sum_tmp;
+//						}
+//					}
+//
+//					G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
+//				}
+//			}
+//		}
+//
+//
+//		dir_s = RESULT + "/" + object_ + "/";
+//		this->DirectoryCheck(dir_s);
+//		dir_s = RESULT + "/" + object_ + "/" + to_string(f) + "/";
+//		this->DirectoryCheck(dir_s);
+//
+//		// Data per subject
+//		for(int ff=0;ff<file_list[f].size();ff++)
+//		{
+//			// action filename pair
+//			// pair_tmp = file_list[ff][fff];
+//
+//			char num[4]; sprintf(num,"%03d",file_list[f][ff].first);
+//			path = dir_s + string(num) + "/";
+//			this->DirectoryCheck(path);
+//
+//			if (this->Testing(file_list[f][ff].second, path)==EXIT_FAILURE)
+//			{
+//				printer(43);
+//				return EXIT_FAILURE;
+//			}
+//			else
+//			{
+//				printer(44);
+//			}
+//		}
+//
+//		delete G; G = NULL;
+//	}
+//
+//	printf("==============================================================================\n");
+//	printf("|| DPL END                                                                  ||\n");
+//	printf("==============================================================================\n");
+//
+//	return EXIT_SUCCESS;
+//}
 
 int TestCase::Lbl(vector<int> idx_)
 {
@@ -694,7 +700,7 @@ int TestCase::Lbl(vector<int> idx_)
 
 	map<int,map<int,pair<int,string> > > file_list; // subject, file number, action, filename
 	map<string, string> label_ref_list;
-	vector<point_d> labels_ref;
+	vector<Vector3d> labels_ref;
 	vector<string> labels_ref_name;
 	map<int,vector<string> > label_list;
 
@@ -725,8 +731,10 @@ int TestCase::Lbl(vector<int> idx_)
 		e = b + RF.GetDataRF().size();
 		P.SetDataParser(RF.GetDataRF());
 		P.ParseDataNoLabel();
-		vector<point_d> tmp = P.GetPointParser();
-		labels_ref.insert(labels_ref.end(),tmp.begin(),tmp.end());
+		vector<Vector4d> tmp = P.GetPointParser();
+		vector<Vector3d> tmp2; tmp2.resize(tmp.size());
+		for(int i=0;i<tmp.size();i++) tmp2[i] = V4d3d(tmp[i]);
+		labels_ref.insert(labels_ref.end(),tmp2.begin(),tmp2.end());
 		for(int i=b;i<e;i++) { labels_ref_name.push_back(itr->first); }
 	}
 

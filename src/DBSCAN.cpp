@@ -7,14 +7,9 @@
 
 #include "DBSCAN.h"
 
-DBSCAN::DBSCAN() {
-	// TODO Auto-generated constructor stub
+DBSCAN::DBSCAN() { }
 
-}
-
-DBSCAN::~DBSCAN() {
-	// TODO Auto-generated destructor stub
-}
+DBSCAN::~DBSCAN() { }
 
 /* Copyright 2015 Gagarine Yaikhom (MIT License) */
 /* modified by Chen */
@@ -215,10 +210,10 @@ void DBSCAN::Clustering(
 {
 	int num_points = points_.size();
 	point_d *points_array = Calloc(point_d, num_points);
-	vector2array(points_, points_array);
+	vectorToArray(points_, points_array);
 	this->DBSCANCluster(epsilon, minpts, num_points, points_array);
 	reshapeVector(points_, num_points);
-	array2vector(points_array, num_points, points_);
+	arrayTovector(points_array, num_points, points_);
 	printer(13);
 }
 

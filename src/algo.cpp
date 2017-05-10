@@ -17,8 +17,7 @@ double l2Norm(
 	vector<double> A)
 {
     double a=0.0;
-    for (unsigned int i=0;i<A.size();i++)
-        a+=Sqr(A[i]);
+    for(int i=0;i<A.size();i++) {a+=Sqr(A[i]);}
     return sqrt(a);
 }
 
@@ -33,7 +32,7 @@ double pdfExp(
 	double mu,
 	double x)
 {
-	return exp( - Sqr(x-mu)/(2*var) );
+	return exp(-Sqr(x-mu)/(2*var));
 }
 
 double normalPdf(
@@ -41,7 +40,7 @@ double normalPdf(
 	double mu,
 	double x)
 {
-	return (1/sqrt(2*var*M_PI)) * exp( - Sqr(x-mu)/(2*var) );
+	return (1/sqrt(2*var*M_PI)) * exp(-Sqr(x-mu)/(2*var));
 }
 
 point_d addPoint(
@@ -52,7 +51,7 @@ point_d addPoint(
 	C.x = A.x + B.x;
 	C.y = A.y + B.y;
 	C.z = A.z + B.z;
-	C.l = 0.0;
+	C.l = A.l;
 	return C;
 }
 
@@ -64,7 +63,7 @@ point_d minusPoint(
 	C.x = A.x - B.x;
 	C.y = A.y - B.y;
 	C.z = A.z - B.z;
-	C.l = 0.0;
+	C.l = A.l;
 	return C;
 }
 
@@ -76,39 +75,33 @@ point_d multiPoint(
 	C.x = A.x*B;
 	C.y = A.y*B;
 	C.z = A.z*B;
-	C.l = 0.0;
+	C.l = A.l;
 	return C;
 }
 
-vector<double> crossProduct(
-	vector<double> A,
-	vector<double> B)
+point_d normPoint(point_d A)
 {
-	vector<double> C; C.resize(3);
-	C[0] = A[1]*B[2] - A[2]*B[1];
-	C[1] = A[2]*B[0] - A[0]*B[2];
-	C[2] = A[0]*B[1] - A[1]*B[0];
-	if(C[0]*C[0]+C[1]*C[1]+C[2]*C[2] == 0){ // prevent degenerate case
-//		printf("[WARNING] : CROSS PRODUCT VECTORS ARE COLLINEAR !!!\n");
-		C[0]=0; C[1]=0; C[2]=0;
-	}
-//	if(A[0] == 0 && A[1] == 0 && A[2] == 0)
-//		printf("[WARNING] : CROSS PRODUCT VECTOR 1 IS A ZERO VECTOR !!!\n");
-//	if(B[0] == 0 && B[1] == 0 && B[2] == 0)
-//		printf("[WARNING] : CROSS PRODUCT VECTOR 2 IS A ZERO VECTOR !!!\n");
-	return C;
+	return multiPoint(A, 1.0/l2Norm(A));
 }
 
-double dotProduct(
-	vector<double> A,
-	vector<double> B)
+vector<double> transposeInv(
+		vector<double> A)
 {
-	double ans = A[0]*B[0] + A[1]*B[1] + A[2]*B[2];
-//	if(A[0] == 0 && A[1] == 0 && A[2] == 0)
-//		printf("[WARNING] : DOT PRODUCT VECTOR 1 IS A ZERO VECTOR !!!\n");
-//	if(B[0] == 0 && B[1] == 0 && B[2] == 0)
-//		printf("[WARNING] : DOT PRODUCT VECTOR 2 IS A ZERO VECTOR !!!\n");
-	return ans;
+	double det =	+ A[0]*(A[4]*A[8]-A[7]*A[5])
+					- A[1]*(A[3]*A[8]-A[5]*A[6])
+					+ A[2]*(A[3]*A[7]-A[4]*A[6]);
+	double invdet = 1/det;
+	vector<double> B; B.resize(9);
+	B[0] =  (A[4]*A[8]-A[7]*A[5])*invdet;
+	B[3] = -(A[1]*A[8]-A[2]*A[7])*invdet;
+	B[6] =  (A[1]*A[5]-A[2]*A[4])*invdet;
+	B[1] = -(A[3]*A[8]-A[5]*A[6])*invdet;
+	B[4] =  (A[0]*A[8]-A[2]*A[6])*invdet;
+	B[7] = -(A[0]*A[5]-A[3]*A[2])*invdet;
+	B[2] =  (A[3]*A[7]-A[6]*A[4])*invdet;
+	B[5] = -(A[0]*A[7]-A[6]*A[1])*invdet;
+	B[8] =  (A[0]*A[4]-A[3]*A[1])*invdet;
+	return B;
 }
 
 double addFunction (
@@ -142,8 +135,7 @@ int movingAverage(
 {
 	A.erase(A.begin());
 	A.push_back(a);
-	int avg = average(A);
-	return avg;
+	return average(A);
 }
 
 int movingAverageIncrement(
@@ -151,8 +143,7 @@ int movingAverageIncrement(
 	vector<int> &A)
 {
 	A.push_back(a);
-	int avg = average(A);
-	return avg;
+	return average(A);
 }
 
 double movingAverage(
@@ -161,8 +152,7 @@ double movingAverage(
 {
 	A.erase(A.begin());
 	A.push_back(a);
-	double avg = average(A);
-	return avg;
+	return average(A);
 }
 
 double movingAverageIncrement(
@@ -170,8 +160,7 @@ double movingAverageIncrement(
 	vector<double> &A)
 {
 	A.push_back(a);
-	double avg = average(A);
-	return avg;
+	return average(A);
 }
 
 point_d movingAverage(
@@ -180,15 +169,13 @@ point_d movingAverage(
 {
 	A.erase(A.begin());
 	A.push_back(a);
-	point_d avg = averagePoint(A);
-	return avg;
+	return averagePoint(A);
 }
 
 point_d averagePoint(
 	vector<point_d> A)
 {
-	point_d avg;
-	avg.x = avg.y = avg.z = 0.0;
+	point_d avg = {};
 	for (int i=0;i<A.size();i++)
 	{
 		avg = addPoint(avg, A[i]);
@@ -206,6 +193,68 @@ point_d averagePointIncrement(
 	point_d avg = averagePoint(tmp);
 	A_mem.push_back(avg);
 	return avg;
+}
+
+Vector4d movingAverage(
+	Vector4d a,
+	vector<Vector4d> &A)
+{
+	A.erase(A.begin());
+	A.push_back(a);
+	return averagePoint(A);
+}
+
+Vector4d averagePoint(
+	vector<Vector4d> A)
+{
+	Vector4d avg = Vector4d::Zero();
+	for (int i=0;i<A.size();i++)
+	{
+		avg = avg + A[i];
+	}
+	avg = avg / A.size();
+	return avg;
+}
+
+Vector4d averagePointIncrement(
+	Vector4d A,
+	vector< Vector4d > &A_mem)
+{
+	vector< Vector4d > tmp = A_mem;
+	tmp.push_back(A);
+	Vector4d avg = averagePoint(tmp);
+	A_mem.push_back(avg);
+	return avg;
+}
+
+Vector3d rodriguezVec(
+	AngleAxisd aa_,
+	Vector3d vec_)
+{
+	return 	(vec_*cos(aa_.angle())) +
+			((aa_.axis()).cross(vec_)*sin(aa_.angle())) +
+			(aa_.axis()*((aa_.axis()).dot(vec_))*(1-cos(aa_.angle())));
+}
+
+Matrix3d rodriguezRot(
+	Vector3d vec_1,
+	Vector3d vec_2)
+{
+	Vector3d axis;
+	Matrix3d A;
+	double angle;
+	axis  = vec_1.cross(vec_2).normalized();
+	angle = acos(vec_1.dot(vec_2) / (vec_1.norm()*vec_2.norm()));
+	A(0,0) = 0.0;
+	A(0,1) = -axis(2);
+	A(0,2) =  axis(1);
+	A(1,0) =  axis(2);
+	A(1,1) = 0.0;
+	A(1,2) = -axis(0);
+	A(2,0) = -axis(1);
+	A(2,1) =  axis(0);
+	A(2,2) = 0.0;
+	return Matrix3d::Identity(3,3) + (A*sin(angle)) + ((A*A)*(1-cos(angle)));
 }
 
 void gaussKernel(
@@ -230,118 +279,32 @@ void gaussKernel(
         	kernel_[i][j] /= sum;
 }
 
-point_d rodriguezVec(
-	double angle_,
-	point_d axis_,
-	point_d vec_)
-{
-	point_d out1;
-	point_d N1, N2, N3;
-	N1 = multiPoint(vec_,cos(angle_));
-	N2 = multiPoint(vector2point(crossProduct(point2vector(axis_),
-											  point2vector(vec_ ))),
-					sin(angle_));
-	N3 = multiPoint(multiPoint(axis_,
-							   dotProduct(point2vector(axis_),
-										  point2vector(vec_ ))),
-					1 - cos(angle_));
-	out1 = addPoint(addPoint(N1,N2),N3);
-	return out1;
-}
-
-vector<double> rodriguezRot(
-	point_d vec_1,
-	point_d vec_2)
-{
-	vector<double> axis, A, A2, R; //row major
-	axis.resize(3); A.resize(9); A2.resize(9); R.resize(9);
-	double angle, axis_norm, angle_norm;
-	axis 		 = crossProduct(point2vector(vec_1), point2vector(vec_2));
-	axis_norm 	 = l2Norm(axis);
-	axis[0]		/= axis_norm;
-	axis[1]		/= axis_norm;
-	axis[2]		/= axis_norm;
-	angle_norm	 = dotProduct(point2vector(vec_1),point2vector(vec_2)) /
-				   (l2Norm(vec_1) * l2Norm(vec_2));
-	angle 		 = acos(angle_norm);
-	A[0] = 0.0;
-	A[1] = -axis[2];
-	A[2] =  axis[1];
-	A[3] =  axis[2];
-	A[4] = 0.0;
-	A[5] = -axis[0];
-	A[6] = -axis[1];
-	A[7] =  axis[0];
-	A[8] = 0.0;
-	for(int i=0;i<9;i++)
-	{
-		A2[i] = 0.0;
-		for(int ii=0;ii<3;ii++)
-			A2[i] += A[(i/3)*3 + ii] * A[(i%3) + (ii*3)];
-	}
-	for(int i=0;i<9;i++)
-	{
-		if (i==0||i==4||i==8)
-			R[i] = 1 + sin(angle)*A[i] + (1-cos(angle))*A2[i];
-		else
-			R[i] = 0 + sin(angle)*A[i] + (1-cos(angle))*A2[i];
-	}
-	return R;
-}
-
-vector<double> transInv(
-		vector<double> A)
-{
-	double det =	+ A[0]*(A[4]*A[8]-A[7]*A[5])
-					- A[1]*(A[3]*A[8]-A[5]*A[6])
-					+ A[2]*(A[3]*A[7]-A[4]*A[6]);
-	double invdet = 1/det;
-	vector<double> B; B.resize(9);
-	B[0] =  (A[4]*A[8]-A[7]*A[5])*invdet;
-	B[3] = -(A[1]*A[8]-A[2]*A[7])*invdet;
-	B[6] =  (A[1]*A[5]-A[2]*A[4])*invdet;
-	B[1] = -(A[3]*A[8]-A[5]*A[6])*invdet;
-	B[4] =  (A[0]*A[8]-A[2]*A[6])*invdet;
-	B[7] = -(A[0]*A[5]-A[3]*A[2])*invdet;
-	B[2] =  (A[3]*A[7]-A[6]*A[4])*invdet;
-	B[5] = -(A[0]*A[7]-A[6]*A[1])*invdet;
-	B[8] =  (A[0]*A[4]-A[3]*A[1])*invdet;
-	return B;
-}
-
 void cal_tangent_normal(
 	double t_mid_,
-	point_d &p_tan_,
-	point_d &p_nor_,
-	vector<point_d> coeff,
+	Vector3d &p_tan_,
+	Vector3d &p_nor_,
+	vector<Vector3d> coeff,
 	int dim,
 	bool normal)
 {
-	point_d out1, out2, out3, out4;
-	out1.x=out1.y=out1.z=0.0;
-	out4 = out3 = out2 = out1;
+	Vector3d out1, out2, out4;
+	out4 = out2 = out1 = Vector3d::Zero();
+
 	for(int i=0;i<dim;i++)
 	{
-		out1.x += i* coeff[i].x * pow(t_mid_,i-1);
-		out1.y += i* coeff[i].y * pow(t_mid_,i-1);
-		out1.z += i* coeff[i].z * pow(t_mid_,i-1);
+		out1 += (i * coeff[i] * pow(t_mid_,i-1));
 	}
 	p_tan_ = out1;
+
 	if(normal)
 	{
 		for(int i=0;i<dim;i++)
 		{
-			out2.x += i * (i-1) * coeff[i].x * pow(t_mid_,i-2);
-			out2.y += i * (i-1) * coeff[i].y * pow(t_mid_,i-2);
-			out2.z += i * (i-1) * coeff[i].z * pow(t_mid_,i-2);
+			out2 += (i * (i-1) * coeff[i] * pow(t_mid_,i-2));
 		}
-		out3.x = 2*out1.x*out2.x;
-		out3.y = 2*out1.y*out2.y;
-		out3.z = 2*out1.z*out2.z;
-		double out3N = out3.x + out3.y + out3.z;
-		out4.x = ((l2Norm(out1) * out2.x) - (out1.x * 0.5 * out3N * (1/l2Norm(out1)))) / Sqr(l2Norm(out1));
-		out4.y = ((l2Norm(out1) * out2.y) - (out1.y * 0.5 * out3N * (1/l2Norm(out1)))) / Sqr(l2Norm(out1));
-		out4.z = ((l2Norm(out1) * out2.z) - (out1.z * 0.5 * out3N * (1/l2Norm(out1)))) / Sqr(l2Norm(out1));
+		double out3N = (out1.cwiseProduct(out2)).sum()*2;
+		out4 = ((out1.norm()*out2) - (0.5*out1*out3N*(1/out1.norm()))) /
+				Sqr(out1.norm());
 		p_nor_ = out4;
 	}
 	else
@@ -700,10 +663,10 @@ void polyCurveFitEst(
 }
 
 void polyCurveFitPoint(
-	vector<point_d> points_,
-	vector<point_d> &points_est_,
-	vector<point_d> &coeffs_,
-	vector<point_d> &covs_,
+	vector<Vector4d> points_,
+	vector<Vector4d> &points_est_,
+	vector<Vector3d> &coeffs_,
+	vector<Vector3d> &covs_,
 	bool flag_est_)
 {
 	int num_points = points_.size();
@@ -718,9 +681,9 @@ void polyCurveFitPoint(
 	vector<double> covz; covz.resize(Sqr(DEGREE));
 	for(int i=0;i<num_points;i++)
 	{
-		x[i] = points_[i].x;
-		y[i] = points_[i].y;
-		z[i] = points_[i].z;
+		x[i] = points_[i](0);
+		y[i] = points_[i](1);
+		z[i] = points_[i](2);
 	}
 	polyCurveFit(x,cx,covx);
 	polyCurveFit(y,cy,covy);
@@ -728,16 +691,16 @@ void polyCurveFitPoint(
 	reshapeVector(coeffs_,DEGREE);
 	for(int i=0;i<DEGREE;i++)
 	{
-		coeffs_[i].x = cx[i];
-		coeffs_[i].y = cy[i];
-		coeffs_[i].z = cz[i];
+		coeffs_[i](0) = cx[i];
+		coeffs_[i](1) = cy[i];
+		coeffs_[i](2) = cz[i];
 	}
 	reshapeVector(covs_,Sqr(DEGREE));
 	for(int i=0;i<Sqr(DEGREE);i++)
 	{
-		covs_[i].x = covx[i];
-		covs_[i].y = covy[i];
-		covs_[i].z = covz[i];
+		covs_[i](0) = covx[i];
+		covs_[i](1) = covy[i];
+		covs_[i](2) = covz[i];
 	}
 	int num_points2 = points_est_.size();
 	vector<double> x2; x2.resize(num_points2);
@@ -750,10 +713,10 @@ void polyCurveFitPoint(
 		polyCurveFitEst(z2, num_points, cz, covz);
 		for(int i=0;i<num_points2;i++)
 		{
-			points_est_[i].x = x2[i];
-			points_est_[i].y = y2[i];
-			points_est_[i].z = z2[i];
-			points_est_[i].l = UNCLASSIFIED;
+			points_est_[i](0) = x2[i];
+			points_est_[i](1) = y2[i];
+			points_est_[i](2) = z2[i];
+			points_est_[i](3) = UNCLASSIFIED;
 		}
 		// ##TODO hack
 		for(int i=0;i<4;i++)
@@ -788,7 +751,7 @@ void polyCurveLength(
 	double &length_,
 	double a_,
 	double b_,
-	vector<point_d> coeffs_)
+	vector<Vector3d> coeffs_)
 {
 	gsl_function F;
 	gsl_integration_glfixed_table *table;
@@ -797,9 +760,10 @@ void polyCurveLength(
 //	table = gsl_integration_glfixed_table_alloc((DEGREE+1)/2);
 	for(int i=0;i<DEGREE;i++)
 	{
-		cc[i*3+0] = coeffs_[i].x;
-		cc[i*3+1] = coeffs_[i].y;
-		cc[i*3+2] = coeffs_[i].z;
+		for(int ii=0;ii<3;ii++)
+		{
+			cc[i*3+ii] = coeffs_[i](ii);
+		}
 	}
 	F.function = &curveIntegral;
 	F.params = cc;
@@ -807,59 +771,59 @@ void polyCurveLength(
 	gsl_integration_glfixed_table_free (table);
 }
 
-// ============================================================================
-// Surface
-// ============================================================================
-
-double surfaceRange(
-	point_d pos_,
-	point_d pos_surface_,
-	vector<double> surface_)
-{
-	vector<double> surface_tmp; surface_tmp.resize(3);
-	vector<double> surface_parallel_tmp;
-	vector<double> p_tmp;
-	double norm_tmp = 0.0;
-
-	surface_tmp[0] = surface_[0];
-	surface_tmp[1] = surface_[1];
-	surface_tmp[2] = surface_[2];
-
-	p_tmp = point2vector(minusPoint(pos_, pos_surface_));
-
-	// surface_parallel_tmp can be obtained at the beginning by just taking the normalized vector between 2 points on the surface
-	{
-		surface_parallel_tmp = crossProduct(surface_tmp, p_tmp);
-
-		for(int i=0;i<3;i++)
-			norm_tmp += Sqr(surface_parallel_tmp[i]);
-		norm_tmp = sqrt(norm_tmp);
-
-		for(int i=0;i<3;i++)
-			surface_parallel_tmp[i] /= norm_tmp;
-	}
-
-	return dotProduct(p_tmp, surface_parallel_tmp);
-}
-
-double surfaceDistance(
-	point_d pos_,
-	vector<double> surface_)
-{
-	return surface_[0]*pos_.x +
-		   surface_[1]*pos_.y +
-		   surface_[2]*pos_.z -
-		   surface_[3];
-}
-
-double surfaceAngle(
-	point_d vel_,
-	vector<double> surface_)
-{
-	vector<double> tmp; tmp.resize(3);
-	tmp[0] = surface_[0];
-	tmp[1] = surface_[1];
-	tmp[2] = surface_[2];
-	return 	l2Norm(crossProduct(tmp,point2vector(vel_)))/
-			(l2Norm(tmp) * l2Norm(point2vector(vel_)));
-}
+//// ============================================================================
+//// Surface
+//// ============================================================================
+//
+//double surfaceRange(
+//	point_d pos_,
+//	point_d pos_surface_,
+//	vector<double> surface_)
+//{
+//	vector<double> surface_tmp; surface_tmp.resize(3);
+//	vector<double> surface_parallel_tmp;
+//	vector<double> p_tmp;
+//	double norm_tmp = 0.0;
+//
+//	surface_tmp[0] = surface_[0];
+//	surface_tmp[1] = surface_[1];
+//	surface_tmp[2] = surface_[2];
+//
+//	p_tmp = point2vector(minusPoint(pos_, pos_surface_));
+//
+//	// surface_parallel_tmp can be obtained at the beginning by just taking the normalized vector between 2 points on the surface
+//	{
+//		surface_parallel_tmp = crossProduct(surface_tmp, p_tmp);
+//
+//		for(int i=0;i<3;i++)
+//			norm_tmp += Sqr(surface_parallel_tmp[i]);
+//		norm_tmp = sqrt(norm_tmp);
+//
+//		for(int i=0;i<3;i++)
+//			surface_parallel_tmp[i] /= norm_tmp;
+//	}
+//
+//	return dotProduct(p_tmp, surface_parallel_tmp);
+//}
+//
+//double surfaceDistance(
+//	point_d pos_,
+//	vector<double> surface_)
+//{
+//	return surface_[0]*pos_.x +
+//		   surface_[1]*pos_.y +
+//		   surface_[2]*pos_.z -
+//		   surface_[3];
+//}
+//
+//double surfaceAngle(
+//	point_d vel_,
+//	vector<double> surface_)
+//{
+//	vector<double> tmp; tmp.resize(3);
+//	tmp[0] = surface_[0];
+//	tmp[1] = surface_[1];
+//	tmp[2] = surface_[2];
+//	return 	l2Norm(crossProduct(tmp,point2vector(vel_)))/
+//			(l2Norm(tmp) * l2Norm(point2vector(vel_)));
+//}

@@ -49,7 +49,7 @@ for i=1:length(DIR)
         
         file_name = [dir_name '/' DIR(i).name '/' DIR_S(ii).name '/location_area.txt'];
         fileID = fopen(file_name);
-        data = textscan(fileID,[repmat('%s', 1, 7)],'Delimiter',',');
+        data = textscan(fileID,[repmat('%s', 1, 13)],'Delimiter',',');
         fclose(fileID);
         LA{c} = data{1};
         

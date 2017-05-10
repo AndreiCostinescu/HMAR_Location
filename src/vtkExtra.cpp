@@ -338,23 +338,23 @@ void colorCode(
 	unsigned char cpr[]  = {255, 0, 127};
 	for(int i=0;i<N;i++)
 	{
-		array2vector(cw,	3,	container_[12*i+0]);
-		array2vector(cy, 	3, 	container_[12*i+1]);
-		array2vector(co, 	3, 	container_[12*i+2]);
-		array2vector(cr, 	3, 	container_[12*i+3]);
-		array2vector(cc, 	3,	container_[12*i+4]);
-		array2vector(cpb, 	3, 	container_[12*i+5]);
-		array2vector(cgb, 	3, 	container_[12*i+6]);
-		array2vector(clb, 	3, 	container_[12*i+7]);
-		array2vector(cb, 	3, 	container_[12*i+8]);
-		array2vector(cg, 	3, 	container_[12*i+9]);
-		array2vector(clg, 	3, 	container_[12*i+10]);
-		array2vector(cpr, 	3, 	container_[12*i+11]);
+		arrayTovector(cw,	3,	container_[12*i+0]);
+		arrayTovector(cy, 	3, 	container_[12*i+1]);
+		arrayTovector(co, 	3, 	container_[12*i+2]);
+		arrayTovector(cr, 	3, 	container_[12*i+3]);
+		arrayTovector(cc, 	3,	container_[12*i+4]);
+		arrayTovector(cpb, 	3, 	container_[12*i+5]);
+		arrayTovector(cgb, 	3, 	container_[12*i+6]);
+		arrayTovector(clb, 	3, 	container_[12*i+7]);
+		arrayTovector(cb, 	3, 	container_[12*i+8]);
+		arrayTovector(cg, 	3, 	container_[12*i+9]);
+		arrayTovector(clg, 	3, 	container_[12*i+10]);
+		arrayTovector(cpr, 	3, 	container_[12*i+11]);
 	}
 }
 
 vtkSmartPointer<vtkPolyDataMapper> dataPoints(
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	int num_locations_,
 	vector<vector<unsigned char> > color_,
 	bool cluster_)
@@ -391,7 +391,7 @@ vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 	mapper 					= vtkSmartPointer<vtkPolyDataMapper>::New();
 
 	for(int i=0;i<points_.size();i++)
-		points->InsertNextPoint(points_[i].x, points_[i].y, points_[i].z);
+		points->InsertNextPoint((double)points_[i](0), (double)points_[i](1), (double)points_[i](2));
 
 	pointsPolydata->SetPoints(points);
 
@@ -413,14 +413,14 @@ vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 		for(int i=0;i<color_.size();i++)
 		{
 			color_tmp[i] = Calloc(unsigned char,3);
-			vector2array(color_[i], color_tmp[i]);
+			vectorToArray(color_[i], color_tmp[i]);
 		}
 		for(int i=0;i<points_.size();i++)
 		{
-			if (points_[i].l < num_locations &&
-				points_[i].l >= 0)
+			if (points_[i][3] < num_locations &&
+				points_[i][3] >= 0)
 			{
-				colors->InsertNextTypedTuple(color_tmp[points_[i].l+1]);
+				colors->InsertNextTypedTuple((unsigned char*)color_tmp[points_[i][3]+1]);
 			}
 			else
 			{
@@ -440,7 +440,7 @@ vtkSmartPointer<vtkPolyDataMapper> dataPoints(
 }
 
 void showData(
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<string> labels_ref_,
 	vector<int> &loc_idx_,
@@ -542,7 +542,7 @@ void showData(
 
 void showConnection(
 	Graph *Graph_,
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<vector<unsigned char> > color_,
 	bool show_points)
@@ -553,11 +553,9 @@ void showConnection(
 
 	int num_locations = nodes.size();
 
-	vector<point_d> locations; locations.resize(num_locations);
+	vector<Vector3d> locations; locations.resize(num_locations);
 	for(int i=0;i<num_locations;i++)
-	{
-		locations[i] = nodes[i].centroid;
-	}
+	{ locations[i] = V4d3d(nodes[i].centroid); }
 
 	vtkSmartPointer<vtkLineSource> 				lineSource;
 	vtkSmartPointer<vtkPolyDataMapper> 			lineMapper;
@@ -611,85 +609,66 @@ void showConnection(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		point_d tmpN[2], Nmax[2], init, beg, end;
-		init.x = init.y = init.z = 0;
+		AngleAxisd aa;
+		Vector3d Ntmp[2], Nmax[2], init, beg, end;
+		init = Vector3d::Zero();
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
 
 		for(int l=0;l<loc;l++)
 		{
-			tmpN[0] =
-					rodriguezVec((double)(2*M_PI*(0)/sec),
-							edges[n1][n2][0].tan[l],
-							edges[n1][n2][0].nor[l]);
-			Nmax[0] =
-					multiPoint(
-							tmpN[0],
-							edges[n1][n2][0].sector_map[l*sec+0]);
-			beg = addPoint(
-						minusPoint(
-								multiPoint(
-										edges[n1][n2][0].loc_mid[l],
-										edges[n1][n2][0].loc_mid[l].l),
-								multiPoint(
-										edges[n1][n2][0].tan[l],
-										edges[n1][n2][0].loc_len[l]/2)),
-						locations[n1]);
-			end = addPoint(
-						addPoint(
-								multiPoint(
-										edges[n1][n2][0].loc_mid[l],
-										edges[n1][n2][0].loc_mid[l].l),
-								multiPoint(
-										edges[n1][n2][0].tan[l],
-										edges[n1][n2][0].loc_len[l]/2)),
-						locations[n1]);
-//			beg =
-//					minusPoint(
-//							edges[n1][n2][0].loc_mid[l],
-//							multiPoint(
-//									edges[n1][n2][0].tan[l],
-//									edges[n1][n2][0].loc_len[l]/2));
-//			end =
-//					addPoint(
-//							edges[n1][n2][0].loc_mid[l],
-//							multiPoint(
-//									edges[n1][n2][0].tan[l],
-//									edges[n1][n2][0].loc_len[l]/2));
+			aa.angle() = (double)(2*M_PI*(0)/sec);
+			aa.axis()  = edges[n1][n2][0].tan[l];
+			Ntmp[0] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
+			Nmax[0] = Ntmp[0] * edges[n1][n2][0].sector_map[l*sec+0];
 
+			beg =
+					V4d3d(
+							edges[n1][n2][0].loc_mid[l] *
+							(double)edges[n1][n2][0].loc_mid[l][3])           -
+					(edges[n1][n2][0].tan[l]*(edges[n1][n2][0].loc_len[l]/2)) +
+					locations[n1];
+			end =
+					V4d3d(
+							edges[n1][n2][0].loc_mid[l] *
+							(double)edges[n1][n2][0].loc_mid[l][3])           +
+					(edges[n1][n2][0].tan[l]*(edges[n1][n2][0].loc_len[l]/2)) +
+					locations[n1];
 			for (int s=0;s<sec;s++)
 			{
 				int s_tmp = (s+1)%sec;
-				tmpN[s_tmp%2] =
-						rodriguezVec((double)(2*M_PI*(s_tmp)/sec),
-								edges[n1][n2][0].tan[l],
-								edges[n1][n2][0].nor[l]);
+				aa.angle() = (double)(2*M_PI*(s_tmp)/sec);
+				Ntmp[s_tmp%2] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 				Nmax[s_tmp%2] =
-						multiPoint(
-								tmpN[s_tmp%2],
-								edges[n1][n2][0].sector_map[l*sec+s]);
-
+						Ntmp[s_tmp%2] * edges[n1][n2][0].sector_map[l*sec+s];
+//				if(edges[n1][n2][0].sector_map[l*sec+s]>0)
+//				{
+//					cout << edges[n1][n2][0].nor[l] << endl;
+//					cout << Ntmp[s_tmp%2] << endl;
+//					cout << Nmax[s_tmp%2] << endl;
+//					cout << edges[n1][n2][0].sector_map[l*sec+s] << endl;
+//				}
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+0,
-						beg.x + Nmax[s%2].x - init.x,
-						beg.y + Nmax[s%2].y - init.y,
-						beg.z + Nmax[s%2].z - init.z);
+						(double)(beg + Nmax[s%2] - init)(0),
+						(double)(beg + Nmax[s%2] - init)(1),
+						(double)(beg + Nmax[s%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+1,
-						end.x + Nmax[s%2].x - init.x,
-						end.y + Nmax[s%2].y - init.y,
-						end.z + Nmax[s%2].z - init.z);
+						(double)(end + Nmax[s%2] - init)(0),
+						(double)(end + Nmax[s%2] - init)(1),
+						(double)(end + Nmax[s%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+2,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+3,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				ID[0] = (l*sec+s)*8+0;
 				ID[1] = (l*sec+s)*8+1;
 				ID[2] = (l*sec+s)*8+3;
@@ -698,28 +677,27 @@ void showConnection(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+4,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+5,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				Nmax[s_tmp%2] =
-						multiPoint(
-								tmpN[s_tmp%2],
-								edges[n1][n2][0].sector_map[l*sec+s_tmp]);
+						Ntmp[s_tmp%2] *
+						edges[n1][n2][0].sector_map[l*sec+s_tmp];
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+6,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+7,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				ID[0] = (l*sec+s)*8+4;
 				ID[1] = (l*sec+s)*8+5;
 				ID[2] = (l*sec+s)*8+7;
@@ -788,7 +766,7 @@ void showConnection(
 
 void showConnectionTest(
 	Graph *Graph_,
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<vector<unsigned char> > color_,
 	bool show_points)
@@ -799,11 +777,9 @@ void showConnectionTest(
 
 	int num_locations = nodes.size();
 
-	vector<point_d> locations; locations.resize(num_locations);
+	vector<Vector3d> locations; locations.resize(num_locations);
 	for(int i=0;i<num_locations;i++)
-	{
-		locations[i] = nodes[i].centroid;
-	}
+	{ locations[i] = V4d3d(nodes[i].centroid); }
 
 	vtkSmartPointer<vtkSphereSource> 			sphereSource;
 	vtkSmartPointer<vtkUnsignedCharArray> 		colors;
@@ -850,73 +826,60 @@ void showConnectionTest(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		point_d tmpN[2], Nmax[2], init, beg, end;
-		init.x = init.y = init.z = 0;
+		AngleAxisd aa;
+		Vector3d Ntmp[2], Nmax[2], init, beg, end;
+		init = Vector3d::Zero();
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
 
 		for(int l=0;l<loc;l++)
 		{
-			tmpN[0] =
-					rodriguezVec((double)(2*M_PI*(0)/sec),
-							edges[n1][n2][0].tan[l],
-							edges[n1][n2][0].nor[l]);
-			Nmax[0] =
-					multiPoint(
-							tmpN[0],
-							edges[n1][n2][0].sector_map[l*sec+0]);
-			beg = addPoint(
-						minusPoint(
-								multiPoint(
-										edges[n1][n2][0].loc_mid[l],
-										edges[n1][n2][0].loc_mid[l].l),
-								multiPoint(
-										edges[n1][n2][0].tan[l],
-										edges[n1][n2][0].loc_len[l]/2)),
-						locations[n1]);
-			end = addPoint(
-						addPoint(
-								multiPoint(
-										edges[n1][n2][0].loc_mid[l],
-										edges[n1][n2][0].loc_mid[l].l),
-								multiPoint(
-										edges[n1][n2][0].tan[l],
-										edges[n1][n2][0].loc_len[l]/2)),
-						locations[n1]);
+			aa.angle() = (double)(2*M_PI*(0)/sec);
+			aa.axis()  = edges[n1][n2][0].tan[l];
+			Ntmp[0] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
+			Nmax[0] = Ntmp[0] * edges[n1][n2][0].sector_map[l*sec+0];
 
+			beg =
+					V4d3d(
+							edges[n1][n2][0].loc_mid[l] *
+							(double)edges[n1][n2][0].loc_mid[l][3])           -
+					(edges[n1][n2][0].tan[l]*(edges[n1][n2][0].loc_len[l]/2)) +
+					locations[n1];
+			end =
+					V4d3d(
+							edges[n1][n2][0].loc_mid[l] *
+							(double)edges[n1][n2][0].loc_mid[l][3])           +
+					(edges[n1][n2][0].tan[l]*(edges[n1][n2][0].loc_len[l]/2)) +
+					locations[n1];
 			for (int s=0;s<sec;s++)
 			{
 				int s_tmp = (s+1)%sec;
-				tmpN[s_tmp%2] =
-						rodriguezVec((double)(2*M_PI*(s_tmp)/sec),
-								edges[n1][n2][0].tan[l],
-								edges[n1][n2][0].nor[l]);
+				aa.angle() = (double)(2*M_PI*(s_tmp)/sec);
+				aa.axis()  = edges[n1][n2][0].tan[l];
+				Ntmp[s_tmp%2] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 				Nmax[s_tmp%2] =
-						multiPoint(
-								tmpN[s_tmp%2],
-								edges[n1][n2][0].sector_map[l*sec+s]);
-
+						Ntmp[s_tmp%2] * edges[n1][n2][0].sector_map[l*sec+s];
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+0,
-						beg.x + Nmax[s%2].x - init.x,
-						beg.y + Nmax[s%2].y - init.y,
-						beg.z + Nmax[s%2].z - init.z);
+						(double)(beg + Nmax[s%2] - init)(0),
+						(double)(beg + Nmax[s%2] - init)(1),
+						(double)(beg + Nmax[s%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+1,
-						end.x + Nmax[s%2].x - init.x,
-						end.y + Nmax[s%2].y - init.y,
-						end.z + Nmax[s%2].z - init.z);
+						(double)(end + Nmax[s%2] - init)(0),
+						(double)(end + Nmax[s%2] - init)(1),
+						(double)(end + Nmax[s%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+2,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+3,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				ID[0] = (l*sec+s)*8+0;
 				ID[1] = (l*sec+s)*8+1;
 				ID[2] = (l*sec+s)*8+3;
@@ -925,28 +888,27 @@ void showConnectionTest(
 
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+4,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+5,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				Nmax[s_tmp%2] =
-						multiPoint(
-								tmpN[s_tmp%2],
-								edges[n1][n2][0].sector_map[l*sec+s_tmp]);
+						Ntmp[s_tmp%2] *
+						edges[n1][n2][0].sector_map[l*sec+s_tmp];
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+6,
-						beg.x + Nmax[s_tmp%2].x - init.x,
-						beg.y + Nmax[s_tmp%2].y - init.y,
-						beg.z + Nmax[s_tmp%2].z - init.z);
+						(double)(beg + Nmax[s_tmp%2] - init)(0),
+						(double)(beg + Nmax[s_tmp%2] - init)(1),
+						(double)(beg + Nmax[s_tmp%2] - init)(2));
 				pointspoly->InsertPoint(
 						(l*sec+s)*8+7,
-						end.x + Nmax[s_tmp%2].x - init.x,
-						end.y + Nmax[s_tmp%2].y - init.y,
-						end.z + Nmax[s_tmp%2].z - init.z);
+						(double)(end + Nmax[s_tmp%2] - init)(0),
+						(double)(end + Nmax[s_tmp%2] - init)(1),
+						(double)(end + Nmax[s_tmp%2] - init)(2));
 				ID[0] = (l*sec+s)*8+4;
 				ID[1] = (l*sec+s)*8+5;
 				ID[2] = (l*sec+s)*8+7;
@@ -1007,13 +969,13 @@ void showConnectionTest(
 		actor	= vtkSmartPointer<vtkActor>::New();
 
 		sphereSource->SetCenter(
-				nodes[i].centroid.x,
-				nodes[i].centroid.y,
-				nodes[i].centroid.z);
+				(double)nodes[i].centroid(0),
+				(double)nodes[i].centroid(1),
+				(double)nodes[i].centroid(2));
 		sphereSource->SetRadius(0.05);
 		mapper->SetInputConnection(sphereSource->GetOutputPort());
 		actor->SetMapper(mapper);
-		actor->GetProperty()->SetColor((double)color_[i+1][0]/255,
+		actor->GetProperty()->SetColor(	(double)color_[i+1][0]/255,
 										(double)color_[i+1][1]/255,
 										(double)color_[i+1][2]/255);
 		renderer->AddActor(actor);

@@ -7,14 +7,13 @@
 
 #include "DataParser.h"
 
-DataParser::DataParser()
+DataParser::DataParser() : face_parser(Vector4d::Zero())
 {
 	data_parser.clear();
 	frames_parser.clear();
 	contact_parser.clear();
 	points_parser.clear();
 	labels_parser.clear();
-	face_parser.x=face_parser.y=face_parser.z=0;
 }
 
 DataParser::~DataParser() { }
@@ -26,7 +25,7 @@ void DataParser::ClearParser()
 	contact_parser.clear();
 	points_parser.clear();
 	labels_parser.clear();
-	face_parser.x=face_parser.y=face_parser.z=0;
+	face_parser = Vector4d::Zero();
 }
 
 void DataParser::SetDataParser(vector<vector<string> > data_)
@@ -45,17 +44,17 @@ int DataParser::ParseDataNoLabel()
 	{
 		if (data_parser[i].size()<8) return EXIT_FAILURE;
 		frames_parser [i]	 = atoi(data_parser[i][0].c_str());
-		contact_parser[i]   = atoi(data_parser[i][1].c_str());
-		points_parser [i].x = atof(data_parser[i][2].c_str());
-		points_parser [i].y = atof(data_parser[i][3].c_str());
-		points_parser [i].z = atof(data_parser[i][4].c_str());
-		points_parser [i].l = UNCLASSIFIED;
+		contact_parser[i]    = atoi(data_parser[i][1].c_str());
+		points_parser [i](0) = atof(data_parser[i][2].c_str());
+		points_parser [i](1)  = atof(data_parser[i][3].c_str());
+		points_parser [i](2)  = atof(data_parser[i][4].c_str());
+		points_parser [i](3)  = UNCLASSIFIED;
 		if(i==200)
 		{
-			face_parser.x = atof(data_parser[i][5].c_str());
-			face_parser.y = atof(data_parser[i][6].c_str());
-			face_parser.z = atof(data_parser[i][7].c_str());
-			face_parser.l = UNCLASSIFIED;
+			face_parser(0) = atof(data_parser[i][5].c_str());
+			face_parser(1) = atof(data_parser[i][6].c_str());
+			face_parser(2) = atof(data_parser[i][7].c_str());
+			face_parser(3) = UNCLASSIFIED;
 		}
 	}
 	return EXIT_SUCCESS;
@@ -67,17 +66,17 @@ int DataParser::ParseData()
 	{
 		if (data_parser[i].size()<9) return EXIT_FAILURE;
 		frames_parser [i]	 = atoi(data_parser[i][0].c_str());
-		contact_parser[i]   = atoi(data_parser[i][1].c_str());
-		points_parser [i].x = atof(data_parser[i][2].c_str());
-		points_parser [i].y = atof(data_parser[i][3].c_str());
-		points_parser [i].z = atof(data_parser[i][4].c_str());
-		points_parser [i].l = UNCLASSIFIED;
+		contact_parser[i]    = atoi(data_parser[i][1].c_str());
+		points_parser [i](0) = atof(data_parser[i][2].c_str());
+		points_parser [i](1)  = atof(data_parser[i][3].c_str());
+		points_parser [i](2)  = atof(data_parser[i][4].c_str());
+		points_parser [i](3)  = UNCLASSIFIED;
 		if(i==200)
 		{
-			face_parser.x = atof(data_parser[i][5].c_str());
-			face_parser.y = atof(data_parser[i][6].c_str());
-			face_parser.z = atof(data_parser[i][7].c_str());
-			face_parser.l = UNCLASSIFIED;
+			face_parser(0) = atof(data_parser[i][5].c_str());
+			face_parser(1) = atof(data_parser[i][6].c_str());
+			face_parser(2) = atof(data_parser[i][7].c_str());
+			face_parser(3) = UNCLASSIFIED;
 		}
 		labels_parser [i] = string(data_parser[i][8]);
 	}

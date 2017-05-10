@@ -20,7 +20,7 @@ class Train : public Test, public TrainLA, public TrainSM
 
 		int Learning(
 			string filename_,
-			Graph *Graph_,
+			string path_LA_,
 			bool flag_);
 };
 

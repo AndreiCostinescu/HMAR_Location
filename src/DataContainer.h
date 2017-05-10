@@ -22,6 +22,10 @@ class DataContainer
 
 	protected:
 		Graph *G;
+		kb_t  KB;
+
+		vector<Vector4d>  pva;
+		int contact;
 
 };
 

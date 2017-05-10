@@ -25,8 +25,9 @@ int main(int argc, char *argv[])
 	if(0)
 	{
 		ReadFile RF; WriteFile WF;
-		vector<point_d> peq,bmin,bmid,bmax;
-		vector<vector<double> > rot;
+		vector<Vector3d> bmin,bmid,bmax;
+		vector<Vector4d> peq;
+		vector<Matrix3d> rot;
 		RF.ReadSurfaceFile("kb/surface_.txt",rot,peq,bmin,bmid,bmax);
 		WF.WriteFileSurface("kb/surface.txt",rot,peq,bmin,bmid,bmax);
 	}
@@ -48,7 +49,18 @@ int main(int argc, char *argv[])
 //	TC->Choose(7);
 //	TC->Choose(8);
 
-	TC->Choose(1);
+//	TC->Choose(9);
+//	TC->Choose(13);
+//
+//	TC->Choose(10);
+//	TC->Choose(14);
+
+//	TC->Choose(11);
+//	TC->Choose(15);
+
+//	TC->Choose(12);
+	TC->Choose(16);
+
 
 //	// Train Cup
 //	TC.Choose(1, TRN);
@@ -74,7 +86,7 @@ int main(int argc, char *argv[])
 
 //	TC.Choose(5, DPL);
 
-	delete TC;
+//	delete TC;
 
 	printf("==============================================================================\n");
 	printf("|| SYSTEM END                                                               ||\n");

@@ -9,7 +9,7 @@ for i=1:length(DIR)
     PROB = cell(49,7);
     WINDOW = cell(49,7);
     
-    if (~strcmp(DIR(i).name,'CUP'))
+    if (~strcmp(DIR(i).name,'KNF'))
         continue;
     end
     

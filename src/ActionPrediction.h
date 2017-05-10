@@ -8,38 +8,40 @@
 #ifndef ACTIONPREDICTION_H_
 #define ACTIONPREDICTION_H_
 
+#include "vtkExtra.h"
+//#include "Prediction.h"
+#include "DataContainer.h"
+#include "ReadFile.h"
+#include "WriteFile.h"
 #include "Evaluate.h"
-#include "TrainSM.h"
 
-class ActionPrediction : public Evaluate, public TrainSM
+class ActionPrediction :public ReadFile,
+						public WriteFile,
+						public DataContainer,
+						public Evaluate
 {
 	public:
-		ActionPrediction(Graph *Graph_, bool learn_);
+		ActionPrediction();
 
 		virtual ~ActionPrediction();
 
-		void PredictExt(
-			vector<point_d> &pva_avg_,
-			int contact_);
+		void PredictExt();
 
-		void PredictInit();
+		void PredictInit(
+				bool learn_);
 
 		int Predict();
 
 		int ContactTrigger();
 
-		int DecideBoundaryClosestExt(
-			point_d &point_,
-			vector<point_d> centroids_);
+		int DecideBoundaryClosestExt();
 
-		int DecideBoundarySphereExt(
-			point_d &point_,
-			vector<point_d> centroids_);
+		int DecideBoundarySphereExt();
 
 		int DecideBoundaryCuboidExt(
-			point_d &point_,
-			point_d box_min_,
-			point_d box_max_);
+			Vector4d &point_,
+			Vector3d box_min_,
+			Vector3d box_max_);
 
 		int NodePrediction();
 
@@ -50,7 +52,7 @@ class ActionPrediction : public Evaluate, public TrainSM
 		int PredictFromSectorMap();
 
 		double DecideLocSecInt(
-			point_d &delta_t_,
+			Vector3d &delta_t_,
 			int &sec_idx_,
 			int &loc_idx_,
 			int &loc_last_idx_,
@@ -71,15 +73,16 @@ class ActionPrediction : public Evaluate, public TrainSM
 
 		int EvaluateEdgePrediction();
 
-		int RebuildSectorMap(
-			vector<vector<point_d> > pva_avg_,
-			int	label1_,
-			int label2_);
+//		int RebuildSectorMap(
+//			vector<vector<point_d> > pva_avg_,
+//			int	label1_,
+//			int label2_);
 
 	private:
 
 		int label1_ap;
 		int label2_ap;
+
 		bool learn;
 		bool la_sm_change; // change flag from sm to la
 
@@ -88,15 +91,13 @@ class ActionPrediction : public Evaluate, public TrainSM
 		predict_e pred_sm; // edge_prediction
 		predict_n pred_la; // node_prediction
 
-		state_t state; // action state
-
 		vector<int> last_loc;
 		vector<int> init;
 
-		vector<point_d> pva_avg;
 		vector<predict_e> pred_sm_mem;
 		vector<predict_n> pred_la_mem;
-		vector<vector<point_d> > pva_avg_mem;
+
+		vector<vector<Vector4d> > pva_avg_mem; // rebuild SM
 
 		vector<int> range_in;
 

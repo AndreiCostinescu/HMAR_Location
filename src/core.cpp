@@ -7,13 +7,12 @@
 
 #include "core.h"
 
-
-bool vectorDirectionCheck(
-	vector<double> A,
-	vector<double> B)
+bool directionCheck(
+	Vector3d A,
+	Vector3d B)
 {
-	for(int i=0;i<A.size();i++)
-		if (((A[i] >= 0) && (B[i] < 0)) || ((A[i] < 0) && (B[i] >= 0)))
+	for(int i=0;i<3;i++)
+		if (((A(i) >= 0) && (B(i) < 0)) || ((A(i) < 0) && (B(i) >= 0)))
 			return false;
 	return true;
 }
@@ -80,42 +79,38 @@ bool vectorDirectionCheck(
 //}
 
 int checkBoundarySphere(
-	point_d 		&point1_,
-	point_d 		&point2_,
-	vector<point_d> centroids_)
+	Vector4d 		 &point_,
+	vector<Vector4d> centroids_)
 {
-	point2_.l = UNCLASSIFIED;
+	point_[3] = UNCLASSIFIED;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
-		point_d tmp_diff = minusPoint(point2_, centroids_[ii]);
-		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
-		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
-		if (max_(location_contact, centroids_[ii].l)) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
-		{
-			point2_.l = ii;
-		}
+		double location_contact =
+				pdfExp(BOUNDARY_VAR, 0.0, V4d3d(point_-centroids_[ii]).norm());
+//		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
+		if (max_(location_contact, (double)centroids_[ii][3])) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
+		{ point_[3] = ii; }
 	}
 	return EXIT_SUCCESS;
 }
 
 int checkBoundaryCuboid(
-	point_d &point_,
-	point_d box_min_,
-	point_d box_max_)
+	Vector4d &point_,
+	Vector3d box_min_,
+	Vector3d box_max_)
 {
-	if(	point_.x < box_max_.x &&
-		point_.y < box_max_.y &&
-		point_.z < box_max_.z &&
-		point_.x > box_min_.x &&
-		point_.y > box_min_.y &&
-		point_.z > box_min_.z )
-//	if( point_.y < box_max_.y )
+	if(	point_[0] < box_max_[0] &&
+		point_[1] < box_max_[1] &&
+		point_[2] < box_max_[2] &&
+		point_[0] > box_min_[0] &&
+		point_[1] > box_min_[1] &&
+		point_[2] > box_min_[2] )
 	{
 		return EXIT_SUCCESS;
 	}
 	else
 	{
-		point_.l = UNCLASSIFIED;
+		point_[3] = UNCLASSIFIED;
 		return EXIT_FAILURE;
 	}
 }
@@ -153,46 +148,32 @@ int checkBoundaryCuboid(
 //}
 
 int decideBoundarySphere(
-	point_d 		&point_,
-	vector<point_d> centroids_)
+	Vector4d 		 &point_,
+	vector<Vector4d> centroids_)
 {
-	point_.l = UNCLASSIFIED;
-	for(int ii=0;ii<centroids_.size();ii++)
-	{
-		point_d tmp_diff = minusPoint(point_, centroids_[ii]);
-		double location_contact = pdfExp(BOUNDARY_VAR, 0.0, l2Norm(tmp_diff));
-		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
-		if (max_(location_contact, centroids_[ii].l))// || pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.8)
-		{
-			point_.l = ii;
-		}
-	}
-	return EXIT_SUCCESS;
+	return checkBoundarySphere(point_, centroids_);
 }
 
 int decideBoundaryCuboid(
-	point_d &point_,
-	point_d box_min_,
-	point_d box_max_)
+	Vector4d &point_,
+	Vector3d box_min_,
+	Vector3d box_max_)
 {
 	return checkBoundaryCuboid(point_, box_min_, box_max_);
 }
 
 int decideBoundaryClosest(
-	point_d 				&point2_,
-	vector<point_d> 		centroids_)
+	Vector4d 		&point_,
+	vector<Vector4d> centroids_)
 {
-	point2_.l = UNCLASSIFIED;
+	point_[3] = UNCLASSIFIED;
 	vector<double> tmp;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
 		tmp.push_back(
-				pdfExp(
-						BOUNDARY_VAR,
-						0.0,
-						l2Norm(minusPoint(point2_, centroids_[ii]))));
+				pdfExp(BOUNDARY_VAR, 0.0, V4d3d(point_-centroids_[ii]).norm()));
 	}
-	point2_.l =
+	point_[3] =
 			distance(
 					tmp.begin(),
 					max_element(tmp.begin(), tmp.end()));
@@ -200,21 +181,20 @@ int decideBoundaryClosest(
 }
 
 double checkSurfaceDistance(
-	point_d centroids_,
-	point_d	surfaces_)
+	Vector4d centroids_,
+	Vector4d surface_eq_)
 {
-	return 	centroids_.x *  surfaces_.x +
-			centroids_.y *  surfaces_.y +
-			centroids_.z *  surfaces_.z -
-							surfaces_.l;
+	return 	centroids_[0] * surface_eq_[0] +
+			centroids_[1] * surface_eq_[1] +
+			centroids_[2] * surface_eq_[2] - surface_eq_[3];
 }
 
 bool decideSurface(
-	point_d centroids_,
-	point_d	surfaces_,
+	Vector4d centroids_,
+	Vector4d surface_eq_,
 	double 	limit_)
 {
-	if(fabs(checkSurfaceDistance(centroids_,surfaces_))<limit_)
+	if(fabs(checkSurfaceDistance(centroids_,surface_eq_))<limit_)
 	{ return true; }
 	else
 	{ return false; }
@@ -223,39 +203,34 @@ bool decideSurface(
 double dLI(
 	int &loc_idx_,
 	int loc_last_idx_,
-	point_d point_,
+	Vector4d point_,
 	vector<double> len_,
-	vector<point_d> mid_,
-	vector<point_d> tangent_,
+	vector<Vector4d> mid_,
+	vector<Vector3d> tangent_,
 	int loc_offset_,
 	bool loc_init_)
 {
 	int idx_tmp;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
-	point_d proj_dir_tmp, beg, mid, end;
+	Vector3d proj_dir_tmp, beg, mid, end;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
-		mid = multiPoint(mid_[l],mid_[l].l);
-		beg = minusPoint(mid, multiPoint(tangent_[l],len_[l]/2));
-		end =   addPoint(mid, multiPoint(tangent_[l],len_[l]/2));
-		proj_dir_tmp =
-				multiPoint(
-						tangent_[l],
-						dotProduct(
-								point2vector(minusPoint(point_, mid)),
-								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg, mid));
-		d2 = l2Norm(minusPoint(end, mid));
-		d3 = l2Norm(minusPoint(beg, addPoint(mid,proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end, addPoint(mid,proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg, end));
-		if (vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(tangent_[l])))
+		mid = V4d3d(mid_[l])* mid_[l][3];
+		beg = mid - (tangent_[l] * (len_[l]/2));
+		end = mid + (tangent_[l] * (len_[l]/2));
+		proj_dir_tmp = tangent_[l] * ((V4d3d(point_)-mid).dot(tangent_[l]));
+
+		d1 = (beg-mid).norm();
+		d2 = (end-mid).norm();
+		d3 = (beg-(mid+proj_dir_tmp)).norm();
+		d4 = (end-(mid+proj_dir_tmp)).norm();
+		d5 = (beg-end).norm();
+
+		if (directionCheck(proj_dir_tmp, tangent_[l]))
 		{
 			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2;}
 			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
@@ -305,50 +280,45 @@ double dLI(
 double dLIPredict(
 	int &loc_idx_,
 	int loc_last_idx_,
-	point_d point_,
-	vector<point_d> mid_,
+	Vector4d point_,
+	vector<Vector4d> mid_,
 	vector<double> len_,
-	vector<point_d> tangent_,
+	vector<Vector3d> tangent_,
 	int loc_offset_,
 	int loc_init_) //0 for true
 {
 	int idx_tmp=loc_last_idx_;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2,min_dist;
 	d1=d2=d3=d4=d5=d6=0.0; d6min = min_dist = 10;
-	point_d proj_dir_tmp, beg, mid, end;
+	Vector3d proj_dir_tmp, beg, mid, end;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_-(loc_offset_/2) < 0 ? 0 : loc_last_idx_-(loc_offset_/2) );
 	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
 	for(int l=idx1;l<idx2;l++)
 	{
-		mid = multiPoint(mid_[l],mid_[l].l);
-		beg = minusPoint(mid, multiPoint(tangent_[l],len_[l]/2));
-		end =   addPoint(mid, multiPoint(tangent_[l],len_[l]/2));
-		proj_dir_tmp =
-				multiPoint(
-						tangent_[l],
-						dotProduct(
-								point2vector(minusPoint(point_, mid)),
-								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg, mid));
-		d2 = l2Norm(minusPoint(end, mid));
-		d3 = l2Norm(minusPoint(beg, addPoint(mid,proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end, addPoint(mid,proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg, end));
-		if (vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(tangent_[l])))
+		mid = V4d3d(mid_[l])* mid_[l][3];
+		beg = mid - (tangent_[l] * (len_[l]/2));
+		end = mid + (tangent_[l] * (len_[l]/2));
+		proj_dir_tmp = tangent_[l] * ((V4d3d(point_)-mid).dot(tangent_[l]));
+
+		d1 = (beg-mid).norm();
+		d2 = (end-mid).norm();
+		d3 = (beg-(mid+proj_dir_tmp)).norm();
+		d4 = (end-(mid+proj_dir_tmp)).norm();
+		d5 = (beg-end).norm();
+
+		if (directionCheck(proj_dir_tmp, tangent_[l]))
 		{
 			// ignore the first loc_int so that we don't get "stuck" at curves
 			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2; continue;}
 			if (d4<=d2 && (d3-d5) < 0.005) //### TODO small error deviation (deadzone)
 			{
 				d6 = d3-d5;
-				if (min_(l2Norm(minusPoint(point_, mid_[l])), min_dist))
+				if (min_((V4d3d(point_)-mid).norm(), min_dist))
 				{
-					min_dist	= l2Norm(minusPoint(point_, mid_[l]));
-					idx_tmp 	= l;
+					min_dist = (V4d3d(point_)-mid).norm();
+					idx_tmp  = l;
 				}
 			}
 		}
@@ -359,10 +329,10 @@ double dLIPredict(
 			if (d3<=d1 && (d4-d5) < 0.005)
 			{
 				d6 = d4-d5;
-				if (min_(l2Norm(minusPoint(point_, mid_[l])), min_dist))
+				if (min_((V4d3d(point_)-mid).norm(), min_dist))
 				{
-					min_dist	= l2Norm(minusPoint(point_, mid_[l]));
-					idx_tmp 	= l;
+					min_dist = (V4d3d(point_)-mid).norm();
+					idx_tmp  = l;
 				}
 			}
 		}
@@ -378,16 +348,17 @@ double dLIPredict(
 //		loc_idx_ = idx_tmp;
 //	}
 
-	if(loc_init_==0)
+	if(loc_init_==0) // initial
 	{
 		min_dist = 10;
 		int tmp = 0;
-		for(int i=idx1;i<idx2;i++)
+		for(int l=idx1;l<idx2;l++)
 		{
-			if (min_(l2Norm(minusPoint(point_, mid_[i])), min_dist))
+			mid = V4d3d(mid_[l])* mid_[l][3];
+			if (min_((V4d3d(point_)-mid).norm(), min_dist))
 			{
-				min_dist = l2Norm(minusPoint(point_, mid_[i]));
-				tmp = i;
+				min_dist = (V4d3d(point_)-mid).norm();
+				tmp  = l;
 			}
 		}
 
@@ -404,199 +375,174 @@ double dLIPredict(
 	return d6;
 }
 
-double decideLocationInterval(
-	vector<int> &loc_idxs_,
-	int &loc_last_idx_,
-	point_d point_,
-	vector<point_d> beg_,
-	vector<point_d> mid_,
-	vector<point_d> end_,
-	vector<point_d> tangent_,
-	int loc_offset_,
-	bool loc_init_)
-{
-	int idx_tmp;
-	double d1,d2,d3,d4,d5,d6,d6min; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
-	point_d proj_dir_tmp;
-	bool flag = true;
-
-	// Added a buffer to prevent the location prediction from jumping too much
-	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
-	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
-	for(int l=idx1;l<idx2;l++)
-	{
-		proj_dir_tmp =
-				multiPoint(
-						tangent_[l],
-						dotProduct(
-								point2vector(minusPoint(point_,mid_[l])),
-								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
-		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
-		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
-		if (vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(tangent_[l])))
-		{
-			if (l == idx1)	{d6 = d3-d5;}
-			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
-			{
-				d6 = d3-d5;
-			}
-		}
-		else
-		{
-			if (l == idx1)	{d6 = d4-d5;}
-			if (d3<=d1 && (d4-d5) < 0.01)
-			{
-				d6 = d4-d5;
-			}
-		}
-		if (min_(fabs(d6),d6min))
-		{
-			d6min = fabs(d6);
-			idx_tmp = l;
-		}
-	}
-
-	loc_idxs_.clear();
-	// to prevent unknown locations at start and end
-	if (d6min > 0.005)
-	{
-		loc_idxs_.push_back(loc_last_idx_);
-		loc_last_idx_ = loc_idxs_.back();
-	}
-	else
-	{
-		if (loc_init_ || idx_tmp==loc_last_idx_)
-		{
-			loc_idxs_.push_back(idx_tmp);
-			loc_last_idx_ = loc_idxs_.back();
-		}
-		else
-		{
-			if (idx_tmp>loc_last_idx_)
-			{
-				for(int i=loc_last_idx_+1;i<idx_tmp+1;i++)
-				{
-					loc_idxs_.push_back(i);
-				}
-				loc_last_idx_ = idx_tmp;
-			}
-			else
-			{
-				for(int i=idx_tmp+1;i<loc_last_idx_+1;i++)
-				{
-					loc_idxs_.push_back(i);
-				}
-				loc_last_idx_ = idx_tmp;
-			}
-		}
-	}
-	return d6min;
-}
-
-double decideLocationInterval(
-	int &loc_idx_,
-	int &loc_last_idx_,
-	point_d point_,
-	vector<point_d> beg_,
-	vector<point_d> mid_,
-	vector<point_d> end_,
-	vector<point_d> tangent_,
-	int offset_)
-{
-	double d1,d2,d3,d4,d5,d6,d7;
-	point_d proj_dir_tmp;
-	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
-//	int idx1 = (loc_last_idx_-offset_  < 0 ? 0 : loc_last_idx_-offset_);
-	int idx2 =
-			(offset_ < 0 ?
-					LOC_INT :
-					(loc_last_idx_+offset_ > LOC_INT ?
-							LOC_INT :
-							loc_last_idx_+offset_));
-	bool mem = false;
-	for(int l=idx1;l<idx2;l++)
-	{
-		proj_dir_tmp =
-				multiPoint(
-						tangent_[l],
-						dotProduct(
-								point2vector(minusPoint(point_,mid_[l])),
-								point2vector(tangent_[l])));
-		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
-		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
-		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
-		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
-		if (vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(tangent_[l])))
-		{
-			mem = true;
-			d7 = d3-d5;
-			if (l == 0)						{d6 = d3-d5;}
-			if (d4<=d2 && (d3-d5)<0.001)	{loc_idx_ = l; break;} //### small error deviation (deadzone)
-		}
-		else
-		{
-			//### helps to mitigate the deadzone
-//			if (mem) {loc_idx_ = (l-1<0 ? 0:l-1); break;}
-			d7 = d4-d5;
-			if (l == 0)						{d6 = d4-d5;}
-			if (d3<=d1 && (d4-d5)<0.001) 	{loc_idx_ = l; break;}
-		}
-	}
-	// to prevent unknown locations at start and end
-	if (loc_idx_<0) {loc_idx_		= loc_last_idx_	; return d6;}
-	else			{loc_last_idx_	= loc_idx_		; return d7;}
-
-}
+//double decideLocationInterval(
+//	vector<int> &loc_idxs_,
+//	int &loc_last_idx_,
+//	point_d point_,
+//	vector<point_d> beg_,
+//	vector<point_d> mid_,
+//	vector<point_d> end_,
+//	vector<point_d> tangent_,
+//	int loc_offset_,
+//	bool loc_init_)
+//{
+//	int idx_tmp;
+//	double d1,d2,d3,d4,d5,d6,d6min; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
+//	point_d proj_dir_tmp;
+//	bool flag = true;
+//
+//	// Added a buffer to prevent the location prediction from jumping too much
+//	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
+//	int idx2 = ( idx1+loc_offset_ > LOC_INT ? LOC_INT : idx1+loc_offset_ );
+//	for(int l=idx1;l<idx2;l++)
+//	{
+//		proj_dir_tmp =
+//				multiPoint(
+//						tangent_[l],
+//						dotProduct(minusPoint(point_,mid_[l]),tangent_[l]));
+//		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
+//		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
+//		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
+//		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
+//		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+//		if (directionCheck(proj_dir_tmp, tangent_[l]))
+//		{
+//			if (l == idx1)	{d6 = d3-d5;}
+//			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
+//			{
+//				d6 = d3-d5;
+//			}
+//		}
+//		else
+//		{
+//			if (l == idx1)	{d6 = d4-d5;}
+//			if (d3<=d1 && (d4-d5) < 0.01)
+//			{
+//				d6 = d4-d5;
+//			}
+//		}
+//		if (min_(fabs(d6),d6min))
+//		{
+//			d6min = fabs(d6);
+//			idx_tmp = l;
+//		}
+//	}
+//
+//	loc_idxs_.clear();
+//	// to prevent unknown locations at start and end
+//	if (d6min > 0.005)
+//	{
+//		loc_idxs_.push_back(loc_last_idx_);
+//		loc_last_idx_ = loc_idxs_.back();
+//	}
+//	else
+//	{
+//		if (loc_init_ || idx_tmp==loc_last_idx_)
+//		{
+//			loc_idxs_.push_back(idx_tmp);
+//			loc_last_idx_ = loc_idxs_.back();
+//		}
+//		else
+//		{
+//			if (idx_tmp>loc_last_idx_)
+//			{
+//				for(int i=loc_last_idx_+1;i<idx_tmp+1;i++)
+//				{
+//					loc_idxs_.push_back(i);
+//				}
+//				loc_last_idx_ = idx_tmp;
+//			}
+//			else
+//			{
+//				for(int i=idx_tmp+1;i<loc_last_idx_+1;i++)
+//				{
+//					loc_idxs_.push_back(i);
+//				}
+//				loc_last_idx_ = idx_tmp;
+//			}
+//		}
+//	}
+//	return d6min;
+//}
+//
+//double decideLocationInterval(
+//	int &loc_idx_,
+//	int &loc_last_idx_,
+//	point_d point_,
+//	vector<point_d> beg_,
+//	vector<point_d> mid_,
+//	vector<point_d> end_,
+//	vector<point_d> tangent_,
+//	int offset_)
+//{
+//	double d1,d2,d3,d4,d5,d6,d7;
+//	point_d proj_dir_tmp;
+//	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
+////	int idx1 = (loc_last_idx_-offset_  < 0 ? 0 : loc_last_idx_-offset_);
+//	int idx2 =
+//			(offset_ < 0 ?
+//					LOC_INT :
+//					(loc_last_idx_+offset_ > LOC_INT ?
+//							LOC_INT :
+//							loc_last_idx_+offset_));
+//	bool mem = false;
+//	for(int l=idx1;l<idx2;l++)
+//	{
+//		proj_dir_tmp =
+//				multiPoint(
+//						tangent_[l],
+//						dotProduct(minusPoint(point_,mid_[l]),tangent_[l]));
+//		d1 = l2Norm(minusPoint(beg_[l],mid_[l]));
+//		d2 = l2Norm(minusPoint(end_[l],mid_[l]));
+//		d3 = l2Norm(minusPoint(beg_[l],addPoint(mid_[l],proj_dir_tmp)));
+//		d4 = l2Norm(minusPoint(end_[l],addPoint(mid_[l],proj_dir_tmp)));
+//		d5 = l2Norm(minusPoint(beg_[l],end_[l]));
+//		if (directionCheck(proj_dir_tmp, tangent_[l]))
+//		{
+//			mem = true;
+//			d7 = d3-d5;
+//			if (l == 0)						{d6 = d3-d5;}
+//			if (d4<=d2 && (d3-d5)<0.001)	{loc_idx_ = l; break;} //### small error deviation (deadzone)
+//		}
+//		else
+//		{
+//			//### helps to mitigate the deadzone
+////			if (mem) {loc_idx_ = (l-1<0 ? 0:l-1); break;}
+//			d7 = d4-d5;
+//			if (l == 0)						{d6 = d4-d5;}
+//			if (d3<=d1 && (d4-d5)<0.001) 	{loc_idx_ = l; break;}
+//		}
+//	}
+//	// to prevent unknown locations at start and end
+//	if (loc_idx_<0) {loc_idx_		= loc_last_idx_	; return d6;}
+//	else			{loc_last_idx_	= loc_idx_		; return d7;}
+//
+//}
 
 int decideSectorInterval(
 	int &sec_idx_,
 	int loc_idx_,
-	point_d &delta_t_,
-	point_d point_,
-	vector<point_d> mid_,
-	vector<point_d> tangent_,
-	vector<point_d> normal_)
+	Vector3d &delta_t_,
+	Vector4d point_,
+	vector<Vector4d> mid_,
+	vector<Vector3d> tangent_,
+	vector<Vector3d> normal_)
 {
 	//projection of point onto the tangent at mid
-	point_d proj_dir =
-			multiPoint(
-					tangent_[loc_idx_],
-					dotProduct(
-							point2vector(
-									minusPoint(
-											point_,
-											multiPoint(
-													mid_[loc_idx_],
-													mid_[loc_idx_].l))),
-							point2vector(tangent_[loc_idx_])));
-	delta_t_ =
-			minusPoint(
-					point_,
-					addPoint(
-							proj_dir,
-							multiPoint(mid_[loc_idx_], mid_[loc_idx_].l)));
+	Vector3d mid = V4d3d(mid_[loc_idx_])* mid_[loc_idx_][3];
+
+	Vector3d proj_dir_tmp =
+			tangent_[loc_idx_] *
+			((V4d3d(point_) - mid).dot(tangent_[loc_idx_]));
+
+	delta_t_ = V4d3d(point_) - (proj_dir_tmp + mid);
+
 	double angle_tmp =
 			atan2(
-					l2Norm(
-							crossProduct(
-									point2vector(delta_t_),
-									point2vector(normal_[loc_idx_]))),
-					dotProduct(
-							point2vector(delta_t_),
-							point2vector(normal_[loc_idx_])));
-	if (!vectorDirectionCheck(
-			crossProduct(
-					point2vector(normal_[loc_idx_]),
-					point2vector(multiPoint(delta_t_,1/l2Norm(delta_t_)))),
-			point2vector(tangent_[loc_idx_])))
+					(delta_t_.cross(normal_[loc_idx_])).norm(),
+					 delta_t_.dot(normal_[loc_idx_]));
+
+	if (!directionCheck(normal_[loc_idx_].cross(delta_t_), tangent_[loc_idx_]))
 	{
 		angle_tmp *= -1;
 	}
@@ -605,61 +551,61 @@ int decideSectorInterval(
 	return EXIT_SUCCESS;
 }
 
-int decideCurvature(
-	point_d point_,
-	vector<point_d> &curve_mem_,
-	double &curve_,
-	int num_points_)
-{
-	int s = curve_mem_.size()-1;
-	if (s+1<num_points_)
-	{
-		curve_mem_.push_back(point_);
-		curve_ = 0.0;
-	}
-	else
-	{
-		curve_mem_.erase(curve_mem_.begin());
-		curve_mem_.push_back(point_);
-		curve_ =
-				(l2Norm(minusPoint(curve_mem_[0], 	curve_mem_[s/2])) +
-				 l2Norm(minusPoint(curve_mem_[s/2],	curve_mem_[s]))) /
-				 l2Norm(minusPoint(curve_mem_[0],	curve_mem_[s]));
-		curve_ -= 1.0;
-	}
-	// HACK TODO
-	if (curve_>0.4) {curve_ = 0.4;}
-	return EXIT_SUCCESS;
-}
-
-int decideRateOfChangeOfDeltaT(
-	point_d delta_t_,
-	vector<point_d> &delta_t_mem_,
-	double &dd_delta_t_,
-	int num_points_)
-{
-	int s = delta_t_mem_.size()-1;
-	if (s+1<num_points_)
-	{
-		delta_t_mem_.push_back(delta_t_);
-		dd_delta_t_ = 0.0;
-	}
-	else
-	{
-		delta_t_mem_.erase(delta_t_mem_.begin());
-		delta_t_mem_.push_back(delta_t_);
-		dd_delta_t_ =
-				l2Norm(
-					minusPoint(
-							minusPoint(
-									delta_t_mem_[s  ],
-									delta_t_mem_[s/2]),
-							minusPoint(
-									delta_t_mem_[s/2],
-									delta_t_mem_[0  ])));
-	}
-	return EXIT_SUCCESS;
-}
+//int decideCurvature(
+//	point_d point_,
+//	vector<point_d> &curve_mem_,
+//	double &curve_,
+//	int num_points_)
+//{
+//	int s = curve_mem_.size()-1;
+//	if (s+1<num_points_)
+//	{
+//		curve_mem_.push_back(point_);
+//		curve_ = 0.0;
+//	}
+//	else
+//	{
+//		curve_mem_.erase(curve_mem_.begin());
+//		curve_mem_.push_back(point_);
+//		curve_ =
+//				(l2Norm(minusPoint(curve_mem_[0], 	curve_mem_[s/2])) +
+//				 l2Norm(minusPoint(curve_mem_[s/2],	curve_mem_[s]))) /
+//				 l2Norm(minusPoint(curve_mem_[0],	curve_mem_[s]));
+//		curve_ -= 1.0;
+//	}
+//	// HACK TODO
+//	if (curve_>0.4) {curve_ = 0.4;}
+//	return EXIT_SUCCESS;
+//}
+//
+//int decideRateOfChangeOfDeltaT(
+//	point_d delta_t_,
+//	vector<point_d> &delta_t_mem_,
+//	double &dd_delta_t_,
+//	int num_points_)
+//{
+//	int s = delta_t_mem_.size()-1;
+//	if (s+1<num_points_)
+//	{
+//		delta_t_mem_.push_back(delta_t_);
+//		dd_delta_t_ = 0.0;
+//	}
+//	else
+//	{
+//		delta_t_mem_.erase(delta_t_mem_.begin());
+//		delta_t_mem_.push_back(delta_t_);
+//		dd_delta_t_ =
+//				l2Norm(
+//					minusPoint(
+//							minusPoint(
+//									delta_t_mem_[s  ],
+//									delta_t_mem_[s/2]),
+//							minusPoint(
+//									delta_t_mem_[s/2],
+//									delta_t_mem_[0  ])));
+//	}
+//	return EXIT_SUCCESS;
+//}
 
 int folderSelect1(
 	const struct dirent *entry)

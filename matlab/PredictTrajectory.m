@@ -57,17 +57,17 @@ for i=1:length(DIR)
             continue;
         end
                 
-%         if (strcmp(DIR_S(ii).name,'2'))
-%             continue;
-%         end
-%         
-%         if (strcmp(DIR_S(ii).name,'1'))
-%             continue;
-%         end
-%         
-%         if (strcmp(DIR_S(ii).name,'0'))
-%             continue;
-%         end
+        if (strcmp(DIR_S(ii).name,'1'))
+            continue;
+        end
+        
+        if (strcmp(DIR_S(ii).name,'2'))
+            continue;
+        end
+        
+        if (strcmp(DIR_S(ii).name,'0'))
+            continue;
+        end
         
         % # action sequence
         file_name = [dir_name '/' DIR(i).name '/' DIR_S(ii).name];
@@ -322,7 +322,7 @@ for i=1:length(DIR)
 
     end
     
-    close all; 
+%     close all; 
     
 end
     

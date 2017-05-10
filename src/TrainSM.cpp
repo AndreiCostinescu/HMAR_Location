@@ -29,21 +29,21 @@ void TrainSM::ClearSM()
 }
 
 int TrainSM::FitCurve(
-	vector<point_d> points_avg_,
-	vector<point_d> &points_est_,
-	vector<point_d> &coeffs_)
+	vector<Vector4d> points_avg_,
+	vector<Vector4d> &points_est_,
+	vector<Vector3d> &coeffs_)
 {
 	// Performs curve fitting to obtain the coefficients of the curve.
-	vector<point_d> covs;
+	vector<Vector3d> covs;
 	reshapeVector(points_est_,(points_avg_.size())*4);
 	polyCurveFitPoint(points_avg_, points_est_, coeffs_, covs, true);
 
 	// Visualize by comparing both original and estimated points.
 	if(0)
 	{
-		vector<point_d> P = points_avg_;
+		vector<Vector4d> P = points_avg_;
 		P.insert(P.end(),points_est_.begin(),points_est_.end());
-		for(int i=0;i<points_avg_.size();i++) { P[i].l = 1; }
+		for(int i=0;i<points_avg_.size();i++) { P[i][3] = 1; }
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
 		vector<string> label_; label_.resize(2);
 		vector<string> label_ref; label_ref.resize(2);
@@ -57,14 +57,14 @@ int TrainSM::FitCurve(
 
 int TrainSM::DecideSectorIntervalExt(
 	edge_tt	edge_,
-	point_d point_,
-	point_d &delta_t_,
+	Vector4d point_,
+	Vector3d &delta_t_,
 	int &sec_idx_,
 	int loc_idx_)
 {
-	vector<point_d> mid	= edge_.loc_mid;
-	vector<point_d> tan	= edge_.tan;
-	vector<point_d> nor	= edge_.nor;
+	vector<Vector4d> mid = edge_.loc_mid;
+	vector<Vector3d> tan = edge_.tan;
+	vector<Vector3d> nor = edge_.nor;
 	return
 			decideSectorInterval(
 					sec_idx_, loc_idx_, delta_t_, point_, mid, tan, nor);
@@ -72,15 +72,15 @@ int TrainSM::DecideSectorIntervalExt(
 
 double TrainSM::DecideLocationIntervalExt(
 	edge_tt	edge_,
-	point_d point_,
+	Vector4d point_,
 	int &loc_idx_,
 	int loc_last_idx_,
 	int loc_offset_,
 	bool loc_init_)
 {
-	vector<point_d> tan	= edge_.tan;
-	vector<double> 	len = edge_.loc_len;
-	vector<point_d> mid	= edge_.loc_mid;
+	vector<Vector3d> tan = edge_.tan;
+	vector<double> 	 len = edge_.loc_len;
+	vector<Vector4d> mid = edge_.loc_mid;
 	return dLI(
 			loc_idx_, loc_last_idx_, point_, len, mid, tan,
 			loc_offset_, loc_init_);
@@ -88,14 +88,14 @@ double TrainSM::DecideLocationIntervalExt(
 
 int TrainSM::AdjustSectorMap(
 	edge_tt &edge_,
-	point_d &point_,
+	Vector4d &point_,
 	int &loc_last_idx_,
 	int &loc_curr_idx_,
 	double &delta_t_mem_,
 	bool &loc_init_,
 	int loc_offset_)
 {
-	point_d delta_t, delta_t_zero;
+	Vector3d delta_t, delta_t_zero;
 	int sec_idx = -1;
 	int loc_idx = -1;
 	int loc_last_idx_mem = loc_last_idx_;
@@ -132,14 +132,11 @@ int TrainSM::AdjustSectorMap(
 	if (loc_idx==loc_last_idx_)
 	{
 		min_idx			= loc_idx*SEC_INT + sec_idx;
-		tmpdeltatmin	= l2Norm(delta_t);
+		tmpdeltatmin	= delta_t.norm();
 		tmpmin			=
-				l2Norm(
-						minusPoint(
-								point_,
-								multiPoint(
-										edge_.loc_mid[loc_idx],
-										edge_.loc_mid[loc_idx].l)));
+				V4d3d(point_ -
+					  (edge_.loc_mid[loc_idx] *
+					   (double)edge_.loc_mid[loc_idx][3])).norm();
 	}
 	else if (loc_idx>loc_last_idx_)
 	{
@@ -149,23 +146,17 @@ int TrainSM::AdjustSectorMap(
 					edge_, point_, delta_t_zero, sec_idx, ll);
 			if (
 					min_(
-							l2Norm(
-									minusPoint(
-											point_,
-											multiPoint(
-													edge_.loc_mid[ll],
-													edge_.loc_mid[ll].l))),
+							V4d3d(point_ -
+									(edge_.loc_mid[loc_idx] *
+									(double)edge_.loc_mid[loc_idx][3])).norm(),
 							tmpmin))
 			{
 				min_idx 		= ll*SEC_INT + sec_idx;
-				tmpdeltatmin	= l2Norm(delta_t_zero);
+				tmpdeltatmin	= delta_t_zero.norm();
 				tmpmin			=
-						l2Norm(
-								minusPoint(
-										point_,
-										multiPoint(
-												edge_.loc_mid[ll],
-												edge_.loc_mid[ll].l)));
+						V4d3d(point_ -
+							  (edge_.loc_mid[loc_idx] *
+							   (double)edge_.loc_mid[loc_idx][3])).norm();
 			}
 		}
 	}
@@ -174,20 +165,15 @@ int TrainSM::AdjustSectorMap(
 	if (loc_init_)
 	{
 		// if point starts before curve
-		point_d proj_dir_tmp =
-				multiPoint(
-						edge_.tan[0],
-						dotProduct(
-								point2vector(
-										minusPoint(
-												point_,
-												multiPoint(
-														edge_.loc_mid[0],
-														edge_.loc_mid[0].l))),
-								point2vector(edge_.tan[0])));
-		if (!vectorDirectionCheck(
-				point2vector(proj_dir_tmp),
-				point2vector(edge_.tan[0])))
+
+		Vector3d proj_dir_tmp =
+				edge_.tan[0] *
+				(V4d3d(
+						point_ - (
+								edge_.loc_mid[0]*
+								(double)edge_.loc_mid[0][3]))
+						.dot(edge_.tan[0]));
+		if (!directionCheck(proj_dir_tmp,edge_.tan[0]))
 		{
 			loc_init_ = true;
 			loc_last_idx_ = 0;
@@ -197,7 +183,8 @@ int TrainSM::AdjustSectorMap(
 		else
 		{
 			loc_init_ = false;
-			edge_.sector_map[min_idx] = max(edge_.sector_map[min_idx], tmpdeltatmin);
+			edge_.sector_map[min_idx] =
+					max(edge_.sector_map[min_idx], tmpdeltatmin);
 //					if (edge_.sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
 			loc_last_idx_ = min_idx/SEC_INT;
 			loc_curr_idx_ = min_idx/SEC_INT;
@@ -215,7 +202,8 @@ int TrainSM::AdjustSectorMap(
 			this->DecideSectorIntervalExt(
 					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*SEC_INT + sec_idx;
-			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+			edge_.sector_map[tmp_idx] =
+					max(edge_.sector_map[tmp_idx], delta_t_zero.norm());
 		}
 		loc_curr_idx_ = (min_idx/SEC_INT);
 	}
@@ -231,12 +219,12 @@ int TrainSM::AdjustSectorMap(
 
 int TrainSM::AdjustCurve(
 	edge_tt &edge_,
-	point_d &point_,
+	Vector4d point_,
 	int &loc_last_idx_,
 	bool &loc_init_,
 	int loc_offset_)
 {
-	point_d delta_t_zero;
+	Vector3d delta_t_zero;
 	int sec_idx 			= -1;
 	int loc_idx 			= -1;
 	int loc_last_idx_mem 	= loc_last_idx_;
@@ -265,7 +253,8 @@ int TrainSM::AdjustCurve(
 	this->DecideSectorIntervalExt(
 			edge_, point_, delta_t_zero, sec_idx, loc_idx);
 	int tmp_idx = loc_idx*SEC_INT + sec_idx;
-	edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+	edge_.sector_map[tmp_idx] =
+			max(edge_.sector_map[tmp_idx], delta_t_zero.norm());
 
 	if (loc_idx>10) //offset because we shift back 10 at beginning
 	{
@@ -274,7 +263,8 @@ int TrainSM::AdjustCurve(
 			this->DecideSectorIntervalExt(
 					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*SEC_INT + sec_idx;
-			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+			edge_.sector_map[tmp_idx] =
+					max(edge_.sector_map[tmp_idx], delta_t_zero.norm());
 		}
 	}
 
@@ -285,13 +275,13 @@ int TrainSM::AdjustCurve(
 
 int TrainSM::AdjustCurveExt(
 	Graph *Graph_,
-	vector<point_d> coeffs_,
-	vector<point_d> pts_)
+	vector<Vector3d> coeffs_,
+	vector<Vector4d> pts_)
 {
 	double cx[DEGREE], cy[DEGREE], cz[DEGREE];
 	double N 				= Graph_->GetEdgeCounter(label1_sm,label2_sm,0);
 	double total_len 		= 0.0;
-	node_tt node_tmp		= {}; Graph_->GetNode(label1_sm, node_tmp);
+	node_tt node_tmp		= Graph_->GetNode(label1_sm);
 	edge_tt edge_tmp 		= Graph_->GetEdge(label1_sm, label2_sm, 0);
 	edge_tt edge_tmp_mem	= edge_tmp;
 
@@ -301,15 +291,15 @@ int TrainSM::AdjustCurveExt(
 
 	for(int i=1;i<pts_.size();i++)
 	{
-		total_len += l2Norm(minusPoint(pts_[i],pts_[i-1]));
+		total_len += V4d3d(pts_[i]-pts_[i-1]).norm();
 	}
 	edge_tmp.total_len = total_len;
 
 	for(int i=0;i<DEGREE;i++)
 	{
-		cx[i] = coeffs_[i].x;
-		cy[i] = coeffs_[i].y;
-		cz[i] = coeffs_[i].z;
+		cx[i] = coeffs_[i][0];
+		cy[i] = coeffs_[i][1];
+		cz[i] = coeffs_[i][2];
 	}
 
 	int mem = 0;
@@ -349,10 +339,10 @@ int TrainSM::AdjustCurveExt(
 
 		if (lim[2]<0) {lim[2] = integral_limit_;}
 
-		point_d p_mid, p_tan, p_nor;
-		p_mid.x = gsl_poly_eval(cx, DEGREE, lim[1]);
-		p_mid.y = gsl_poly_eval(cy, DEGREE, lim[1]);
-		p_mid.z = gsl_poly_eval(cz, DEGREE, lim[1]);
+		Vector3d p_tan, p_nor, p_mid;
+		p_mid[0] = gsl_poly_eval(cx, DEGREE, lim[1]);
+		p_mid[1] = gsl_poly_eval(cy, DEGREE, lim[1]);
+		p_mid[2] = gsl_poly_eval(cz, DEGREE, lim[1]);
 
 		// N : counter
 		if (N==0)
@@ -361,58 +351,35 @@ int TrainSM::AdjustCurveExt(
 			if (i==0)
 			{
 				cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, true);
-				edge_tmp.nor[i] = multiPoint(p_nor, 1/l2Norm(p_nor));
-				edge_tmp.tan[i] = multiPoint(p_tan, 1/l2Norm(p_tan));
+				edge_tmp.nor[i] = p_nor.normalized();
+				edge_tmp.tan[i] = p_tan.normalized();
+
 			}
 			// rotates the normal at location interval 0
 			else
 			{
 				cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, false);
-				edge_tmp.tan [i] = multiPoint(p_tan , 1/l2Norm(p_tan));
-				vector<double> tmpRTI =
-						transInv(
-								rodriguezRot(
-										edge_tmp.tan[0],
-										edge_tmp.tan[i]));
-				edge_tmp.nor[i].x =
-						tmpRTI[0]*edge_tmp.nor[0].x +
-						tmpRTI[1]*edge_tmp.nor[0].y +
-						tmpRTI[2]*edge_tmp.nor[0].z;
-				edge_tmp.nor[i].y =
-						tmpRTI[3]*edge_tmp.nor[0].x +
-						tmpRTI[4]*edge_tmp.nor[0].y +
-						tmpRTI[5]*edge_tmp.nor[0].z;
-				edge_tmp.nor[i].z =
-						tmpRTI[6]*edge_tmp.nor[0].x +
-						tmpRTI[7]*edge_tmp.nor[0].y +
-						tmpRTI[8]*edge_tmp.nor[0].z;
+				edge_tmp.tan [i] = p_tan.normalized();
+				Matrix3d R = rodriguezRot(edge_tmp.tan[0], edge_tmp.tan[i]);
+				edge_tmp.nor[i] = R.inverse().transpose() * edge_tmp.nor[0];
 			}
 		}
 		else
 		{
 			cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, false);
-			edge_tmp.nor[i] = multiPoint(p_nor , 1/l2Norm(p_nor));
-			edge_tmp.tan[i] = multiPoint(p_tan , 1/l2Norm(p_tan));
+			edge_tmp.nor[i] = p_nor.normalized();
+			edge_tmp.tan[i] = p_tan.normalized();
 		}
 
-
-		edge_tmp.loc_len[i] 	=
-				l2Norm(
-						minusPoint(
-								addPoint(
-										p_mid,
-										multiPoint(p_tan, lim[0]-lim[1])),
-								addPoint(
-										p_mid,
-										multiPoint(p_tan, lim[2]-lim[1]))));
-
-//		edge_tmp.loc_mid[i]		= p_mid;
+		edge_tmp.loc_len[i] =
+				((p_mid + (p_tan * (lim[0]-lim[1]))) -
+				 (p_mid + (p_tan * (lim[2]-lim[1])))).norm();
 
 		//change origin to LA label1
-		p_mid   = minusPoint(p_mid, pts_[0]);
-		tmp_len = l2Norm(p_mid);
-		edge_tmp.loc_mid[i]		= multiPoint(p_mid, 1/tmp_len);
-		edge_tmp.loc_mid[i].l	= tmp_len;
+		p_mid   = p_mid - V4d3d(pts_[0]);
+		tmp_len = p_mid.norm();
+		edge_tmp.loc_mid[i]		= V3d4d(p_mid.normalized());
+		edge_tmp.loc_mid[i][3]	= tmp_len;
 
 	}
 	// *************************************************************[CURVE FIT]
@@ -424,65 +391,39 @@ int TrainSM::AdjustCurveExt(
 		for(int l=0;l<LOC_INT;l++)
 		{
 			edge_tmp.loc_mid[l]	=
-					addPoint(
-							multiPoint(
-									addPoint(
-											multiPoint(
-													edge_tmp_mem.loc_mid[l],
-													edge_tmp_mem.loc_mid[l].l),
-											node_tmp.centroid),
-									N/(N+1)),
-							multiPoint(
-									addPoint(
-											multiPoint(
-													edge_tmp.loc_mid[l],
-													edge_tmp.loc_mid[l].l),
-											node_tmp.centroid),
-									1/(N+1)));
+					((N/(N+1)) *
+							(edge_tmp_mem.loc_mid[l] *
+									edge_tmp_mem.loc_mid[l][3] +
+										node_tmp.centroid)) +
+					((1/(N+1)) *
+							(edge_tmp.loc_mid[l] *
+									edge_tmp.loc_mid[l][3] +
+										node_tmp.centroid)) ;
 
-			edge_tmp.loc_mid[l]	=
-					minusPoint(edge_tmp.loc_mid[l], node_tmp.centroid);
-			tmp_len = l2Norm(edge_tmp.loc_mid[l]);
-			edge_tmp.loc_mid[l]		= multiPoint(edge_tmp.loc_mid[l], 1/tmp_len);
-			edge_tmp.loc_mid[l].l 	= tmp_len;
+			edge_tmp.loc_mid[l]	= edge_tmp.loc_mid[l] - node_tmp.centroid;
+			tmp_len = V4d3d(edge_tmp.loc_mid[l]).norm();
+			edge_tmp.loc_mid[l] =
+					V3d4d(V4d3d(edge_tmp.loc_mid[l]).normalized());
+			edge_tmp.loc_mid[l][3] = tmp_len;
 
 			edge_tmp.loc_len[l] =
 					(edge_tmp_mem.loc_len[l]*N/(N+1)) +
 					(edge_tmp.loc_len[l]*1/(N+1));
 
 			edge_tmp.tan[l] =
-					addPoint(
-							multiPoint(edge_tmp_mem.tan[l] 		, N/(N+1)),
-							multiPoint(edge_tmp.tan[l] 	  	  	, 1/(N+1)));
-			edge_tmp.tan[l]	=
-					multiPoint(edge_tmp.tan[l], 1/l2Norm(edge_tmp.tan[l]));
+					(edge_tmp_mem.tan[l] * N/(N+1)) +
+					(edge_tmp.tan[l] 	 * 1/(N+1));
+			edge_tmp.tan[l].normalize();
 
 			// for angles close to 0
-			if (dotProduct(
-					point2vector(edge_tmp_mem.tan[l]),
-					point2vector(edge_tmp.tan[l])) > 0.99)
+			if (edge_tmp_mem.tan[l].dot(edge_tmp.tan[l]) > 0.99)
 			{
 				edge_tmp.nor[l] = edge_tmp_mem.nor[l];
 			}
 			else
 			{
-				vector<double> tmpRTI =
-						transInv(
-								rodriguezRot(
-										edge_tmp_mem.tan[l],
-										edge_tmp.tan[l]));
-				edge_tmp.nor[l].x =
-						tmpRTI[0]*edge_tmp_mem.nor[l].x +
-						tmpRTI[1]*edge_tmp_mem.nor[l].y +
-						tmpRTI[2]*edge_tmp_mem.nor[l].z;
-				edge_tmp.nor[l].y =
-						tmpRTI[3]*edge_tmp_mem.nor[l].x +
-						tmpRTI[4]*edge_tmp_mem.nor[l].y +
-						tmpRTI[5]*edge_tmp_mem.nor[l].z;
-				edge_tmp.nor[l].z =
-						tmpRTI[6]*edge_tmp_mem.nor[l].x +
-						tmpRTI[7]*edge_tmp_mem.nor[l].y +
-						tmpRTI[8]*edge_tmp_mem.nor[l].z;
+				Matrix3d R = rodriguezRot(edge_tmp_mem.tan[l], edge_tmp.tan[l]);
+				edge_tmp.nor[l] = R.inverse().transpose() * edge_tmp_mem.nor[l];
 			}
 		}
 		// ***********************************************************[AVERAGE]
@@ -490,7 +431,9 @@ int TrainSM::AdjustCurveExt(
 		// [SECTOR MAP]********************************************************
 		reshapeVector(edge_tmp.sector_map, LOC_INT*SEC_INT);
 		vector<double> delta_t_mem; delta_t_mem.resize(3);
-		point_d tmpN, p_old;
+		Vector3d tmpN;
+		Vector4d p_old;
+		AngleAxisd aa;
 
 		for(int l=0;l<LOC_INT;l++)
 		{
@@ -498,18 +441,12 @@ int TrainSM::AdjustCurveExt(
 			for(int s=0;s<SEC_INT;s++)
 			{
 				// [OLD POINT]*************************************************
-				tmpN = rodriguezVec(
-								2*M_PI*fmod((s+0.5),(double)SEC_INT)/SEC_INT,
-								edge_tmp_mem.tan[l],
-								edge_tmp_mem.nor[l]);
-				p_old =
-						addPoint(
-								multiPoint(
-										edge_tmp_mem.loc_mid[l],
-										edge_tmp_mem.loc_mid[l].l),
-								multiPoint(
-										tmpN,
-										edge_tmp_mem.sector_map[l*SEC_INT+s]));
+				aa.angle() = 2*M_PI*fmod((s+0.5),(double)SEC_INT)/SEC_INT;
+				aa.axis() = edge_tmp_mem.tan[l];
+				tmpN = rodriguezVec(aa, edge_tmp_mem.nor[l]);
+
+				p_old = (edge_tmp_mem.loc_mid[l]*edge_tmp_mem.loc_mid[l][3]) +
+						V3d4d(tmpN * edge_tmp_mem.sector_map[l*SEC_INT+s]);
 				// *************************************************[OLD POINT]
 				bool tmp_init = false;
 				int last; //##TODO
@@ -540,7 +477,7 @@ int TrainSM::AdjustCurveExt(
 
 int TrainSM::FitSectorMap(
 	edge_tt &edge_,
-	point_d point_,
+	Vector4d point_,
 	int &loc_last_idx_,
 	int loc_offset_,
 	bool &loc_init_)
@@ -549,7 +486,7 @@ int TrainSM::FitSectorMap(
 	int loc_idx 			= -1;
 	int loc_last_idx_mem 	= loc_last_idx_;
 	bool mem_init			= loc_init_;
-	point_d delta_t, delta_t_zero;
+	Vector3d delta_t, delta_t_zero;
 
 	double tmp =
 			this->DecideLocationIntervalExt(
@@ -572,11 +509,10 @@ int TrainSM::FitSectorMap(
 	}
 
 	// Find delta_t
-	this->DecideSectorIntervalExt(
-			edge_, point_, delta_t, sec_idx, loc_idx);
+	this->DecideSectorIntervalExt(edge_, point_, delta_t, sec_idx, loc_idx);
 
 	// To fill up the holes if the location index jumps a few forward.
-	double delta_t_min	= l2Norm(delta_t);
+	double delta_t_min	= delta_t.norm();
 	int min_idx			= loc_idx*SEC_INT + sec_idx;
 
 	if (loc_init_)
@@ -599,7 +535,8 @@ int TrainSM::FitSectorMap(
 			this->DecideSectorIntervalExt(
 					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*SEC_INT + sec_idx;
-			edge_.sector_map[tmp_idx] = max(edge_.sector_map[tmp_idx], l2Norm(delta_t_zero));
+			edge_.sector_map[tmp_idx] =
+					max(edge_.sector_map[tmp_idx], delta_t_zero.norm());
 			if (edge_.sector_map[min_idx]>0.9)  {return EXIT_FAILURE;} // TO BIGGGGGGGGG
 		}
 		loc_last_idx_ = (min_idx/SEC_INT);
@@ -617,7 +554,7 @@ int TrainSM::FitSectorMap(
 
 int TrainSM::FitSectorMapInit(
 	Graph *Graph_,
-	vector<point_d> &points_,
+	vector<Vector4d> &points_,
 	int loc_offset_)
 {
 	int loc_last_idx = 0;
@@ -641,12 +578,11 @@ int TrainSM::FitSectorMapInit(
 
 int TrainSM::FitSectorMapExt(
 	Graph *Graph_,
-	vector<point_d> &points_,
+	vector<Vector4d> &points_,
 	int loc_offset_)
 {
 	edge_tt edge_tmp = {};
-	node_tt node_tmp = {};
-	Graph_->GetNode(label1_sm, node_tmp);
+	node_tt node_tmp = Graph_->GetNode(label1_sm);
 
 	bool flag_init		= true;
 	int offset			= loc_offset_;
@@ -661,7 +597,7 @@ int TrainSM::FitSectorMapExt(
 
 		if (this->FitSectorMap(
 				edge_tmp,
-				minusPoint(points_[i],node_tmp.centroid),
+				points_[i] - node_tmp.centroid,
 				loc_last_idx,
 				offset,
 				flag_init)==EXIT_FAILURE)
@@ -672,8 +608,7 @@ int TrainSM::FitSectorMapExt(
 		//VISUALIZE
 		if(0)
 		{
-			cout << flag_init << endl;
-			vector<point_d> point_zero = {points_[i]}; vector<string> label_zero;
+			vector<Vector4d> point_zero = {points_[i]}; vector<string> label_zero;
 			vector<vector<unsigned char> > color_code; colorCode(color_code);
 			showConnection(Graph_, point_zero, label_zero, color_code, true);
 		}
@@ -686,7 +621,7 @@ int TrainSM::FitSectorMapExt(
 
 int TrainSM::UpdateSectorMap(
 	Graph *Graph_,
-	vector<point_d> points_avg_)
+	vector<Vector4d> points_avg_)
 {
 	/**
 	 * @Function
@@ -700,7 +635,8 @@ int TrainSM::UpdateSectorMap(
 	 * Graph_.setEdgeCounter()	: Increment the counter.
 	 */
 
-	vector<point_d> points_est, coeffs;
+	vector<Vector4d> points_est;
+	vector<Vector3d> coeffs;
 
 	if (Graph_->GetEdgeCounter(label1_sm,label2_sm,0) == 0)
 	{
@@ -742,7 +678,7 @@ int TrainSM::UpdateSectorMap(
 	//VISUALIZE
 	if(0)
 	{
-		vector<point_d> point_zero; vector<string> label_zero;
+		vector<Vector4d> point_zero; vector<string> label_zero;
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
 		showConnection(Graph_, points_avg_, label_zero, color_code, true);
 	}
@@ -752,7 +688,8 @@ int TrainSM::UpdateSectorMap(
 
 int TrainSM::BuildSectorMap(
 	Graph 						*Graph_,
-	vector<vector<point_d> > 	pva_avg_,
+	kb_t 						kb_,
+	vector<vector<Vector4d> > 	pva_avg_,
 	vector<int> 				contact_)
 {
 	this->ClearSM();
@@ -767,12 +704,12 @@ int TrainSM::BuildSectorMap(
 	// 2. Split the points into blocks according to the LA determined.
 	for(int i=0;i<pos_sm.size();i++)
 	{
-		if (pos_sm[i].l >= 0)
+		if (pos_sm[i][3] >= 0)
 		{
 			// Initial location
 			if	(label1_sm < 0)
 			{
-				label1_sm = pos_sm[i].l;
+				label1_sm = pos_sm[i][3];
 				continue;
 			}
 			else
@@ -780,7 +717,7 @@ int TrainSM::BuildSectorMap(
 				// Check if location has changed
 				if (label_idx_sm > 0)
 				{
-					label2_sm = pos_sm[i].l;
+					label2_sm = pos_sm[i][3];
 
 					// Back to the same position
 					if (label2_sm==label1_sm)
@@ -799,10 +736,11 @@ int TrainSM::BuildSectorMap(
 
 						// Adding the LA positions for start and end
 						node_tt node_tmp = {};
-						Graph_->GetNode(label1_sm, node_tmp);
-						pos_ind_sm.insert(pos_ind_sm.begin(),node_tmp.centroid);
-						Graph_->GetNode(label2_sm, node_tmp);
-						pos_ind_sm.push_back(node_tmp.centroid);
+						pos_ind_sm.insert(
+								pos_ind_sm.begin(),
+								Graph_->GetNode(label1_sm).centroid);
+						pos_ind_sm.push_back(
+								Graph_->GetNode(label2_sm).centroid);
 
 						this->UpdateSectorMap(Graph_, pos_ind_sm);
 						this->FindWindowConstraint(Graph_);

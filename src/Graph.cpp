@@ -14,44 +14,44 @@ Graph::Graph(
 	object 	= object_;
 }
 
-void Graph::SetKB(
-		kb_t x_)
-{
-	surface_mid	= x_.surface_mid;
-	surface_min	= x_.surface_min;
-	surface_max	= x_.surface_max;
-	surface_eq	= x_.surface_eq;
-	surface_lim	= x_.surface_lim;
-	surface_rot	= x_.surface_rot;
-	action_label= x_.al;
-	action_cat	= x_.ac;
-	object_label= x_.ol;
-	for(int i=action_cat["GEOMETRIC"].first;i<action_cat["GEOMETRIC"].second+1;i++)
-	{
-		action_state.goal[action_label[i]] = 0.0;
-	}
-}
+//void Graph::SetKB(
+//		kb_t x_)
+//{
+//	surface_mid	= x_.surface_mid;
+//	surface_min	= x_.surface_min;
+//	surface_max	= x_.surface_max;
+//	surface_eq	= x_.surface_eq;
+//	surface_lim	= x_.surface_lim;
+//	surface_rot	= x_.surface_rot;
+//	action_label= x_.al;
+//	action_cat	= x_.ac;
+//	object_label= x_.ol;
+//	for(int i=action_cat["GEOMETRIC"].first;i<action_cat["GEOMETRIC"].second+1;i++)
+//	{
+//		action_state.goal[action_label[i]] = 0.0;
+//	}
+//}
 
-kb_t Graph::GetKB()
-{
-	kb_t kb_tmp = {};
-	kb_tmp.surface_mid = surface_mid;
-	kb_tmp.surface_min = surface_min;
-	kb_tmp.surface_max = surface_max;
-	kb_tmp.surface_eq = surface_eq;
-	kb_tmp.al = action_label;
-	kb_tmp.ac = action_cat;
-	kb_tmp.ol = object_label;
-	return kb_tmp;
-}
+//kb_t Graph::GetKB()
+//{
+//	kb_t kb_tmp = {};
+//	kb_tmp.surface_mid = surface_mid;
+//	kb_tmp.surface_min = surface_min;
+//	kb_tmp.surface_max = surface_max;
+//	kb_tmp.surface_eq = surface_eq;
+//	kb_tmp.al = action_label;
+//	kb_tmp.ac = action_cat;
+//	kb_tmp.ol = object_label;
+//	return kb_tmp;
+//}
 
 //=============================================================================
 // NODES
 //=============================================================================
 
-vector<point_d> Graph::GetCentroidList()
+vector<Vector4d> Graph::GetCentroidList()
 {
-	vector<point_d> tmp;
+	vector<Vector4d> tmp;
 	tmp.resize(node_list.size());
 	for(int i=0;i<node_list.size();i++)
 	{

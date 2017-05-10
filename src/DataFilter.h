@@ -20,16 +20,17 @@ class DataFilter
 		void ResetFilter();
 
 		int PreprocessDataLive(
-			point_d pos_,
-			vector<point_d> &pos_vel_acc_avg_, //motion
+			Vector4d pos_,
+			vector<Vector4d> &pos_vel_acc_avg_, //motion
 			unsigned int window_);
 
 		int PreprocessContactLive(
-			int &contact_,
+			int contact_,
+			int &contact_out_,
 			unsigned int window_);
 
 	private:
-		vector<vector<point_d> > 	pos_vel_acc_mem;
+		vector<vector<Vector4d> > 	pos_vel_acc_mem;
 		vector<int> 				contact_mem;
 
 };

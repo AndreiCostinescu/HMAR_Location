@@ -19,7 +19,7 @@ void colorCode(
 	vector<vector<unsigned char> > &container_);
 
 void showData(
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<string> labels_ref_,
 	vector<int> &loc_idx_,
@@ -34,14 +34,14 @@ void showConnectionOnly(
 
 void showConnection(
 	Graph *Graph_,
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<vector<unsigned char> > color_,
 	bool show_points);
 
 void showConnectionTest(
 	Graph *Graph_,
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	vector<string> &labels_,
 	vector<vector<unsigned char> > color_,
 	bool show_points);
@@ -67,7 +67,7 @@ void plotDatasGeo(
 	vector<vector<vector<double> > > y);
 
 vtkSmartPointer<vtkPolyDataMapper> dataPoints(
-	vector<point_d> points_,
+	vector<Vector4d> points_,
 	int num_locations_,
 	vector<vector<unsigned char> > color_,
 	bool cluster_);

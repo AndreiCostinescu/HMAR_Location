@@ -18,7 +18,7 @@ TrainLA::~TrainLA() {
 
 void TrainLA::ClearLA()
 {
-	contact.clear();
+	contact_flag.clear();
 	locations_flag.clear();
 	surfaces_flag.clear();
 	loc_idx_zero.clear(); // loc_idx_zero unused at all
@@ -32,115 +32,106 @@ void TrainLA::ClearLA()
 	surfaces_limit.clear();
 }
 
+int TrainLA::DecideBoundaryCuboidExt(
+	Vector4d &point_,
+	Vector3d box_min_,
+	Vector3d box_max_)
+{
+	Vector3d tmp = box_max_-box_min_;
+	box_min_ -= (tmp*0.2);
+	box_max_ += (tmp*0.2);
+	return decideBoundaryCuboid(point_, box_min_, box_max_);
+}
+
 int TrainLA::LearnBoundary(
-	vector<point_d> &centroids_)
+	vector<Vector4d> &centroids_)
 {
 	for (int i=0;i<points_avg.size();i++)
 	{
-		if (points_avg[i].l < 0.0) { continue; }
+		if (points_avg[i][3] < 0.0) { continue; }
 
-		centroids_[points_avg[i].l].l =
+		centroids_[(int)points_avg[i][3]][3] =
 				min(pdfExp(
 							BOUNDARY_VAR,
 							0.0,
-							l2Norm(
-									minusPoint(
-											points_avg[i],
-											centroids_[points_avg[i].l]))),
-					centroids_[points_avg[i].l].l);
+							V4d3d(
+									points_avg[i] -
+									centroids_[(int)points_avg[i][3]]
+								 ).norm()),
+					(double)centroids_[(int)points_avg[i][3]][3]);
 
-		centroids_[points_avg[i].l].l =
-				max(0.50, centroids_[points_avg[i].l].l);
-		centroids_[points_avg[i].l].l =
-				min(0.98, centroids_[points_avg[i].l].l);
+		centroids_[(int)points_avg[i][3]][3] =
+				max(0.50, (double)centroids_[points_avg[i][3]][3]);
+		centroids_[(int)points_avg[i][3]][3] =
+				min(0.98, (double)centroids_[points_avg[i][3]][3]);
 
-		if (surfaces_flag[points_avg[i].l] > 0)
+		if (surfaces_flag[(int)points_avg[i][3]] > 0)
 		{
-			// point transform to the coord system of the surface
-			point_d point_rot={}, point_rot2={};
-			point_rot.x =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*points_avg[i].z;
-			point_rot.y =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*points_avg[i].z;
-			point_rot.z =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*points_avg[i].z;
-			point_rot2.x =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*centroids_[points_avg[i].l].z;
-			point_rot2.y =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*centroids_[points_avg[i].l].z;
-			point_rot2.z =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*centroids_[points_avg[i].l].z;
+			// TODO : is it correct?
+			centroids_[(int)points_avg[i][3]] =
+					V3d4d(surfaces_mid[surfaces_flag[(int)points_avg[i][3]]-1]);
+			centroids_[(int)points_avg[i][3]][3] = 0.6;
 
-			point_rot = minusPoint(point_rot, point_rot2);
+			{
+				Vector4d point_rot, point_rot2;
+				Matrix4d T;
+				T << surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(0), 0,
+					 surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(1), 0,
+					 surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(2), 0,
+					 0,0,0,0;
 
-			if(	point_rot.y > surfaces_max[points_avg[i].l].y )
-				surfaces_max[surfaces_flag[points_avg[i].l]-1].y = point_rot.y;
+				// Last element of T is zero because last vector element is used for labeling.
+				// Point transform to the coordinate system of the surface.
+				// p' = [R,R*t]*p
+				point_rot  =
+						(T * points_avg[i]) -
+						(T * centroids_[points_avg[i][3]]);
 
-			if(	point_rot.y < surfaces_min[points_avg[i].l].y )
-				surfaces_min[surfaces_flag[points_avg[i].l]-1].y = point_rot.y;
+				if(	point_rot[1] > surfaces_max[surfaces_flag[(int)points_avg[i][3]]-1][1])
+					surfaces_max[surfaces_flag[points_avg[i][3]]-1][1] = point_rot[1];
+				if(	point_rot[1] < surfaces_min[surfaces_flag[(int)points_avg[i][3]]-1][1])
+					surfaces_min[surfaces_flag[points_avg[i][3]]-1][1] = point_rot[1];
+			}
 		}
 	}
 	return EXIT_SUCCESS;
 }
 
 int TrainLA::ContactBoundary(
-	vector<point_d> &centroids_)
+	vector<Vector4d> &centroids_)
 {
 	for (int i=0;i<points_avg.size();i++)
 	{
-		if (i > 0)
-		{ checkBoundarySphere(points_avg[i-1], points_avg[i], centroids_); }
-		else
-		{ checkBoundarySphere(points_avg[i]  , points_avg[i], centroids_); }
 
-		if (points_avg[i].l < 0.0) { continue; }
+//		if (points_avg[i][3] < 0.0) { continue; }
 
-		if (surfaces_flag[points_avg[i].l] > 0)
+		checkBoundarySphere(points_avg[i], centroids_);
+
+		if (points_avg[i][3]>=0)
 		{
-			point_d point_rot={}, point_rot2={};
-			point_rot.x =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*points_avg[i].z;
-			point_rot.y =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*points_avg[i].z;
-			point_rot.z =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*points_avg[i].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*points_avg[i].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*points_avg[i].z;
-			point_rot2.x =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][0]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][1]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][2]*centroids_[points_avg[i].l].z;
-			point_rot2.y =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][3]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][4]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][5]*centroids_[points_avg[i].l].z;
-			point_rot2.z =
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][6]*centroids_[points_avg[i].l].x +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][7]*centroids_[points_avg[i].l].y +
-					surfaces_rot[surfaces_flag[points_avg[i].l]-1][8]*centroids_[points_avg[i].l].z;
+			if (surfaces_flag[(int)points_avg[i][3]] > 0)
+			{
+				Vector4d point_rot, point_rot2;
+				Matrix4d T;
+				T << surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(0), 0,
+					 surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(1), 0,
+					 surfaces_rot[surfaces_flag[(int)points_avg[i][3]]-1].row(2), 0,
+					 0,0,0,0;
 
-			point_rot = minusPoint(point_rot, point_rot2);
+				// Last element of T is zero because last vector element is used for labeling.
+				// Point transform to the coordinate system of the surface.
+				// p' = [R,R*t]*p
+				point_rot  =
+						(T * points_avg[i]) -
+						(T * centroids_[points_avg[i][3]]);
+				point_rot[3] = points_avg[i][3];
 
-			checkBoundaryCuboid(
-					point_rot,
-					surfaces_min[surfaces_flag[points_avg[i].l]-1],
-					surfaces_max[surfaces_flag[points_avg[i].l]-1]);
+				this->DecideBoundaryCuboidExt(
+						point_rot,
+						surfaces_min[surfaces_flag[(int)points_avg[i][3]]-1],
+						surfaces_max[surfaces_flag[(int)points_avg[i][3]]-1]);
+				points_avg[i][3] = point_rot[3];
+			}
 		}
 
 //		if (points_avg[i].l < 0.0) { continue; }
@@ -160,54 +151,68 @@ int TrainLA::ContactBoundary(
 }
 
 int TrainLA::SurfaceContactCheck(
-	vector<point_d> centroids_)
+	vector<Vector4d> &centroids_)
 {
 
 	// label the surface involved
 	for(int i=0;i<points_avg.size();i++)
 	{
-		if (points_avg[i].l < 0) continue;
+		if (points_avg[i][3] < 0) continue;
 
 		for(int ii=0;ii<surfaces_mid.size();ii++)
 		{
 			// surface already known
-			if (surfaces_flag[points_avg[i].l] > 0) continue;
+			if (surfaces_flag[(int)points_avg[i][3]] > 0) continue;
 
 			if (decideSurface(
 					points_avg[i], surfaces_eq[ii], surfaces_limit[ii]) &&
-				l2Norm(
-					minusPoint(surfaces_mid[ii],centroids_[points_avg[i].l])) < 0.2) // HACK: to prevent arbitrary surface detection
+				(surfaces_mid[ii] -
+					 V4d3d(centroids_[(int)points_avg[i][3]])).norm()
+					< 0.2) // HACK: to prevent arbitrary surface detection
 			{
-				surfaces_flag[points_avg[i].l] = ii+1;
+				surfaces_flag[(int)points_avg[i][3]] = ii+1;
 				break;
 			}
 		}
 	}
 
-	// uodate the data
-	for(int i=0;i<points_avg.size();i++)
-	{
-		if (points_avg[i].l < 0) continue;
-
-		// no surface
-		if (surfaces_flag[points_avg[i].l]==0) continue;
-
-		if (!decideSurface(
-				points_avg[i], surfaces_eq[surfaces_flag[points_avg[i].l]-1],
-				surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
-		{
-			points_avg[i].l = UNCLASSIFIED;
-		}
-	}
+//	// update the data
+//	for(int i=0;i<points_avg.size();i++)
+//	{
+//		if (points_avg[i].l < 0) continue;
+//
+//		// no surface
+//		if (surfaces_flag[points_avg[i].l]==0) continue;
+//
+//		if (!decideSurface(
+//				points_avg[i], surfaces_eq[surfaces_flag[points_avg[i].l]-1],
+//				surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
+//		{
+//			points_avg[i].l = UNCLASSIFIED;
+//		}
+//	}
 
 	return EXIT_SUCCESS;
 }
 
 int TrainLA::ClusteringExt(
-		vector<point_d> &centroids_)
+		vector<Vector4d> &centroids_)
 {
+	vector<point_d> loc_tmp;
+	vector<point_d> pos_tmp;
+
+	pos_tmp.resize(points_avg.size());
+	for(int i=0;i<points_avg.size();i++)
+		pos_tmp[i] = Vector4dToPoint(points_avg[i]);
+	loc_tmp.resize(centroids_.size());
+	for(int i=0;i<centroids_.size();i++)
+		loc_tmp[i] = Vector4dToPoint(centroids_[i]);
+
 	// 1. Clustering of data
-	this->Clustering(points_avg, DBSCAN_EPS, DBSCAN_MIN);
+	this->Clustering(pos_tmp, DBSCAN_EPS, DBSCAN_MIN);
+
+	for(int i=0;i<points_avg.size();i++)
+		points_avg[i] = PointToVector4d(pos_tmp[i]);
 
 	// Visualize
 	if (0)
@@ -220,7 +225,23 @@ int TrainLA::ClusteringExt(
 	}
 
 	// 2. Combine nearby clusters
-	this->CombineNearCluster(points_avg, centroids_, locations_flag, contact);
+	this->CombineNearCluster(pos_tmp, loc_tmp, locations_flag, contact_flag);
+
+	for(int i=0;i<points_avg.size();i++)
+		points_avg[i] = PointToVector4d(pos_tmp[i]);
+	reshapeVector(centroids_,loc_tmp.size());
+	for(int i=0;i<loc_tmp.size();i++)
+		centroids_[i] = PointToVector4d(loc_tmp[i]);
+
+	// Visualize
+	if (0)
+	{
+		vector<int> loc_idx_zero;
+		vector<string>goal_action, al;goal_action.resize(10);
+		showData(
+				points_avg, goal_action, al,
+				loc_idx_zero, color_code, true, false, false);
+	}
 
 	locations_flag[0] = 0; // hack TODO
 	printer(14);
@@ -254,8 +275,9 @@ int TrainLA::ClusteringExt(
 
 int TrainLA::BuildLocationArea(
 	Graph 						*Graph_,
-	vector<vector<point_d> > 	&pos_vel_acc_,
-	vector<int> 				contact_,
+	kb_t 						kb_,
+	vector<vector<Vector4d> > 	&pos_vel_acc_,
+	vector<int> 				contact_flag_,
 	bool 						flag_)
 {
 	this->ClearLA();
@@ -264,13 +286,13 @@ int TrainLA::BuildLocationArea(
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{ points_avg.push_back(pos_vel_acc_[i][0]); }
 
-	contact			= contact_;
-	surfaces_mid 	= Graph_->GetSurfaceMid();
-	surfaces_min 	= Graph_->GetSurfaceMin();
-	surfaces_max 	= Graph_->GetSurfaceMax();
-	surfaces_eq		= Graph_->GetSurfaceEq();
-	surfaces_limit	= Graph_->GetSurfaceLimit();
-	surfaces_rot	= Graph_->GetSurfaceRot();
+	contact_flag	= contact_flag_;
+	surfaces_mid 	= kb_.surface_mid;
+	surfaces_min 	= kb_.surface_min;
+	surfaces_max 	= kb_.surface_max;
+	surfaces_eq		= kb_.surface_eq;
+	surfaces_limit	= kb_.surface_lim;
+	surfaces_rot	= kb_.surface_rot;
 
 	// Graph is empty
 	if (Graph_->GetNumberOfNodes()==0)
@@ -309,7 +331,7 @@ int TrainLA::BuildLocationArea(
 		}
 		else
 			showData(
-					points_avg, goal_action, Graph_->GetActionLabel(),
+					points_avg, goal_action, kb_.al,
 					loc_idx_zero, color_code, true, true, false);
 
 		for(int i=0;i<locations.size();i++)
@@ -327,8 +349,8 @@ int TrainLA::BuildLocationArea(
 			}
 			else
 			{
-				node_tmp.box_max 	= {};
-				node_tmp.box_min 	= {};
+				node_tmp.box_max 	= Vector3d::Zero();
+				node_tmp.box_min 	= Vector3d::Zero();
 			}
 			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
@@ -339,13 +361,11 @@ int TrainLA::BuildLocationArea(
 		// Graph is not empty
 		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
-			node_tt node_tmp = {};
-			Graph_->GetNode(i, node_tmp);
-			goal_action.push_back(node_tmp.name);
-			locations.push_back(node_tmp.centroid);
+			goal_action.push_back(Graph_->GetNode(i).name);
+			locations.push_back(Graph_->GetNode(i).centroid);
 		}
 
-		vector<point_d> locations_; // new ones
+		vector<Vector4d> locations_; // new ones
 		this->ClusteringExt(locations_);
 		reshapeVector(goal_action, locations_.size());
 		printer(15);
@@ -353,23 +373,39 @@ int TrainLA::BuildLocationArea(
 		// when new label is present
 		if (flag_)
 		{
-			if(Graph_->GetNumberOfNodes()==3)
+			if(!strcmp(Graph_->GetObject().c_str(),"CUP"))
+			{
+				goal_action[0] = "SHELF";
+				goal_action[1] = "DISPENSER";
+				goal_action[2] = "TABLE2";
+				goal_action[3] = "SINK";
+			}
+			else if(!strcmp(Graph_->GetObject().c_str(),"ORG"))
 			{
 				goal_action[0] = "SHELF";
 				goal_action[1] = "TABLE2";
 				goal_action[2] = "BIN";
 			}
-			if(Graph_->GetNumberOfNodes()==4)
+			else
 			{
-				goal_action[0] = "SHELF";
-				goal_action[1] = "TABLE1";
-				goal_action[2] = "SINK";
-			}
-			if(Graph_->GetNumberOfNodes()==5)
-			{
-				goal_action[0] = "SHELF";
-				goal_action[1] = "DISPENSER";
-				goal_action[2] = "SINK";
+				if(Graph_->GetNumberOfNodes()==3)
+				{
+					goal_action[0] = "SHELF";
+					goal_action[1] = "TABLE2";
+					goal_action[2] = "BIN";
+				}
+				if(Graph_->GetNumberOfNodes()==4)
+				{
+					goal_action[0] = "SHELF";
+					goal_action[1] = "TABLE1";
+					goal_action[2] = "SINK";
+				}
+				if(Graph_->GetNumberOfNodes()==5)
+				{
+					goal_action[0] = "SHELF";
+					goal_action[1] = "DISPENSER";
+					goal_action[2] = "SINK";
+				}
 			}
 //			showData(
 //					points_avg, goal_action, Graph_->GetActionLabel(),
@@ -382,15 +418,9 @@ int TrainLA::BuildLocationArea(
 			for(int ii=0;ii<locations.size();ii++)
 			{
 				// adjust old LA
-				if (
-						l2Norm(
-								minusPoint(
-										locations[ii],
-										locations_[i])) < CLUSTER_LIMIT*1.5)
+				if (V4d3d(locations[ii] - locations_[i]).norm()
+						< CLUSTER_LIMIT*1.5)
 				{
-					node_tt node_tmp = {};
-					Graph_->GetNode(ii, node_tmp);
-
 //					// not stable the values
 //					double tmp1 = locations_[i].l; //new
 //					double tmp2 = locations[i].l;  //old
@@ -411,24 +441,21 @@ int TrainLA::BuildLocationArea(
 //									0.0,
 //									max(tmp1,tmp2));
 
-					double tmp1 = locations_[i].l;
+					node_tt node = Graph_->GetNode(ii);
+					double tmp1 = locations_[i][3];
 					tmp1 = sqrt(-log(tmp1)*BOUNDARY_VAR*2);
-					point_d loc_tmp =
-							minusPoint(
-									node_tmp.centroid,
-									locations_[i]);
-					tmp1 += l2Norm(loc_tmp);
-					locations[ii].l = pdfExp(BOUNDARY_VAR, 0.0, tmp1);
-
-					node_tmp.centroid = locations[ii];
-					Graph_->SetNode(node_tmp);
+					Vector4d loc_tmp = node.centroid - locations_[i];
+					tmp1 += V4d3d(loc_tmp).norm();
+					locations[ii][3] = pdfExp(BOUNDARY_VAR, 0.0, tmp1);
+					node.centroid = locations[ii];
+					Graph_->SetNode(node);
 
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
 					{
-						if (points_avg[iii].l == i)
+						if (points_avg[iii][3] == i)
 						{
-							points_avg[iii].l = ii;
+							points_avg[iii][3] = ii;
 						}
 					}
 					break;
@@ -448,8 +475,8 @@ int TrainLA::BuildLocationArea(
 					}
 					else
 					{
-						node_tmp.box_max 	= {};
-						node_tmp.box_min 	= {};
+						node_tmp.box_max 	= Vector3d::Zero();
+						node_tmp.box_min 	= Vector3d::Zero();
 					}
 					node_tmp.contact 	= locations_flag[i];
 					node_tmp.centroid 	= locations_[i];
@@ -458,9 +485,9 @@ int TrainLA::BuildLocationArea(
 					// modify label according to list
 					for(int iii=0;iii<points_avg.size();iii++)
 					{
-						if (points_avg[iii].l == i)
+						if (points_avg[iii][3] == i)
 						{
-							points_avg[iii].l = node_tmp.index;
+							points_avg[iii][3] = node_tmp.index;
 						}
 					}
 					break;
@@ -472,7 +499,7 @@ int TrainLA::BuildLocationArea(
 	// putting in the labels
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
-		pos_vel_acc_[i][0].l = points_avg[i].l;
+		pos_vel_acc_[i][0][3] = points_avg[i][3];
 	}
 	printer(16);
 	printer(17);
@@ -483,12 +510,10 @@ int TrainLA::BuildLocationArea(
 		goal_action.clear();
 		for(int i=0;i<Graph_->GetNumberOfNodes();i++)
 		{
-			node_tt node_tmp = {};
-			Graph_->GetNode(i, node_tmp);
-			goal_action.push_back(node_tmp.name);
+			goal_action.push_back(Graph_->GetNode(i).name);
 		}
 		showData(
-				points_avg, goal_action, Graph_->GetActionLabel(),
+				points_avg, goal_action, kb_.al,
 				loc_idx_zero, color_code, true, false, false);
 	}
 

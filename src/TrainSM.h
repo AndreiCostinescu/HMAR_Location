@@ -24,20 +24,20 @@ class TrainSM
 		void ClearSM();
 
 		int FitCurve(
-			vector<point_d> points_avg_,
-			vector<point_d> &points_est_,
-			vector<point_d> &coeffs_);
+			vector<Vector4d> points_avg_,
+			vector<Vector4d> &points_est_,
+			vector<Vector3d> &coeffs_);
 
 		int DecideSectorIntervalExt(
 			edge_tt	edge_,
-			point_d point_,
-			point_d &delta_t_,
+			Vector4d point_,
+			Vector3d &delta_t_,
 			int &sec_idx_,
 			int loc_idx_);
 
 		double DecideLocationIntervalExt(
 			edge_tt	edge_,
-			point_d point_,
+			Vector4d point_,
 			int &loc_idx_,
 			int loc_last_idx_,
 			int loc_offset_,
@@ -45,7 +45,7 @@ class TrainSM
 
 		int AdjustSectorMap(
 			edge_tt &edge_,
-			point_d &point_,
+			Vector4d &point_,
 			int &loc_last_idx_,
 			int &loc_curr_idx_,
 			double &delta_t_mem_,
@@ -54,31 +54,31 @@ class TrainSM
 
 		int AdjustCurve(
 			edge_tt &edge_,
-			point_d &point_,
+			Vector4d point_,
 			int &loc_last_idx_,
 			bool &loc_init_,
 			int loc_offset_);
 
 		int AdjustCurveExt(
 			Graph *Graph_,
-			vector<point_d> coeffs_,
-			vector<point_d> pts_);
+			vector<Vector3d> coeffs_, // from fit curve
+			vector<Vector4d> pts_);
 
 		int FitSectorMap(
 			edge_tt &edge_,
-			point_d point_,
+			Vector4d point_,
 			int &loc_last_idx_,
 			int loc_offset_,
 			bool &loc_init_);
 
 		int FitSectorMapInit(
 			Graph *Graph_,
-			vector<point_d> &points_,
+			vector<Vector4d> &points_,
 			int loc_offset_);
 
 		int FitSectorMapExt(
 			Graph *Graph_,
-			vector<point_d> &points_,
+			vector<Vector4d> &points_,
 			int loc_offset_);
 
 		int FindWindowConstraint(
@@ -86,11 +86,12 @@ class TrainSM
 
 		int UpdateSectorMap(
 			Graph *Graph_,
-			vector<point_d> points_avg_);
+			vector<Vector4d> points_avg_);
 
 		int BuildSectorMap(
 			Graph *Graph_,
-			vector<vector<point_d> > pva_avg_,
+			kb_t kb_,
+			vector<vector<Vector4d> > pva_avg_,
 			vector<int> contact_);
 
 		void SetLabel1SM(int label1_) {label1_sm = label1_;}
@@ -101,7 +102,7 @@ class TrainSM
 		// label2_sm	 : goal location
 		// label_idx_sm : index of data point for label1_sm
 		int label1_sm, label2_sm, label_idx_sm;
-		vector<point_d> pos_sm, pos_ind_sm, vel_sm;
+		vector<Vector4d> pos_sm, pos_ind_sm, vel_sm;
 };
 
 #endif /* TRAINSM_H_ */

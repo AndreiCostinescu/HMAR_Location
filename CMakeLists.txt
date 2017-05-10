@@ -7,7 +7,7 @@ add_compile_options(-std=c++11)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
  
-include_directories(/home/chen/gsl/include)
+include_directories(/usr/local/include/eigen3 /home/chen/gsl/include)
 
 link_directories(/home/chen/gsl/lib)
 
@@ -38,6 +38,7 @@ if(TRUE)
   	./src/DataFilter.cpp 
   	./src/DataContainer.cpp 
   	./src/ActionPrediction.cpp 
+  	./src/Deployment.cpp 
   	./src/DBSCAN.cpp 
   	./src/main.cpp)
   if(VTK_LIBRARIES)
@@ -71,6 +72,7 @@ else()
   	../src/DataFilter.cpp 
   	../src/DataContainer.cpp 
   	../src/ActionPrediction.cpp 
+  	../src/Deployment.cpp 
   	../src/DBSCAN.cpp 
   	../src/main.cpp)
   if(VTK_LIBRARIES)

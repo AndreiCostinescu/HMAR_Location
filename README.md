@@ -165,3 +165,8 @@
 - changed the way the tables are modelled, using OBB representation.
 - added the surface boundary with new kinect data.
 
+[27]
+- 10/05/2017
+- using the LA as reference.
+- adaptable LA.
+- added the EIGEN library

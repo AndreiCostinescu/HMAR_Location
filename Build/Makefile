@@ -234,6 +234,30 @@ src/DataParser.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataParser.cpp.s
 .PHONY : src/DataParser.cpp.s
 
+src/Deployment.o: src/Deployment.cpp.o
+.PHONY : src/Deployment.o
+
+# target to build an object file
+src/Deployment.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.o
+.PHONY : src/Deployment.cpp.o
+
+src/Deployment.i: src/Deployment.cpp.i
+.PHONY : src/Deployment.i
+
+# target to preprocess a source file
+src/Deployment.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.i
+.PHONY : src/Deployment.cpp.i
+
+src/Deployment.s: src/Deployment.cpp.s
+.PHONY : src/Deployment.s
+
+# target to generate assembly for a file
+src/Deployment.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.s
+.PHONY : src/Deployment.cpp.s
+
 src/Evaluate.o: src/Evaluate.cpp.o
 .PHONY : src/Evaluate.o
 
@@ -618,6 +642,9 @@ help:
 	@echo "... src/DataParser.o"
 	@echo "... src/DataParser.i"
 	@echo "... src/DataParser.s"
+	@echo "... src/Deployment.o"
+	@echo "... src/Deployment.i"
+	@echo "... src/Deployment.s"
 	@echo "... src/Evaluate.o"
 	@echo "... src/Evaluate.i"
 	@echo "... src/Evaluate.s"

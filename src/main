@@ -7,7 +7,7 @@
 //=============================================================================
 
 #include "dataDeclaration.h"
-#include "TestCase.h"
+//#include "TestCase.h"
 
 #ifdef PC
 	string DATA_DIR_ 		= "../../KINECT/recording/";
@@ -25,8 +25,8 @@
 int main(int argc, char *argv[])
 {
 
-	TestCase TC;
-	TC.choose(1);
+//	TestCase TC;
+//	TC.choose(1);
 
 //	for(int idx=1;idx<2;idx++)
 //	{

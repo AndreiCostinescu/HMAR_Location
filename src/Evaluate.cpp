@@ -7,36 +7,29 @@
 
 #include "Evaluate.h"
 
-Evaluate::Evaluate(
-	Graph *Graph_)
+Evaluate::Evaluate() : 	label1_eval(0),
+						vel_eval(0.0),
+						surface_dist_eval(0.0),
+						state_eval{}
 {
-	label1_eval = 0;
-	vel_eval = 0.0;
-	surface_dist_eval = 0.0;
-	win_eval.clear();
-	pct_err_eval.clear();
-	state_eval = {};
-	G = Graph_;
 }
 
 Evaluate::~Evaluate() {}
 
-int Evaluate::UpdateStateNode()
+int Evaluate::UpdateStateNode(Graph *G_)
 {
-	state_eval = G->GetActionState();
+	state_eval = G_->GetActionState();
 	state_eval.mov = vel_eval;
 	state_eval.sur_dist = surface_dist_eval;
-	G->SetActionState(state_eval);
+	G_->SetActionState(state_eval);
 	return EXIT_SUCCESS;
 }
 
-int Evaluate::UpdateStateEdge()
+int Evaluate::UpdateStateEdge(Graph *G_)
 {
-	state_eval = G->GetActionState();
+	state_eval = G_->GetActionState();
 
 	double max_val = *max_element(pct_err_eval.begin(), pct_err_eval.end());
-
-	node_tt node_tmp = {};
 
 	if (max_val<=0)
 	{
@@ -49,25 +42,23 @@ int Evaluate::UpdateStateEdge()
 		int idx =
 					distance(
 							pct_err_eval.begin(),
-							max_element(pct_err_eval.begin(), pct_err_eval.end()));
-
-		vector<string> al_tmp = G->GetActionLabel();
-		map<string,pair<int,int> > ac_tmp = G->GetActionCategory();
-
-		G->GetNode(label1_eval, node_tmp);
-		string tmp1 = node_tmp.name;
-		G->GetNode(idx, node_tmp);
-		string tmp2 = node_tmp.name;
+							max_element(
+									pct_err_eval.begin(),
+									pct_err_eval.end()));
 
 		int c= 0;
-		for(int i=0;i<al_tmp.size();i++)
+		for(int i=0;i<al_eval.size();i++)
 		{
-			if (!strcmp(tmp1.c_str(),al_tmp[i].c_str()))
+			if (!strcmp(
+					G_->GetNode(label1_eval).name.c_str(),
+					al_eval[i].c_str()))
 			{
 				state_eval.label1 = i;
 				c++;
 			}
-			else if (!strcmp(tmp2.c_str(),al_tmp[i].c_str()))
+			if (!strcmp(
+					G_->GetNode(idx).name.c_str(),
+					al_eval[i].c_str()))
 			{
 				state_eval.label2 = i;
 				c++;
@@ -75,19 +66,18 @@ int Evaluate::UpdateStateEdge()
 			if (c==2) break;
 		}
 
-		state_eval.sur = node_tmp.surface;
+		state_eval.sur = G_->GetNode(idx).surface;
 	}
 
 	state_eval.mov = vel_eval;
 
-	for(int i=0;i<G->GetNumberOfNodes();i++)
+	for(int i=0;i<G_->GetNumberOfNodes();i++)
 	{
-		G->GetNode(i, node_tmp);
-		state_eval.goal[node_tmp.name] = pct_err_eval[i];
-		state_eval.window[node_tmp.name] = win_eval[i];
+		state_eval.goal  [G_->GetNode(i).name] = pct_err_eval[i];
+		state_eval.window[G_->GetNode(i).name] = win_eval[i];
 	}
 
-	G->SetActionState(state_eval);
+	G_->SetActionState(state_eval);
 
 	return EXIT_SUCCESS;
 }

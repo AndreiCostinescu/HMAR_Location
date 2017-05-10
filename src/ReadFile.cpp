@@ -202,11 +202,11 @@ int ReadFile::ReadFileLabel(
 
 int ReadFile::ReadSurfaceFile(
 	string path_,
-	vector<vector<double> > &rotation_,
-	vector<point_d> &planeeq_,
-	vector<point_d> &boxmin_,
-	vector<point_d> &boxmid_,
-	vector<point_d> &boxmax_)
+	vector<Matrix3d> &rotation_,
+	vector<Vector4d> &planeeq_,
+	vector<Vector3d> &boxmin_,
+	vector<Vector3d> &boxmid_,
+	vector<Vector3d> &boxmax_)
 {
 	if (this->ReadFile_(path_, ',')==EXIT_FAILURE)
 	{
@@ -215,188 +215,98 @@ int ReadFile::ReadSurfaceFile(
 	}
 	else
 	{
-		int c = 0;
-		point_d planeeq_tmp, boxmin_tmp, boxmid_tmp, boxmax_tmp;
-		planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+		int c = 0, counter = 0;
+		double tmp;
+		Vector4d planeeq_tmp=Vector4d::Zero();
+		Vector3d boxmin_tmp, boxmid_tmp, boxmax_tmp, boxmidrot_tmp, y_tmp(0,1,0);
+		boxmin_tmp=boxmid_tmp=boxmax_tmp=Vector3d::Zero();
 		for(int i=0;i<data_rf.size();i++)
 		{
 			if(c != atoi(data_rf[i][0].c_str()))
 			{
-				// boxmid_tmp.l is a counter.
 				c = atoi(data_rf[i][0].c_str());
-				double tmp = planeeq_tmp.l/boxmid_tmp.l;
-				planeeq_tmp = multiPoint(planeeq_tmp,1/boxmid_tmp.l);
-				planeeq_tmp = multiPoint(planeeq_tmp,1/l2Norm(planeeq_tmp));
-				planeeq_tmp.l = tmp;
-				boxmin_tmp = multiPoint(boxmin_tmp,1/boxmid_tmp.l);
-				boxmax_tmp = multiPoint(boxmax_tmp,1/boxmid_tmp.l);
-				boxmid_tmp = multiPoint(boxmid_tmp,1/boxmid_tmp.l);
+				tmp = planeeq_tmp[3];
+				planeeq_tmp = V3d4d(V4d3d((planeeq_tmp/counter)).normalized());
+				planeeq_tmp[3] = tmp/counter;
+				boxmin_tmp = boxmin_tmp/counter;
+				boxmax_tmp = boxmax_tmp/counter;
+				boxmid_tmp = boxmid_tmp/counter;
+				counter = 0;
 
-				point_d tmp0 = {}, tmp2 = {}; tmp0.x=tmp0.y=tmp0.z=tmp0.l=0.0; tmp0.y=1.0;
-				vector<double> tmp1 = rodriguezRot(tmp0, planeeq_tmp);
-				rotation_.push_back(tmp1);
+				Matrix3d R = rodriguezRot(y_tmp, V4d3d(planeeq_tmp));
+				rotation_.push_back(R);
+				boxmidrot_tmp 	= R * boxmid_tmp;
+				boxmin_tmp 		= R * boxmin_tmp - boxmidrot_tmp;
+				boxmax_tmp 		= R * boxmax_tmp - boxmidrot_tmp;
 
-				tmp2.x =
-						tmp1[0]*boxmid_tmp.x +
-						tmp1[1]*boxmid_tmp.y +
-						tmp1[2]*boxmid_tmp.z;
-				tmp2.y =
-						tmp1[3]*boxmid_tmp.x +
-						tmp1[4]*boxmid_tmp.y +
-						tmp1[5]*boxmid_tmp.z;
-				tmp2.z =
-						tmp1[6]*boxmid_tmp.x +
-						tmp1[7]*boxmid_tmp.y +
-						tmp1[8]*boxmid_tmp.z;
-
-				tmp0.x =
-						tmp1[0]*boxmin_tmp.x +
-						tmp1[1]*boxmin_tmp.y +
-						tmp1[2]*boxmin_tmp.z;
-				tmp0.y =
-						tmp1[3]*boxmin_tmp.x +
-						tmp1[4]*boxmin_tmp.y +
-						tmp1[5]*boxmin_tmp.z;
-				tmp0.z =
-						tmp1[6]*boxmin_tmp.x +
-						tmp1[7]*boxmin_tmp.y +
-						tmp1[8]*boxmin_tmp.z;
-				boxmin_tmp = tmp0;
-
-				tmp0.x =
-						tmp1[0]*boxmax_tmp.x +
-						tmp1[1]*boxmax_tmp.y +
-						tmp1[2]*boxmax_tmp.z;
-				tmp0.y =
-						tmp1[3]*boxmax_tmp.x +
-						tmp1[4]*boxmax_tmp.y +
-						tmp1[5]*boxmax_tmp.z;
-				tmp0.z =
-						tmp1[6]*boxmax_tmp.x +
-						tmp1[7]*boxmax_tmp.y +
-						tmp1[8]*boxmax_tmp.z;
-				boxmax_tmp = tmp0;
-
-				boxmin_tmp = minusPoint(boxmin_tmp,tmp2);
-				boxmax_tmp = minusPoint(boxmax_tmp,tmp2);
-
-				tmp = boxmin_tmp.x;
-				if (boxmax_tmp.x < boxmin_tmp.x)
-				{ boxmin_tmp.x = boxmax_tmp.x; boxmax_tmp.x = tmp; }
-				tmp = boxmin_tmp.y;
-				if (boxmax_tmp.y < boxmin_tmp.y)
-				{ boxmin_tmp.y = boxmax_tmp.y; boxmax_tmp.y = tmp; }
-				tmp = boxmin_tmp.z;
-				if (boxmax_tmp.z < boxmin_tmp.z)
-				{ boxmin_tmp.z = boxmax_tmp.z; boxmax_tmp.z = tmp; }
-				tmp = boxmax_tmp.x - boxmin_tmp.x;
-				boxmin_tmp.x -= tmp/3.0; boxmax_tmp.x += tmp/3.0;
-				tmp = boxmax_tmp.y - boxmin_tmp.y;
-				boxmin_tmp.y -= tmp/3.0; boxmax_tmp.y += tmp/3.0;
-				tmp = boxmax_tmp.z - boxmin_tmp.z;
-				boxmin_tmp.z -= tmp/3.0; boxmax_tmp.z += tmp/3.0;
+				for(int xyz=0;xyz<3;xyz++)
+				{
+					tmp = boxmin_tmp[xyz];
+					if (boxmax_tmp[xyz] < boxmin_tmp[xyz])
+					{
+						boxmin_tmp[xyz] = boxmax_tmp[xyz];
+						boxmax_tmp[xyz] = tmp;
+					}
+					tmp = boxmax_tmp[xyz] - boxmin_tmp[xyz];
+					boxmin_tmp[xyz] -= tmp/3.0;
+					boxmax_tmp[xyz] += tmp/3.0;
+				}
 
 				planeeq_.push_back(planeeq_tmp);
 				boxmin_.push_back(boxmin_tmp);
 				boxmid_.push_back(boxmid_tmp);
 				boxmax_.push_back(boxmax_tmp);
-				planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+
+				planeeq_tmp=Vector4d::Zero();
+				boxmin_tmp=boxmid_tmp=boxmax_tmp=Vector3d::Zero();
 			}
 
-			planeeq_tmp.x += atof(data_rf[i][1].c_str());
-			planeeq_tmp.y += atof(data_rf[i][2].c_str());
-			planeeq_tmp.z += atof(data_rf[i][3].c_str());
-			planeeq_tmp.l += atof(data_rf[i][4].c_str());
-			boxmid_tmp.x  += atof(data_rf[i][5].c_str());
-			boxmid_tmp.y  += atof(data_rf[i][6].c_str());
-			boxmid_tmp.z  += atof(data_rf[i][7].c_str());
-			boxmid_tmp.l  += 1;
-			boxmin_tmp.x  += atof(data_rf[i][8].c_str());
-			boxmin_tmp.y  += atof(data_rf[i][9].c_str());
-			boxmin_tmp.z  += atof(data_rf[i][10].c_str());
-			boxmax_tmp.x  += atof(data_rf[i][11].c_str());
-			boxmax_tmp.y  += atof(data_rf[i][12].c_str());
-			boxmax_tmp.z  += atof(data_rf[i][13].c_str());
+			counter++;
+			for(int ii=0;ii<4;ii++)
+				planeeq_tmp[ii] += atof(data_rf[i][1+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				boxmid_tmp[ii] += atof(data_rf[i][5+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				boxmin_tmp[ii] += atof(data_rf[i][8+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				boxmax_tmp[ii] += atof(data_rf[i][11+ii].c_str());
 
 			if(i==data_rf.size()-1)
 			{
-				double tmp = planeeq_tmp.l/boxmid_tmp.l;
-				planeeq_tmp = multiPoint(planeeq_tmp,1/boxmid_tmp.l);
-				planeeq_tmp = multiPoint(planeeq_tmp,1/l2Norm(planeeq_tmp));
-				planeeq_tmp.l = tmp;
-				boxmin_tmp = multiPoint(boxmin_tmp,1/boxmid_tmp.l);
-				boxmax_tmp = multiPoint(boxmax_tmp,1/boxmid_tmp.l);
-				boxmid_tmp = multiPoint(boxmid_tmp,1/boxmid_tmp.l);
+				tmp = planeeq_tmp[3];
+				planeeq_tmp = V3d4d(V4d3d((planeeq_tmp/counter)).normalized());
+				planeeq_tmp[3] = tmp/counter;
+				boxmin_tmp = boxmin_tmp/counter;
+				boxmax_tmp = boxmax_tmp/counter;
+				boxmid_tmp = boxmid_tmp/counter;
+				counter = 0;
 
-				point_d tmp0 = {}, tmp2 = {}; tmp0.x=tmp0.y=tmp0.z=tmp0.l=0.0; tmp0.y=1.0;
-				vector<double> tmp1 = rodriguezRot(tmp0, planeeq_tmp);
-				rotation_.push_back(tmp1);
+				Matrix3d R = rodriguezRot(y_tmp, V4d3d(planeeq_tmp));
+				rotation_.push_back(R);
+				boxmidrot_tmp 	= R * boxmid_tmp;
+				boxmin_tmp 		= R * boxmin_tmp - boxmidrot_tmp;
+				boxmax_tmp 		= R * boxmax_tmp - boxmidrot_tmp;
 
-				tmp2.x =
-						tmp1[0]*boxmid_tmp.x +
-						tmp1[1]*boxmid_tmp.y +
-						tmp1[2]*boxmid_tmp.z;
-				tmp2.y =
-						tmp1[3]*boxmid_tmp.x +
-						tmp1[4]*boxmid_tmp.y +
-						tmp1[5]*boxmid_tmp.z;
-				tmp2.z =
-						tmp1[6]*boxmid_tmp.x +
-						tmp1[7]*boxmid_tmp.y +
-						tmp1[8]*boxmid_tmp.z;
-
-				tmp0.x =
-						tmp1[0]*boxmin_tmp.x +
-						tmp1[1]*boxmin_tmp.y +
-						tmp1[2]*boxmin_tmp.z;
-				tmp0.y =
-						tmp1[3]*boxmin_tmp.x +
-						tmp1[4]*boxmin_tmp.y +
-						tmp1[5]*boxmin_tmp.z;
-				tmp0.z =
-						tmp1[6]*boxmin_tmp.x +
-						tmp1[7]*boxmin_tmp.y +
-						tmp1[8]*boxmin_tmp.z;
-				boxmin_tmp = tmp0;
-
-				tmp0.x =
-						tmp1[0]*boxmax_tmp.x +
-						tmp1[1]*boxmax_tmp.y +
-						tmp1[2]*boxmax_tmp.z;
-				tmp0.y =
-						tmp1[3]*boxmax_tmp.x +
-						tmp1[4]*boxmax_tmp.y +
-						tmp1[5]*boxmax_tmp.z;
-				tmp0.z =
-						tmp1[6]*boxmax_tmp.x +
-						tmp1[7]*boxmax_tmp.y +
-						tmp1[8]*boxmax_tmp.z;
-				boxmax_tmp = tmp0;
-
-				boxmin_tmp = minusPoint(boxmin_tmp,tmp2);
-				boxmax_tmp = minusPoint(boxmax_tmp,tmp2);
-
-				tmp = boxmin_tmp.x;
-				if (boxmax_tmp.x < boxmin_tmp.x)
-				{ boxmin_tmp.x = boxmax_tmp.x; boxmax_tmp.x = tmp; }
-				tmp = boxmin_tmp.y;
-				if (boxmax_tmp.y < boxmin_tmp.y)
-				{ boxmin_tmp.y = boxmax_tmp.y; boxmax_tmp.y = tmp; }
-				tmp = boxmin_tmp.z;
-				if (boxmax_tmp.z < boxmin_tmp.z)
-				{ boxmin_tmp.z = boxmax_tmp.z; boxmax_tmp.z = tmp; }
-				tmp = boxmax_tmp.x - boxmin_tmp.x;
-				boxmin_tmp.x -= tmp/3.0; boxmax_tmp.x += tmp/3.0;
-				tmp = boxmax_tmp.y - boxmin_tmp.y;
-				boxmin_tmp.y -= tmp/3.0; boxmax_tmp.y += tmp/3.0;
-				tmp = boxmax_tmp.z - boxmin_tmp.z;
-				boxmin_tmp.z -= tmp/3.0; boxmax_tmp.z += tmp/3.0;
+				for(int xyz=0;xyz<3;xyz++)
+				{
+					tmp = boxmin_tmp[xyz];
+					if (boxmax_tmp[xyz] < boxmin_tmp[xyz])
+					{
+						boxmin_tmp[xyz] = boxmax_tmp[xyz];
+						boxmax_tmp[xyz] = tmp;
+					}
+					tmp = boxmax_tmp[xyz] - boxmin_tmp[xyz];
+					boxmin_tmp[xyz] -= tmp/3.0;
+					boxmax_tmp[xyz] += tmp/3.0;
+				}
 
 				planeeq_.push_back(planeeq_tmp);
 				boxmin_.push_back(boxmin_tmp);
 				boxmid_.push_back(boxmid_tmp);
 				boxmax_.push_back(boxmax_tmp);
-				planeeq_tmp=boxmin_tmp=boxmid_tmp=boxmax_tmp={};
+
+				planeeq_tmp=Vector4d::Zero();
+				boxmin_tmp=boxmid_tmp=boxmax_tmp=Vector3d::Zero();
 			}
 		}
 		return EXIT_SUCCESS;
@@ -423,26 +333,17 @@ int ReadFile::ReadFileKB(
 		kb_.surface_rot.resize(data_rf.size());
 		for(int i=0;i<data_rf.size();i++)
 		{
-			kb_.surface_eq[i].x = atof(data_rf[i][1].c_str());
-			kb_.surface_eq[i].y = atof(data_rf[i][2].c_str());
-			kb_.surface_eq[i].z = atof(data_rf[i][3].c_str());
-			kb_.surface_eq[i].l = atof(data_rf[i][4].c_str());
-			kb_.surface_mid[i].x = atof(data_rf[i][5].c_str());
-			kb_.surface_mid[i].y = atof(data_rf[i][6].c_str());
-			kb_.surface_mid[i].z = atof(data_rf[i][7].c_str());
-			kb_.surface_mid[i].l = UNCLASSIFIED;
-			kb_.surface_min[i].x = atof(data_rf[i][8].c_str());
-			kb_.surface_min[i].y = atof(data_rf[i][9].c_str());
-			kb_.surface_min[i].z = atof(data_rf[i][10].c_str());
-			kb_.surface_min[i].l = UNCLASSIFIED;
-			kb_.surface_max[i].x = atof(data_rf[i][11].c_str());
-			kb_.surface_max[i].y = atof(data_rf[i][12].c_str());
-			kb_.surface_max[i].z = atof(data_rf[i][13].c_str());
-			kb_.surface_max[i].l = UNCLASSIFIED;
-			for(int ii=14;ii<data_rf[i].size();ii++)
-			{
-				kb_.surface_rot[i].push_back(atof(data_rf[i][ii].c_str()));
-			}
+			for(int ii=0;ii<4;ii++)
+				kb_.surface_eq[i][ii]  = atof(data_rf[i][1+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				kb_.surface_mid[i][ii] = atof(data_rf[i][5+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				kb_.surface_min[i][ii] = atof(data_rf[i][8+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				kb_.surface_max[i][ii] = atof(data_rf[i][11+ii].c_str());
+			for(int ii=0;ii<3;ii++)
+				for(int iii=0;iii<3;iii++)
+					kb_.surface_rot[i](ii,iii) = atof(data_rf[i][14+(ii*3+iii)].c_str());
 		}
 		printer(39);
 	}
@@ -509,6 +410,7 @@ int ReadFile::ReadFileKB(
 
 int ReadFile::ReadFileLA(
 	Graph *Graph_,
+	vector<string> al_,
 	string path_)
 {
 	if (this->ReadFile_(path_, ',')==EXIT_FAILURE)
@@ -521,30 +423,43 @@ int ReadFile::ReadFileLA(
 		node_tt node_tmp = {};
 		for(int i=0;i<data_rf.size();i++)
 		{
-			if (Graph_->GetNode(i,node_tmp)==EXIT_SUCCESS)
-			{return EXIT_SUCCESS;}
-
-			vector<string> al_tmp = Graph_->GetActionLabel();
-
-			node_tmp.name 		= al_tmp[atof(data_rf[i][0].c_str())];
-			node_tmp.index    	= i;
-			node_tmp.centroid.x	= atof(data_rf[i][1].c_str());
-			node_tmp.centroid.y	= atof(data_rf[i][2].c_str());
-			node_tmp.centroid.z	= atof(data_rf[i][3].c_str());
-			node_tmp.centroid.l	= atof(data_rf[i][4].c_str());
-			node_tmp.surface 	= atoi(data_rf[i][5].c_str());
-			node_tmp.box_min.x	= atof(data_rf[i][6].c_str());
-			node_tmp.box_min.y	= atof(data_rf[i][7].c_str());
-			node_tmp.box_min.z	= atof(data_rf[i][8].c_str());
-			node_tmp.box_max.x	= atof(data_rf[i][9].c_str());
-			node_tmp.box_max.y	= atof(data_rf[i][10].c_str());
-			node_tmp.box_max.z	= atof(data_rf[i][11].c_str());
-			node_tmp.contact 	= atoi(data_rf[i][12].c_str());
-
-			Graph_->SetNode(node_tmp);
-			Graph_->addEmptyEdgeForNewNode(i);
+			node_tmp = Graph_->GetNode(i);
+			if (!strcmp(node_tmp.name.c_str(),""))
+			{
+				node_tmp.name 		= al_[atof(data_rf[i][0].c_str())];
+				node_tmp.index    	= i;
+				for(int ii=0;ii<4;ii++)
+					node_tmp.centroid[ii] = atof(data_rf[i][1+ii].c_str());
+				node_tmp.surface 	= atoi(data_rf[i][5].c_str());
+				for(int ii=0;ii<3;ii++)
+					node_tmp.box_min[ii]  = atof(data_rf[i][6+ii].c_str());
+				for(int ii=0;ii<3;ii++)
+					node_tmp.box_max[ii]  = atof(data_rf[i][9+ii].c_str());
+				node_tmp.contact 	= atoi(data_rf[i][12].c_str());
+				Graph_->SetNode(node_tmp);
+				Graph_->addEmptyEdgeForNewNode(i);
+			}
+			else
+			{
+				return EXIT_SUCCESS;
+			}
 		}
 		printer(6);
+		return EXIT_SUCCESS;
+	}
+}
+
+int ReadFile::ReadFileLA(
+		vector<vector<string> > &data_,
+		string path_)
+{
+	if (this->ReadFile_(path_, ',')==EXIT_FAILURE)
+	{
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		data_ = data_rf;
 		return EXIT_SUCCESS;
 	}
 }
@@ -580,28 +495,28 @@ int ReadFile::ReadFileGraph(
 				case 1:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.nor[iii].x = atof(data_rf[i][iii*4+0].c_str());
-						edge_tmp.nor[iii].y = atof(data_rf[i][iii*4+1].c_str());
-						edge_tmp.nor[iii].z = atof(data_rf[i][iii*4+2].c_str());
-						edge_tmp.nor[iii].l = atof(data_rf[i][iii*4+3].c_str());
+						for(int iv=0;iv<3;iv++)
+						{
+							edge_tmp.nor[iii][iv] = atof(data_rf[i][iii*3+iv].c_str());
+						}
 					}
 					break;
 				case 2:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.tan[iii].x = atof(data_rf[i][iii*4+0].c_str());
-						edge_tmp.tan[iii].y = atof(data_rf[i][iii*4+1].c_str());
-						edge_tmp.tan[iii].z = atof(data_rf[i][iii*4+2].c_str());
-						edge_tmp.tan[iii].l = atof(data_rf[i][iii*4+3].c_str());
+						for(int iv=0;iv<3;iv++)
+						{
+							edge_tmp.tan[iii][iv] = atof(data_rf[i][iii*3+iv].c_str());
+						}
 					}
 					break;
 				case 3:
 					for(int iii=0;iii<num_location_intervals;iii++)
 					{
-						edge_tmp.loc_mid[iii].x = atof(data_rf[i][iii*4+0].c_str());
-						edge_tmp.loc_mid[iii].y = atof(data_rf[i][iii*4+1].c_str());
-						edge_tmp.loc_mid[iii].z = atof(data_rf[i][iii*4+2].c_str());
-						edge_tmp.loc_mid[iii].l = atof(data_rf[i][iii*4+3].c_str());
+						for(int iv=0;iv<4;iv++)
+						{
+							edge_tmp.loc_mid[iii][iv] = atof(data_rf[i][iii*4+iv].c_str());
+						}
 					}
 					break;
 				case 4:

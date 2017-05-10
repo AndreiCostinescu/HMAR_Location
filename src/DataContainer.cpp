@@ -7,7 +7,11 @@
 
 #include "DataContainer.h"
 
-DataContainer::DataContainer() : G(NULL) {}
+DataContainer::DataContainer() : G(NULL), KB{}, contact(0)
+{
+	pva.clear();
+	pva.resize(3);
+}
 
 DataContainer::~DataContainer() { }
 

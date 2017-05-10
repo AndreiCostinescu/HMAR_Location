@@ -17,6 +17,7 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/../HMAR.dir/src/DataFilter.cpp.o"
   "CMakeFiles/../HMAR.dir/src/DataContainer.cpp.o"
   "CMakeFiles/../HMAR.dir/src/ActionPrediction.cpp.o"
+  "CMakeFiles/../HMAR.dir/src/Deployment.cpp.o"
   "CMakeFiles/../HMAR.dir/src/DBSCAN.cpp.o"
   "CMakeFiles/../HMAR.dir/src/main.cpp.o"
   "../HMAR.pdb"

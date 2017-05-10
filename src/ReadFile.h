@@ -38,11 +38,11 @@ class ReadFile
 
 		int ReadSurfaceFile(
 			string path_,
-			vector<vector<double> > &rotation_,
-			vector<point_d> &planeeq_,
-			vector<point_d> &boxmin_,
-			vector<point_d> &boxmid_,
-			vector<point_d> &boxmax_);
+			vector<Matrix3d> &rotation_,
+			vector<Vector4d> &planeeq_,
+			vector<Vector3d> &boxmin_,
+			vector<Vector3d> &boxmid_,
+			vector<Vector3d> &boxmax_);
 
 		int ReadFileKB(
 			string path_,
@@ -50,6 +50,11 @@ class ReadFile
 
 		int ReadFileLA(
 			Graph *Graph_,
+			vector<string> al_,
+			string path_);
+
+		int ReadFileLA(
+			vector<vector<string> > &data_,
 			string path_);
 
 		int ReadFileGraph(

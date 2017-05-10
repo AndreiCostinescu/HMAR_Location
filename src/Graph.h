@@ -25,36 +25,6 @@ public:
 	string GetObject() {return object;}
 	void SetObject(string object_) {object = object_;}
 
-	kb_t GetKB();
-	void SetKB(kb_t x_);
-
-	vector<vector<double> > GetSurfaceRot() {return surface_rot;}
-	void SetSurfaceRot(vector<vector<double> > x_) {surface_rot = x_;}
-
-	vector<double> GetSurfaceLimit() {return surface_lim;}
-	void SetSurfaceLimit(vector<double> x_) {surface_lim = x_;}
-
-	vector<point_d> GetSurfaceEq() {return surface_eq;}
-	void SetSurfaceEq(vector<point_d> x_) {surface_eq = x_;}
-
-	vector<point_d> GetSurfaceMid() {return surface_mid;}
-	void SetSurfaceMid(vector<point_d> x_) {surface_mid = x_;}
-
-	vector<point_d> GetSurfaceMin() {return surface_min;}
-	void SetSurfaceMin(vector<point_d> x_) {surface_min = x_;}
-
-	vector<point_d> GetSurfaceMax() {return surface_max;}
-	void SetSurfaceMax(vector<point_d> x_) {surface_max = x_;}
-
-	map<string,map<string,string> > GetObjectLabel() {return object_label;}
-	void SetObjectLabel(map<string,map<string,string> > object_label_) {object_label = object_label_;}
-
-	map<string,pair<int,int> > GetActionCategory() {return action_cat;}
-	void SetActionCategory(map<string,pair<int,int> > x_) {action_cat = x_;}
-
-	vector<string> GetActionLabel() {return action_label;}
-	void SetActionLabel(vector<string> x_) {action_label = x_;}
-
 //	void GetPredictionReset(vector<map<string, double> > &x_) {x_ = prediction_reset;}
 //	void GetPrediction(vector<map<string, double> > &x_) {x_ = prediction;}
 //	void SetPrediction(vector<map<string, double> > x_) {prediction = x_;}
@@ -66,18 +36,16 @@ public:
 // NODES
 //=============================================================================
 
-	int GetNode(
-		int  idx_,
-		node_tt &x_)
+	node_tt GetNode(
+		int  idx_)
 	{
 		if (idx_<node_list.size())
 		{
-			x_ = node_list[idx_];
-			return EXIT_SUCCESS;
+			return node_list[idx_];
 		}
 		else
 		{
-			return EXIT_FAILURE;
+			return {};
 		}
 	}
 
@@ -102,7 +70,7 @@ public:
 		return node_list;
 	}
 
-	vector<point_d> GetCentroidList();
+	vector<Vector4d> GetCentroidList();
 
 	vector<int> GetSurfaceFlagList();
 
@@ -229,7 +197,7 @@ public:
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
-		vector<point_d> &x_)
+		vector<Vector3d> &x_)
 	{
 		x_ = edge_list[n1_][n2_][edge_num_].tan;
 	}
@@ -238,7 +206,7 @@ public:
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
-		vector<point_d> x_)
+		vector<Vector3d> x_)
 	{
 		edge_list[n1_][n2_][edge_num_].tan = x_;
 	}
@@ -247,7 +215,7 @@ public:
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
-		vector<point_d> &x_)
+		vector<Vector3d> &x_)
 	{
 		x_ = edge_list[n1_][n2_][edge_num_].nor;
 	}
@@ -256,7 +224,7 @@ public:
 		unsigned int n1_,
 		unsigned int n2_,
 		unsigned int edge_num_,
-		vector<point_d> x_)
+		vector<Vector3d> x_)
 	{
 		edge_list[n1_][n2_][edge_num_].nor = x_;
 	}
@@ -271,19 +239,7 @@ private:
 	vector<map<string, double> >		filter;
 	vector<map<string, double> >		prediction;
 	vector<map<string, double> >		prediction_reset;
-	map<string,pair<int,int> >			action_cat;
-	vector<string>						action_label; //fixed given beforehand
 
-	map<string,map<string,string> > 	object_label;
-
-	vector<point_d> 					surface_min;
-	vector<point_d> 					surface_mid;
-	vector<point_d> 					surface_max;
-	vector<point_d > 					surface_eq;
-	vector<double> 						surface_lim;
-	vector<vector<double> >				surface_rot;
-
-	kb_t 								kb;
 	state_t 							action_state;
 
 };

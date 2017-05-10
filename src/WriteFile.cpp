@@ -93,14 +93,14 @@ void WriteFile::RewriteDataFileFilter(
 }
 
 void WriteFile::RewriteDataFile(
-		string path_,
-		vector<vector<string> > data_,
-		vector<point_d> points_,
-		vector<int>	contact_,
-		point_d face_,
-		vector<point_d> label_ref_write_,
-		vector<string> label_ref_name_,
-		vector<string> label_list_)
+	string path_,
+	vector<vector<string> > data_,
+	vector<Vector4d> points_,
+	vector<int>	contact_,
+	Vector4d face_,
+	vector<Vector3d> label_ref_write_,
+	vector<string> label_ref_name_,
+	vector<string> label_list_)
 {
 	float face_lim = 0.20;
 	int mem,mem2,mem3; mem=mem2=mem3=-1;
@@ -113,16 +113,16 @@ void WriteFile::RewriteDataFile(
 
 	for(int i=0;i<points_.size();i++)
 	{
-		points_[i].l = UNCLASSIFIED;
+		points_[i][3] = UNCLASSIFIED;
 		if(contact_[i]==0)
 		{
 			label.push_back("RELEASE");
 		}
 		else
 		{
-			if(l2Norm(minusPoint(points_[i],face_))<face_lim)
+			if(V4d3d(points_[i]-face_).norm()<face_lim)
 			{
-				points_[i].l = 2.0;
+				points_[i][3] = 2.0;
 				label.push_back("FACE");
 			}
 			else
@@ -130,9 +130,9 @@ void WriteFile::RewriteDataFile(
 				bool flag = true;
 				for(int ii=0;ii<label_ref_write_.size();ii++)
 				{
-					if(l2Norm(minusPoint(points_[i],label_ref_write_[ii]))<0.05)
+					if((V4d3d(points_[i])-label_ref_write_[ii]).norm()<0.05)
 					{
-						points_[i].l = 2.0;
+						points_[i][3] = 2.0;
 						label.push_back(label_ref_name_[ii]);
 						flag = false;
 						break;
@@ -194,15 +194,15 @@ void WriteFile::RewriteDataFile(
 	// Visualize
 	if (0)
 	{
-		vector<point_d> point_zero = points_;
+		vector<Vector4d> point_zero = points_;
 		for(int ii=0;ii<point_zero.size();ii++)
 		{
 			if (!strcmp(label[ii].c_str(),"MOVE"))
-				point_zero[ii].l = -1;
+				point_zero[ii][3] = -1;
 			else if (!strcmp(label[ii].c_str(),"RELEASE"))
-				point_zero[ii].l = -1;
+				point_zero[ii][3] = -1;
 			else
-				point_zero[ii].l = 1;
+				point_zero[ii][3] = 1;
 		}
 		vector<vector<unsigned char> > color_code; colorCode(color_code);
 		vector<string>  goal_action, al; goal_action.resize(5);
@@ -225,36 +225,97 @@ void WriteFile::RewriteDataFile(
 	}
 }
 
-void WriteFile::WriteFileLA(Graph *Graph_, string path_)
+void WriteFile::WriteFileLA(
+	vector<string> line_,
+	vector<vector<string> > data_tmp,
+	string path_)
+{
+	bool flag = false;
+	if (!data_tmp.empty())
+	{
+		remove(path_.c_str());
+		ofstream write_file(path_, ios::app);
+		for(int i=0;i<data_tmp.size();i++)
+		{
+			if(!strcmp(data_tmp[i][0].c_str(),line_[0].c_str()))
+			{
+				flag = true;
+				for(int ii=0;ii<data_tmp[i].size()-1;ii++)
+				{
+					switch(ii)
+					{
+						case 1:
+							write_file << line_[ii] << ",";
+							break;
+						case 2:
+							write_file << line_[ii] << ",";
+							break;
+						case 3:
+							write_file << line_[ii] << ",";
+							break;
+						default:
+							write_file << data_tmp[i][ii] << ",";
+							break;
+					}
+					write_file << data_tmp[i][ii] << "\n";
+				}
+			}
+			else
+			{
+				for(int ii=0;ii<data_tmp[i].size();ii++)
+				{
+					if (ii==data_tmp[i].size()-1)
+						write_file << data_tmp[i][ii] << "\n";
+					else
+						write_file << data_tmp[i][ii] << ",";
+				}
+			}
+		}
+		if(!flag)
+		{
+			for(int ii=0;ii<line_.size();ii++)
+			{
+				if (ii==line_.size()-1)
+					write_file << line_[ii] << "\n";
+				else
+					write_file << line_[ii] << ",";
+			}
+		}
+	}
+}
+
+void WriteFile::WriteFileLA(
+	Graph *Graph_,
+	kb_t kb_,
+	string path_)
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
-	vector<string> al_tmp = Graph_->GetActionLabel();
 	vector<node_tt> node_tmp = Graph_->GetNodeList();
 
 	ofstream write_file(path_, ios::app);
 
 	for(int i=0;i<node_tmp.size();i++)
 	{
-		for(int ii=0;ii<al_tmp.size();ii++)
+		for(int ii=0;ii<kb_.al.size();ii++)
 		{
-			if(!strcmp(node_tmp[i].name.c_str(),al_tmp[ii].c_str()))
+			if(!strcmp(node_tmp[i].name.c_str(),kb_.al[ii].c_str()))
 			{
 				write_file << ii << ",";
 				break;
 			}
 		}
-		write_file << node_tmp[i].centroid.x	<< ","
-				   << node_tmp[i].centroid.y 	<< ","
-				   << node_tmp[i].centroid.z 	<< ","
-				   << node_tmp[i].centroid.l 	<< ","
+		write_file << node_tmp[i].centroid[0]	<< ","
+				   << node_tmp[i].centroid[1] 	<< ","
+				   << node_tmp[i].centroid[2] 	<< ","
+				   << node_tmp[i].centroid[3] 	<< ","
 				   << node_tmp[i].surface 		<< ","
-				   << node_tmp[i].box_min.x 	<< ","
-				   << node_tmp[i].box_min.y 	<< ","
-				   << node_tmp[i].box_min.z 	<< ","
-				   << node_tmp[i].box_max.x 	<< ","
-				   << node_tmp[i].box_max.y 	<< ","
-				   << node_tmp[i].box_max.z 	<< ","
+				   << node_tmp[i].box_min[0] 	<< ","
+				   << node_tmp[i].box_min[1] 	<< ","
+				   << node_tmp[i].box_min[2] 	<< ","
+				   << node_tmp[i].box_max[0] 	<< ","
+				   << node_tmp[i].box_max[1] 	<< ","
+				   << node_tmp[i].box_max[2] 	<< ","
 				   << node_tmp[i].contact;
 		write_file << "\n";
 	}
@@ -266,7 +327,6 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 
 	int num_location = Graph_->GetNodeList().size();
 	vector<double> sec;
-	vector<point_d> data;
 	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	ofstream write_file(path_, ios::app);
@@ -283,17 +343,47 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 				int tmp = 0;
 				while (tmp>=0)
 				{
-					data.clear(); sec.clear();
+					sec.clear();
 					switch (tmp)
 					{
 						case 0:
-							data = edges[i][ii][0].nor;
+							for(int iv=0;iv<LOC_INT;iv++)
+							{
+								for(int v=0;v<3;v++)
+								{
+									write_file << edges[i][ii][0].nor[iv][v];
+									if (iv==LOC_INT-1 && v==2)
+									{ write_file << "\n";  }
+									else
+									{ write_file << ","; }
+								}
+							}
 							break;
 						case 1:
-							data = edges[i][ii][0].tan;
+							for(int iv=0;iv<LOC_INT;iv++)
+							{
+								for(int v=0;v<3;v++)
+								{
+									write_file << edges[i][ii][0].tan[iv][v];
+									if (iv==LOC_INT-1 && v==2)
+									{ write_file << "\n";  }
+									else
+									{ write_file << ","; }
+								}
+							}
 							break;
 						case 2:
-							data = edges[i][ii][0].loc_mid;
+							for(int iv=0;iv<LOC_INT;iv++)
+							{
+								for(int v=0;v<4;v++)
+								{
+									write_file << edges[i][ii][0].loc_mid[iv][v];
+									if (iv==LOC_INT-1 && v==3)
+									{ write_file << "\n";  }
+									else
+									{ write_file << ","; }
+								}
+							}
 							break;
 						case 3:
 							for(int iv=0;iv<LOC_INT;iv++)
@@ -320,16 +410,6 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 							break;
 					}
 					tmp++;
-					if (tmp > 3 || tmp < 0) {continue;}
-					for(int iv=0;iv<LOC_INT;iv++)
-					{
-						write_file << data[iv].x << ",";
-						write_file << data[iv].y << ",";
-						write_file << data[iv].z << ",";
-						write_file << data[iv].l;
-						if (iv<data.size()-1) 	{ write_file << ",";  }
-						else 					{ write_file << "\n"; }
-					}
 				}
 			}
 		}
@@ -338,6 +418,7 @@ void WriteFile::WriteFileGraph(Graph *Graph_, string path_)
 
 void WriteFile::WriteFilePrediction(
 	Graph *Graph_,
+	kb_t kb_,
 	string path_,
 	vector<string> labels_,
 	vector<string> labels_predict_,
@@ -346,23 +427,20 @@ void WriteFile::WriteFilePrediction(
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
-	vector<string> al_tmp = Graph_->GetActionLabel();
-	map<string,pair<int,int> > ac_tmp = Graph_->GetActionCategory();
-
 	string line;
 
 	ofstream write_file(path_, ios::app);
 	for(int i=0;i<labels_.size();i++)
 	{
 		line = labels_[i] + "," + labels_predict_[i] + ",";
-		for(int ii=ac_tmp["GEOMETRIC"].first;ii<ac_tmp["GEOMETRIC"].second+1;ii++)
+		for(int ii=kb_.ac["GEOMETRIC"].first;ii<kb_.ac["GEOMETRIC"].second+1;ii++)
 		{
-			line += to_string(goals_[i][al_tmp[ii]]);
+			line += to_string(goals_[i][kb_.al[ii]]);
 			line += ",";
 		}
-		for(int ii=ac_tmp["GEOMETRIC"].first;ii<ac_tmp["GEOMETRIC"].second+1;ii++)
+		for(int ii=kb_.ac["GEOMETRIC"].first;ii<kb_.ac["GEOMETRIC"].second+1;ii++)
 		{
-			line += to_string(windows_[i][al_tmp[ii]]);
+			line += to_string(windows_[i][kb_.al[ii]]);
 			line += ",";
 		}
 		line.erase(line.size()-1);
@@ -386,7 +464,6 @@ void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
 	double max_val = 0.0;
 	int num_location = Graph_->GetNodeList().size();
 	vector<double> sec;
-	vector<point_d> data;
 	vector<vector<vector<edge_tt> > > edges = Graph_->GetListOfEdges();
 
 	ofstream write_file(path_, ios::app);
@@ -439,37 +516,26 @@ void WriteFile::WriteFileWindow(Graph *Graph_, string path_)
 }
 
 void WriteFile::WriteFileSurface(
-		string path_,
-		vector<vector<double> > rotation_,
-		vector<point_d> planeeq_,
-		vector<point_d> boxmin_,
-		vector<point_d> boxmid_,
-		vector<point_d> boxmax_)
+	string path_,
+	vector<Matrix3d> rotation_,
+	vector<Vector4d> planeeq_,
+	vector<Vector3d> boxmin_,
+	vector<Vector3d> boxmid_,
+	vector<Vector3d> boxmax_)
 {
 	if (ifstream(path_)) { remove(path_.c_str()); }
 
 	ofstream write_file(path_, ios::app);
 	for(int i=0;i<rotation_.size();i++)
 	{
-		write_file << i	<< ","
-				   << planeeq_[i].x	<< ","
-				   << planeeq_[i].y << ","
-				   << planeeq_[i].z << ","
-				   << planeeq_[i].l << ","
-				   << boxmid_[i].x << ","
-				   << boxmid_[i].y << ","
-				   << boxmid_[i].z << ","
-				   << boxmin_[i].x << ","
-				   << boxmin_[i].y << ","
-				   << boxmin_[i].z << ","
-				   << boxmax_[i].x << ","
-				   << boxmax_[i].y << ","
-				   << boxmax_[i].z << ",";
-
-		for(int ii=0;ii<rotation_[i].size();ii++)
-		{
-			write_file << rotation_[i][ii] << ",";
-		}
+		write_file << i	<< ",";
+		for(int ii=0;ii<4;ii++) write_file << planeeq_[i][ii] << ",";
+		for(int ii=0;ii<3;ii++) write_file << boxmid_ [i][ii] << ",";
+		for(int ii=0;ii<3;ii++) write_file << boxmin_ [i][ii] << ",";
+		for(int ii=0;ii<3;ii++) write_file << boxmax_ [i][ii] << ",";
+		for(int ii=0;ii<3;ii++)
+			for(int iii=0;iii<3;iii++)
+				write_file << rotation_[i](ii,iii) << ",";
 		write_file << "\n";
 	}
 }

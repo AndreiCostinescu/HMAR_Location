@@ -18,19 +18,19 @@ void DataFilter::ResetFilter()
 }
 
 int DataFilter::PreprocessDataLive(
-	point_d pos_,
-	vector<point_d> &pva_avg_, //motion
+	Vector4d pos_,
+	vector<Vector4d> &pva_avg_, //motion
 	unsigned int window_)
 {
-	point_d vel = minusPoint(pos_, pva_avg_[0]);
-	point_d acc = minusPoint(vel , pva_avg_[1]);
-	vector<point_d> tmp; tmp.resize(3);
+	Vector4d vel = pos_ - pva_avg_[0];
+	Vector4d acc = vel  - pva_avg_[1];
+	vector<Vector4d> tmp; tmp.resize(3);
 	tmp[0] = pos_; tmp[1] = vel; tmp[2] = acc;
 	for(int i=0;i<3;i++)
 	{
 		if(pos_vel_acc_mem[i].size() == window_)
 		{
-			if(l2Norm(vel)<0.3)
+			if(V4d3d(vel).norm()<0.3)
 			{
 				pva_avg_[i] = movingAverage(tmp[i], pos_vel_acc_mem[i]);
 			}
@@ -39,7 +39,7 @@ int DataFilter::PreprocessDataLive(
 				if(i==0)
 					pva_avg_[i] =
 							movingAverage(
-									addPoint(pva_avg_[0], pva_avg_[1]),
+									pva_avg_[0] + pva_avg_[1],
 									pos_vel_acc_mem[i]);
 			}
 		}
@@ -51,36 +51,37 @@ int DataFilter::PreprocessDataLive(
 		{
 			pos_vel_acc_mem[i].push_back(tmp[i]);
 			pva_avg_[i] 	= tmp[i];
-			pva_avg_[i].l 	= UNCLASSIFIED;
+			pva_avg_[i](3) 	= UNCLASSIFIED;
 			for(int ii=i+1;ii<3;ii++)
 			{
-				pva_avg_[ii].x =
-				pva_avg_[ii].y =
-				pva_avg_[ii].z =
-				pva_avg_[ii].l = UNCLASSIFIED;
+				pva_avg_[ii](0) =
+				pva_avg_[ii](1) =
+				pva_avg_[ii](2) =
+				pva_avg_[ii](3) = UNCLASSIFIED;
 			}
 			break;
 		}
-		pva_avg_[i].l = UNCLASSIFIED;
+		pva_avg_[i](3) = UNCLASSIFIED;
 	}
 	return EXIT_SUCCESS;
 }
 
 int DataFilter::PreprocessContactLive(
-	int &contact_,
+	int contact_,
+	int &contact_out_,
 	unsigned int window_)
 {
 	if(contact_mem.size() == window_)
 	{
-		contact_ = movingAverage(contact_, contact_mem);
+		contact_out_ = movingAverage(contact_, contact_mem);
 	}
 	else if (contact_mem.size()>0)
 	{
-		contact_ = movingAverageIncrement(contact_, contact_mem);
+		contact_out_ = movingAverageIncrement(contact_, contact_mem);
 	}
 	else
 	{
-		contact_mem.push_back(contact_);
+		contact_mem.push_back(contact_out_);
 	}
 	return EXIT_SUCCESS;
 }

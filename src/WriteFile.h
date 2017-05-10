@@ -32,14 +32,22 @@ class WriteFile
 		void RewriteDataFile(
 			string path_,
 			vector<vector<string> > data_,
-			vector<point_d> points_,
+			vector<Vector4d> points_,
 			vector<int>	contact_,
-			point_d face_,
-			vector<point_d> label_ref_write_, // points in label reference
+			Vector4d face_,
+			vector<Vector3d> label_ref_write_, // points in label reference
 			vector<string> label_ref_name_, // name of label reference
 			vector<string> label_list_); // list of label for actions taken
 
-		void WriteFileLA(Graph *Graph_, string path_);
+		void WriteFileLA(
+				Graph *Graph_,
+				kb_t kb_,
+				string path_);
+
+		void WriteFileLA(
+				vector<string> line_,
+				vector<vector<string> > data_tmp,
+				string path_);
 
 		void WriteFileGraph(Graph *Graph_, string path_);
 
@@ -47,14 +55,15 @@ class WriteFile
 
 		void WriteFileSurface(
 				string path_,
-				vector<vector<double> > rotation_,
-				vector<point_d> planeeq_,
-				vector<point_d> boxmin_,
-				vector<point_d> boxmid_,
-				vector<point_d> boxmax_);
+				vector<Matrix3d> rotation_,
+				vector<Vector4d> planeeq_,
+				vector<Vector3d> boxmin_,
+				vector<Vector3d> boxmid_,
+				vector<Vector3d> boxmax_);
 
 		void WriteFilePrediction(
 			Graph *Graph_,
+			kb_t kb_,
 			string path_,
 			vector<string> labels_,
 			vector<string> labels_predict_,

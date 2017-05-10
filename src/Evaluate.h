@@ -14,17 +14,11 @@
 class Evaluate
 {
 	public:
-		Evaluate(Graph *Graph_);
+		Evaluate();
 		virtual ~Evaluate();
 
-		void setVelocity(double x_) 		{vel_eval = x_;}
-		void setLabel(int x_) 				{label1_eval = x_;}
-		void setWindow(vector<double> x_) 	{win_eval = x_;}
-		void setPctErr(vector<double> x_)	{pct_err_eval = x_;}
-		void setGraph(Graph *x_) 			{G = x_;}
-
-		int UpdateStateNode();
-		int UpdateStateEdge();
+		int UpdateStateNode(Graph *G_);
+		int UpdateStateEdge(Graph *G_);
 
 	protected:
 
@@ -36,8 +30,10 @@ class Evaluate
 		vector<double> win_eval;
 		vector<double> pct_err_eval;
 
+		vector<string> al_eval;
+		map<string,pair<int,int> > ac_eval;
+
 		state_t state_eval;
-		Graph *G;
 };
 
 #endif /* EVALUATE_H_ */

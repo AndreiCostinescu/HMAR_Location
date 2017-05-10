@@ -108,7 +108,10 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_linalg.h>
 
+#include <Eigen/Eigen>
+
 using namespace std;
+using namespace Eigen;
 
 #ifdef PC
 	// For backward compatibility with new VTK generic data arrays
@@ -242,33 +245,33 @@ struct pva_s
 typedef struct node_ss node_tt;
 struct node_ss
 {
-	string 			name;
-	int				index; // used to check for new nodes
-	int				contact;
-	point_d 		centroid;
-	int				surface;
-	point_d			box_max;
-	point_d			box_min;
+	string 	 name;
+	int		 index; // used to check for new nodes
+	int		 contact;
+	Vector4d centroid; // Sphere
+	int		 surface; // Surface
+	Vector3d box_max;
+	Vector3d box_min;
 };
 
 typedef struct edge_ss edge_tt;
 struct edge_ss
 {
-	string 			name;
-	unsigned int 	idx1;
-	unsigned int 	idx2;
-	vector<double> 	sector_map; // locations int * sectors int
-	vector<double> 	sector_const;
-	vector<point_d> tan; // locations int
-	vector<point_d> nor; // locations int
-	vector<point_d> loc_mid; // locations int
-	vector<double>  loc_len; // locations int
-	double 			total_len;
-	int 			counter;
-	vector<int> 	mov_const; // 0/1 activation of the mov_const labels
-	vector<double> 	loc_mem; // to calculate d2(loc)
-	vector<double> 	sec_mem; // to calculate d2(sec)
-	vector<double> 	err_mem; // to calculate d2(err)
+	string				name;
+	unsigned int 		idx1;
+	unsigned int 		idx2;
+	vector<double> 		sector_map; // locations int * sectors int
+	vector<double> 		sector_const;
+	vector<Vector3d> 	tan; // locations int
+	vector<Vector3d> 	nor; // locations int
+	vector<Vector4d> 	loc_mid; // locations int
+	vector<double>  	loc_len; // locations int
+	double 				total_len;
+	int 				counter;
+	vector<int> 		mov_const; // 0/1 activation of the mov_const labels
+	vector<double> 		loc_mem; // to calculate d2(loc)
+	vector<double> 		sec_mem; // to calculate d2(sec)
+	vector<double> 		err_mem; // to calculate d2(err)
 };
 
 // prediction for node
@@ -310,11 +313,11 @@ struct predict_se
 typedef struct kb_s kb_t;
 struct kb_s
 {
-	vector<point_d>		 			surface_eq;
-	vector<point_d> 				surface_mid;
-	vector<point_d> 				surface_min;
-	vector<point_d> 				surface_max;
-	vector<vector<double> > 		surface_rot;
+	vector<Vector4d>		 		surface_eq;
+	vector<Vector3d> 				surface_mid;
+	vector<Vector3d> 				surface_min; // from mid
+	vector<Vector3d> 				surface_max; // from mid
+	vector<Matrix3d> 				surface_rot;
 	vector<double> 					surface_lim;
 	map<int,vector<string> > 		label;
 	map<string,pair<int,int> > 		ac;
