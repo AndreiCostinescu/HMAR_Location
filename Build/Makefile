@@ -60,6 +60,47 @@ edit_cache:
 edit_cache/fast: edit_cache
 .PHONY : edit_cache/fast
 
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: install/local
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: install/strip
+.PHONY : install/strip/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -114,6 +155,30 @@ depend:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/build
 .PHONY : ../HMAR/fast
 
+src/ActionParser.o: src/ActionParser.cpp.o
+.PHONY : src/ActionParser.o
+
+# target to build an object file
+src/ActionParser.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ActionParser.cpp.o
+.PHONY : src/ActionParser.cpp.o
+
+src/ActionParser.i: src/ActionParser.cpp.i
+.PHONY : src/ActionParser.i
+
+# target to preprocess a source file
+src/ActionParser.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ActionParser.cpp.i
+.PHONY : src/ActionParser.cpp.i
+
+src/ActionParser.s: src/ActionParser.cpp.s
+.PHONY : src/ActionParser.s
+
+# target to generate assembly for a file
+src/ActionParser.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ActionParser.cpp.s
+.PHONY : src/ActionParser.cpp.s
+
 src/ActionPrediction.o: src/ActionPrediction.cpp.o
 .PHONY : src/ActionPrediction.o
 
@@ -138,6 +203,102 @@ src/ActionPrediction.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/ActionPrediction.cpp.s
 .PHONY : src/ActionPrediction.cpp.s
 
+src/CAS.o: src/CAS.cpp.o
+.PHONY : src/CAS.o
+
+# target to build an object file
+src/CAS.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CAS.cpp.o
+.PHONY : src/CAS.cpp.o
+
+src/CAS.i: src/CAS.cpp.i
+.PHONY : src/CAS.i
+
+# target to preprocess a source file
+src/CAS.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CAS.cpp.i
+.PHONY : src/CAS.cpp.i
+
+src/CAS.s: src/CAS.cpp.s
+.PHONY : src/CAS.s
+
+# target to generate assembly for a file
+src/CAS.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CAS.cpp.s
+.PHONY : src/CAS.cpp.s
+
+src/CData.o: src/CData.cpp.o
+.PHONY : src/CData.o
+
+# target to build an object file
+src/CData.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CData.cpp.o
+.PHONY : src/CData.cpp.o
+
+src/CData.i: src/CData.cpp.i
+.PHONY : src/CData.i
+
+# target to preprocess a source file
+src/CData.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CData.cpp.i
+.PHONY : src/CData.cpp.i
+
+src/CData.s: src/CData.cpp.s
+.PHONY : src/CData.s
+
+# target to generate assembly for a file
+src/CData.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CData.cpp.s
+.PHONY : src/CData.cpp.s
+
+src/CGraph.o: src/CGraph.cpp.o
+.PHONY : src/CGraph.o
+
+# target to build an object file
+src/CGraph.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CGraph.cpp.o
+.PHONY : src/CGraph.cpp.o
+
+src/CGraph.i: src/CGraph.cpp.i
+.PHONY : src/CGraph.i
+
+# target to preprocess a source file
+src/CGraph.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CGraph.cpp.i
+.PHONY : src/CGraph.cpp.i
+
+src/CGraph.s: src/CGraph.cpp.s
+.PHONY : src/CGraph.s
+
+# target to generate assembly for a file
+src/CGraph.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CGraph.cpp.s
+.PHONY : src/CGraph.cpp.s
+
+src/CKB.o: src/CKB.cpp.o
+.PHONY : src/CKB.o
+
+# target to build an object file
+src/CKB.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CKB.cpp.o
+.PHONY : src/CKB.cpp.o
+
+src/CKB.i: src/CKB.cpp.i
+.PHONY : src/CKB.i
+
+# target to preprocess a source file
+src/CKB.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CKB.cpp.i
+.PHONY : src/CKB.cpp.i
+
+src/CKB.s: src/CKB.cpp.s
+.PHONY : src/CKB.s
+
+# target to generate assembly for a file
+src/CKB.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/CKB.cpp.s
+.PHONY : src/CKB.cpp.s
+
 src/DBSCAN.o: src/DBSCAN.cpp.o
 .PHONY : src/DBSCAN.o
 
@@ -161,30 +322,6 @@ src/DBSCAN.s: src/DBSCAN.cpp.s
 src/DBSCAN.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DBSCAN.cpp.s
 .PHONY : src/DBSCAN.cpp.s
-
-src/DataContainer.o: src/DataContainer.cpp.o
-.PHONY : src/DataContainer.o
-
-# target to build an object file
-src/DataContainer.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.o
-.PHONY : src/DataContainer.cpp.o
-
-src/DataContainer.i: src/DataContainer.cpp.i
-.PHONY : src/DataContainer.i
-
-# target to preprocess a source file
-src/DataContainer.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.i
-.PHONY : src/DataContainer.cpp.i
-
-src/DataContainer.s: src/DataContainer.cpp.s
-.PHONY : src/DataContainer.s
-
-# target to generate assembly for a file
-src/DataContainer.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataContainer.cpp.s
-.PHONY : src/DataContainer.cpp.s
 
 src/DataFilter.o: src/DataFilter.cpp.o
 .PHONY : src/DataFilter.o
@@ -234,30 +371,6 @@ src/DataParser.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/DataParser.cpp.s
 .PHONY : src/DataParser.cpp.s
 
-src/Deployment.o: src/Deployment.cpp.o
-.PHONY : src/Deployment.o
-
-# target to build an object file
-src/Deployment.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.o
-.PHONY : src/Deployment.cpp.o
-
-src/Deployment.i: src/Deployment.cpp.i
-.PHONY : src/Deployment.i
-
-# target to preprocess a source file
-src/Deployment.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.i
-.PHONY : src/Deployment.cpp.i
-
-src/Deployment.s: src/Deployment.cpp.s
-.PHONY : src/Deployment.s
-
-# target to generate assembly for a file
-src/Deployment.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Deployment.cpp.s
-.PHONY : src/Deployment.cpp.s
-
 src/Evaluate.o: src/Evaluate.cpp.o
 .PHONY : src/Evaluate.o
 
@@ -281,54 +394,6 @@ src/Evaluate.s: src/Evaluate.cpp.s
 src/Evaluate.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Evaluate.cpp.s
 .PHONY : src/Evaluate.cpp.s
-
-src/Graph.o: src/Graph.cpp.o
-.PHONY : src/Graph.o
-
-# target to build an object file
-src/Graph.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Graph.cpp.o
-.PHONY : src/Graph.cpp.o
-
-src/Graph.i: src/Graph.cpp.i
-.PHONY : src/Graph.i
-
-# target to preprocess a source file
-src/Graph.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Graph.cpp.i
-.PHONY : src/Graph.cpp.i
-
-src/Graph.s: src/Graph.cpp.s
-.PHONY : src/Graph.s
-
-# target to generate assembly for a file
-src/Graph.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Graph.cpp.s
-.PHONY : src/Graph.cpp.s
-
-src/Prediction.o: src/Prediction.cpp.o
-.PHONY : src/Prediction.o
-
-# target to build an object file
-src/Prediction.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.o
-.PHONY : src/Prediction.cpp.o
-
-src/Prediction.i: src/Prediction.cpp.i
-.PHONY : src/Prediction.i
-
-# target to preprocess a source file
-src/Prediction.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.i
-.PHONY : src/Prediction.cpp.i
-
-src/Prediction.s: src/Prediction.cpp.s
-.PHONY : src/Prediction.s
-
-# target to generate assembly for a file
-src/Prediction.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/Prediction.cpp.s
-.PHONY : src/Prediction.cpp.s
 
 src/ReadFile.o: src/ReadFile.cpp.o
 .PHONY : src/ReadFile.o
@@ -474,6 +539,30 @@ src/TrainSM.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/TrainSM.cpp.s
 .PHONY : src/TrainSM.cpp.s
 
+src/VTKExtra.o: src/VTKExtra.cpp.o
+.PHONY : src/VTKExtra.o
+
+# target to build an object file
+src/VTKExtra.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/VTKExtra.cpp.o
+.PHONY : src/VTKExtra.cpp.o
+
+src/VTKExtra.i: src/VTKExtra.cpp.i
+.PHONY : src/VTKExtra.i
+
+# target to preprocess a source file
+src/VTKExtra.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/VTKExtra.cpp.i
+.PHONY : src/VTKExtra.cpp.i
+
+src/VTKExtra.s: src/VTKExtra.cpp.s
+.PHONY : src/VTKExtra.s
+
+# target to generate assembly for a file
+src/VTKExtra.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/VTKExtra.cpp.s
+.PHONY : src/VTKExtra.cpp.s
+
 src/WriteFile.o: src/WriteFile.cpp.o
 .PHONY : src/WriteFile.o
 
@@ -570,53 +659,29 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
-src/misc.o: src/misc.cpp.o
-.PHONY : src/misc.o
+src/print.o: src/print.cpp.o
+.PHONY : src/print.o
 
 # target to build an object file
-src/misc.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.o
-.PHONY : src/misc.cpp.o
+src/print.cpp.o:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/print.cpp.o
+.PHONY : src/print.cpp.o
 
-src/misc.i: src/misc.cpp.i
-.PHONY : src/misc.i
-
-# target to preprocess a source file
-src/misc.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.i
-.PHONY : src/misc.cpp.i
-
-src/misc.s: src/misc.cpp.s
-.PHONY : src/misc.s
-
-# target to generate assembly for a file
-src/misc.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/misc.cpp.s
-.PHONY : src/misc.cpp.s
-
-src/vtkExtra.o: src/vtkExtra.cpp.o
-.PHONY : src/vtkExtra.o
-
-# target to build an object file
-src/vtkExtra.cpp.o:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.o
-.PHONY : src/vtkExtra.cpp.o
-
-src/vtkExtra.i: src/vtkExtra.cpp.i
-.PHONY : src/vtkExtra.i
+src/print.i: src/print.cpp.i
+.PHONY : src/print.i
 
 # target to preprocess a source file
-src/vtkExtra.cpp.i:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.i
-.PHONY : src/vtkExtra.cpp.i
+src/print.cpp.i:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/print.cpp.i
+.PHONY : src/print.cpp.i
 
-src/vtkExtra.s: src/vtkExtra.cpp.s
-.PHONY : src/vtkExtra.s
+src/print.s: src/print.cpp.s
+.PHONY : src/print.s
 
 # target to generate assembly for a file
-src/vtkExtra.cpp.s:
-	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/vtkExtra.cpp.s
-.PHONY : src/vtkExtra.cpp.s
+src/print.cpp.s:
+	$(MAKE) -f CMakeFiles/../HMAR.dir/build.make CMakeFiles/../HMAR.dir/src/print.cpp.s
+.PHONY : src/print.cpp.s
 
 # Help Target
 help:
@@ -626,34 +691,41 @@ help:
 	@echo "... depend"
 	@echo "... ../HMAR"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... src/ActionParser.o"
+	@echo "... src/ActionParser.i"
+	@echo "... src/ActionParser.s"
 	@echo "... src/ActionPrediction.o"
 	@echo "... src/ActionPrediction.i"
 	@echo "... src/ActionPrediction.s"
+	@echo "... src/CAS.o"
+	@echo "... src/CAS.i"
+	@echo "... src/CAS.s"
+	@echo "... src/CData.o"
+	@echo "... src/CData.i"
+	@echo "... src/CData.s"
+	@echo "... src/CGraph.o"
+	@echo "... src/CGraph.i"
+	@echo "... src/CGraph.s"
+	@echo "... src/CKB.o"
+	@echo "... src/CKB.i"
+	@echo "... src/CKB.s"
 	@echo "... src/DBSCAN.o"
 	@echo "... src/DBSCAN.i"
 	@echo "... src/DBSCAN.s"
-	@echo "... src/DataContainer.o"
-	@echo "... src/DataContainer.i"
-	@echo "... src/DataContainer.s"
 	@echo "... src/DataFilter.o"
 	@echo "... src/DataFilter.i"
 	@echo "... src/DataFilter.s"
 	@echo "... src/DataParser.o"
 	@echo "... src/DataParser.i"
 	@echo "... src/DataParser.s"
-	@echo "... src/Deployment.o"
-	@echo "... src/Deployment.i"
-	@echo "... src/Deployment.s"
 	@echo "... src/Evaluate.o"
 	@echo "... src/Evaluate.i"
 	@echo "... src/Evaluate.s"
-	@echo "... src/Graph.o"
-	@echo "... src/Graph.i"
-	@echo "... src/Graph.s"
-	@echo "... src/Prediction.o"
-	@echo "... src/Prediction.i"
-	@echo "... src/Prediction.s"
 	@echo "... src/ReadFile.o"
 	@echo "... src/ReadFile.i"
 	@echo "... src/ReadFile.s"
@@ -672,6 +744,9 @@ help:
 	@echo "... src/TrainSM.o"
 	@echo "... src/TrainSM.i"
 	@echo "... src/TrainSM.s"
+	@echo "... src/VTKExtra.o"
+	@echo "... src/VTKExtra.i"
+	@echo "... src/VTKExtra.s"
 	@echo "... src/WriteFile.o"
 	@echo "... src/WriteFile.i"
 	@echo "... src/WriteFile.s"
@@ -684,12 +759,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... src/misc.o"
-	@echo "... src/misc.i"
-	@echo "... src/misc.s"
-	@echo "... src/vtkExtra.o"
-	@echo "... src/vtkExtra.i"
-	@echo "... src/vtkExtra.s"
+	@echo "... src/print.o"
+	@echo "... src/print.i"
+	@echo "... src/print.s"
 .PHONY : help
 
 

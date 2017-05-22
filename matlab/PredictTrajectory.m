@@ -14,7 +14,6 @@ end
 DICT2 = DICT;
 remove(DICT2,'MOVE');
 remove(DICT2,'RELEASE');
-remove(DICT2,'STOP');
 DICT3 = containers.Map(values(DICT2),keys(DICT2));
 
 %% Action sequence
@@ -40,9 +39,9 @@ for i=1:length(DIR)
     PROB = cell(49,7);
     WINDOW = cell(49,7);
     
-    if (~strcmp(DIR(i).name,'SPG'))
-        continue;
-    end
+%     if (~strcmp(DIR(i).name,'SPG'))
+%         continue;
+%     end
     
     if (strcmp(DIR(i).name,'.') || strcmp(DIR(i).name,'..'))
         continue;
@@ -57,17 +56,17 @@ for i=1:length(DIR)
             continue;
         end
                 
-        if (strcmp(DIR_S(ii).name,'1'))
-            continue;
-        end
-        
-        if (strcmp(DIR_S(ii).name,'2'))
-            continue;
-        end
-        
-        if (strcmp(DIR_S(ii).name,'0'))
-            continue;
-        end
+%         if (strcmp(DIR_S(ii).name,'1'))
+%             continue;
+%         end
+%         
+%         if (strcmp(DIR_S(ii).name,'2'))
+%             continue;
+%         end
+%         
+%         if (strcmp(DIR_S(ii).name,'0'))
+%             continue;
+%         end
         
         % # action sequence
         file_name = [dir_name '/' DIR(i).name '/' DIR_S(ii).name];
@@ -315,14 +314,15 @@ for i=1:length(DIR)
             close(figure(ii));
         else
             legend(plot_handles, legend_name');
-            title([DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1)]);
-%             print(figure(ii),['0505/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
+%             title(['Trajectory Prediction ( ' DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1) ')']);
+%             title(['Trajectory Prediction (Goal : ' DICT3(mod(ii-1,7)+1) ')']);
+%             print(figure(ii),['0515/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
         end
         
 
     end
     
-%     close all; 
+    close all; 
     
 end
     

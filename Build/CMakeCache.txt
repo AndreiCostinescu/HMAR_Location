@@ -17,9 +17,8 @@
 //Path to a program.
 CMAKE_AR:FILEPATH=/usr/bin/ar
 
-//Choose the type of build, options are: None(CMAKE_CXX_FLAGS or
-// CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.
-CMAKE_BUILD_TYPE:STRING=release
+//Choose the type of build.
+CMAKE_BUILD_TYPE:STRING=Debug
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -176,9 +175,6 @@ HMAR_Location_BINARY_DIR:STATIC=/home/chen/HMAR/HMAR_Location/Build
 //Value Computed by CMake
 HMAR_Location_SOURCE_DIR:STATIC=/home/chen/HMAR/HMAR_Location
 
-//The directory containing a CMake configuration file for VTK.
-VTK_DIR:PATH=/home/chen/vtksrc/VTK-build
-
 
 ########################
 # INTERNAL cache entries
@@ -190,8 +186,8 @@ CMAKE_AR-ADVANCED:INTERNAL=1
 CMAKE_BUILD_TOOL-ADVANCED:INTERNAL=1
 //What is the target build tool cmake is generating for.
 CMAKE_BUILD_TOOL:INTERNAL=/usr/bin/make
-//MODIFIED property for variable: CMAKE_BUILD_TYPE
-CMAKE_BUILD_TYPE-MODIFIED:INTERNAL=ON
+//STRINGS property for variable: CMAKE_BUILD_TYPE
+CMAKE_BUILD_TYPE-STRINGS:INTERNAL=Debug;Release;MinSizeRel;RelWithDebInfo
 //This is the directory where this CMakeCache.txt was created
 CMAKE_CACHEFILE_DIR:INTERNAL=/home/chen/HMAR/HMAR_Location/Build
 //Major version of cmake used to create the current loaded cache
@@ -315,6 +311,4 @@ CMAKE_UNAME:INTERNAL=/bin/uname
 CMAKE_USE_RELATIVE_PATHS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
-//MODIFIED property for variable: VTK_DIR
-VTK_DIR-MODIFIED:INTERNAL=ON
 

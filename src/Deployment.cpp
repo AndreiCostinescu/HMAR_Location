@@ -3,6 +3,7 @@
  *
  *  Created on: May 8, 2017
  *      Author: chen
+ *      Detail: This class can be deployed for online evaluation.
  */
 
 #include "Deployment.h"

@@ -6,7 +6,6 @@
 // Description : Hello World in C++, Ansi-style
 //=============================================================================
 
-#include "dataDeclaration.h"
 #include "TestCase.h"
 
 //=============================================================================
@@ -42,7 +41,7 @@ int main(int argc, char *argv[])
 //	TC->Choose(2);
 //	TC->Choose(3);
 //	TC->Choose(4);
-
+//
 //	// Test
 //	TC->Choose(5);
 //	TC->Choose(6);
@@ -50,17 +49,31 @@ int main(int argc, char *argv[])
 //	TC->Choose(8);
 
 //	TC->Choose(9);
+//	TC->Choose(10);
+//	TC->Choose(11);
+//	TC->Choose(12);
+//
+//	TC->Choose(13);
+//	TC->Choose(14);
+//	TC->Choose(15);
+//	TC->Choose(16);
+
+//	TC->Choose(9);
 //	TC->Choose(13);
 //
 //	TC->Choose(10);
 //	TC->Choose(14);
-
+//
 //	TC->Choose(11);
 //	TC->Choose(15);
-
+//
 //	TC->Choose(12);
-	TC->Choose(16);
+//	TC->Choose(16);
 
+//	TC->Choose(17);
+//	TC->Choose(18);
+//	TC->Choose(19);
+//	TC->Choose(20);
 
 //	// Train Cup
 //	TC.Choose(1, TRN);

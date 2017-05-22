@@ -8,8 +8,13 @@
 #ifndef CORE_H_
 #define CORE_H_
 
-#include "dataDeclaration.h"
+#include <fstream>
+#include <sstream>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "algo.h"
+
+#define BOUNDARY_VAR 0.1
 
 bool directionCheck(
 	Vector3d A,
@@ -54,7 +59,8 @@ double dLI(
 	vector<Vector4d> mid_,
 	vector<Vector3d> tangent_,
 	int loc_offset_,
-	bool loc_init_);
+	bool loc_init_,
+	int LOC_INT_);
 
 double dLIPredict(
 	int &loc_idx_,
@@ -64,28 +70,8 @@ double dLIPredict(
 	vector<double> len_,
 	vector<Vector3d> tangent_,
 	int loc_offset_,
-	int loc_init_); //0 for true
-
-//double decideLocationInterval(
-//	vector<int> &loc_idxs_,
-//	int &loc_last_idx_,
-//	point_d point_,
-//	vector<point_d> beg_,
-//	vector<point_d> mid_,
-//	vector<point_d> end_,
-//	vector<point_d> tangent_,
-//	int loc_offset_,
-//	bool loc_init_=false);
-//
-//double decideLocationInterval(
-//	int &loc_idx_,
-//	int &loc_last_idx_,
-//	point_d point_,
-//	vector<point_d> beg_,
-//	vector<point_d> mid_,
-//	vector<point_d> end_,
-//	vector<point_d> tangent_,
-//	int offset_);
+	int loc_init_, //0 for true
+	int LOC_INT_);
 
 int decideSectorInterval(
 	int &sec_idx_,
@@ -94,18 +80,13 @@ int decideSectorInterval(
 	Vector4d point_,
 	vector<Vector4d> mid_,
 	vector<Vector3d> tangent_,
-	vector<Vector3d> normal_);
+	vector<Vector3d> normal_,
+	int SEC_INT_);
 
 //int decideCurvature(
 //	point_d point_,
 //	vector<point_d> &curve_mem_,
 //	double &curve_,
-//	int num_points_);
-//
-//int decideRateOfChangeOfDeltaT(
-//	point_d delta_t_,
-//	vector<point_d> &delta_t_mem_,
-//	double &dd_delta_t_,
 //	int num_points_);
 
 int folderSelect1(
@@ -117,5 +98,11 @@ int folderSelect2(
 int fileSelect(
 	const struct dirent *entry);
 
+bool copyFile(
+		string SRC,
+		string DEST);
+
+bool directoryCheck(
+		string path_);
 
 #endif /* CORE_H_ */

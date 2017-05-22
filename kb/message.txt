@@ -1,9 +1,9 @@
 the object has been released .
 nothing is happening .
-you are moving the object that was action .
-you are grabbing the object that was action .
+you have grabbed the object that was action .
+you are action on location .
+you have placed the object on location .
 you are action .
-you have stopped action .
 i think you are going to action .
 i think you are going to action . but you have stopped .
 maybe you are going to action . but i am not sure .

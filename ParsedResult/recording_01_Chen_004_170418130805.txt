@@ -1,0 +1,28 @@
+ nothing is happening .
+ you have grabbed the SPG that was storeed .
+ i think you are going to clean TABLE2 .
+No, i think you are going to clean TABLE1 .
+ you are cleaning TABLE2 on TABLE2 .
+ you have placed the SPG on TABLE2 .
+ you are cleaning TABLE2 on TABLE2 .
+ i think you are going to throw the SPG .
+ you are throwing the SPG .
+ the SPG has been released .
+ nothing is happening .
+ you have grabbed the SPG that was throwed .
+ the SPG has been released .
+ nothing is happening .
+ nothing is happening .
+ you have grabbed the SPG that was storeed .
+ i think you are going to clean TABLE2 .
+No, i think you are going to clean TABLE1 .
+ you are cleaning TABLE2 on TABLE2 .
+ you have placed the SPG on TABLE2 .
+ you are cleaning TABLE2 on TABLE2 .
+ i think you are going to throw the SPG .
+ you are throwing the SPG .
+ the SPG has been released .
+ nothing is happening .
+ you have grabbed the SPG that was throwed .
+ the SPG has been released .
+ nothing is happening .

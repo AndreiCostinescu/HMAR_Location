@@ -18,7 +18,7 @@ DICT3 = containers.Map(values(DICT2),keys(DICT2));
 
 %% Window
 
-dir_name = '../Scene1';
+dir_name = '../Scene2';
 file_name = '';
 
 
@@ -28,6 +28,10 @@ DIR = dir(dir_name);
 for i=1:length(DIR)
 
     if (strcmp(DIR(i).name,'.') || strcmp(DIR(i).name,'..'))
+        continue;
+    end
+    
+    if (~strcmp(DIR(i).name,'PT1'))
         continue;
     end
     
@@ -105,8 +109,10 @@ for i=1:length(DIR)
             a = 1;
             y  = filter(b,a,Y {ii}(iii,:));
             y2 = filter(b,a,Y2{ii}(iii,:));
+            y = smooth(Y{ii}(iii,:));
             y2 = smooth(Y2{ii}(iii,:));
 %             plot(X{ii}(iii,:),y2./y); 
+%             y2 = Y2{ii}(iii,:);
             plot(X{ii}(iii,:),y2); 
             L = [L ; iii];
             hold on;
@@ -147,7 +153,7 @@ for i=1:length(DIR)
 %         hold off;
 %     end
     
-    close all;
+%     close all;
     
     
     

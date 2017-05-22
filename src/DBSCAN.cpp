@@ -1,9 +1,13 @@
-/*
- * DBSCAN.cpp
+/*******************************************************************************
+ * DBSCAN.h
  *
  *  Created on: Apr 20, 2017
- *      Author: chen
- */
+ *      Author: Chen, EeHeng
+ * 		Detail: Implementation of DBSCAN algorithm. Original code is written in
+ * 				C by Gagarine Yaikhom and modified by author.
+ * 				(Copyright 2015 Gagarine Yaikhom MIT License).
+ *
+ ******************************************************************************/
 
 #include "DBSCAN.h"
 
@@ -11,11 +15,7 @@ DBSCAN::DBSCAN() { }
 
 DBSCAN::~DBSCAN() { }
 
-/* Copyright 2015 Gagarine Yaikhom (MIT License) */
-/* modified by Chen */
-/* changed all point_d to point_d and changed l to l*/
-
-node_t *DBSCAN::create_node(unsigned int index)
+DBSCAN::node_t *DBSCAN::create_node(unsigned int index)
 {
     node_t *n = (node_t *) calloc(1, sizeof(node_t));
     if (n == NULL)
@@ -47,7 +47,7 @@ int DBSCAN::append_at_end(
     return SUCCESS;
 }
 
-epsilon_neighbours_t *DBSCAN::get_epsilon_neighbours(
+DBSCAN::epsilon_neighbours_t *DBSCAN::get_epsilon_neighbours(
     unsigned int index,
     point_d *points,
     unsigned int num_points,
@@ -172,7 +172,6 @@ double DBSCAN::euclidean_dist(point_d *a, point_d *b)
             pow(a->z - b->z, 2));
 }
 
-
 void DBSCAN::dbscan(
     point_d *points,
     unsigned int num_points,
@@ -189,9 +188,78 @@ void DBSCAN::dbscan(
     }
 }
 
-// ============================================================================
-// dbscan
-// ============================================================================
+DBSCAN::point_d DBSCAN::AddPoint(
+	point_d A,
+	point_d B)
+{
+	point_d C;
+	C.x = A.x + B.x;
+	C.y = A.y + B.y;
+	C.z = A.z + B.z;
+	C.l = A.l;
+	return C;
+}
+
+DBSCAN::point_d DBSCAN::MinusPoint(
+	point_d A,
+	point_d B)
+{
+	point_d C;
+	C.x = A.x - B.x;
+	C.y = A.y - B.y;
+	C.z = A.z - B.z;
+	C.l = A.l;
+	return C;
+}
+
+DBSCAN::point_d DBSCAN::MultiPoint(
+	point_d A,
+	double  B)
+{
+	point_d C;
+	C.x = A.x*B;
+	C.y = A.y*B;
+	C.z = A.z*B;
+	C.l = A.l;
+	return C;
+}
+
+double DBSCAN::l2Norm(
+	point_d A)
+{
+    return sqrt(A.x*A.x+A.y*A.y+A.z*A.z);
+}
+
+void DBSCAN::vectorToArray(vector<point_d> A, point_d *B)
+{
+	for(int i=0;i<A.size();i++) { B[i] = A[i]; }
+}
+
+void DBSCAN::ArrayTovector(point_d *A, int size, vector<point_d> &B)
+{
+	B.clear();
+	B.resize(size);
+	for(int i=0;i<size;i++) { B[i] = A[i]; }
+}
+
+Vector4d DBSCAN::PointToVector4d(point_d A)
+{
+	Vector4d B;
+	B(0)=A.x;
+	B(1)=A.y;
+	B(2)=A.z;
+	B(3)=A.l;
+	return B;
+}
+DBSCAN::point_d DBSCAN::Vector4dToPoint(Vector4d A)
+{
+	point_d B;
+	B.x=A(0);
+	B.y=A(1);
+	B.z=A(2);
+	B.l=A(3);
+	return B;
+}
 
 void DBSCAN::DBSCANCluster(
 	double epsilon,
@@ -204,17 +272,43 @@ void DBSCAN::DBSCANCluster(
 }
 
 void DBSCAN::Clustering(
-	vector<point_d> &points_,
+	vector<Vector4d> &points_,
+	vector<Vector4d> &centroids_,
+	vector<int> &locations_flag_,
+	vector<int> contact_flag_,
 	double epsilon,
 	unsigned int minpts)
 {
+	vector<point_d> pos_tmp;
+	vector<point_d> loc_tmp;
+
+	for(int i=0;i<points_.size();i++)
+		pos_tmp.push_back(Vector4dToPoint(points_[i]));
+	for(int i=0;i<centroids_.size();i++)
+		loc_tmp.push_back(Vector4dToPoint(centroids_[i]));
+
 	int num_points = points_.size();
-	point_d *points_array = Calloc(point_d, num_points);
-	vectorToArray(points_, points_array);
+	point_d *points_array = new point_d[num_points];
+	this->vectorToArray(pos_tmp, points_array);
+
 	this->DBSCANCluster(epsilon, minpts, num_points, points_array);
-	reshapeVector(points_, num_points);
-	arrayTovector(points_array, num_points, points_);
-	printer(13);
+
+	points_.clear();
+	points_.resize(num_points);
+	this->ArrayTovector(points_array, num_points, pos_tmp);
+	delete [] points_array;
+
+	this->CombineNearCluster(pos_tmp, loc_tmp, locations_flag_, contact_flag_);
+
+	points_.clear();
+	points_.resize(pos_tmp.size());
+	centroids_.clear();
+	centroids_.resize(loc_tmp.size());
+
+	for(int i=0;i<points_.size();i++)
+		points_[i] = PointToVector4d(pos_tmp[i]);
+	for(int i=0;i<loc_tmp.size();i++)
+		centroids_[i] = PointToVector4d(loc_tmp[i]);
 }
 
 void DBSCAN::CombineNearCluster(
@@ -249,14 +343,14 @@ void DBSCAN::CombineNearCluster(
 		if(points_[i].l >= 0)
 		{
 			p_tmp[(int)points_[i].l] =
-					addPoint(p_tmp[(int)points_[i].l], points_[i]);
+					this->AddPoint(p_tmp[(int)points_[i].l], points_[i]);
 			count[(int)points_[i].l] += 1;
 		}
 	}
 
 	for(int i=0;i<num_locations2;i++)
 	{
-		p_tmp[i] = multiPoint(p_tmp[i],1/count[i]);
+		p_tmp[i] = this->MultiPoint(p_tmp[i],1/count[i]);
 		p_tmp[i].l = UNCLASSIFIED;
 	}
 
@@ -269,10 +363,12 @@ void DBSCAN::CombineNearCluster(
 			if(j<=i) continue;
 
 			for(int ii=0;ii<num_points;ii++)
-				if(points_[ii].l == i && !limit)
+				if (points_[ii].l == i && !limit)
 					for(int jj=0;jj<num_points;jj++)
-						if(points_[jj].l == j)
-							if(l2Norm(minusPoint(points_[ii],points_[jj]))<CLUSTER_LIMIT)
+						if (points_[jj].l == j)
+							if (this->l2Norm(
+									this->MinusPoint(points_[ii], points_[jj]))
+								< CLUSTER_LIMIT)
 								limit = true;
 
 			if(limit)
@@ -337,7 +433,8 @@ void DBSCAN::CombineNearCluster(
 			num_locations2 = max((int)points_[i].l, num_locations2);
 		}
 		num_locations2 += 1;
-		reshapeVector(locations_flag_,num_locations2);
+		locations_flag_.clear();
+		locations_flag_.resize(num_locations2);
 		vector<double> c1; c1.resize(num_locations2);
 		vector<double> c2; c2.resize(num_locations2);
 		for(int i=0;i<num_points;i++)
@@ -365,7 +462,7 @@ void DBSCAN::CombineNearCluster(
 		if(points_[i].l >= 0)
 		{
 			p_tmp[(int)points_[i].l] =
-					addPoint(p_tmp[(int)points_[i].l], points_[i]);
+					this->AddPoint(p_tmp[(int)points_[i].l], points_[i]);
 			count[(int)points_[i].l] += 1;
 		}
 		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
@@ -373,11 +470,10 @@ void DBSCAN::CombineNearCluster(
 
 	for(int i=0;i<p_tmp.size();i++)
 	{
-		p_tmp[i]	= multiPoint(p_tmp[i],1/count[i]);
+		p_tmp[i]	= this->MultiPoint(p_tmp[i],1/count[i]);
 		p_tmp[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
 		count[i]	= UNCLASSIFIED;
 		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
 	}
-
 	locations_ = p_tmp;
 }

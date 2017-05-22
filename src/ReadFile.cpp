@@ -3,18 +3,14 @@
  *
  *  Created on: Apr 16, 2017
  *      Author: chen
+ *      Detail: Read data from file.
  */
 
 #include "ReadFile.h"
 
-ReadFile::ReadFile()
+ReadFile::ReadFile() : n(0), nn(0), nnn(0), list0{}, list1{}, list2{}
 {
-	n=nn=nnn=0;
-	list0=list1=list2={};
-	pair_tmp=make_pair(-1,"");
-	data_rf.clear();
-	idx.clear();
-	map_tmp.clear();
+	this->ClearRF();
 }
 
 ReadFile::~ReadFile() {}
@@ -22,14 +18,14 @@ ReadFile::~ReadFile() {}
 int ReadFile::ReadFileName(
 	string dir_name_,
 	vector<int> idx_,
-	map<int,map<int,pair<int,string> > > &file_list_,
+	map<int,map<int,pair<int,string> > > *file_list_,
 	int &sub_num_)
 {
 	{
 		n=nn=nnn=0;
 		list0=list1=list2={};
 		pair_tmp=make_pair(-1,"");
-		idx.clear();
+		index.clear();
 		map_tmp.clear();
 	}
 
@@ -52,13 +48,13 @@ int ReadFile::ReadFileName(
 
 		int c = 0;
 		map_tmp.clear();
-		idx.clear(); idx = idx_;
+		index.clear(); index = idx_;
 
 		for(int ff=0;ff<nn;ff++)
 		{
-			char num[4]; sprintf(num, "%03d", idx[0]);
+			char num[4]; sprintf(num, "%03d", index[0]);
 
-			// takes only the action specify by idx
+			// takes only the action specify by index
 			if (strcmp(list1[ff]->d_name, num)) continue;
 
 			dir_s = dir_name_ + "/" + list0[f]->d_name + "/" + list1[ff]->d_name;
@@ -66,16 +62,16 @@ int ReadFile::ReadFileName(
 			nnn = scandir(dir_s.c_str(), &list2, fileSelect, alphasort);
 			for(int fff=0;fff<nnn;fff++)
 			{
-				pair_tmp.first 	= idx[0]; //start with 001
+				pair_tmp.first 	= index[0]; //start with 001
 				pair_tmp.second = dir_s + "/" + list2[fff]->d_name;
 				map_tmp[c] = pair_tmp;
 				c += 1;
 			}
 
-			idx.erase(idx.begin());
+			index.erase(index.begin());
 		}
 
-		file_list_[f] = map_tmp;
+		(*file_list_)[f] = map_tmp;
 	}
 
 	return EXIT_SUCCESS;
@@ -111,40 +107,8 @@ void ReadFile::ClearRF()
 	list0=list1=list2={};
 	pair_tmp=make_pair(-1,"");
 	data_rf.clear();
-	idx.clear();
+	index.clear();
 	map_tmp.clear();
-}
-
-bool ReadFile::CopyFile(
-	string SRC,
-	string DEST)
-{
-	ifstream src (SRC,  ios::binary);
-	ofstream dest(DEST, ios::binary);
-	dest << src.rdbuf();
-	return src && dest;
-}
-
-bool ReadFile::DirectoryCheck(
-	string path_ )
-{
-	if (path_.empty())
-	{
-		return false;
-	}
-	DIR *dir;
-	bool exist = false;
-	dir = opendir(path_.c_str());
-	if (dir != NULL)
-	{
-		exist = true;
-		closedir(dir);
-	}
-	if (!exist)
-	{
-		mkdir(path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	}
-	return exist;
 }
 
 int ReadFile::ReadFile_(
@@ -175,11 +139,10 @@ int ReadFile::ReadFile_(
 
 int ReadFile::ReadFileLabel(
 	string path_,
-	map<int,vector<string> > &label_)
+	map<int,vector<string> > *label_)
 {
-	label_.clear();
-
-	if (this->ReadFile_(path_ + "label.txt", ',')==EXIT_FAILURE)
+	label_->clear();
+	if (this->ReadFile_(path_,',')==EXIT_FAILURE)
 	{
 		printer(36);
 		return EXIT_FAILURE;
@@ -193,7 +156,7 @@ int ReadFile::ReadFileLabel(
 			{
 				tmp.push_back(data_rf[n][nn]);
 			}
-			label_[atoi(data_rf[n][0].c_str())] = tmp;
+			(*label_)[atoi(data_rf[n][0].c_str())] = tmp;
 		}
 		printer(37);
 		return EXIT_SUCCESS;
@@ -315,9 +278,9 @@ int ReadFile::ReadSurfaceFile(
 
 int ReadFile::ReadFileKB(
 	string path_,
-	kb_t &kb_)
+	CKB *kb_)
 {
-	kb_ = {};
+	*kb_ = {};
 
 	if (this->ReadFile_(path_ + "surface.txt", ',')==EXIT_FAILURE)
 	{
@@ -326,24 +289,24 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		kb_.surface_mid.resize(data_rf.size());
-		kb_.surface_min.resize(data_rf.size());
-		kb_.surface_max.resize(data_rf.size());
-		kb_.surface_eq.resize(data_rf.size());
-		kb_.surface_rot.resize(data_rf.size());
+		kb_->surface_mid.resize(data_rf.size());
+		kb_->surface_min.resize(data_rf.size());
+		kb_->surface_max.resize(data_rf.size());
+		kb_->surface_eq.resize(data_rf.size());
+		kb_->surface_rot.resize(data_rf.size());
 		for(int i=0;i<data_rf.size();i++)
 		{
 			for(int ii=0;ii<4;ii++)
-				kb_.surface_eq[i][ii]  = atof(data_rf[i][1+ii].c_str());
+				kb_->surface_eq[i][ii]  = atof(data_rf[i][1+ii].c_str());
 			for(int ii=0;ii<3;ii++)
-				kb_.surface_mid[i][ii] = atof(data_rf[i][5+ii].c_str());
+				kb_->surface_mid[i][ii] = atof(data_rf[i][5+ii].c_str());
 			for(int ii=0;ii<3;ii++)
-				kb_.surface_min[i][ii] = atof(data_rf[i][8+ii].c_str());
+				kb_->surface_min[i][ii] = atof(data_rf[i][8+ii].c_str());
 			for(int ii=0;ii<3;ii++)
-				kb_.surface_max[i][ii] = atof(data_rf[i][11+ii].c_str());
+				kb_->surface_max[i][ii] = atof(data_rf[i][11+ii].c_str());
 			for(int ii=0;ii<3;ii++)
 				for(int iii=0;iii<3;iii++)
-					kb_.surface_rot[i](ii,iii) = atof(data_rf[i][14+(ii*3+iii)].c_str());
+					kb_->surface_rot[i](ii,iii) = atof(data_rf[i][14+(ii*3+iii)].c_str());
 		}
 		printer(39);
 	}
@@ -355,10 +318,10 @@ int ReadFile::ReadFileKB(
 	}
 	else
 	{
-		kb_.surface_lim.resize(data_rf.size());
+		kb_->surface_lim.resize(data_rf.size());
 		for(int i=0;i<data_rf.size();i++)
 		{
-			kb_.surface_lim[i] = atof(data_rf[i][1].c_str());
+			kb_->surface_lim[i] = atof(data_rf[i][1].c_str());
 		}
 		printer(46);
 	}
@@ -377,11 +340,11 @@ int ReadFile::ReadFileKB(
 				pair<int,int> tmp_pair(
 						atoi(data_rf[i][1].c_str()),
 						atoi(data_rf[i][2].c_str()));
-				kb_.ac[data_rf[i][0]] = tmp_pair;
+				kb_->ac[data_rf[i][0]] = tmp_pair;
 			}
 			else
 			{
-				kb_.al.push_back(data_rf[i][0]);
+				kb_->al.push_back(data_rf[i][0]);
 			}
 		}
 		printer(2);
@@ -401,7 +364,7 @@ int ReadFile::ReadFileKB(
 			{
 				tmp2[data_rf[i][ii*2+1]] = data_rf[i][ii*2+2];
 			}
-			kb_.ol[data_rf[i][0]] = tmp2;
+			kb_->ol[data_rf[i][0]] = tmp2;
 		}
 		printer(4);
 	}
@@ -409,7 +372,7 @@ int ReadFile::ReadFileKB(
 }
 
 int ReadFile::ReadFileLA(
-	Graph *Graph_,
+	CGraph *Graph_,
 	vector<string> al_,
 	string path_)
 {
@@ -420,7 +383,7 @@ int ReadFile::ReadFileLA(
 	}
 	else
 	{
-		node_tt node_tmp = {};
+		CGraph::node_t node_tmp = {};
 		for(int i=0;i<data_rf.size();i++)
 		{
 			node_tmp = Graph_->GetNode(i);
@@ -430,11 +393,11 @@ int ReadFile::ReadFileLA(
 				node_tmp.index    	= i;
 				for(int ii=0;ii<4;ii++)
 					node_tmp.centroid[ii] = atof(data_rf[i][1+ii].c_str());
-				node_tmp.surface 	= atoi(data_rf[i][5].c_str());
+				node_tmp.surface_flag 	= atoi(data_rf[i][5].c_str());
 				for(int ii=0;ii<3;ii++)
-					node_tmp.box_min[ii]  = atof(data_rf[i][6+ii].c_str());
+					node_tmp.cuboid_min[ii]  = atof(data_rf[i][6+ii].c_str());
 				for(int ii=0;ii<3;ii++)
-					node_tmp.box_max[ii]  = atof(data_rf[i][9+ii].c_str());
+					node_tmp.cuboid_max[ii]  = atof(data_rf[i][9+ii].c_str());
 				node_tmp.contact 	= atoi(data_rf[i][12].c_str());
 				Graph_->SetNode(node_tmp);
 				Graph_->addEmptyEdgeForNewNode(i);
@@ -465,7 +428,7 @@ int ReadFile::ReadFileLA(
 }
 
 int ReadFile::ReadFileGraph(
-	Graph *Graph_,
+	CGraph *Graph_,
 	string path_)
 {
 	if (this->ReadFile_(path_, ',')==EXIT_FAILURE)
@@ -484,7 +447,7 @@ int ReadFile::ReadFileGraph(
 		for(int i=3;i<data_rf.size();i++)
 		{
 			c=(i-3)%7;
-			edge_tt edge_tmp = Graph_->GetEdge(l1,l2,l3);
+			CGraph::edge_t edge_tmp = Graph_->GetEdge(l1,l2,l3);
 			switch (c)
 			{
 				case 0:
@@ -542,3 +505,25 @@ int ReadFile::ReadFileGraph(
 	}
 }
 
+int ReadFile::ReadMsg(
+		string path_,
+		vector<string> *message_)
+{
+	message_->clear();
+	ifstream src_file(path_);
+	while (src_file)
+	{
+		string file_line_;
+		if (!getline( src_file, file_line_ )) break;
+		istringstream line_( file_line_ );
+		string data_line_;
+		while (line_)
+		{
+		   string word;
+		   if (!getline( line_, word, ' ')) break;
+		   data_line_ = data_line_ + " " + word;
+		}
+		message_->push_back( data_line_ );
+	}
+	return EXIT_SUCCESS;
+}

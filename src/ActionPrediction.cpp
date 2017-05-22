@@ -16,15 +16,47 @@ ActionPrediction::ActionPrediction() :
 						pred_sm{},
 						pred_la{}
 {
+	G = new CGraph;
+	KB = new CKB;
+	AS = new CAS;
 }
 
-ActionPrediction::~ActionPrediction() { }
+ActionPrediction::~ActionPrediction()
+{
+	delete G;
+	delete KB;
+	delete AS;
+}
 
-void ActionPrediction::PredictInit(
+void ActionPrediction::reshapePredictEdge(
+	predict_e &P_,
+	int size)
+{
+	P_.acc		 = 0.0;
+	P_.vel		 = 0.0;
+	P_.curvature = 0.0;
+	reshapeVector(P_.range, 		size);
+	reshapeVector(P_.err, 			size);
+	reshapeVector(P_.pct_err, 		size);
+	reshapeVector(P_.err_diff,		size);
+	reshapeVector(P_.pct_err_diff,	size);
+	reshapeVector(P_.window,	 	size);
+}
+
+void ActionPrediction::reshapePredictNode(
+	predict_n &P_,
+	int size)
+{
+	P_.acc		 	= 0.0;
+	P_.vel		 	= 0.0;
+	P_.surface_dist = 0.0;
+	P_.curvature 	= 0.0;
+}
+
+void ActionPrediction::Init(
 		bool learn_)
 {
 	learn = learn_;
-
 	la_sm_change = true;
 
 	reshapeVector(init, 		G->GetNumberOfNodes());
@@ -33,70 +65,67 @@ void ActionPrediction::PredictInit(
 	reshapePredictEdge(pred_sm, G->GetNumberOfNodes());
 	reshapePredictNode(pred_la, G->GetNumberOfNodes());
 
-	al_eval = KB.al;
-	ac_eval = KB.ac;
+	al_eval = KB->al;
+	ac_eval = KB->ac;
 
-	state_eval = G->GetActionState();
+	AS->grasp 	= RELEASE;
+	AS->label1 	= -1;
+	AS->label2 	= -1;
+	AS->vel 		=  0.0;
+	AS->pct_err 	= -1;
+	AS->surface_flag = -1;
+	AS->surface_name = "";
+	AS->surface_dist	= 0.0;
 
-	state_eval.grasp 	= RELEASE;
-	state_eval.label1 	= label1_ap;
-	state_eval.label2 	= label1_ap;
-	state_eval.mov 		=  0.0;
-	state_eval.pct_err 	= -1;
-	state_eval.sur 		= -1;
-	state_eval.sur_dist 	= 0.0;
-
-	for(int i=KB.ac["GEOMETRIC"].first;i<KB.ac["GEOMETRIC"].second+1;i++)
+	for(int i=KB->ac["GEOMETRIC"].first;i<KB->ac["GEOMETRIC"].second+1;i++)
 	{
-		state_eval.goal	[KB.al[i]] = 0.0;
-		state_eval.window[KB.al[i]] = 0.0;
+		AS->goal	 [KB->al[i]] = 0.0;
+		AS->window[KB->al[i]] = 0.0;
 	}
 
-	G->SetActionState(state_eval);
+	pva.clear();
+	pva.resize(3);
+	contact = 0;
+
 }
 
 void ActionPrediction::PredictExt()
 {
-	state_eval = G->GetActionState();
 	if (contact==1)
 	{
-		if (state_eval.grasp==RELEASE)
+		if (AS->grasp==RELEASE)
 		{
-			state_eval.grasp = GRABBED_CLOSE;
-			G->SetActionState(state_eval);
+			AS->grasp = GRABBED_CLOSE;
 			this->Predict();
 		}
 		else
 		{
-			state_eval.grasp = GRABBED;
-			G->SetActionState(state_eval);
+			AS->grasp = GRABBED;
 			this->Predict();
 		}
 	}
 	else
 	{
-		if (state_eval.grasp==GRABBED)
+		if (AS->grasp==GRABBED)
 		{
-			state_eval.grasp = RELEASE_CLOSE;
-			G->SetActionState(state_eval);
+			AS->grasp = RELEASE_CLOSE;
 			this->Predict();
 		}
 		else
 		{
-			state_eval.grasp 	= RELEASE;
-			state_eval.label2 	= state_eval.label1;
-			state_eval.mov 		= 0.0;
-			// state_eval.pct_err 	= -1; // should be -1 because it is in LA
-			// state_eval.sur 		= 0; // should just follow whatever that was determined beforehand
-			state_eval.sur_dist 	= 0.0;
-			for(int i=KB.ac["GEOMETRIC"].first;
-					i<KB.ac["GEOMETRIC"].second+1;
+			AS->grasp 	= RELEASE;
+			AS->label2 	= AS->label1;
+			AS->vel		= 0.0;
+			// AS->pct_err 	= -1; // should be -1 because it is in LA
+			// AS->sur 		= 0; // should just follow whatever that was determined beforehand
+			AS->surface_dist 	= 0.0;
+			for(int i=KB->ac["GEOMETRIC"].first;
+					i<KB->ac["GEOMETRIC"].second+1;
 					i++)
 			{
-				state_eval.goal[KB.al[i]] = 0.0;
-				state_eval.window[KB.al[i]] = 0.0;
+				AS->goal[KB->al[i]] = 0.0;
+				AS->window[KB->al[i]] = 0.0;
 			}
-			G->SetActionState(state_eval);
 		}
 	}
 }
@@ -145,33 +174,29 @@ int ActionPrediction::Predict()
 
 			// ii. update label 1
 			{
-				label1_ap 	= pva[0][3];
+				label1_ap	= pva[0][3];
 				node_ap		= G->GetNode(label1_ap);
 			}
 
 			// iii. update action state_eval
 			{
-				state_eval = G->GetActionState();
-				for(int i=0;i<KB.al.size();i++)
+				for(int i=0;i<KB->al.size();i++)
 				{
-					if (!strcmp(
-							node_ap.name.c_str(),
-							KB.al[i].c_str()))
-					{ state_eval.label1 = state_eval.label2 = i; }
+					if (!strcmp(node_ap.name.c_str(), KB->al[i].c_str()))
+					{ AS->label1 = AS->label2 = i; }
 				}
-				for(int i=KB.ac["GEOMETRIC"].first;
-						i<KB.ac["GEOMETRIC"].second+1;
+				for(int i=KB->ac["GEOMETRIC"].first;
+						i<KB->ac["GEOMETRIC"].second+1;
 						i++)
 				{
-					state_eval.goal[KB.al[i]] = 0.0;
-					state_eval.window[KB.al[i]] = 0.0;
+					AS->goal  [KB->al[i]] = 0.0;
+					AS->window[KB->al[i]] = 0.0;
 				}
-				state_eval.mov 		= V4d3d(pva[1]).norm();
-				state_eval.pct_err 	= -1;
-				state_eval.sur 		= node_ap.surface;
-				G->SetActionState(state_eval);
+				AS->vel 			= V4d3d(pva[1]).norm();
+				AS->pct_err 		= -1;
+				AS->surface_flag	= node_ap.surface_flag;
+				AS->surface_name	= node_ap.name;
 			}
-
 		}
 
 		this->NodePrediction();
@@ -190,15 +215,12 @@ int ActionPrediction::ContactTrigger()
 	if (label1_ap < 0)
 	{
 		this->DecideBoundaryClosestExt();
-		state_eval = G->GetActionState();
-		state_eval.grasp = GRABBED_CLOSE;
-		G->SetActionState(state_eval);
+		AS->grasp = GRABBED_CLOSE;
 	}
 	else
 	{
 		// give a starting location during change from release to move and vice versa
-		if ((G->GetActionState().grasp==GRABBED_CLOSE) ||
-			(G->GetActionState().grasp==RELEASE_CLOSE))
+		if ((AS->grasp==GRABBED_CLOSE) || (AS->grasp==RELEASE_CLOSE))
 		{
 			this->DecideBoundaryClosestExt();
 		}
@@ -208,19 +230,19 @@ int ActionPrediction::ContactTrigger()
 
 			if (pva[0][3]>=0)
 			{
-//				if (node_tmp.surface>0)
+//				if (node_tmp.surface_flag>0)
 //				{
-//					if (!decideSurface(pva_avg[0], G->GetSurfaceEq()[node_tmp.surface-1], 0.2))
+//					if (!decideSurface(pva_avg[0], G->GetSurfaceEq()[node_tmp.surface_flag-1], 0.2))
 //						pva_avg[0].l = UNCLASSIFIED;
 //				}
 
-				if (G->GetNode((int)pva[0][3]).surface > 0)
+				if (G->GetNode((int)pva[0][3]).surface_flag > 0)
 				{
 					Vector4d point_rot, point_rot2;
 					Matrix4d T;
-					T << KB.surface_rot[G->GetNode((int)pva[0][3]).surface-1].row(0), 0,
-						 KB.surface_rot[G->GetNode((int)pva[0][3]).surface-1].row(1), 0,
-						 KB.surface_rot[G->GetNode((int)pva[0][3]).surface-1].row(2), 0,
+					T << KB->surface_rot[G->GetNode((int)pva[0][3]).surface_flag-1].row(0), 0,
+						 KB->surface_rot[G->GetNode((int)pva[0][3]).surface_flag-1].row(1), 0,
+						 KB->surface_rot[G->GetNode((int)pva[0][3]).surface_flag-1].row(2), 0,
 						 0,0,0,0;
 
 					// Last element of T is zero because last vector element is used for labeling.
@@ -233,19 +255,22 @@ int ActionPrediction::ContactTrigger()
 
 					this->DecideBoundaryCuboidExt(
 							point_rot,
-							G->GetNode((int)pva[0][3]).box_min,
-							G->GetNode((int)pva[0][3]).box_max);
+							G->GetNode((int)pva[0][3]).cuboid_min,
+							G->GetNode((int)pva[0][3]).cuboid_max);
 					pva[0][3] = point_rot[3];
 				}
 
 				// prevent from going to unknown goal locations during middle of movement
 				for(int i=0;i<G->GetNumberOfNodes();i++)
 				{
-					if (pred_sm.pct_err[i]>0 && last_loc[i]>LOC_INT/10 && last_loc[i]<LOC_INT-(LOC_INT/10))
+					if (	pred_sm.pct_err[i]>0 &&
+							last_loc[i]>G->GetLocInt()/10 &&
+							last_loc[i]<G->GetLocInt() - (G->GetLocInt()/10))
 					{
-						if (pred_sm.pct_err[(int)pva[0][3]]==0 && pred_sm.range[(int)pva[0][3]]!=RANGE_EXCEED)
+						if (	pred_sm.pct_err[(int)pva[0][3]]==0 &&
+								pred_sm.range[(int)pva[0][3]]!=RANGE_EXCEED)
 						{
-							pva[0][3] = UNCLASSIFIED;
+							pva[0][3] = -1;
 						}
 						break;
 					}
@@ -263,13 +288,13 @@ int ActionPrediction::DecideBoundarySphereExt()
 
 int ActionPrediction::DecideBoundaryCuboidExt(
 	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_)
+	Vector3d cuboid_min_,
+	Vector3d cuboid_max_)
 {
-	Vector3d tmp = box_max_-box_min_;// tmp[1] = 0.0;
-	box_min_ -= (tmp*0.2);
-	box_max_ += (tmp*0.2);
-	return decideBoundaryCuboid(point_, box_min_, box_max_);
+	Vector3d tmp = cuboid_max_-cuboid_min_;// tmp[1] = 0.0;
+	cuboid_min_ -= (tmp*0.2);
+	cuboid_max_ += (tmp*0.2);
+	return decideBoundaryCuboid(point_, cuboid_min_, cuboid_max_);
 }
 
 int ActionPrediction::DecideBoundaryClosestExt()
@@ -316,10 +341,12 @@ int ActionPrediction::NodePrediction()
 	this->DecideMovement(false);
 
 	// 2. check surface distance
-	if (node_ap.surface > 0)
+	if (node_ap.surface_flag > 0)
 	{
 		pred_la.surface_dist =
-				checkSurfaceDistance(pva[0], KB.surface_eq[node_ap.surface-1]);
+				checkSurfaceDistance(
+						pva[0],
+						KB->surface_eq[node_ap.surface_flag-1]);
 	}
 
 	// prediction average
@@ -373,7 +400,6 @@ int ActionPrediction::PredictFromSectorMap()
 		pred_sm.pct_err[i]   	= 0.0;
 		pred_sm.err_diff[i] 	= 0.0;
 		pred_sm.pct_err_diff[i] = 0.0;
-		pred_sm.oscillate[i]	= 0.0;
 		pred_sm.window[i]		= 0.0;
 		label2_ap 				= i;
 
@@ -389,31 +415,27 @@ int ActionPrediction::PredictFromSectorMap()
 				this->DecideLocSecInt(
 						delta_t, sec_idx, loc_idx, last_loc[i], init_tmp);
 
-//		if(label1_ap==2)
-//			cout << "AA : " << loc_idx << endl;
-
 		init[i] = init_tmp;
 		if(last_loc[i]==0) { init[i] = 0; }
 
-		vector<double> sm_tmp;
-		G->GetEdgeSectorMap(label1_ap, i, 0, sm_tmp);
-
 		// GLA
-		bool flag =
-				this->DecideGoal(
-						i, sm_tmp[loc_idx*SEC_INT + sec_idx],
-						delta_t.norm(), tmp_dis);
-		if (!flag) {continue;}
+		if (
+				!this->DecideGoal(
+						i,
+						G->GetEdgeSectorMap(
+								label1_ap,
+								i,
+								0)[loc_idx*G->GetSecInt() + sec_idx],
+						delta_t.norm(),
+						tmp_dis))
+		{continue;}
 
 		// window
-		this->DecideWindow(sm_tmp, loc_idx, i);
-//		if(i == 2) cout << loc_idx << " " <<predict_.window[i] << endl;
-
+		this->DecideWindow(G->GetEdgeSectorMap(label1_ap, i, 0), loc_idx, i);
 	}
 
-	// Give priority to range in
-	int sum_tmp = accumulate(range_in.begin(), range_in.end(), 0.0, addFunction);
-
+//	// Give priority to range in
+//	int sum_tmp = accumulate(range_in.begin(), range_in.end(), 0.0, addFunction);
 //	if (sum_tmp>0)
 //	{
 //		for(int i=0;i<G->GetNumberOfNodes();i++)
@@ -437,30 +459,30 @@ double ActionPrediction::DecideLocSecInt(
 {
 	double tmp_dis, offset, last;
 
-	if (init_==0)	{offset = LOC_INT*0.75;}
-	else			{offset = LOC_INT*0.50;}
+	if (init_==0)	{offset = G->GetLocInt()*0.75;}
+	else			{offset = G->GetLocInt()*0.50;}
 
 	last = loc_last_idx_;
 
 	tmp_dis  =
-			dLIPredict(
+			this->DecideLocationIntervalExt(
 					loc_idx_,
 					loc_last_idx_,
 					(pva[0] - node_ap.centroid),
 					G->GetEdge(label1_ap, label2_ap, 0).loc_mid,
 					G->GetEdge(label1_ap, label2_ap, 0).loc_len,
 					G->GetEdge(label1_ap, label2_ap, 0).tan,
-					offset,
+					(int)round(offset),
 					init_);
 
-	if(loc_idx_>0) init_ = 1;
+	if(loc_idx_>0) { init_ = 1; }
 
 	// going forward
 	if(loc_idx_-loc_last_idx_>0)
 	{
 		for(int i=loc_last_idx_+1;i<loc_idx_+1;i++)
 		{
-			decideSectorInterval(
+			this->DecideSectorIntervalExt(
 					sec_idx_,
 					i,
 					delta_t_,
@@ -475,7 +497,7 @@ double ActionPrediction::DecideLocSecInt(
 	{
 		for(int i=loc_idx_+1;i<loc_last_idx_+1;i++)
 		{
-			decideSectorInterval(
+			this->DecideSectorIntervalExt(
 					sec_idx_,
 					i,
 					delta_t_,
@@ -489,8 +511,7 @@ double ActionPrediction::DecideLocSecInt(
 	else
 	{
 		if (init_==1 && last>0) {loc_idx_ = last;}
-
-		decideSectorInterval(
+		this->DecideSectorIntervalExt(
 				sec_idx_,
 				loc_idx_,
 				delta_t_,
@@ -504,9 +525,38 @@ double ActionPrediction::DecideLocSecInt(
 	return tmp_dis;
 }
 
+double ActionPrediction::DecideLocationIntervalExt(
+	int &loc_idx_,
+	int loc_last_idx_,
+	Vector4d point_,
+	vector<Vector4d> mid_,
+	vector<double> len_,
+	vector<Vector3d> tangent_,
+	int loc_offset_,
+	int loc_init_)
+{
+	return dLIPredict(loc_idx_, loc_last_idx_, point_, mid_, len_, tangent_,
+			loc_offset_, loc_init_, G->GetLocInt());
+}
+
+
+int ActionPrediction::DecideSectorIntervalExt(
+	int &sec_idx_,
+	int loc_idx_,
+	Vector3d &delta_t_,
+	Vector4d point_,
+	vector<Vector4d> mid_,
+	vector<Vector3d> tangent_,
+	vector<Vector3d> normal_)
+{
+	return decideSectorInterval(sec_idx_, loc_idx_, delta_t_, point_,
+			mid_, tangent_, normal_, G->GetSecInt());
+}
+
+
 bool ActionPrediction::DecideGoal(
 	int label2_,
-	double &sm_i_, //sectormap single
+	double sm_i_, //sectormap single
 	double delta_t_,
 	double loc_error_)
 {
@@ -517,7 +567,6 @@ bool ActionPrediction::DecideGoal(
 		pred_sm.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, pred_sm.err[label2_]);
 		return false;
 	}
-
 	if (delta_t_ <= sm_i_)
 	{
 		range_in[label2_] = 1;
@@ -530,7 +579,6 @@ bool ActionPrediction::DecideGoal(
 		pred_sm.err[label2_] = delta_t_ - sm_i_;
 		pred_sm.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, pred_sm.err[label2_]);
 	}
-
 	return true;
 }
 
@@ -540,9 +588,9 @@ int ActionPrediction::DecideWindow(
 	int label2_)
 {
 	double max_val = 0.0;
-	for(int s=0;s<SEC_INT;s++)
+	for(int s=0;s<G->GetSecInt() ;s++)
 	{
-		max_val = max(sm_[loc_idx_*SEC_INT+s],max_val);
+		max_val = max(sm_[loc_idx_*G->GetSecInt()+s],max_val);
 	}
 
 	pred_sm.window[label2_] = max_val;
@@ -557,21 +605,22 @@ int ActionPrediction::DecideWindow(
 
 int ActionPrediction::EvaluateNodePrediction()
 {
+	vector<double> vel;
 	vector<double> surface_dist;
 	for(int i=0;i<pred_la_mem.size();i++)
 	{
+		vel.push_back(pred_la_mem[i].vel);
 		surface_dist.push_back(pred_la_mem[i].surface_dist);
 	}
 
 	surface_dist_eval 	= average(surface_dist);
-//	surface_dist_eval 	= pred_la_mem.back().surface_dist;
 	vel_eval 			= pred_la_mem.back().vel;
 	label1_eval 		= label1_ap;
 
 	win_eval.clear();
 	pct_err_eval.clear();
 
-	this->UpdateStateNode(G);
+	this->UpdateStateNode(G, AS);
 
 	return EXIT_SUCCESS;
 }
@@ -602,7 +651,7 @@ int ActionPrediction::EvaluateEdgePrediction()
 
 		if (G->GetEdgeCounter(label1_ap,i,0)>0) { counter += 1.0; }
 
-		if (last_loc[i]>LOC_INT/10) { flag = true; }
+		if (last_loc[i]>G->GetLocInt() /10) { flag = true; }
 
 		sum_tmp += pct_err_eval[i];
 	}
@@ -637,7 +686,7 @@ int ActionPrediction::EvaluateEdgePrediction()
 	label1_eval 		= label1_ap;
 	surface_dist_eval 	= 0.0;
 
-	this->UpdateStateEdge(G);
+	this->UpdateStateEdge(G, AS);
 
 	return EXIT_SUCCESS;
 }

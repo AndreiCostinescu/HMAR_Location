@@ -7,14 +7,11 @@
 
 #include "TrainLA.h"
 
-TrainLA::TrainLA()
+TrainLA::TrainLA() : VTK(NULL), loc_int(-1), sec_int(-1), f_win(-1)
 {
-	colorCode(color_code);
 }
 
-TrainLA::~TrainLA() {
-	// TODO Auto-generated destructor stub
-}
+TrainLA::~TrainLA() {}
 
 void TrainLA::ClearLA()
 {
@@ -30,17 +27,29 @@ void TrainLA::ClearLA()
 	surfaces_max.clear();
 	surfaces_eq.clear();
 	surfaces_limit.clear();
+	surfaces_rot.clear();
+}
+
+int TrainLA::InitLA(
+		int loc_int_,
+		int sec_int_,
+		int f_win_)
+{
+	loc_int = loc_int_;
+	sec_int = sec_int_;
+	f_win 	= f_win_;
+	return EXIT_SUCCESS;
 }
 
 int TrainLA::DecideBoundaryCuboidExt(
 	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_)
+	Vector3d cuboid_min_,
+	Vector3d cuboid_max_)
 {
-	Vector3d tmp = box_max_-box_min_;
-	box_min_ -= (tmp*0.2);
-	box_max_ += (tmp*0.2);
-	return decideBoundaryCuboid(point_, box_min_, box_max_);
+	Vector3d tmp = cuboid_max_-cuboid_min_;
+	cuboid_min_ -= (tmp*0.2);
+	cuboid_max_ += (tmp*0.2);
+	return decideBoundaryCuboid(point_, cuboid_min_, cuboid_max_);
 }
 
 int TrainLA::LearnBoundary(
@@ -153,7 +162,6 @@ int TrainLA::ContactBoundary(
 int TrainLA::SurfaceContactCheck(
 	vector<Vector4d> &centroids_)
 {
-
 	// label the surface involved
 	for(int i=0;i<points_avg.size();i++)
 	{
@@ -175,72 +183,31 @@ int TrainLA::SurfaceContactCheck(
 			}
 		}
 	}
-
-//	// update the data
-//	for(int i=0;i<points_avg.size();i++)
-//	{
-//		if (points_avg[i].l < 0) continue;
-//
-//		// no surface
-//		if (surfaces_flag[points_avg[i].l]==0) continue;
-//
-//		if (!decideSurface(
-//				points_avg[i], surfaces_eq[surfaces_flag[points_avg[i].l]-1],
-//				surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
-//		{
-//			points_avg[i].l = UNCLASSIFIED;
-//		}
-//	}
-
 	return EXIT_SUCCESS;
 }
 
 int TrainLA::ClusteringExt(
 		vector<Vector4d> &centroids_)
 {
-	vector<point_d> loc_tmp;
-	vector<point_d> pos_tmp;
-
-	pos_tmp.resize(points_avg.size());
-	for(int i=0;i<points_avg.size();i++)
-		pos_tmp[i] = Vector4dToPoint(points_avg[i]);
-	loc_tmp.resize(centroids_.size());
-	for(int i=0;i<centroids_.size();i++)
-		loc_tmp[i] = Vector4dToPoint(centroids_[i]);
-
 	// 1. Clustering of data
-	this->Clustering(pos_tmp, DBSCAN_EPS, DBSCAN_MIN);
-
-	for(int i=0;i<points_avg.size();i++)
-		points_avg[i] = PointToVector4d(pos_tmp[i]);
-
-	// Visualize
-	if (0)
-	{
-		vector<int> loc_idx_zero;
-		vector<string>goal_action, al;goal_action.resize(10);
-		showData(
-				points_avg, goal_action, al,
-				loc_idx_zero, color_code, true, false, false);
-	}
-
 	// 2. Combine nearby clusters
-	this->CombineNearCluster(pos_tmp, loc_tmp, locations_flag, contact_flag);
-
-	for(int i=0;i<points_avg.size();i++)
-		points_avg[i] = PointToVector4d(pos_tmp[i]);
-	reshapeVector(centroids_,loc_tmp.size());
-	for(int i=0;i<loc_tmp.size();i++)
-		centroids_[i] = PointToVector4d(loc_tmp[i]);
+	this->Clustering(
+			points_avg, centroids_, locations_flag, contact_flag,
+			DBSCAN_EPS, DBSCAN_MIN);
+	printer(13);
 
 	// Visualize
 	if (0)
 	{
+		VTK = new VTKExtra(loc_int,sec_int);
 		vector<int> loc_idx_zero;
 		vector<string>goal_action, al;goal_action.resize(10);
-		showData(
+		vector<vector<unsigned char> > color_code;
+		VTK->ColorCode(color_code);
+		VTK->ShowData(
 				points_avg, goal_action, al,
 				loc_idx_zero, color_code, true, false, false);
+		delete VTK;
 	}
 
 	locations_flag[0] = 0; // hack TODO
@@ -263,36 +230,40 @@ int TrainLA::ClusteringExt(
 	// Visualize
 	if (0)
 	{
+		VTK = new VTKExtra(loc_int,sec_int);
 		vector<int> loc_idx_zero;
 		vector<string>goal_action, al;goal_action.resize(10);
-		showData(
+		vector<vector<unsigned char> > color_code;
+		VTK->ColorCode(color_code);
+		VTK->ShowData(
 				points_avg, goal_action, al,
 				loc_idx_zero, color_code, true, false, false);
+		delete VTK;
 	}
 
 	return EXIT_SUCCESS;
 }
 
 int TrainLA::BuildLocationArea(
-	Graph 						*Graph_,
-	kb_t 						kb_,
-	vector<vector<Vector4d> > 	&pos_vel_acc_,
-	vector<int> 				contact_flag_,
-	bool 						flag_)
+		CGraph *Graph_,
+		CKB *kb_,
+		vector<vector<Vector4d> > &pos_vel_acc_,
+		vector<int> *contact_flag_,
+		bool flag_)
 {
 	this->ClearLA();
 
 	// Gathering points
 	for(int i=0;i<pos_vel_acc_.size();i++)
-	{ points_avg.push_back(pos_vel_acc_[i][0]); }
+	{ points_avg.push_back((pos_vel_acc_)[i][0]); }
 
-	contact_flag	= contact_flag_;
-	surfaces_mid 	= kb_.surface_mid;
-	surfaces_min 	= kb_.surface_min;
-	surfaces_max 	= kb_.surface_max;
-	surfaces_eq		= kb_.surface_eq;
-	surfaces_limit	= kb_.surface_lim;
-	surfaces_rot	= kb_.surface_rot;
+	contact_flag	= *contact_flag_;
+	surfaces_mid 	= kb_->surface_mid;
+	surfaces_min 	= kb_->surface_min;
+	surfaces_max 	= kb_->surface_max;
+	surfaces_eq		= kb_->surface_eq;
+	surfaces_limit	= kb_->surface_lim;
+	surfaces_rot	= kb_->surface_rot;
 
 	// Graph is empty
 	if (Graph_->GetNumberOfNodes()==0)
@@ -330,27 +301,33 @@ int TrainLA::BuildLocationArea(
 			goal_action[2] = "SINK";
 		}
 		else
-			showData(
-					points_avg, goal_action, kb_.al,
+		{
+			VTK = new VTKExtra(loc_int,sec_int);
+			vector<vector<unsigned char> > color_code;
+			VTK->ColorCode(color_code);
+			VTK->ShowData(
+					points_avg, goal_action, kb_->al,
 					loc_idx_zero, color_code, true, true, false);
+			delete VTK;
+		}
 
 		for(int i=0;i<locations.size();i++)
 		{
-			node_tt node_tmp;
+			CGraph::node_t node_tmp;
 			node_tmp.name 		= goal_action[i];
 			node_tmp.index 		= i;
-			node_tmp.surface 	= surfaces_flag[i];
+			node_tmp.surface_flag 	= surfaces_flag[i];
 			node_tmp.contact 	= locations_flag[i];
 			node_tmp.centroid 	= locations[i];
 			if(surfaces_flag[i]>0)
 			{
-				node_tmp.box_max 	= surfaces_max[surfaces_flag[i]-1];
-				node_tmp.box_min 	= surfaces_min[surfaces_flag[i]-1];
+				node_tmp.cuboid_max 	= surfaces_max[surfaces_flag[i]-1];
+				node_tmp.cuboid_min 	= surfaces_min[surfaces_flag[i]-1];
 			}
 			else
 			{
-				node_tmp.box_max 	= Vector3d::Zero();
-				node_tmp.box_min 	= Vector3d::Zero();
+				node_tmp.cuboid_max 	= Vector3d::Zero();
+				node_tmp.cuboid_min 	= Vector3d::Zero();
 			}
 			Graph_->SetNode(node_tmp);
 			Graph_->addEmptyEdgeForNewNode(node_tmp.index);
@@ -441,7 +418,7 @@ int TrainLA::BuildLocationArea(
 //									0.0,
 //									max(tmp1,tmp2));
 
-					node_tt node = Graph_->GetNode(ii);
+					CGraph::node_t node = Graph_->GetNode(ii);
 					double tmp1 = locations_[i][3];
 					tmp1 = sqrt(-log(tmp1)*BOUNDARY_VAR*2);
 					Vector4d loc_tmp = node.centroid - locations_[i];
@@ -464,19 +441,19 @@ int TrainLA::BuildLocationArea(
 				if (ii==locations.size()-1 && flag_)
 				{
 
-					node_tt node_tmp 	= {};
+					CGraph::node_t node_tmp 	= {};
 					node_tmp.name 		= goal_action[i];
 					node_tmp.index 		= Graph_->GetNodeList().size();
-					node_tmp.surface 	= surfaces_flag[i];
+					node_tmp.surface_flag 	= surfaces_flag[i];
 					if(surfaces_flag[i]>0)
 					{
-						node_tmp.box_max 	= surfaces_max[surfaces_flag[i]-1];
-						node_tmp.box_min 	= surfaces_min[surfaces_flag[i]-1];
+						node_tmp.cuboid_max 	= surfaces_max[surfaces_flag[i]-1];
+						node_tmp.cuboid_min 	= surfaces_min[surfaces_flag[i]-1];
 					}
 					else
 					{
-						node_tmp.box_max 	= Vector3d::Zero();
-						node_tmp.box_min 	= Vector3d::Zero();
+						node_tmp.cuboid_max 	= Vector3d::Zero();
+						node_tmp.cuboid_min 	= Vector3d::Zero();
 					}
 					node_tmp.contact 	= locations_flag[i];
 					node_tmp.centroid 	= locations_[i];
@@ -499,7 +476,7 @@ int TrainLA::BuildLocationArea(
 	// putting in the labels
 	for(int i=0;i<pos_vel_acc_.size();i++)
 	{
-		pos_vel_acc_[i][0][3] = points_avg[i][3];
+		(pos_vel_acc_)[i][0][3] = points_avg[i][3];
 	}
 	printer(16);
 	printer(17);
@@ -512,10 +489,17 @@ int TrainLA::BuildLocationArea(
 		{
 			goal_action.push_back(Graph_->GetNode(i).name);
 		}
-		showData(
-				points_avg, goal_action, kb_.al,
+
+		VTK = new VTKExtra(loc_int,sec_int);
+		vector<vector<unsigned char> > color_code;
+		VTK->ColorCode(color_code);
+		VTK->ShowData(
+				points_avg, goal_action, kb_->al,
 				loc_idx_zero, color_code, true, false, false);
+		delete VTK;
 	}
+
+	delete VTK;
 
 	return EXIT_SUCCESS;
 }

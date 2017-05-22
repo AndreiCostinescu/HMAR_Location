@@ -1,0 +1,34 @@
+ nothing is happening .
+ i think you are going to clean TABLE1 .
+ you are storeing the SPG .
+ i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+No, i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+No, i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+ you are cleaning DISPENSER .
+ i think you are going to wash the SPG .
+ you are cleaning DISPENSER .
+ i think you are going to wash the SPG .
+No, i think you are going to throw the SPG .
+ you are throwing the SPG .
+ the SPG has been released .
+ nothing is happening .
+ nothing is happening .
+ i think you are going to clean TABLE1 .
+ you are storeing the SPG .
+ i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+No, i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+No, i think you are going to clean TABLE1 .
+No, i think you are going to clean DISPENSER .
+ you are cleaning DISPENSER .
+ i think you are going to wash the SPG .
+ you are cleaning DISPENSER .
+ i think you are going to wash the SPG .
+No, i think you are going to throw the SPG .
+ you are throwing the SPG .
+ the SPG has been released .
+ nothing is happening .

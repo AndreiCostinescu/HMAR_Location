@@ -170,3 +170,9 @@
 - using the LA as reference.
 - adaptable LA.
 - added the EIGEN library
+
+[28]
+- 22/05/2017
+- used pointer referencing between classes.
+- added "containers" to keep the data that are relevant for processing.
+- removed most inheritance, it is making things unflexible.

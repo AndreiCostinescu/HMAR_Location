@@ -3,17 +3,13 @@
  *
  *  Created on: Apr 18, 2017
  *      Author: chen
+ *      Detail: Parses data from a file.
  */
 
 #include "DataParser.h"
 
 DataParser::DataParser() : face_parser(Vector4d::Zero())
 {
-	data_parser.clear();
-	frames_parser.clear();
-	contact_parser.clear();
-	points_parser.clear();
-	labels_parser.clear();
 }
 
 DataParser::~DataParser() { }
@@ -45,16 +41,16 @@ int DataParser::ParseDataNoLabel()
 		if (data_parser[i].size()<8) return EXIT_FAILURE;
 		frames_parser [i]	 = atoi(data_parser[i][0].c_str());
 		contact_parser[i]    = atoi(data_parser[i][1].c_str());
-		points_parser [i](0) = atof(data_parser[i][2].c_str());
-		points_parser [i](1)  = atof(data_parser[i][3].c_str());
-		points_parser [i](2)  = atof(data_parser[i][4].c_str());
-		points_parser [i](3)  = UNCLASSIFIED;
+		points_parser [i][0] = atof(data_parser[i][2].c_str());
+		points_parser [i][1] = atof(data_parser[i][3].c_str());
+		points_parser [i][2] = atof(data_parser[i][4].c_str());
+		points_parser [i][3] = -1;
 		if(i==200)
 		{
-			face_parser(0) = atof(data_parser[i][5].c_str());
-			face_parser(1) = atof(data_parser[i][6].c_str());
-			face_parser(2) = atof(data_parser[i][7].c_str());
-			face_parser(3) = UNCLASSIFIED;
+			face_parser[0] = atof(data_parser[i][5].c_str());
+			face_parser[1] = atof(data_parser[i][6].c_str());
+			face_parser[2] = atof(data_parser[i][7].c_str());
+			face_parser[3] = -1;
 		}
 	}
 	return EXIT_SUCCESS;
@@ -67,16 +63,16 @@ int DataParser::ParseData()
 		if (data_parser[i].size()<9) return EXIT_FAILURE;
 		frames_parser [i]	 = atoi(data_parser[i][0].c_str());
 		contact_parser[i]    = atoi(data_parser[i][1].c_str());
-		points_parser [i](0) = atof(data_parser[i][2].c_str());
-		points_parser [i](1)  = atof(data_parser[i][3].c_str());
-		points_parser [i](2)  = atof(data_parser[i][4].c_str());
-		points_parser [i](3)  = UNCLASSIFIED;
+		points_parser [i][0] = atof(data_parser[i][2].c_str());
+		points_parser [i][1]  = atof(data_parser[i][3].c_str());
+		points_parser [i][2]  = atof(data_parser[i][4].c_str());
+		points_parser [i][3]  = -1;
 		if(i==200)
 		{
-			face_parser(0) = atof(data_parser[i][5].c_str());
-			face_parser(1) = atof(data_parser[i][6].c_str());
-			face_parser(2) = atof(data_parser[i][7].c_str());
-			face_parser(3) = UNCLASSIFIED;
+			face_parser[0] = atof(data_parser[i][5].c_str());
+			face_parser[1] = atof(data_parser[i][6].c_str());
+			face_parser[2] = atof(data_parser[i][7].c_str());
+			face_parser[3] = -1;
 		}
 		labels_parser [i] = string(data_parser[i][8]);
 	}
