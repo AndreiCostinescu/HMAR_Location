@@ -182,3 +182,8 @@
 - added object state
 - added new recording data
 - reorganized the folders
+
+[29a]
+- 26/06/2017
+- added a build folder
+

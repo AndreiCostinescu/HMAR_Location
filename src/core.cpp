@@ -351,8 +351,7 @@ bool copyFile(
 std::string currentDirectory()
 {
 	char buff[FILENAME_MAX];
-	getcwd(buff,FILENAME_MAX);
-	std::string cwd(buff);
+	std::string cwd(getcwd(buff,FILENAME_MAX)); // buff and return are the same
 	return cwd;
 }
 
