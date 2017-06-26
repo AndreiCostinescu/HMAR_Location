@@ -50,6 +50,7 @@
 #include <vtkProperty.h>
 #include <vtkPointData.h>
 #include <vtkGL2PSExporter.h>
+#include <vtkObjectFactory.h>
 
 #include "CGraph.h"
 #include "algo.h"

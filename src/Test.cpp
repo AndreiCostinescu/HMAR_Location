@@ -150,6 +150,166 @@ int Test::ApplyGauss(
 	return EXIT_SUCCESS;
 }
 
+int Test::TestInit()
+{
+	DF->ResetFilter();
+	APred->Init(false);
+	AParse->Init(3);
+	return EXIT_SUCCESS;
+}
+
+int Test::TestFaceAdjust()
+{
+	face_parser[1] *= -1;
+	face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
+	// When a graph is present.
+	if(APred->G.get()->GetNumberOfNodes()>0)
+	{
+		// Initialize.
+		double scale = 1.0;
+		Eigen::Vector3d t;
+		Eigen::Matrix3d R;
+		Eigen::Matrix4d T = Matrix4d::Zero();
+		CGraph::node_t old_node;
+		CGraph::edge_t edge_tmp;
+
+		// Check for the LA that we intend to change.
+		for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
+		{
+			old_node = APred->G.get()->GetNode(i);
+			if (old_node.name=="FACE")
+			{
+				// 1. Change the SM that has the LA as goal.
+				//    The start locations stay the same.
+				//    Transform to new target goal.
+				//    p' = [S]*[R]*p
+				for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
+				{
+					edge_tmp = APred->G.get()->GetEdge(ii,i,0);
+
+					if (edge_tmp.counter==0) { continue; }
+
+					scale =
+							V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid).norm() /
+							V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid).norm();
+					R =
+							rodriguezRot(
+									V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid),
+									V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid));
+					T = Matrix4d::Zero();
+					T.block<3,3>(0,0) = R;
+					T(3,3) = scale;
+
+					for(int j=0;j<APred->G.get()->GetLocInt();j++)
+					{
+						edge_tmp.tan[j] = R*edge_tmp.tan[j];
+						edge_tmp.nor[j] = R.inverse().transpose()*edge_tmp.nor[j];
+						edge_tmp.loc_mid[j] = T*edge_tmp.loc_mid[j];
+						edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
+					}
+
+					APred->G.get()->SetEdge(ii,i,0,edge_tmp);
+				}
+
+				// 2. Change the SM that has the LA as start.
+				//    The goal locations stay the same.
+				//    Transform to new origin.
+				//    p' = [S]*[R,t]*p
+				for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
+				{
+					edge_tmp = APred->G.get()->GetEdge(i,ii,0);
+
+					if (edge_tmp.counter==0) { continue; }
+
+					t = V4d3d(face_parser - old_node.centroid);
+
+					R =
+							rodriguezRot(
+									V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid),
+									V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser		 ));
+					t += R*V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid);
+					scale =
+							V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser).norm() /
+							V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid).norm();
+
+					T = Matrix4d::Zero();
+					T.block<3,3>(0,0) = R;
+					T(3,3) = scale;
+
+					for(int j=0;j<edge_tmp.tan.size();j++)
+					{
+						edge_tmp.tan[j] = R*edge_tmp.tan[j];
+						edge_tmp.nor[j] = R.inverse().transpose()*edge_tmp.nor[j];
+						edge_tmp.loc_mid[j] = T*edge_tmp.loc_mid[j];
+						edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
+					}
+
+					APred->G.get()->SetEdge(i,ii,0,edge_tmp);
+				}
+
+				old_node.centroid.head(3) = V4d3d(face_parser);
+				APred->G.get()->SetNode(old_node);
+				break;
+			}
+		}
+	}
+	return EXIT_SUCCESS;
+}
+
+int Test::FilterData(
+		const Eigen::Vector4d &pva_in_,
+		std::vector<Eigen::Vector4d> &pva_out_,
+		const int &contact_in_,
+		int &contact_out_)
+{
+	DF->PreprocessDataLive(pva_in_, pva_out_, f_win);
+	DF->PreprocessContactLive(contact_out_, contact_out_, f_win);
+	return EXIT_SUCCESS;
+}
+
+int Test::Predict()
+{
+	APred->PredictExt();
+	return EXIT_SUCCESS;
+}
+
+int Test::Parser(
+		const std::string &filename_)
+{
+	AParse->Parse(APred->AS.get());
+	AParse->Display(filename_);
+	return EXIT_SUCCESS;
+}
+
+int Test::WriteResult(
+		const std::string &filename_,
+		const std::string &resultdir_,
+		std::vector<std::string> labels_predict_,
+		std::vector<std::vector<double> > data_writeout_,
+		std::vector<std::map<std::string,double> > goals_,
+		std::vector<std::map<std::string,double> > windows_,
+		bool nolabel_)
+{
+	std::string name_tmp = filename_;
+	reverse(name_tmp.begin(),name_tmp.end());
+	name_tmp.erase(name_tmp.begin()+name_tmp.find("/"),name_tmp.end());
+	reverse(name_tmp.begin(),name_tmp.end());
+	if (nolabel_)
+	{
+		WF->WriteFilePrediction(
+				APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
+				labels_predict_, goals_, windows_);
+	}
+	else
+	{
+		WF->WriteFilePrediction(
+				APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
+				labels_parser, labels_predict_, goals_, windows_);
+	}
+	WF->WriteFile_((resultdir_ + "_" + name_tmp), data_writeout_);
+	return EXIT_SUCCESS;
+}
+
 int Test::Testing(
 	const std::string &filename_,
 	const std::string &resultdir_,
@@ -168,9 +328,7 @@ int Test::Testing(
 	// **************************************************************[VARIABLES]
 
 	// [Initialization] ********************************************************
-	DF->ResetFilter();
-	APred->Init(false);
-	AParse->Init(3);
+	this->TestInit();
 
 	std::string tmpname = filename_;
 	replace(tmpname.begin(), tmpname.end(), '/', '_');
@@ -198,114 +356,21 @@ int Test::Testing(
 	// *************************************************************[PARSE DATA]
 
 	// [FACE ADJUST]************************************************************
-	if (face_)
-	{
-//		face_parser -= Eigen::Vector4d(0,0.15,0,1);
-		face_parser[1] *= -1;
-		face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
-		// When a graph is present.
-		if(APred->G.get()->GetNumberOfNodes()>0)
-		{
-			// Initialize.
-			double scale = 1.0;
-			Eigen::Vector3d t;
-			Eigen::Matrix3d R;
-			Eigen::Matrix4d T = Matrix4d::Zero();
-			CGraph::node_t old_node;
-			CGraph::edge_t edge_tmp;
-
-			// Check for the LA that we intend to change.
-			for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
-			{
-				old_node = APred->G.get()->GetNode(i);
-				if (old_node.name=="FACE")
-				{
-					// 1. Change the SM that has the LA as goal.
-					//    The start locations stay the same.
-					//    Transform to new target goal.
-					//    p' = [S]*[R]*p
-					for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
-					{
-						edge_tmp = APred->G.get()->GetEdge(ii,i,0);
-
-						if (edge_tmp.counter==0) { continue; }
-
-						scale =
-								V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid).norm() /
-								V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid).norm();
-						R =
-								rodriguezRot(
-										V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid),
-										V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid));
-						T = Matrix4d::Zero();
-						T.block<3,3>(0,0) = R;
-						T(3,3) = scale;
-
-						for(int j=0;j<APred->G.get()->GetLocInt();j++)
-						{
-							edge_tmp.tan[j] = R*edge_tmp.tan[j];
-							edge_tmp.nor[j] = R.inverse().transpose()*edge_tmp.nor[j];
-							edge_tmp.loc_mid[j] = T*edge_tmp.loc_mid[j];
-							edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
-						}
-
-						APred->G.get()->SetEdge(ii,i,0,edge_tmp);
-					}
-
-					// 2. Change the SM that has the LA as start.
-					//    The goal locations stay the same.
-					//    Transform to new origin.
-					//    p' = [S]*[R,t]*p
-					for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
-					{
-						edge_tmp = APred->G.get()->GetEdge(i,ii,0);
-
-						if (edge_tmp.counter==0) { continue; }
-
-						t = V4d3d(face_parser - old_node.centroid);
-
-						R =
-								rodriguezRot(
-										V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid),
-										V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser		 ));
-						t += R*V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid);
-						scale =
-								V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser).norm() /
-								V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid).norm();
-
-						T = Matrix4d::Zero();
-						T.block<3,3>(0,0) = R;
-						T(3,3) = scale;
-
-						for(int j=0;j<edge_tmp.tan.size();j++)
-						{
-							edge_tmp.tan[j] = R*edge_tmp.tan[j];
-							edge_tmp.nor[j] = R.inverse().transpose()*edge_tmp.nor[j];
-							edge_tmp.loc_mid[j] = T*edge_tmp.loc_mid[j];
-							edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
-						}
-
-						APred->G.get()->SetEdge(i,ii,0,edge_tmp);
-					}
-
-					old_node.centroid.head(3) = V4d3d(face_parser);
-					APred->G.get()->SetNode(old_node);
-					break;
-				}
-			}
-		}
-	}
+	if (face_) { this->TestFaceAdjust(); }
 	// *********************************************************** [FACE ADJUST]
 
 	// [TEST] ******************************************************************
 	for(int i=0;i<points_parser.size();i++)
 	{
 		// 1. Filter
-		DF->PreprocessDataLive(points_parser[i], *(APred->pva), f_win);
-		DF->PreprocessContactLive(contact_parser[i], *(APred->contact), f_win);
+		this->FilterData(
+				points_parser[i], *(APred->pva),
+				contact_parser[i], *(APred->contact));
+//		DF->PreprocessDataLive(points_parser[i], *(APred->pva), f_win);
+//		DF->PreprocessContactLive(contact_parser[i], *(APred->contact), f_win);
 
 		// 2. Prediction
-		APred->PredictExt();
+		this->Predict();
 
 //		if(APred->AS->label1>=0)
 		{
@@ -322,8 +387,6 @@ int Test::Testing(
 			tmp.push_back((double)((*(APred->pva))[0][2]));
 			data_writeout.push_back(tmp);
 		}
-
-		//decideBoundarySphere(pva_avg[i][0], pva_avg[i][0], APred->G.get()->GetCentroidList());
 
 		pvas.push_back(*(APred->pva));
 		goals.push_back(APred->AS->Goal());
@@ -342,8 +405,7 @@ int Test::Testing(
 			labels_predict.push_back("MOVE");
 		}
 
-		AParse->Parse(APred->AS.get());
-		AParse->Display(tmpname);
+		this->Parser(tmpname);
 
 		// Visualize
 		if (0)
@@ -360,23 +422,9 @@ int Test::Testing(
 
 	// writing results
 	{
-		std::string name_tmp = filename_;
-		reverse(name_tmp.begin(),name_tmp.end());
-		name_tmp.erase(name_tmp.begin()+name_tmp.find("/"),name_tmp.end());
-		reverse(name_tmp.begin(),name_tmp.end());
-		if (nolabel)
-		{
-			WF->WriteFilePrediction(
-					APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
-					labels_predict, goals, windows);
-		}
-		else
-		{
-			WF->WriteFilePrediction(
-					APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
-					labels_parser, labels_predict, goals, windows);
-		}
-		WF->WriteFile_((resultdir_ + "_" + name_tmp), data_writeout);
+		this->WriteResult(
+				filename_, resultdir_, labels_predict, data_writeout, goals,
+				windows, true);
 	}
 
 //	plotData(x,y);

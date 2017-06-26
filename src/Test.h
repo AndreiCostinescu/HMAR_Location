@@ -45,6 +45,28 @@ public:
 			const int &num_x_,
 			const int &num_y_);
 
+	virtual int TestInit();
+	virtual int TestFaceAdjust();
+
+	virtual int WriteResult(
+			const std::string &filename_,
+			const std::string &resultdir_,
+			std::vector<std::string> labels_predict_,
+			std::vector<std::vector<double> > data_writeout_,
+			std::vector<std::map<std::string,double> > goals_,
+			std::vector<std::map<std::string,double> > windows_,
+			bool nolabel_);
+
+	virtual int FilterData(
+			const Eigen::Vector4d &pva_in_,
+			std::vector<Eigen::Vector4d> &pva_out_,
+			const int &contact_in_,
+			int &contact_out_);
+
+	virtual int Predict();
+
+	virtual int Parser(const std::string &filename_);
+
 	virtual int Testing(
 			const std::string &filename_,
 			const std::string &resultdir_,

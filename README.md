@@ -187,3 +187,7 @@
 - 26/06/2017
 - added a build folder
 
+[29b]
+- 26/06/2017
+- modified testing to allow for integration with online deployment
+

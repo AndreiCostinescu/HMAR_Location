@@ -93,7 +93,7 @@ std::string ActionParser::Decode(
 		{
 			if (ob_ac.find(" ")!=std::string::npos)
 			{
-				ob_ac.erase(ob_ac.find(" "),ob_ac.length()-ob_ac.find(" "));
+				ob_ac.erase (ob_ac.find(" "),ob_ac.length()-ob_ac.find(" "));
 				ob_ac.insert(ob_ac.length(),"ed");
 			}
 			else
