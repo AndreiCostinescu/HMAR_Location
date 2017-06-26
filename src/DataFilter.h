@@ -18,9 +18,6 @@
 
 #include <Eigen/Eigen>
 
-using namespace std;
-using namespace Eigen;
-
 class DataFilter
 {
 public:
@@ -29,17 +26,17 @@ public:
 
 	void ResetFilter();
 	int PreprocessDataLive(
-			Vector4d pos_,
-			vector<Vector4d> &pos_vel_acc_avg_, //motion
-			unsigned int window_);
+			const Eigen::Vector4d &pos_,
+			std::vector<Eigen::Vector4d> &pos_vel_acc_avg_, //motion
+			const int &window_);
 	int PreprocessContactLive(
-			int contact_,
+			const int &contact_,
 			int &contact_out_,
-			unsigned int window_);
+			const int &window_);
 
 private:
-	vector<vector<Vector4d> > 	pos_vel_acc_mem;
-	vector<int> 				contact_mem;
+	std::vector<std::vector<Eigen::Vector4d> > 	pos_vel_acc_mem;
+	std::vector<float> contact_mem;
 };
 
 #endif /* DATAFILTER_H_ */

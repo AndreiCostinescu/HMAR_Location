@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <memory>
+#include <Eigen/Eigen>
 #include "CGraph.h"
 #include "CKB.h"
 #include "VTKExtra.h"
@@ -27,55 +29,53 @@
 class TrainLA : public DBSCAN
 {
 public:
-	TrainLA();
+	TrainLA(
+			const int &loc_int_,
+			const int &sec_int_);
 	virtual ~TrainLA();
 
-	void ClearLA();
-	int InitLA(
-			int loc_int_,
-			int sec_int_,
-			int f_win_);
-	int DecideBoundaryCuboidExt(
-			Vector4d &point_,
-			Vector3d box_min_,
-			Vector3d box_max_);
-	int LearnBoundary(
-			vector<Vector4d> &centroids_);
-	int ContactBoundary(
-			vector<Vector4d> &centroids_);
-	int SurfaceContactCheck(
-			vector<Vector4d> &centroids_);
-	int ClusteringExt(
-			vector<Vector4d> &centroids_);
-	int BuildLocationArea(
-			CGraph *Graph_,
-			CKB *kb_,
-			vector<vector<Vector4d> > &pos_vel_acc_,
-			vector<int> *contact_flag_,
+	virtual void ClearLA();
+
+	virtual int DecideBoundaryCuboidExt(
+			Eigen::Vector4d &point_,
+			Eigen::Vector3d box_min_,
+			Eigen::Vector3d box_max_);
+	virtual int LearnBoundary(
+			std::shared_ptr<std::vector<Eigen::Vector4d> > centroids_);
+	virtual int ContactBoundary(
+			std::shared_ptr<std::vector<Eigen::Vector4d> > centroids_);
+	virtual int SurfaceContactCheck(
+			std::shared_ptr<std::vector<Eigen::Vector4d> > centroids_);
+	virtual int ClusteringExt(
+			std::shared_ptr<std::vector<Eigen::Vector4d> > centroids_);
+	virtual int BuildLocationArea(
+			std::shared_ptr<CGraph> G_,
+			std::shared_ptr<CKB> kb_,
+			std::shared_ptr<std::vector<std::vector<Eigen::Vector4d> > > pos_vel_acc_,
+			std::shared_ptr<std::vector<int> > contact_flag_,
 			bool flag_);
 
 private:
-	vector<int> contact_flag; // contact 1/0
-	vector<int> locations_flag; // whether location has change in contact 1/0
-	vector<int> loc_idx_zero; // loc_idx_zero unused at all
+	std::shared_ptr<std::vector<int> > contact_flag; // contact 1/0
+	std::shared_ptr<std::vector<int> > locations_flag; // whether location has change in contact 1/0
+	std::vector<int> loc_idx_zero; // loc_idx_zero unused at all
 
-	vector<Vector4d> points_avg, locations; // centroids
-	vector<string>   goal_action;
+	std::shared_ptr<std::vector<Eigen::Vector4d> > points_avg;
+	std::shared_ptr<std::vector<Eigen::Vector4d> > locations; // centroids
 
-	vector<Vector3d> surfaces_mid;
-	vector<Vector3d> surfaces_min;
-	vector<Vector3d> surfaces_max;
-	vector<Vector4d> surfaces_eq; // equation of plane
-	vector<double> 	 surfaces_limit; // surface distance limit
-	vector<int>		 surfaces_flag;  // flag if surface is detected
-	vector<Matrix3d> surfaces_rot;  // surface rotation
+	std::vector<std::string>	 goal_action;
 
-	VTKExtra *VTK;
+	std::vector<Eigen::Vector3d> surfaces_mid;
+	std::vector<Eigen::Vector3d> surfaces_min;
+	std::vector<Eigen::Vector3d> surfaces_max;
+	std::vector<Eigen::Vector4d> surfaces_eq; // equation of plane
+	std::vector<double> 	 	 surfaces_limit; // surface distance limit
+	std::vector<int>		 	 surfaces_flag;  // flag if surface is detected
+	std::vector<Eigen::Matrix3d> surfaces_rot;  // surface rotation
 
 protected:
 	int loc_int;
 	int sec_int;
-	int f_win;
 
 };
 

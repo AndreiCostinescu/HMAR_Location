@@ -8,7 +8,7 @@
 
 #include "DataParser.h"
 
-DataParser::DataParser() : face_parser(Vector4d::Zero())
+DataParser::DataParser() : face_parser(Eigen::Vector4d::Zero())
 {
 }
 
@@ -21,10 +21,10 @@ void DataParser::ClearParser()
 	contact_parser.clear();
 	points_parser.clear();
 	labels_parser.clear();
-	face_parser = Vector4d::Zero();
+	face_parser = Eigen::Vector4d::Zero();
 }
 
-void DataParser::SetDataParser(vector<vector<string> > data_)
+void DataParser::SetDataParser(const std::vector<std::vector<std::string> > &data_)
 {
 	this->ClearParser();
 	data_parser = data_;
@@ -45,7 +45,7 @@ int DataParser::ParseDataNoLabel()
 		points_parser [i][1] = atof(data_parser[i][3].c_str());
 		points_parser [i][2] = atof(data_parser[i][4].c_str());
 		points_parser [i][3] = -1;
-		if(i==200)
+		if(i==100)
 		{
 			face_parser[0] = atof(data_parser[i][5].c_str());
 			face_parser[1] = atof(data_parser[i][6].c_str());
@@ -67,14 +67,14 @@ int DataParser::ParseData()
 		points_parser [i][1]  = atof(data_parser[i][3].c_str());
 		points_parser [i][2]  = atof(data_parser[i][4].c_str());
 		points_parser [i][3]  = -1;
-		if(i==200)
+		if(i==100)
 		{
 			face_parser[0] = atof(data_parser[i][5].c_str());
 			face_parser[1] = atof(data_parser[i][6].c_str());
 			face_parser[2] = atof(data_parser[i][7].c_str());
 			face_parser[3] = -1;
 		}
-		labels_parser [i] = string(data_parser[i][8]);
+		labels_parser [i] = std::string(data_parser[i][8]);
 	}
 	return EXIT_SUCCESS;
 }

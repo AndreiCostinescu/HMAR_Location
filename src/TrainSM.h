@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <memory>
 #include "core.h"
 #include "CGraph.h"
 #include "CKB.h"
@@ -28,86 +29,82 @@
 class TrainSM
 {
 public:
-	TrainSM();
+	TrainSM(
+			const int &loc_int_,
+			const int &sec_int_);
 	virtual ~TrainSM();
 
-	void ClearSM();
-	int InitSM(
-			int loc_int_,
-			int sec_int_,
-			int f_win_);
+	virtual void ClearSM();
 
-	int FitCurve(
-			vector<Vector4d> &points_est_,
-			vector<Vector3d> &coeffs_);
-	int DecideSectorIntervalExt(
-			CGraph::edge_t	*edge_,
-			Vector4d point_,
-			Vector3d &delta_t_,
+	virtual int FitCurve(
+			std::vector<Eigen::Vector4d> &points_est_,
+			std::vector<Eigen::Vector3d> &coeffs_);
+	virtual int DecideSectorIntervalExt(
+			std::shared_ptr<CGraph::edge_t> edge_,
+			Eigen::Vector4d point_,
+			Eigen::Vector3d &delta_t_,
 			int &sec_idx_,
-			int loc_idx_);
+			const int &loc_idx_);
 	double DecideLocationIntervalExt(
-			CGraph::edge_t	*edge_,
-			Vector4d point_,
+			std::shared_ptr<CGraph::edge_t> edge_,
+			const Eigen::Vector4d &point_,
 			int &loc_idx_,
-			int loc_last_idx_,
-			int loc_offset_,
+			const int &loc_last_idx_,
+			const int &loc_offset_,
 			bool loc_init_);
-	int AdjustSectorMap(
-			CGraph::edge_t *edge_,
-			Vector4d point_,
+	virtual int AdjustSectorMap(
+			std::shared_ptr<CGraph::edge_t> edge_,
+			Eigen::Vector4d point_,
 			int &loc_last_idx_,
 			int &loc_curr_idx_,
 			double &delta_t_mem_,
 			bool &loc_init_,
 			int loc_offset_);
-	int AdjustCurve(
-			CGraph::edge_t *edge_,
-			Vector4d point_,
+	virtual int AdjustCurve(
+			std::shared_ptr<CGraph::edge_t> edge_,
+			Eigen::Vector4d point_,
 			int &loc_last_idx_,
 			bool &loc_init_,
 			int loc_offset_);
-	int AdjustCurveExt(
-			CGraph *Graph_,
-			vector<Vector3d> coeffs_); // from fit curve
-	int FitSectorMap(
-			CGraph::edge_t *edge_,
-			Vector4d point_,
+	virtual int AdjustCurveExt(
+			std::shared_ptr<CGraph> G_,
+			std::vector<Eigen::Vector3d> coeffs_); // from fit curve
+	virtual int FitSectorMap(
+			std::shared_ptr<CGraph::edge_t> edge_,
+			Eigen::Vector4d point_,
 			int &loc_last_idx_,
 			int loc_offset_,
 			bool &loc_init_);
-	int FitSectorMapInit(
-			CGraph *Graph_,
-			vector<Vector4d> &points_,
-			int loc_offset_);
-	int FitSectorMapExt(
-			CGraph *Graph_,
-			int loc_offset_);
-	int FindWindowConstraint(
-			CGraph *Graph_){return EXIT_SUCCESS;}
-	int UpdateSectorMap(
-			CGraph *Graph_);
-	int BuildSectorMap(
-			CGraph *Graph_,
-			CKB *kb_,
-			vector<vector<Vector4d> > *pva_avg_,
-			vector<int> *contact_);
+	virtual int FitSectorMapInit(
+			std::shared_ptr<CGraph> G_,
+			std::vector<Eigen::Vector4d> &points_,
+			const int &loc_offset_);
+	virtual int FitSectorMapExt(
+			std::shared_ptr<CGraph> G_,
+			const int &loc_offset_);
+	virtual int FindWindowConstraint(
+			std::shared_ptr<CGraph> G_) {return EXIT_SUCCESS;}
+	virtual int UpdateSectorMap(
+			std::shared_ptr<CGraph> G_);
+	virtual int BuildSectorMap(
+			std::shared_ptr<CGraph> G_,
+			std::shared_ptr<CKB> kb_,
+			std::shared_ptr<std::vector<std::vector<Eigen::Vector4d> > >pva_avg_,
+			std::shared_ptr<std::vector<int> >contact_);
 
-	void SetLabel1SM(int label1_) {label1_sm = label1_;}
-	void SetLabel2SM(int label2_) {label2_sm = label2_;}
+	virtual void SetLabel1SM(const int &x_) {label1_sm = x_;}
+	virtual void SetLabel2SM(const int &x_) {label2_sm = x_;}
 
 private:
 	// label1_sm	 : start location
 	// label2_sm	 : goal location
 	// label_idx_sm : index of data point for label1_sm
 	int label1_sm, label2_sm, label_idx_sm;
-	vector<Vector4d> pos_sm, pos_ind_sm, vel_sm;
-	VTKExtra *VTK;
+	std::vector<Eigen::Vector4d> pos_sm, pos_ind_sm, vel_sm;
 
 protected:
 	int loc_int;
 	int sec_int;
-	int f_win;
 
 };
 

@@ -12,40 +12,15 @@
 //=============================================================================
 // functions
 //=============================================================================
-
-double l2Norm(
-	vector<double> A)
-{
-    double a=0.0;
-    for(int i=0;i<A.size();i++) {a+=Sqr(A[i]);}
-    return sqrt(a);
-}
-
-
-double pdfExp(
-	double var,
-	double mu,
-	double x)
-{
-	return exp(-Sqr(x-mu)/(2*var));
-}
-
-double normalPdf(
-	double var,
-	double mu,
-	double x)
-{
-	return (1/sqrt(2*var*M_PI)) * exp(-Sqr(x-mu)/(2*var));
-}
-
-vector<double> transposeInv(
-		vector<double> A)
+/*
+std::vector<double> transposeInv(
+		std::vector<double> A)
 {
 	double det =	+ A[0]*(A[4]*A[8]-A[7]*A[5])
 					- A[1]*(A[3]*A[8]-A[5]*A[6])
 					+ A[2]*(A[3]*A[7]-A[4]*A[6]);
 	double invdet = 1/det;
-	vector<double> B; B.resize(9);
+	std::vector<double> B; B.resize(9);
 	B[0] =  (A[4]*A[8]-A[7]*A[5])*invdet;
 	B[3] = -(A[1]*A[8]-A[2]*A[7])*invdet;
 	B[6] =  (A[1]*A[5]-A[2]*A[4])*invdet;
@@ -56,130 +31,66 @@ vector<double> transposeInv(
 	B[5] = -(A[0]*A[7]-A[6]*A[1])*invdet;
 	B[8] =  (A[0]*A[4]-A[3]*A[1])*invdet;
 	return B;
-}
+}*/
 
-double addFunction (
-	double x,
-	double y)
+double pdfExp(
+		double var,
+		double mu,
+		double x)
 {
-	return fabs(x)+fabs(y);
+	return exp(-Sqr(x-mu)/(2*var));
 }
 
-int average(
-	vector<int> A)
+double normalPdf(
+		double var,
+		double mu,
+		double x)
 {
-	if (accumulate( A.begin(), A.end(), 0.0, addFunction) == 0)
-		return 0;
-	else
-		return round(accumulate(A.begin(), A.end(), 0.0, addFunction)/A.size());
+	return (1/sqrt(2*var*M_PI)) * exp(-Sqr(x-mu)/(2*var));
 }
 
-double average(
-	vector<double> A)
+Eigen::Vector4d average(
+		const std::vector<Eigen::Vector4d> &A)
 {
-	if (accumulate( A.begin(), A.end(), 0.0, addFunction) == 0)
-		return 0.0;
-	else
-		return accumulate( A.begin(), A.end(), 0.0, addFunction)/A.size();
+	Eigen::Vector4d result = Eigen::Vector4d::Zero();
+	for(auto i:A) { result+=i; }
+	if(result.isZero()) return result;
+	else                return (result/A.size());
 }
 
-int movingAverage(
-	int a,
-	vector<int> &A)
-{
-	A.erase(A.begin());
-	A.push_back(a);
-	return average(A);
-}
-
-int movingAverageIncrement(
-	int a,
-	vector<int> &A)
-{
-	A.push_back(a);
-	return average(A);
-}
-
-double movingAverage(
-	double a,
-	vector<double> &A)
+Eigen::Vector4d movingAverage(
+		const Eigen::Vector4d &a,
+		std::vector<Eigen::Vector4d> &A)
 {
 	A.erase(A.begin());
 	A.push_back(a);
 	return average(A);
 }
 
-double movingAverageIncrement(
-	double a,
-	vector<double> &A)
+Eigen::Vector4d movingAverageIncrement(
+		const Eigen::Vector4d &a,
+		std::vector<Eigen::Vector4d> &A)
 {
 	A.push_back(a);
 	return average(A);
 }
 
-Vector4d movingAverage(
-	Vector4d a,
-	vector<Vector4d> &A)
+Eigen::Vector3d rodriguezVec(
+		const Eigen::AngleAxisd &aa_,
+		const Eigen::Vector3d &vec_)
 {
-	A.erase(A.begin());
-	A.push_back(a);
-	return averagePoint(A);
-}
-
-Vector4d averagePoint(
-	vector<Vector4d> A)
-{
-	Vector4d avg = Vector4d::Zero();
-	for (int i=0;i<A.size();i++) { avg = avg + A[i]; }
-	avg = avg / A.size();
-	return avg;
-}
-
-Vector4d averagePointIncrement(
-	Vector4d A,
-	vector< Vector4d > &A_mem)
-{
-	vector< Vector4d > tmp = A_mem;
-	tmp.push_back(A);
-	Vector4d avg = averagePoint(tmp);
-	A_mem.push_back(avg);
-	return avg;
-}
-
-Vector3d rodriguezVec(
-	AngleAxisd aa_,
-	Vector3d vec_)
-{
-//	{
-//		Vector3d out1;
-//		Vector3d N1, N2, N3;
-//		N1 = multiPoint(vec_,cos(angle_));
-//		N2 = multiPoint(vector2point(crossProduct(point2vector(axis_),
-//												  point2vector(vec_ ))),
-//						sin(angle_));
-//		N3 = multiPoint(multiPoint(axis_,
-//								   dotProduct(point2vector(axis_),
-//											  point2vector(vec_ ))),
-//						1 - cos(angle_));
-//		out1 = addPoint(addPoint(N1,N2),N3);
-//		return out1;
-//	}
-
-
 	return 	(vec_*cos(aa_.angle())) +
 			((aa_.axis()).cross(vec_)*sin(aa_.angle())) +
 			(aa_.axis()*((aa_.axis()).dot(vec_))*(1-cos(aa_.angle())));
 }
 
-Matrix3d rodriguezRot(
-	Vector3d vec_1,
-	Vector3d vec_2)
+Eigen::Matrix3d rodriguezRot(
+		const Eigen::Vector3d &vec_1,
+		const Eigen::Vector3d &vec_2)
 {
-	Vector3d axis;
-	Matrix3d A;
-	double angle;
-	axis  = vec_1.cross(vec_2).normalized();
-	angle = acos(vec_1.dot(vec_2) / (vec_1.norm()*vec_2.norm()));
+	double angle = acos(vec_1.dot(vec_2) / (vec_1.norm()*vec_2.norm()));
+	Eigen::Vector3d axis = vec_1.cross(vec_2).normalized();
+	Eigen::Matrix3d A;
 	A(0,0) = 0.0;
 	A(0,1) = -axis(2);
 	A(0,2) =  axis(1);
@@ -189,14 +100,14 @@ Matrix3d rodriguezRot(
 	A(2,0) = -axis(1);
 	A(2,1) =  axis(0);
 	A(2,2) = 0.0;
-	return Matrix3d::Identity(3,3) + (A*sin(angle)) + ((A*A)*(1-cos(angle)));
+	return Eigen::Matrix3d::Identity(3,3) + (A*sin(angle)) + ((A*A)*(1-cos(angle)));
 }
 
 void gaussKernel(
-	vector<vector<double> > &kernel_,
-	int numx_,
-	int numy_,
-	double var_)
+		std::vector<std::vector<double> > &kernel_,
+		const int &numx_,
+		const int &numy_,
+		const double &var_)
 {
     double sum = 0.0;
     for (int x = -(numx_/2); x <= (numx_/2); x++)
@@ -209,33 +120,35 @@ void gaussKernel(
             sum += kernel_[x+(numx_/2)][y+(numy_/2)];
         }
     }
-    for(int i = 0; i < numx_; ++i)
-        for(int j = 0; j < numy_; ++j)
-        	kernel_[i][j] /= sum;
+    for(auto &i:kernel_) for(auto &j:i) { j /= sum; }
 }
 
 void cal_tangent_normal(
-	double t_mid_,
-	Vector3d &p_tan_,
-	Vector3d &p_nor_,
-	vector<Vector3d> coeff,
-	int dim,
-	bool normal)
+		Eigen::Vector3d &p_tan_,
+		Eigen::Vector3d &p_nor_,
+		const double &t_mid_,
+		const std::vector<Eigen::Vector3d> &coeff,
+		bool normal)
 {
-	Vector3d out1, out2, out4;
-	out4 = out2 = out1 = Vector3d::Zero();
+	Eigen::Vector3d out1(Eigen::Vector3d::Zero());
+	Eigen::Vector3d out2(Eigen::Vector3d::Zero());
+	Eigen::Vector3d out4(Eigen::Vector3d::Zero());
 
-	for(int i=0;i<dim;i++)
+	int i=0;
+	for(auto c : coeff)
 	{
-		out1 += (i * coeff[i] * pow(t_mid_,i-1));
+		out1 += (i * c * pow(t_mid_, i-1));
+		i++;
 	}
 	p_tan_ = out1;
 
 	if(normal)
 	{
-		for(int i=0;i<dim;i++)
+		i = 0;
+		for(auto c : coeff)
 		{
-			out2 += (i * (i-1) * coeff[i] * pow(t_mid_,i-2));
+			out2 += (i * (i-1) * c * pow(t_mid_, i-2));
+			i++;
 		}
 		double out3N = (out1.cwiseProduct(out2)).sum()*2;
 		out4 = ((out1.norm()*out2) - (0.5*out1*out3N*(1/out1.norm()))) /
@@ -247,9 +160,9 @@ void cal_tangent_normal(
 		p_nor_ = out4;
 	}
 }
-
+/*
 double determinant(
-	vector<vector<double> > x)
+	std::vector<std::vector<double> > x)
 {
 	int sign = 0;
 	int * signum = &sign;
@@ -269,7 +182,7 @@ double determinant(
 	gsl_matrix_free(A);
 	return det;
 }
-
+*/
 // ============================================================================
 // B-spline
 // ============================================================================
@@ -277,8 +190,8 @@ double determinant(
 #ifdef NEVER
 // example
 void curveFit(
-	vector<point_d> points_,
-	vector<point_d> &curves_)
+	std::vector<point_d> points_,
+	std::vector<point_d> &curves_)
 {
 	const size_t n = points_.size();
 	const size_t ncoeffs = NCOEFFS;
@@ -384,9 +297,9 @@ void curveFit(
 #endif
 
 void polyCurveFit(
-		vector<double> points_,
-		vector<double> &coeff_,
-		vector<double> &cov_,
+		const std::vector<double> &points_,
+		std::vector<double> &coeff_,
+		std::vector<double> &cov_,
 		int DEGREE_)
 {
 
@@ -434,7 +347,7 @@ void polyCurveFit(
 	// for visualizing the curve-fitting
 	if(0)
 	{
-		vector<double> y0(num_points);
+		std::vector<double> y0(num_points);
 		{
 			double yerr;
 			for(int i=0;i<num_points;i++)
@@ -443,7 +356,7 @@ void polyCurveFit(
 				gsl_multifit_linear_est(B, c, cov, &y0[i], &yerr);
 			}
 		}
-		vector<double> x0;
+		std::vector<double> x0;
 		for(int i=0;i<num_points;i++)
 		{ x0.push_back(i); }
 		plotData(x0, points_, x0, y0);
@@ -496,10 +409,10 @@ void polyCurveFit(
 }
 
 void polyCurveFitEst(
-		vector<double> &points_,
+		std::vector<double> &points_,
 		int num_points_,
-		vector<double> coeffs_,
-		vector<double> covs_,
+		const std::vector<double> &coeffs_,
+		const std::vector<double> &covs_,
 		int DEGREE_)
 {
 
@@ -537,7 +450,7 @@ void polyCurveFitEst(
 	// Vizualize
 	if(0)
 	{
-		vector<double> x0;
+		std::vector<double> x0;
 		for(int i=0;i<points_.size();i++) {x0.push_back(i);}
 		plotData(x0, points_);
 	}
@@ -576,23 +489,23 @@ void polyCurveFitEst(
 }
 
 void polyCurveFitPoint(
-		vector<Vector4d> points_,
-		vector<Vector4d> &points_est_,
-		vector<Vector3d> &coeffs_,
-		vector<Vector3d> &covs_,
+		const std::vector<Eigen::Vector4d> &points_,
+		std::vector<Eigen::Vector4d> &points_est_,
+		std::vector<Eigen::Vector3d> &coeffs_,
+		std::vector<Eigen::Vector3d> &covs_,
 		int DEGREE_,
 		bool flag_est_)
 {
 	int num_points = points_.size();
-	vector<double> x; x.resize(num_points);
-	vector<double> y; y.resize(num_points);
-	vector<double> z; z.resize(num_points);
-	vector<double> cx; cx.resize(DEGREE_);
-	vector<double> cy; cy.resize(DEGREE_);
-	vector<double> cz; cz.resize(DEGREE_);
-	vector<double> covx; covx.resize(Sqr(DEGREE_));
-	vector<double> covy; covy.resize(Sqr(DEGREE_));
-	vector<double> covz; covz.resize(Sqr(DEGREE_));
+	std::vector<double> x; x.resize(num_points);
+	std::vector<double> y; y.resize(num_points);
+	std::vector<double> z; z.resize(num_points);
+	std::vector<double> cx; cx.resize(DEGREE_);
+	std::vector<double> cy; cy.resize(DEGREE_);
+	std::vector<double> cz; cz.resize(DEGREE_);
+	std::vector<double> covx; covx.resize(Sqr(DEGREE_));
+	std::vector<double> covy; covy.resize(Sqr(DEGREE_));
+	std::vector<double> covz; covz.resize(Sqr(DEGREE_));
 	for(int i=0;i<num_points;i++)
 	{
 		x[i] = points_[i](0);
@@ -617,9 +530,9 @@ void polyCurveFitPoint(
 		covs_[i](2) = covz[i];
 	}
 	int num_points2 = points_est_.size();
-	vector<double> x2; x2.resize(num_points2);
-	vector<double> y2; y2.resize(num_points2);
-	vector<double> z2; z2.resize(num_points2);
+	std::vector<double> x2; x2.resize(num_points2);
+	std::vector<double> y2; y2.resize(num_points2);
+	std::vector<double> z2; z2.resize(num_points2);
 	if(flag_est_)
 	{
 		polyCurveFitEst(x2, num_points, cx, covx, DEGREE_);
@@ -666,7 +579,7 @@ void polyCurveLength(
 		double &length_,
 		double a_,
 		double b_,
-		vector<Vector3d> coeffs_,
+		const std::vector<Eigen::Vector3d> &coeffs_,
 		int DEGREE_)
 {
 	gsl_function F;

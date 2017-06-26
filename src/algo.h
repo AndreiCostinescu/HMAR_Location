@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <Eigen/Eigen>
 
@@ -25,18 +26,12 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_linalg.h>
 
-using namespace std;
-using namespace Eigen;
+template<typename T>
+static inline T Sqr(const T &A) { return A*A; }
 
-#define Sqr(x) ((x)*(x))
-
-//=============================================================================
-// inline + template
-//=============================================================================
-
-static inline Vector4d V3d4d(Vector3d A)
+static inline Eigen::Vector4d V3d4d(const Eigen::Vector3d &A)
 {
-	Vector4d B;
+	Eigen::Vector4d B;
 	B(0)=A(0);
 	B(1)=A(1);
 	B(2)=A(2);
@@ -44,9 +39,9 @@ static inline Vector4d V3d4d(Vector3d A)
 	return B;
 }
 
-static inline Vector3d V4d3d(Vector4d A)
+static inline Eigen::Vector3d V4d3d(const Eigen::Vector4d &A)
 {
-	Vector3d B;
+	Eigen::Vector3d B;
 	B(0)=A(0);
 	B(1)=A(1);
 	B(2)=A(2);
@@ -57,119 +52,137 @@ template<typename T> static inline bool min_ (T x,T y) { return (x<y)?true:false
 template<typename T> static inline bool max_ (T x,T y) { return (x>y)?true:false; }
 
 template<typename T>
-void reshapeVector(vector<T> &A, int size)
+void reshapeVector(
+		std::vector<T> &A,
+		const int &size)
 {
 	A.clear();
 	A.resize(size);
 }
 
 template<typename T>
-void vectorToArray(vector<T> A, T *B)
+void vectorToArray(
+		const std::vector<T> &A,
+		T *B)
 {
-	for(int i=0;i<A.size();i++) { B[i] = A[i]; }
+	int c=0;
+	for(auto i:A) { B[c] = i; c++;}
 }
 
 template<typename T>
-void arrayTovector(T *A, int size, vector<T> &B)
+void arrayTovector(
+		T *A,
+		std::vector<T> &B)
 {
-	reshapeVector(B,size);
-	for(int i=0;i<size;i++) { B[i] = A[i]; }
+	//reshapeVector(B, std::extent<decltype(A)>::value);
+	B.clear();
+	for(auto i:A) { B.push_back(i);}
 }
+
+//template<typename T>
+//std::vector<T> addvector(
+//		std::vector<T> A,
+//		std::vector<T> B)
+//{
+//	std::vector<T> C;
+//	for(int i=0;i<A.size();i++) { C.push_back(A[i]+B[i]); }
+//	return C;
+//}
+//
+//template<typename T>
+//std::vector<T> minusvector(
+//		std::vector<T> A,
+//		std::vector<T> B)
+//{
+//	std::vector<T> C;
+//	for(int i=0;i<A.size();i++) { C.push_back(A[i]-B[i]); }
+//	return C;
+//}
 
 template<typename T>
-vector<T> addvector(vector<T> A, vector<T> B)
+T l2Norm(std::vector<T> A)
 {
-	vector<T> C;
-	for(int i=0;i<A.size();i++) { C.push_back(A[i]+B[i]); }
-	return C;
+    double a=0.0;
+    for(auto i:A) {a+=Sqr(i);}
+    return sqrt(a);
 }
-
-template<typename T>
-vector<T> minusvector(vector<T> A, vector<T> B)
-{
-	vector<T> C;
-	for(int i=0;i<A.size();i++) { C.push_back(A[i]-B[i]); }
-	return C;
-}
-
-//=============================================================================
-// functions
-//=============================================================================
-
-double l2Norm(
-	vector<double> A);
 
 double pdfExp(
-	double var,
-	double mu,
-	double x);
+		double var,
+		double mu,
+		double x);
 
 double normalPdf(
-	double var,
-	double mu,
-	double x);
+		double var,
+		double mu,
+		double x);
 
-double addFunction (
-	double x,
-	double y);
+template<typename T>
+T addFunction (
+		const T &x,
+		const T &y)
+{
+	return fabs(x)+fabs(y);
+}
 
-double average(
-	vector<double> A);
+template<typename T>
+T average(const std::vector<T> &A)
+{
+	if (accumulate(A.begin(), A.end(), 0.0, addFunction<T>) == 0.0)
+		return 0.0;
+	else
+		return accumulate(A.begin(), A.end(), 0.0, addFunction<T>)/A.size();
+}
 
-int movingAverage(
-	int a,
-	vector<int> &A);
+template<typename T>
+T movingAverage(
+		const T &a,
+		std::vector<T> &A)
+{
+	A.erase(A.begin());
+	A.push_back(a);
+	return average(A);
+}
 
-int movingAverageIncrement(
-	int a,
-	vector<int> &A);
+template<typename T>
+T movingAverageIncrement(
+		const T &a,
+		std::vector<T> &A)
+{
+	A.push_back(a);
+	return average(A);
+}
 
-double movingAverage(
-	double a,
-	vector<double> &A);
+Eigen::Vector4d average(const std::vector<Eigen::Vector4d> &A);
 
-double movingAverageIncrement(
-	double a,
-	vector<double> &A);
+Eigen::Vector4d movingAverage(
+		const Eigen::Vector4d &a,
+		std::vector<Eigen::Vector4d> &A);
 
-Vector4d movingAverage(
-	Vector4d a,
-	vector<Vector4d> &A);
-
-Vector4d averagePoint(
-	vector<Vector4d> A);
-
-Vector4d averagePointIncrement(
-	Vector4d A,
-	vector< Vector4d > &A_mem);
+Eigen::Vector4d movingAverageIncrement(
+		const Eigen::Vector4d &a,
+		std::vector<Eigen::Vector4d> &A);
 
 void gaussKernel(
-	vector<vector<double> > &kernel_,
-	int numx_,
-	int numy_,
-	double var_);
+		std::vector<std::vector<double> > &kernel_,
+		const int &numx_,
+		const int &numy_,
+		const double &var_);
 
-Vector3d rodriguezVec(
-	AngleAxisd aa_,
-	Vector3d vec_);
+Eigen::Vector3d rodriguezVec(
+		const Eigen::AngleAxisd &aa_,
+		const Eigen::Vector3d &vec_);
 
-Matrix3d rodriguezRot(
-	Vector3d vec_1,
-	Vector3d vec_2);
-
-vector<double> transposeInv(
-	vector<double> A);
+Eigen::Matrix3d rodriguezRot(
+		const Eigen::Vector3d &vec_1,
+		const Eigen::Vector3d &vec_2);
 
 void cal_tangent_normal(
-	double t_mid_,
-	Vector3d &p_tan_,
-	Vector3d &p_nor_,
-	vector<Vector3d> coeff,
-	int dim,
-	bool normal);
-
-double determinant(
-	vector<vector<double> > x);
+		Eigen::Vector3d &p_tan_,
+		Eigen::Vector3d &p_nor_,
+		const double &t_mid_,
+		const std::vector<Eigen::Vector3d> &coeff,
+		bool normal);
 
 // ============================================================================
 // B-spline
@@ -180,31 +193,31 @@ double curveIntegral (
 		void *params);
 
 void polyCurveFit(
-		vector<double> points_,
-		vector<double> &coeff_,
-		vector<double> &cov_,
+		const std::vector<double> &points_,
+		std::vector<double> &coeff_,
+		std::vector<double> &cov_,
 		int DEGREE_);
 
 void polyCurveFitPoint(
-		vector<Vector4d> points_,
-		vector<Vector4d> &points_est_,
-		vector<Vector3d> &coeffs_,
-		vector<Vector3d> &covs_,
+		const std::vector<Eigen::Vector4d> &points_,
+		std::vector<Eigen::Vector4d> &points_est_,
+		std::vector<Eigen::Vector3d> &coeffs_,
+		std::vector<Eigen::Vector3d> &covs_,
 		int DEGREE_,
 		bool flag_est_);
 
 void polyCurveFitEst(
-		vector<double> &points_,
+		std::vector<double> &points_,
 		int num_points_,
-		vector<double> coeffs_,
-		vector<double> covs_,
+		const std::vector<double> &coeffs_,
+		const std::vector<double> &covs_,
 		int DEGREE_);
 
 void polyCurveLength(
 		double &length_,
 		double a_,
 		double b_,
-		vector<Vector3d> coeffs_,
+		const std::vector<Eigen::Vector3d> &coeffs_,
 		int DEGREE_);
 
 #endif /* ALGO_H_ */

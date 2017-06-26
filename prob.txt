@@ -1,0 +1,70 @@
+P(LA_1, LA_0, SM, O_1, O_0) =
+	P(SM|LA_1) *		[Which SM it is currently following]
+	P(O_1|LA_1,O_0) *	[which object state it is at]
+	P(O_0) *			[initial probability of LA]
+	P(LA_1|LA_0) *		[transition probability]
+	P(LA_0) 			[initial probability of LA]
+		
+P(O_1|LA_1,O_0) =
+	P(LA_1|O_1) * P(O_1|O_0) * P(O_0) / Sum(quotient wrt. O_1)
+		
+P(LA_1|O_1)	[Object state linked to the LA]
+P(O_1|O_0)	[transition probability of OS]
+P(O_0)		[initial probability of OS]
+		
+P(LA_1, LA_0, SM, O_1, O_0) = P(SM|LA_1) * P(O_1|LA_1,O_0) * P(O_0) * P(LA_1|LA_0) * P(LA_0)
+P(LA_1, LA_0, SM, O_1, O_0) = P(SM|LA_1) * P(O_1, O_0|LA_1) * P(LA_1|LA_0) * P(LA_0)
+P(LA_1, LA_0, SM, O_1, O_0) = P(SM, O_1, O_0|LA_1) * P(LA_1|LA_0) * P(LA_0)
+P(LA_1, LA_0, SM, O_1, O_0) = P(SM, O_1, O_0, LA_1| LA_0) * P(LA_0)
+P(LA_1, LA_0, SM, O_1, O_0) = P(SM, O_1, O_0, LA_1, LA_0)
+
+#####
+P(LA_1| SM, O_0 ) ~ P(SM(X), LA_1| O_0)  << / Sum(Quotient{LA_1})
+P(LA_1| SM, O_0 ) ~ P(SM(X)| LA_1) * P(LA_1| O_0)
+
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * P(LA_1| O_1) * P(O_1| O_0)
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * P(LA_1,O_1| O_0)
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * SUM[P(LA_1| O_0)]_{O_1}
+####
+
+
+#####
+P(LA_1| SM, O_0, LA_0 ) ~ P(SM(X), LA_1| O_0, LA_0)  << / Sum(Quotient{LA_1})
+P(LA_1| SM, O_0, LA_0 ) ~ P(SM(X)| LA_1) * P(LA_1| O_0, LA_0)
+P(LA_1| SM, O_0, LA_0 ) ~ P(SM(X)| LA_1) * SUM{ P(LA_1| O_1, LA_0) * P(O_1| O_0) } _{O_1}
+
+P(LA_1| O_1, LA_0) ~ P(LA_1, O_1| LA_0) /...Sum(Quotient{LA_1})
+P(LA_1| O_1, LA_0) ~ P(O_1 | LA_1) * P(LA_1| LA_0)
+
+P ( LA_1 | SM, O_0, LA_0 ) =
+		( P( SM(X)| LA_1 ) * SUM{ P(LA_1| O_1, LA_0) * P(O_1| O_0) } _{O_1})
+		/ Sum(Quotient(LA_1))
+
+
+
+
+
+
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * P(LA_1| O_1) * P(O_1| O_0)
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * P(LA_1,O_1| O_0)
+P(LA_1| X, O_0 ) ~ P(SM(X)| LA_1) * SUM[P(LA_1| O_0)]_{O_1}
+####
+
+
+P(LA_1, O_1 | SM, O_0) ~ P(SM(X),LA_1|O_1) * P(O_1|O_0) * P(O_0)
+P(LA_1, O_1 | SM, O_0) ~ P(SM(X),LA_1,O_1|O_0) * P(O_0)
+P(LA_1, O_1 | SM, O_0) ~ P(SM(X),LA_1,O_1,O_0)
+
+P(SM(X)|LA_1) = bayes classifier
+
+P(O_0) = clean
+P(O_1|O_0) = dirty,throw,clean = 0.3,0.1,0.6
+
+0.0,0.0,0.7
+
+0.42
+
+
+ 
+
+

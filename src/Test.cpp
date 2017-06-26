@@ -7,44 +7,33 @@
 
 #include "Test.h"
 
-Test::Test() : 	VTK(NULL),
-				DF(NULL),
-				APred(NULL),
-				AParse(NULL),
-				RF(NULL),
-				WF(NULL),
-				loc_int(-1),
-				sec_int(-1),
-				f_win(-1)
+Test::Test(
+		const std::string &obj_,
+		const int &loc_int_,
+		const int &sec_int_,
+		const int &f_win_,
+		std::shared_ptr<CKB> KB_,
+		std::shared_ptr<COS> OS_,
+		std::shared_ptr<std::vector<std::string> > msg_,
+		const std::string &path_,
+		bool object_state_)
+		:	DF(new DataFilter()),
+			APred(new ActionPrediction(obj_, loc_int_, sec_int_, KB_, OS_, object_state_)),
+			AParse(new ActionParser(obj_, KB_, msg_, path_)),
+			RF(new ReadFile()),
+			WF(new WriteFile()),
+			loc_int(loc_int_),
+			sec_int(sec_int_),
+			f_win(f_win_)
 {
 }
 
 Test::~Test()
 {
-	delete DF;
-	delete APred;
-	delete AParse;
-	delete RF;
-	delete WF;
 }
 
-int Test::Init(int loc_int_, int sec_int_, int f_win_, string obj_)
-{
-	DF 		= new DataFilter;
-	APred 	= new ActionPrediction;
-	AParse 	= new ActionParser;
-	RF 		= new ReadFile;
-	WF 		= new WriteFile;
-	loc_int = loc_int_;
-	sec_int = sec_int_;
-	f_win 	= f_win_;
-	APred->G->SetObject(obj_);
-	APred->G->SetLocInt(loc_int);
-	APred->G->SetSecInt(sec_int);
-	return EXIT_SUCCESS;
-}
-
-int Test::ReadKB(string path_)
+int Test::ReadKB(
+		const std::string &path_)
 {
 	if (RF->ReadFileKB(path_, APred->KB)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
@@ -52,23 +41,25 @@ int Test::ReadKB(string path_)
 	{return EXIT_SUCCESS;}
 }
 
-int Test::ReadLA(string path_)
+int Test::ReadLA(
+		const std::string &path_)
 {
-	if (RF->ReadFileLA(APred->G, APred->KB->al, path_)==EXIT_FAILURE)
+	if (RF->ReadFileLA(path_, APred->KB->AL(), APred->G)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 	else
 	{return EXIT_SUCCESS;}
 }
 
-int Test::ReadGraph(string path_)
+int Test::ReadGraph(
+		const std::string &path_)
 {
-	if (RF->ReadFileGraph(APred->G, path_)==EXIT_FAILURE)
+	if (RF->ReadFileGraph(path_, APred->G)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 	else
 	{return EXIT_SUCCESS;}
 }
 
-int Test::SetMessage(vector<string> msg_)
+int Test::SetMessage(std::shared_ptr<std::vector<std::string> > msg_)
 {
 	AParse->SetMsg(msg_);
 	return EXIT_SUCCESS;
@@ -76,175 +67,181 @@ int Test::SetMessage(vector<string> msg_)
 
 int Test::SetKB(CKB *kb_)
 {
-	APred->KB = kb_;
+	*APred->KB.get() = *kb_;
 	return EXIT_SUCCESS;
 }
 
-int Test::WriteWindow(string path_)
+int Test::SetOS(COS *os_)
 {
-	WF->WriteFileWindow(APred->G, path_);
+	*APred->OS = *os_;
 	return EXIT_SUCCESS;
 }
 
-int Test::ApplyGauss(int num_x_, int num_y_)
+int Test::WriteWindow(
+		const std::string &path_)
 {
-	vector<vector<double> > k_xy; k_xy.resize(num_x_);
+	WF->WriteFileWindow(APred->G.get(), path_);
+	return EXIT_SUCCESS;
+}
+
+int Test::ApplyGauss(
+		const int &num_x_,
+		const int &num_y_)
+{
+	std::vector<std::vector<double> > k_xy; k_xy.resize(num_x_);
 	for(int i=0;i<num_x_;i++) { k_xy[i].resize(num_x_); }
 	gaussKernel(k_xy, num_x_, num_x_, 1);
-
-	vector<double> sm_tmp1; reshapeVector(sm_tmp1, loc_int*sec_int);
-	vector<double> sm_tmp2; reshapeVector(sm_tmp2, loc_int*sec_int);
-	double sum_tmp = 0.0;
 
 	// Visualize
 	if (0)
 	{
-		VTK = new VTKExtra (loc_int, sec_int);
-		vector<Vector4d> point_zero; vector<string> label_zero;
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<Eigen::Vector4d> point_zero; std::vector<std::string> label_zero;
 		for(int i=0;i<APred->G->GetNumberOfNodes();i++)
 		{ label_zero.push_back(APred->G->GetNode(i).name); }
-		vector<vector<unsigned char> > color_code;
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		VTK->ShowConnectionTest(APred->G, point_zero, label_zero, color_code, true);
-		delete VTK;
+		VTK->ShowConnectionTest(APred->G.get(), point_zero, label_zero, color_code, true);
 	}
 
-	// Gauss
-	if(1)
+	for(int i=0;i<APred->G->GetNumberOfNodes();i++)
 	{
-		for(int i=0;i<APred->G->GetNumberOfNodes();i++)
+		for(int ii=0;ii<APred->G->GetNumberOfNodes();ii++)
 		{
-			for(int ii=0;ii<APred->G->GetNumberOfNodes();ii++)
+			if (i==ii) { continue; }
+
+			std::vector<double> sm_tmp1 = APred->G->GetEdgeSectorMap(i, ii, 0);
+			std::vector<double> sm_tmp2 = APred->G->GetEdgeSectorMap(i, ii, 0);
+
+			for(int l=0;l<loc_int;l++)
 			{
-				if (i==ii) { continue; }
-
-				sm_tmp2 = sm_tmp1 = APred->G->GetEdgeSectorMap(i, ii, 0);
-
-				for(int l=0;l<loc_int;l++)
+				for(int s=0;s<sec_int;s++)
 				{
-					for(int s=0;s<sec_int;s++)
+					double sum_tmp = 0.0;
+					for(int gkx=0;gkx<num_x_;gkx++)
 					{
-						sum_tmp = 0.0;
-						for(int gkx=0;gkx<num_x_;gkx++)
+						for(int gky=0;gky<num_y_;gky++)
 						{
-							for(int gky=0;gky<num_y_;gky++)
-							{
-								int tmpl = l-(num_y_/2)+gky; if(tmpl < 0 || tmpl>=loc_int) continue;
-								int tmps = (s-(num_x_/2)+gkx+sec_int)%sec_int;
-								sum_tmp += sm_tmp2[tmpl*sec_int + tmps] * k_xy[gkx][gky];
-							}
+							int tmpl = l-(num_y_/2)+gky;
+							if (tmpl < 0 || tmpl>=loc_int) continue;
+							int tmps = (s-(num_x_/2)+gkx+sec_int)%sec_int;
+							sum_tmp += sm_tmp2[tmpl*sec_int + tmps] * k_xy[gkx][gky];
 						}
-						sm_tmp1[l*sec_int+s] = sum_tmp;
 					}
+					sm_tmp1[l*sec_int+s] = sum_tmp;
 				}
-				APred->G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
 			}
+			APred->G->SetEdgeSectorMap(i,ii,0,sm_tmp1);
 		}
 	}
 
 	// Visualize
 	if (0)
 	{
-		VTK = new VTKExtra (loc_int, sec_int);
-		vector<Vector4d> point_zero; vector<string> label_zero;
-		for(int i=0;i<APred->G->GetNumberOfNodes();i++)
-		{ label_zero.push_back(APred->G->GetNode(i).name); }
-		vector<vector<unsigned char> > color_code;
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<Eigen::Vector4d> point_zero; std::vector<std::string> label_zero;
+		for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
+		{ label_zero.push_back(APred->G.get()->GetNode(i).name); }
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		VTK->ShowConnectionTest(APred->G, point_zero, label_zero, color_code, true);
-		delete VTK;
+		VTK->ShowConnectionTest(APred->G.get(), point_zero, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;
 }
 
 int Test::Testing(
-	string filename_,
-	string resultdir_)
+	const std::string &filename_,
+	const std::string &resultdir_,
+	bool face_)
 {
 	// [VARIABLES]**************************************************************
-	vector<string> 				labels_predict;
-	vector<vector<Vector4d> >	pvas;
+	bool nolabel {false};
 
-	vector<map<string,double> > goals;
-	vector<map<string,double> > windows;
+	std::vector<std::string> labels_predict;
+	std::vector<std::vector<Eigen::Vector4d> >	pvas;
 
-	vector<vector<double> > data_writeout;
-	vector<double> x;
-	vector<double> y;
-	vector<double> px;
-	vector<vector<double> > py; py.resize(7);
-	vector<vector<vector<double> > > pyy; pyy.push_back(py);
+	std::vector<std::map<std::string,double> > goals;
+	std::vector<std::map<std::string,double> > windows;
+
+	std::vector<std::vector<double> > data_writeout;
 	// **************************************************************[VARIABLES]
 
 	// [Initialization] ********************************************************
 	DF->ResetFilter();
 	APred->Init(false);
-	AParse->Init(
-			APred->G->GetObject(), APred->KB->ac, APred->KB->al, APred->KB->ol,
-			3);
+	AParse->Init(3);
 
-	string tmpname = filename_;
+	std::string tmpname = filename_;
 	replace(tmpname.begin(), tmpname.end(), '/', '_');
 
 	printer(1);
 	// ******************************************************** [Initialization]
 
 	// [READ FILE]**************************************************************
-	if (RF->ReadFile_(filename_,',')==EXIT_FAILURE)
+	if (RF->ReadWord(filename_,',')==EXIT_FAILURE)
 	{ return EXIT_FAILURE;	} printer(8);
 	// **************************************************************[READ FILE]
 
 	// [PARSE DATA]*************************************************************
 	this->ClearParser();
-	this->SetDataParser(RF->GetDataRF());
-	if (this->ParseData()==EXIT_FAILURE) {return EXIT_FAILURE;}
+	this->SetDataParser(RF->GetDataWordRF());
+//	if (this->ParseData()==EXIT_FAILURE)
+//	{
+		nolabel = true;
+		if (this->ParseDataNoLabel()==EXIT_FAILURE)
+		{
+			return EXIT_FAILURE;
+		}
+//	}
 	printer(9);
 	// *************************************************************[PARSE DATA]
 
 	// [FACE ADJUST]************************************************************
-	if (1)
+	if (face_)
 	{
-		face_parser -= Vector4d(0,0.15,0,1);
+//		face_parser -= Eigen::Vector4d(0,0.15,0,1);
+		face_parser[1] *= -1;
+		face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
 		// When a graph is present.
-		if(APred->G->GetNumberOfNodes()>0)
+		if(APred->G.get()->GetNumberOfNodes()>0)
 		{
 			// Initialize.
 			double scale = 1.0;
-			Vector3d t;
-			Matrix3d R;
-			Matrix4d T = Matrix4d::Zero();
+			Eigen::Vector3d t;
+			Eigen::Matrix3d R;
+			Eigen::Matrix4d T = Matrix4d::Zero();
 			CGraph::node_t old_node;
 			CGraph::edge_t edge_tmp;
 
 			// Check for the LA that we intend to change.
-			for(int i=0;i<APred->G->GetNumberOfNodes();i++)
+			for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
 			{
-				old_node = APred->G->GetNode(i);
-				if (!strcmp(old_node.name.c_str(),"FACE"))
+				old_node = APred->G.get()->GetNode(i);
+				if (old_node.name=="FACE")
 				{
 					// 1. Change the SM that has the LA as goal.
 					//    The start locations stay the same.
 					//    Transform to new target goal.
 					//    p' = [S]*[R]*p
-					for(int ii=0;ii<APred->G->GetNumberOfNodes();ii++)
+					for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
 					{
-						edge_tmp = APred->G->GetEdge(ii,i,0);
+						edge_tmp = APred->G.get()->GetEdge(ii,i,0);
 
 						if (edge_tmp.counter==0) { continue; }
 
 						scale =
-								V4d3d(face_parser		- APred->G->GetNode(ii).centroid).norm() /
-								V4d3d(old_node.centroid - APred->G->GetNode(ii).centroid).norm();
+								V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid).norm() /
+								V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid).norm();
 						R =
 								rodriguezRot(
-										V4d3d(old_node.centroid - APred->G->GetNode(ii).centroid),
-										V4d3d(face_parser		- APred->G->GetNode(ii).centroid));
+										V4d3d(old_node.centroid - APred->G.get()->GetNode(ii).centroid),
+										V4d3d(face_parser		- APred->G.get()->GetNode(ii).centroid));
 						T = Matrix4d::Zero();
 						T.block<3,3>(0,0) = R;
 						T(3,3) = scale;
 
-						for(int j=0;j<APred->G->GetLocInt();j++)
+						for(int j=0;j<APred->G.get()->GetLocInt();j++)
 						{
 							edge_tmp.tan[j] = R*edge_tmp.tan[j];
 							edge_tmp.nor[j] = R.inverse().transpose()*edge_tmp.nor[j];
@@ -252,16 +249,16 @@ int Test::Testing(
 							edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
 						}
 
-						APred->G->SetEdge(ii,i,0,edge_tmp);
+						APred->G.get()->SetEdge(ii,i,0,edge_tmp);
 					}
 
 					// 2. Change the SM that has the LA as start.
 					//    The goal locations stay the same.
 					//    Transform to new origin.
 					//    p' = [S]*[R,t]*p
-					for(int ii=0;ii<APred->G->GetNumberOfNodes();ii++)
+					for(int ii=0;ii<APred->G.get()->GetNumberOfNodes();ii++)
 					{
-						edge_tmp = APred->G->GetEdge(i,ii,0);
+						edge_tmp = APred->G.get()->GetEdge(i,ii,0);
 
 						if (edge_tmp.counter==0) { continue; }
 
@@ -269,12 +266,12 @@ int Test::Testing(
 
 						R =
 								rodriguezRot(
-										V4d3d(APred->G->GetNode(ii).centroid - old_node.centroid),
-										V4d3d(APred->G->GetNode(ii).centroid - face_parser		 ));
-						t += R*V4d3d(APred->G->GetNode(ii).centroid - old_node.centroid);
+										V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid),
+										V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser		 ));
+						t += R*V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid);
 						scale =
-								V4d3d(APred->G->GetNode(ii).centroid - face_parser).norm() /
-								V4d3d(APred->G->GetNode(ii).centroid - old_node.centroid).norm();
+								V4d3d(APred->G.get()->GetNode(ii).centroid - face_parser).norm() /
+								V4d3d(APred->G.get()->GetNode(ii).centroid - old_node.centroid).norm();
 
 						T = Matrix4d::Zero();
 						T.block<3,3>(0,0) = R;
@@ -288,11 +285,11 @@ int Test::Testing(
 							edge_tmp.loc_len[j] = edge_tmp.loc_len[j]*scale;
 						}
 
-						APred->G->SetEdge(i,ii,0,edge_tmp);
+						APred->G.get()->SetEdge(i,ii,0,edge_tmp);
 					}
 
 					old_node.centroid.head(3) = V4d3d(face_parser);
-					APred->G->SetNode(old_node);
+					APred->G.get()->SetNode(old_node);
 					break;
 				}
 			}
@@ -301,109 +298,108 @@ int Test::Testing(
 	// *********************************************************** [FACE ADJUST]
 
 	// [TEST] ******************************************************************
-
 	for(int i=0;i<points_parser.size();i++)
 	{
 		// 1. Filter
-		DF->PreprocessDataLive(points_parser[i], APred->pva, f_win);
-		DF->PreprocessContactLive(contact_parser[i], APred->contact, f_win);
+		DF->PreprocessDataLive(points_parser[i], *(APred->pva), f_win);
+		DF->PreprocessContactLive(contact_parser[i], *(APred->contact), f_win);
 
 		// 2. Prediction
 		APred->PredictExt();
 
 //		if(APred->AS->label1>=0)
 		{
-			vector<double> tmp;
+			std::vector<double> tmp;
 			tmp.push_back(i);
-			tmp.push_back(APred->AS->grasp);
-			tmp.push_back(APred->AS->label1);
-			tmp.push_back(APred->AS->label2);
-			tmp.push_back(APred->AS->vel);
-			tmp.push_back(APred->AS->surface_flag);
-			tmp.push_back((checkSurfaceDistance(APred->pva[0],APred->KB->surface_eq[1])));
-			tmp.push_back((double)APred->pva[0][0]);
-			tmp.push_back((double)APred->pva[0][1]);
-			tmp.push_back((double)APred->pva[0][2]);
+			tmp.push_back(APred->AS->Grasp());
+			tmp.push_back(APred->AS->Label1());
+			tmp.push_back(APred->AS->Label2());
+			tmp.push_back(APred->AS->Velocity());
+			tmp.push_back(APred->AS->SurfaceFlag());
+			tmp.push_back((checkSurfaceDistance((*(APred->pva))[0], APred->KB->SurfaceEquation()[0])));
+			tmp.push_back((double)((*(APred->pva))[0][0]));
+			tmp.push_back((double)((*(APred->pva))[0][1]));
+			tmp.push_back((double)((*(APred->pva))[0][2]));
 			data_writeout.push_back(tmp);
 		}
 
-		//decideBoundarySphere(pva_avg[i][0], pva_avg[i][0], APred->G->GetCentroidList());
+		//decideBoundarySphere(pva_avg[i][0], pva_avg[i][0], APred->G.get()->GetCentroidList());
 
-		x.push_back(i);
-		y.push_back((double)APred->AS->label2);
+		pvas.push_back(*(APred->pva));
+		goals.push_back(APred->AS->Goal());
+		windows.push_back(APred->AS->Window());
 
-		for(int i=APred->KB->ac["GEOMETRIC"].first;i<APred->KB->ac["GEOMETRIC"].second+1;i++)
-		{
-			pyy[0][i].push_back(APred->AS->goal[APred->KB->al[i]]);
-		}
-
-		pvas.push_back(APred->pva);
-		goals.push_back(APred->AS->goal);
-		windows.push_back(APred->AS->window);
-
-		if (APred->AS->grasp==RELEASE)
+		if (APred->AS->Grasp()==RELEASE)
 		{
 			labels_predict.push_back("RELEASE");
 		}
-		else if (APred->AS->pct_err<0)
+		else if (APred->AS->Probability()<0)
 		{
-			labels_predict.push_back(APred->KB->al[APred->AS->label2]);
+			labels_predict.push_back(APred->KB.get()->AL()[APred->AS->Label2()]);
 		}
 		else
 		{
 			labels_predict.push_back("MOVE");
 		}
 
-		AParse->Parse(APred->AS);
+		AParse->Parse(APred->AS.get());
 		AParse->Display(tmpname);
 
 		// Visualize
 		if (0)
 		{
-			VTK = new VTKExtra (loc_int, sec_int);
-			vector<Vector4d> point_zero; vector<string> label_zero;
+			auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+			std::vector<Eigen::Vector4d> point_zero; std::vector<std::string> label_zero;
 			for(int ii=0;ii<i+1;ii++) point_zero.push_back(pvas[ii][0]);
-			vector<vector<unsigned char> > color_code;
+			std::vector<std::vector<unsigned char> > color_code;
 			VTK->ColorCode(color_code);
-			VTK->ShowConnectionTest(APred->G, point_zero, label_zero, color_code, true);
-			delete VTK;
+			VTK->ShowConnectionTest(APred->G.get(), point_zero, label_zero, color_code, true);
 		}
 
 	}
 
 	// writing results
 	{
-		string name_tmp = filename_;
+		std::string name_tmp = filename_;
 		reverse(name_tmp.begin(),name_tmp.end());
 		name_tmp.erase(name_tmp.begin()+name_tmp.find("/"),name_tmp.end());
 		reverse(name_tmp.begin(),name_tmp.end());
-		WF->WriteFilePrediction(
-				APred->G, APred->KB, (resultdir_ + name_tmp), labels_parser, labels_predict,
-				goals, windows);
+		if (nolabel)
+		{
+			WF->WriteFilePrediction(
+					APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
+					labels_predict, goals, windows);
+		}
+		else
+		{
+			WF->WriteFilePrediction(
+					APred->G.get(), APred->KB.get(), (resultdir_ + name_tmp),
+					labels_parser, labels_predict, goals, windows);
+		}
 		WF->WriteFile_((resultdir_ + "_" + name_tmp), data_writeout);
 	}
 
 //	plotData(x,y);
 
-//	vector<string> title; title.resize(1);
+//	std::vector<std::string> title; title.resize(1);
 //	plotDatas(title, x, pyy);
 
 	// Visualize
 	if(0)
 	{
-		VTK = new VTKExtra (loc_int, sec_int);
-		vector<string>goal_action;
-		for(int i=0;i<APred->G->GetNumberOfNodes();i++)
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<std::string>goal_action;
+		for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
 		{
-			goal_action.push_back(APred->G->GetNode(i).name);
+			goal_action.push_back(APred->G.get()->GetNode(i).name);
 		}
-		vector<Vector4d> point_zero; vector<string> label_zero;
+		std::vector<Eigen::Vector4d> point_zero; std::vector<std::string> label_zero;
 		for(int ii=0;ii<pvas.size();ii++) {point_zero.push_back(pvas[ii][0]);}
-		vector<vector<unsigned char> > color_code;
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		vector<int> 	loc_idx_zero;
+		std::vector<int> 	loc_idx_zero;
 		VTK->ShowData(
-				point_zero, goal_action, APred->KB->al,
+				point_zero, goal_action, APred->KB.get()->AL(),
 				loc_idx_zero, color_code, true, false, false);
 
 		for(int ii=0;ii<pvas.size();ii++)
@@ -416,25 +412,23 @@ int Test::Testing(
 				point_zero[ii][3] = 1;
 		}
 		VTK->ShowData(
-				point_zero, goal_action, APred->KB->al,
+				point_zero, goal_action, APred->KB.get()->AL(),
 				loc_idx_zero, color_code, true, false, false);
-		delete VTK;
 	}
 
 	// Visualize
 	if (0)
 	{
-		VTK = new VTKExtra (loc_int, sec_int);
-		vector<Vector4d> point_zero; vector<string> label_zero;
-		for(int i=0;i<APred->G->GetNumberOfNodes();i++)
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<Eigen::Vector4d> point_zero; std::vector<std::string> label_zero;
+		for(int i=0;i<APred->G.get()->GetNumberOfNodes();i++)
 		{
-			label_zero.push_back(APred->G->GetNode(i).name);
+			label_zero.push_back(APred->G.get()->GetNode(i).name);
 		}
 		for(int ii=0;ii<pvas.size();ii++) point_zero.push_back(pvas[ii][0]);
-		vector<vector<unsigned char> > color_code;
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		VTK->ShowConnection(APred->G, point_zero, label_zero, color_code, true);
-		delete VTK;
+		VTK->ShowConnection(APred->G.get(), point_zero, label_zero, color_code, true);
 	}
 
 	// ****************************************************************** [TEST]

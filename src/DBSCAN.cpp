@@ -230,28 +230,28 @@ double DBSCAN::l2Norm(
     return sqrt(A.x*A.x+A.y*A.y+A.z*A.z);
 }
 
-void DBSCAN::vectorToArray(vector<point_d> A, point_d *B)
+void DBSCAN::vectorToArray(std::vector<point_d> A, point_d *B)
 {
 	for(int i=0;i<A.size();i++) { B[i] = A[i]; }
 }
 
-void DBSCAN::ArrayTovector(point_d *A, int size, vector<point_d> &B)
+void DBSCAN::ArrayTovector(point_d *A, int size, std::vector<point_d> &B)
 {
 	B.clear();
 	B.resize(size);
 	for(int i=0;i<size;i++) { B[i] = A[i]; }
 }
 
-Vector4d DBSCAN::PointToVector4d(point_d A)
+Eigen::Vector4d DBSCAN::PointToVector4d(point_d A)
 {
-	Vector4d B;
+	Eigen::Vector4d B;
 	B(0)=A.x;
 	B(1)=A.y;
 	B(2)=A.z;
 	B(3)=A.l;
 	return B;
 }
-DBSCAN::point_d DBSCAN::Vector4dToPoint(Vector4d A)
+DBSCAN::point_d DBSCAN::Vector4dToPoint(Eigen::Vector4d A)
 {
 	point_d B;
 	B.x=A(0);
@@ -268,54 +268,46 @@ void DBSCAN::DBSCANCluster(
 	point_d *p)
 {
 	if(num_points)	{ this->dbscan(p, num_points, epsilon, minpts); }
-	else 			{ cerr << "NO POINTS FOR CLUSTERING!!!"; }
+	else 			{ std::cerr << "NO POINTS FOR CLUSTERING!!!"; }
 }
 
 void DBSCAN::Clustering(
-	vector<Vector4d> &points_,
-	vector<Vector4d> &centroids_,
-	vector<int> &locations_flag_,
-	vector<int> contact_flag_,
-	double epsilon,
-	unsigned int minpts)
+		std::shared_ptr<std::vector<Eigen::Vector4d> > points_,
+		std::shared_ptr<std::vector<Eigen::Vector4d> > centroids_,
+		std::shared_ptr<std::vector<int> > locations_flag_,
+		std::shared_ptr<std::vector<int> > contact_flag_,
+		const double &epsilon,
+		const unsigned int &minpts)
 {
-	vector<point_d> pos_tmp;
-	vector<point_d> loc_tmp;
+	std::vector<point_d> pos_tmp;
+	std::vector<point_d> loc_tmp;
 
-	for(int i=0;i<points_.size();i++)
-		pos_tmp.push_back(Vector4dToPoint(points_[i]));
-	for(int i=0;i<centroids_.size();i++)
-		loc_tmp.push_back(Vector4dToPoint(centroids_[i]));
+	for(auto p : *points_)		{ pos_tmp.push_back(Vector4dToPoint(p)); }
+	for(auto c : *centroids_)	{ loc_tmp.push_back(Vector4dToPoint(c)); }
 
-	int num_points = points_.size();
+	auto num_points = points_->size();
 	point_d *points_array = new point_d[num_points];
 	this->vectorToArray(pos_tmp, points_array);
 
 	this->DBSCANCluster(epsilon, minpts, num_points, points_array);
 
-	points_.clear();
-	points_.resize(num_points);
 	this->ArrayTovector(points_array, num_points, pos_tmp);
 	delete [] points_array;
 
-	this->CombineNearCluster(pos_tmp, loc_tmp, locations_flag_, contact_flag_);
+	this->CombineNearCluster(pos_tmp, loc_tmp, *locations_flag_, *contact_flag_);
 
-	points_.clear();
-	points_.resize(pos_tmp.size());
-	centroids_.clear();
-	centroids_.resize(loc_tmp.size());
+	points_->clear();
+	centroids_->clear();
 
-	for(int i=0;i<points_.size();i++)
-		points_[i] = PointToVector4d(pos_tmp[i]);
-	for(int i=0;i<loc_tmp.size();i++)
-		centroids_[i] = PointToVector4d(loc_tmp[i]);
+	for(auto p : pos_tmp) { points_->push_back(PointToVector4d(p)); }
+	for(auto l : loc_tmp) { centroids_->push_back(PointToVector4d(l)); }
 }
 
 void DBSCAN::CombineNearCluster(
-	vector<point_d> &points_,
-	vector<point_d> &locations_,
-	vector<int> 	&locations_flag_,
-	vector<int> 	contact_)
+		std::vector<point_d> 	&points_,
+		std::vector<point_d> 	&locations_,
+		std::vector<int> 		&locations_flag_,
+		const std::vector<int> 	&contact_)
 {
 	int num_points 		= points_.size();
 	int num_locations 	= locations_.size();
@@ -323,35 +315,31 @@ void DBSCAN::CombineNearCluster(
 
 	if (num_locations < 1)
 	{
-		for(int i=0;i<num_points;i++)
-			num_locations = max((int)points_[i].l, num_locations);
+		for(auto i : points_) num_locations = std::max((int)i.l, num_locations);
 		num_locations += 1;
 		num_locations2 = num_locations;
 	}
 	else
 	{
-		for(int i=0;i<num_points;i++)
-			num_locations2 = max((int)points_[i].l, num_locations2);
+		for(auto i : points_) num_locations2 = std::max((int)i.l, num_locations2);
 		num_locations2 += 1;
 	}
 
 	// calculating the centroid of cluster
-	vector<point_d> p_tmp; p_tmp.resize(num_locations2);
-	vector<double>	count; count.resize(num_locations2);
-	for(int i=0;i<num_points;i++)
+	std::vector<point_d> p_tmp(num_locations2,{0.0,0.0,0.0,0.0});
+	for(auto i : points_)
 	{
-		if(points_[i].l >= 0)
+		if(i.l >= 0)
 		{
-			p_tmp[(int)points_[i].l] =
-					this->AddPoint(p_tmp[(int)points_[i].l], points_[i]);
-			count[(int)points_[i].l] += 1;
+			p_tmp[(int)i.l] = this->AddPoint(p_tmp[(int)i.l], i);
+			p_tmp[(int)i.l].l += 1;
 		}
 	}
 
-	for(int i=0;i<num_locations2;i++)
+	for(auto &i : p_tmp)
 	{
-		p_tmp[i] = this->MultiPoint(p_tmp[i],1/count[i]);
-		p_tmp[i].l = UNCLASSIFIED;
+		i = this->MultiPoint(i, 1/i.l);
+		i.l = UNCLASSIFIED;
 	}
 
 	// combine cluster if it is less than 0.1m
@@ -371,31 +359,31 @@ void DBSCAN::CombineNearCluster(
 								< CLUSTER_LIMIT)
 								limit = true;
 
-			if(limit)
+			if (limit)
 			{
 				limit = false;
 
-				if(p_tmp[i].l>=0 && p_tmp[j].l>=0)
+				if (p_tmp[i].l>=0 && p_tmp[j].l>=0)
 				{
-					int big   = max(p_tmp[i].l, p_tmp[j].l);
-					int small = min(p_tmp[i].l, p_tmp[j].l);
+					int big   = std::max(p_tmp[i].l, p_tmp[j].l);
+					int small = std::min(p_tmp[i].l, p_tmp[j].l);
 					for(int ii=0;ii<num_locations2;ii++)
 					{
 						if (p_tmp[ii].l == big) { p_tmp[ii].l = small; }
 					}
 				}
-				else if(p_tmp[i].l>=0) { p_tmp[j].l = p_tmp[i].l; }
-				else if(p_tmp[j].l>=0) { p_tmp[i].l = p_tmp[j].l; }
+				else if (p_tmp[i].l>=0) { p_tmp[j].l = p_tmp[i].l; }
+				else if (p_tmp[j].l>=0) { p_tmp[i].l = p_tmp[j].l; }
 				else
 				{
-					if(i<j)	{ p_tmp[i].l = i; p_tmp[j].l = i; }
-					else	{ p_tmp[i].l = j; p_tmp[j].l = j; }
+					if (i<j)	{ p_tmp[i].l = i; p_tmp[j].l = i; }
+					else		{ p_tmp[i].l = j; p_tmp[j].l = j; }
 				}
 			}
 			else
 			{
-				if(p_tmp[i].l!=(int)i && p_tmp[i].l<0) { p_tmp[i].l = i; }
-				if(p_tmp[j].l!=(int)j && p_tmp[j].l<0) { p_tmp[j].l = j; }
+				if (p_tmp[i].l!=(int)i && p_tmp[i].l<0)	{ p_tmp[i].l = i; }
+				if (p_tmp[j].l!=(int)j && p_tmp[j].l<0)	{ p_tmp[j].l = j; }
 			}
 		}
 		//printf("Location %02d: %02f\n", i, p_tmp[i].l);
@@ -418,9 +406,9 @@ void DBSCAN::CombineNearCluster(
 	}
 
 	// updating cluster label
-	for(int i=0;i<num_points;i++)
+	for(auto &i : points_)
 	{
-		if (points_[i].l >= 0) { points_[i].l = p_tmp[(int)points_[i].l].l; }
+		if (i.l >= 0) { i.l = p_tmp[(int)i.l].l; }
 		//printf("Location %02d: %02f\n", i, points_[i].l );
 	}
 
@@ -430,50 +418,53 @@ void DBSCAN::CombineNearCluster(
 		num_locations2 = 0;
 		for(int i=0;i<num_points;i++)
 		{
-			num_locations2 = max((int)points_[i].l, num_locations2);
+			num_locations2 = std::max((int)points_[i].l, num_locations2);
 		}
 		num_locations2 += 1;
 		locations_flag_.clear();
 		locations_flag_.resize(num_locations2);
-		vector<double> c1; c1.resize(num_locations2);
-		vector<double> c2; c2.resize(num_locations2);
+		std::vector<double> c1(num_locations2, 0.0);
+		std::vector<double> c2(num_locations2, 0.0);
 		for(int i=0;i<num_points;i++)
 		{
 			if (points_[i].l<0) { continue; }
 			if (contact_[i]==1) { c1[points_[i].l]+=1; }
 			c2[points_[i].l]+=1;
 		}
-		for(int i=0;i<num_points;i++)
+		for(auto i : points_)
 		{
-			if (points_[i].l<0) { continue; }
-			if (c1[points_[i].l]/
-				c2[points_[i].l] < CONTACT_TRIGGER_RATIO)
-			{ continue; }
-			locations_flag_[points_[i].l] = 1;
+			if (i.l<0) { continue; }
+			if (c1[i.l]/c2[i.l] < CONTACT_TRIGGER_RATIO) { continue; }
+			locations_flag_[i.l] = 1;
 		}
 	}
 
 	// calculate the centroid of combined clusters
 	p_tmp.clear(); p_tmp.resize(num_locations2);
-	count.clear(); count.resize(num_locations2);
 
-	for(int i=0;i<num_points;i++)
+	for(auto i : points_)
 	{
-		if(points_[i].l >= 0)
+		if(i.l >= 0)
 		{
-			p_tmp[(int)points_[i].l] =
-					this->AddPoint(p_tmp[(int)points_[i].l], points_[i]);
-			count[(int)points_[i].l] += 1;
+			p_tmp[(int)i.l] = this->AddPoint(p_tmp[(int)i.l], i);
+			p_tmp[(int)i.l].l += 1;
 		}
 		//printf("Location %02d: %02d %02d\n", i, points_[i].l, p_center[points_[i].l].l );
 	}
 
-	for(int i=0;i<p_tmp.size();i++)
+	for(auto &i : p_tmp)
 	{
-		p_tmp[i]	= this->MultiPoint(p_tmp[i],1/count[i]);
-		p_tmp[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
-		count[i]	= UNCLASSIFIED;
+		i	= this->MultiPoint(i, 1/i.l);
+		i.l = 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
 		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
 	}
+
+//	for(int i=0;i<p_tmp.size();i++)
+//	{
+//		p_tmp[i]	= this->MultiPoint(p_tmp[i],1/count[i]);
+//		p_tmp[i].l 	= 1.0; // boundary starts with 1.0 as no error and goes to zero for large distance boundary
+//		count[i]	= UNCLASSIFIED;
+//		//printf("Location %02d: %+.4f %+.4f %+.4f %d\n", i, p_center[i].x, p_center[i].y, p_center[i].z, p_center[i].l);
+//	}
 	locations_ = p_tmp;
 }

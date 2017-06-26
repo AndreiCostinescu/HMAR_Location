@@ -52,8 +52,7 @@
 #include <vtkGL2PSExporter.h>
 
 #include "CGraph.h"
-
-using namespace std;
+#include "algo.h"
 
 #define CLICK_EMPTY		0
 #define CLICK_LABEL		1
@@ -72,8 +71,6 @@ using namespace std;
 #define VTKCWHT "\x1B[37m"
 #define VTKCNOR "\x1B[0m"
 
-#define Sqr(x) ((x)*(x))
-
 class VTKExtra
 {
 
@@ -82,27 +79,15 @@ private:
 int LOC_INT;
 int SEC_INT;
 
-static inline Vector3d V4d3d(Vector4d A)
-{
-	Vector3d B;
-	B(0)=A(0);
-	B(1)=A(1);
-	B(2)=A(2);
-	return B;
-}
-
-void ArrayTovector(
+void arrayTovector(
 		unsigned char *A,
 		int size,
-		vector<unsigned char> &B);
-
-void vectorToArray(
-		vector<unsigned char> A,
-		unsigned char *B);
-
-Vector3d RodriguesVec(
-	AngleAxisd aa_,
-	Vector3d vec_);
+		std::vector<unsigned char> &B)
+{
+	//reshapeVector(B, std::extent<decltype(A)>::value);
+	B.clear();
+	for(int i=0;i<size;i++) { B.push_back(A[i]);}
+}
 
 public:
 
@@ -111,60 +96,60 @@ VTKExtra(
 		int sec_int_);
 virtual ~VTKExtra();
 
-void ColorCode(vector<vector<unsigned char> > &container_);
+void ColorCode(std::vector<std::vector<unsigned char> > &container_);
 
 void ShowData(
-		vector<Vector4d> points_,
-		vector<string> &labels_,
-		vector<string> labels_ref_,
-		vector<int> &loc_idx_,
-		vector<vector<unsigned char> > color_,
+		std::vector<Eigen::Vector4d> points_,
+		std::vector<std::string> &labels_,
+		std::vector<std::string> labels_ref_,
+		std::vector<int> &loc_idx_,
+		std::vector<std::vector<unsigned char> > color_,
 		bool cluster_,
 		bool labeling_,
 		bool deleting_);
 
 void ShowConnectionOnly(
 		CGraph Graph_,
-		vector<vector<unsigned char> > color_);
+		std::vector<std::vector<unsigned char> > color_);
 
 void ShowConnection(
 		CGraph *Graph_,
-		vector<Vector4d> points_,
-		vector<string> &labels_,
-		vector<vector<unsigned char> > color_,
+		std::vector<Eigen::Vector4d> points_,
+		std::vector<std::string> &labels_,
+		std::vector<std::vector<unsigned char> > color_,
 		bool show_points);
 
 void ShowConnectionTest(
 		CGraph *Graph_,
-		vector<Vector4d> points_,
-		vector<string> &labels_,
-		vector<vector<unsigned char> > color_,
+		std::vector<Eigen::Vector4d> points_,
+		std::vector<std::string> &labels_,
+		std::vector<std::vector<unsigned char> > color_,
 		bool show_points);
 
 void PlotData(
-		vector<double> x,
-		vector<double> y);
+		std::vector<double> x,
+		std::vector<double> y);
 
 void PlotData(
-		vector<double> x,
-		vector<double> y,
-		vector<double> x2,
-		vector<double> y2);
+		std::vector<double> x,
+		std::vector<double> y,
+		std::vector<double> x2,
+		std::vector<double> y2);
 
 void PlotDatas(
-		vector<string> title,
-		vector<double> x,
-		vector<vector<vector<double> > > y);
+		std::vector<std::string> title,
+		std::vector<double> x,
+		std::vector<std::vector<std::vector<double> > > y);
 
 void PlotDatasGeo(
-		vector<string> title,
-		vector<double> x,
-		vector<vector<vector<double> > > y);
+		std::vector<std::string> title,
+		std::vector<double> x,
+		std::vector<std::vector<std::vector<double> > > y);
 
 vtkSmartPointer<vtkPolyDataMapper> DataPoints(
-		vector<Vector4d> points_,
+		std::vector<Eigen::Vector4d> points_,
 		int num_locations_,
-		vector<vector<unsigned char> > color_,
+		std::vector<std::vector<unsigned char> > color_,
 		bool cluster_);
 };
 

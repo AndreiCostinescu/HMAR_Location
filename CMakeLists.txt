@@ -24,12 +24,14 @@ link_directories(/home/chen/gsl/lib)
 # FALSE for PC
 if(TRUE)
   add_executable(../HMAR 
+  	./src/COS.cpp 
   	./src/CKB.cpp 
   	./src/CAS.cpp 
   	./src/CData.cpp 
   	./src/CGraph.cpp 
-  	./src/VTKExtra.cpp 
   	./src/algo.cpp 
+  	./src/DataFilter.cpp
+  	./src/VTKExtra.cpp 
   	./src/print.cpp
   	./src/core.cpp
   	./src/TestCase.cpp 
@@ -41,7 +43,7 @@ if(TRUE)
   	./src/Train.cpp 
   	./src/TrainLA.cpp 
   	./src/TrainSM.cpp 
-  	./src/DataFilter.cpp 
+  	./src/ObjectPrediction.cpp  
   	./src/ActionPrediction.cpp 
   	./src/ActionParser.cpp 
   	./src/DBSCAN.cpp 

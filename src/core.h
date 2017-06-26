@@ -17,75 +17,75 @@
 #define BOUNDARY_VAR 0.1
 
 bool directionCheck(
-	Vector3d A,
-	Vector3d B);
+	Eigen::Vector3d A,
+	Eigen::Vector3d B);
 
 int checkBoundarySphere(
-	Vector4d &point_,
-	vector<Vector4d> centroids_);
+	Eigen::Vector4d &point_,
+	std::vector<Eigen::Vector4d> centroids_);
 
 int checkBoundaryCuboid(
-	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_);
+	Eigen::Vector4d &point_,
+	Eigen::Vector3d box_min_,
+	Eigen::Vector3d box_max_);
 
 int decideBoundarySphere(
-	Vector4d 		 &point_,
-	vector<Vector4d> centroids_);
+	Eigen::Vector4d 		 &point_,
+	std::vector<Eigen::Vector4d> centroids_);
 
 int decideBoundaryCuboid(
-	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_);
+	Eigen::Vector4d &point_,
+	Eigen::Vector3d box_min_,
+	Eigen::Vector3d box_max_);
 
 int decideBoundaryClosest(
-	Vector4d 		&point_,
-	vector<Vector4d> centroids_);
+	Eigen::Vector4d 		&point_,
+	std::vector<Eigen::Vector4d> centroids_);
 
 double checkSurfaceDistance(
-	Vector4d centroids_,
-	Vector4d surface_eq_);
+	Eigen::Vector4d centroids_,
+	Eigen::Vector4d surface_eq_);
 
 bool decideSurface(
-	Vector4d centroids_,
-	Vector4d surface_eq_,
+	Eigen::Vector4d centroids_,
+	Eigen::Vector4d surface_eq_,
 	double limit_);
 
 double dLI(
-	int &loc_idx_,
-	int loc_last_idx_,
-	Vector4d point_,
-	vector<double> len_,
-	vector<Vector4d> mid_,
-	vector<Vector3d> tangent_,
-	int loc_offset_,
-	bool loc_init_,
-	int LOC_INT_);
+		int &loc_idx_,
+		const Eigen::Vector4d &point_,
+		const std::vector<double> &len_,
+		const std::vector<Eigen::Vector4d> &mid_,
+		const std::vector<Eigen::Vector3d> &tangent_,
+		const int &loc_last_idx_,
+		const int &loc_offset_,
+		const int &loc_int_,
+		bool loc_init_);
 
 double dLIPredict(
-	int &loc_idx_,
-	int loc_last_idx_,
-	Vector4d point_,
-	vector<Vector4d> mid_,
-	vector<double> len_,
-	vector<Vector3d> tangent_,
-	int loc_offset_,
-	int loc_init_, //0 for true
-	int LOC_INT_);
+		int &loc_idx_,
+		int loc_last_idx_,
+		Eigen::Vector4d point_,
+		std::vector<Eigen::Vector4d> mid_,
+		std::vector<double> len_,
+		std::vector<Eigen::Vector3d> tangent_,
+		int loc_offset_,
+		int loc_init_, //0 for true
+		int LOC_INT_);
 
 int decideSectorInterval(
-	int &sec_idx_,
-	int loc_idx_,
-	Vector3d &delta_t_,
-	Vector4d point_,
-	vector<Vector4d> mid_,
-	vector<Vector3d> tangent_,
-	vector<Vector3d> normal_,
-	int SEC_INT_);
+		int &sec_idx_,
+		Eigen::Vector3d &delta_t_,
+		const Eigen::Vector4d &point_,
+		const std::vector<Eigen::Vector4d> &mid_,
+		const std::vector<Eigen::Vector3d> &tangent_,
+		const std::vector<Eigen::Vector3d> &normal_,
+		const int &loc_idx_,
+		const int &SEC_INT_);
 
 //int decideCurvature(
 //	point_d point_,
-//	vector<point_d> &curve_mem_,
+//	std::vector<point_d> &curve_mem_,
 //	double &curve_,
 //	int num_points_);
 
@@ -99,10 +99,10 @@ int fileSelect(
 	const struct dirent *entry);
 
 bool copyFile(
-		string SRC,
-		string DEST);
+		const std::string &SRC,
+		const std::string &DEST);
 
 bool directoryCheck(
-		string path_);
+		const std::string &path_);
 
 #endif /* CORE_H_ */

@@ -1,4 +1,0 @@
-SPG,SHELF,store the object,TABLE1,clean location,TABLE2,clean location,DISPENSER,clean location,SINK,wash the object,BIN,throw the object
-KNF,SHELF,store the object,TABLE2,cut,SINK,wash the object
-ORG,SHELF,store the object,FACE,eat the object,TABLE2,place the object,BIN,throw the object
-CUP,SHELF,store the object,FACE,drink,DISPENSER,fill up the object,TABLE2,place the object,SINK,wash the object

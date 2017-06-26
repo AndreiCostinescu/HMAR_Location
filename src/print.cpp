@@ -167,6 +167,24 @@ int printer(
 		case 48:
 			printf("# Rewriting data file with label.......................................SUCCESS\n");
 			break;
+		case 49:
+			printf(CRED "# Object label file is empty..................................................\n" CNOR);
+			break;
+		case 50:
+			printf("# Reading object label file............................................SUCCESS\n");
+			break;
+		case 51:
+			printf(CRED "# Object transition file is empty.............................................\n" CNOR);
+			break;
+		case 52:
+			printf("# Reading object transition file.......................................SUCCESS\n");
+			break;
+		case 53:
+			printf(CRED "# Object-LA file is empty.....................................................\n" CNOR);
+			break;
+		case 54:
+			printf("# Reading object-LA file...............................................SUCCESS\n");
+			break;
 		default :
 			printf(CRED "# UNKNOWN COMMAND.............................................................\n" CNOR);
 			break;

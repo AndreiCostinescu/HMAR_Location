@@ -8,20 +8,27 @@
 
 #include "ActionParser.h"
 
-ActionParser::ActionParser() :
-					obj(""),
-					delay_factor(-1),
-					output(""),
-					output_mem(""),
-					label(""),
-					label_mem(""),
-					repeat("i think"),
-					ob_ac(""),
-					grasp_flag(true),
-					start_loc(true),
-					o("object"),
-					l("location"),
-					a("action")
+ActionParser::ActionParser(
+		const std::string &obj_,
+		std::shared_ptr<CKB> KB,
+		std::shared_ptr<std::vector<std::string> > msg_,
+		const std::string &path_)
+		:	obj(obj_),
+		 	message(msg_),
+		 	KB(KB),
+			delay_factor(-1),
+			output(""),
+			output_mem(""),
+			label(""),
+			label_mem(""),
+			repeat("i think"),
+			ob_ac(""),
+			grasp_flag(true),
+			start_loc(true),
+			o("object"),
+			l("location"),
+			a("action"),
+			msg_path(path_)
 {
 	message_num = {-1,-1};
 }
@@ -29,48 +36,39 @@ ActionParser::ActionParser() :
 ActionParser::~ActionParser() {}
 
 int ActionParser::ReadMsg(
-		string path_)
+		std::string path_)
 {
-	message.clear();
-	//string path = "kb/message.txt";
-	ifstream src_file(path_);
+	message->clear();
+	std::ifstream src_file(path_);
 	while (src_file)
 	{
-		string file_line_;
+		std::string file_line_;
 		if (!getline( src_file, file_line_ )) break;
-		istringstream line_( file_line_ );
-		string data_line_;
+		std::istringstream line_( file_line_ );
+		std::string data_line_;
 		while (line_)
 		{
-		   string word;
+		   std::string word;
 		   if (!getline( line_, word, ' ')) break;
 		   data_line_ = data_line_ + " " + word;
 		}
-		message.push_back( data_line_ );
+		message->push_back( data_line_ );
 	}
 	return EXIT_SUCCESS;
 }
 
 void ActionParser::Init(
-		string obj_,
-		map<string,pair<int,int> > ac_,
-		vector<string> al_,
-		map<string,map<string,string> > ol_,
 		int delay_)
 {
-	ac = ac_;
-	al = al_;
-	ol = ol_;
-	obj = obj_;
 	delay_factor = delay_;
 }
 
-string ActionParser::Decode(
-	string obj_,
-	string loc_,
-	string msg_)
+std::string ActionParser::Decode(
+	std::string obj_,
+	std::string loc_,
+	std::string msg_)
 {
-	string output = "";
+	std::string output = "";
 
 	if (msg_.find(o)!=std::string::npos)
 	{
@@ -118,7 +116,7 @@ void ActionParser::Delay_(CAS *s_)
 {
 	if (state_mem.size() > 0)
 	{
-		if (s_->label2 != state_mem.back().label2)
+		if (s_->Label2() != state_mem.back().Label2())
 		{
 			state_mem.clear();
 		}
@@ -184,17 +182,17 @@ void ActionParser::Parse(
 // GRASP
 void ActionParser::DT0()
 {
-	if (!state_mem.back().grasp)
+	if (!state_mem.back().Grasp())
 	{
-		if (state_mem[state_mem.size()-2].grasp)
+		if (state_mem[state_mem.size()-2].Grasp())
 		{
 			grasp_flag = true;
-			output = this->Decode(obj, loc, message[0]);
+			output = this->Decode(obj, loc, (*message)[0]);
 			message_num[0] = 0;
 		}
 		else
 		{
-			output = this->Decode(obj, loc, message[1]);
+			output = this->Decode(obj, loc, (*message)[1]);
 			message_num[0] = 1;
 		}
 		start_loc = true;
@@ -204,7 +202,7 @@ void ActionParser::DT0()
 	{
 		this->DT1();
 	}
-	if (grasp_flag && (state_mem.back().label1!=state_mem.back().label2))
+	if (grasp_flag && (state_mem.back().Label1()!=state_mem.back().Label2()))
 	{
 		grasp_flag 	= false;
 	}
@@ -214,10 +212,10 @@ void ActionParser::DT0()
 void ActionParser::DT1()
 {
 	// in LA
-	if (state_mem.back().pct_err<0)
+	if (state_mem.back().Probability()<0)
 	{
 		this->DT2_1();
-		label  = al[state_mem.back().label2];
+		label  = KB->AL()[state_mem.back().Label2()];
 	}
 	// in SM
 	else
@@ -232,18 +230,18 @@ void ActionParser::DT2_1()
 {
 	if(grasp_flag)
 	{
-		output = this->Decode(obj, loc, message[2]);
+		output = this->Decode(obj, loc, (*message)[2]);
 		message_num[0] = 2;
 	}
 	else
 	{
-		if(state_mem.back().surface_flag>0)
+		if(state_mem.back().SurfaceFlag()>0)
 		{
 			this->DT3_1();
 		}
 		else
 		{
-			output = this->Decode(obj, loc, message[5]);
+			output = this->Decode(obj, loc, (*message)[5]);
 			message_num[0] = 5;
 		}
 	}
@@ -252,14 +250,14 @@ void ActionParser::DT2_1()
 // surface constraint
 void ActionParser::DT3_1()
 {
-	if(state_mem.back().vel>0.001)
+	if(state_mem.back().Velocity()>0.001)
 	{
-		output = this->Decode(obj, loc, message[3]);
+		output = this->Decode(obj, loc, (*message)[3]);
 		message_num[0] = 3;
 	}
 	else
 	{
-		output = this->Decode(obj, loc, message[4]);
+		output = this->Decode(obj, loc, (*message)[4]);
 		message_num[0] = 4;
 	}
 }
@@ -273,12 +271,12 @@ void ActionParser::DT2_2()
 // prediction on SM
 void ActionParser::DT3_2()
 {
-	vector<double> tmp, tmp_idx;
-	for(int i=ac["GEOMETRIC"].first;i<ac["GEOMETRIC"].second+1;i++)
+	std::vector<double> tmp, tmp_idx;
+	for(int i=KB->AC()["GEOMETRIC"].first;i<KB->AC()["GEOMETRIC"].second+1;i++)
 	{
-		if(state_mem.back().goal[al[i]]>0)
+		if(state_mem.back().Goal()[KB->AL()[i]]>0)
 		{
-			tmp.push_back(state_mem.back().goal[al[i]]);
+			tmp.push_back(state_mem.back().Goal()[KB->AL()[i]]);
 			tmp_idx.push_back(i);
 		}
 	}
@@ -296,7 +294,7 @@ void ActionParser::DT3_2()
 	// unknown
 	else
 	{
-		output = this->Decode(obj, loc, message[10]);
+		output = this->Decode(obj, loc, (*message)[10]);
 		message_num[0] = 10;
 		label  = "UNKNOWN";
 	}
@@ -306,15 +304,15 @@ void ActionParser::DT3_2()
 void ActionParser::DT4_1(
 	double x_)
 {
-	if(state_mem.back().vel>0.001)
+	if(state_mem.back().Velocity()>0.001)
 	{
-		output = this->Decode(obj, loc, message[6]);
+		output = this->Decode(obj, loc, (*message)[6]);
 		message_num[0] = 6;
 		label  = "MOVE";
 	}
 	else
 	{
-		output = this->Decode(obj, loc, message[7]);
+		output = this->Decode(obj, loc, (*message)[7]);
 		message_num[0] = 7;
 		label  = "STOP";
 	}
@@ -322,7 +320,7 @@ void ActionParser::DT4_1(
 
 // multiple confident traj
 void ActionParser::DT4_2(
-	vector<double> x_)
+	std::vector<double> x_)
 {
 	double sum_tmp = accumulate(x_.begin(), x_.end(), 0.0);
 	for(int i=0;i<x_.size();i++)
@@ -332,15 +330,15 @@ void ActionParser::DT4_2(
 
 	if(*max_element(x_.begin(), x_.end()) > 0.33)
 	{
-		if(state_mem.back().vel>0.001)
+		if(state_mem.back().Velocity()>0.001)
 		{
-			output = this->Decode(obj, loc, message[6]);
+			output = this->Decode(obj, loc, (*message)[6]);
 			message_num[0] = 6;
 			label  = "MOVE";
 		}
 		else
 		{
-			output = this->Decode(obj, loc, message[7]);
+			output = this->Decode(obj, loc, (*message)[7]);
 			message_num[0] = 7;
 			label  = "STOP";
 		}
@@ -356,47 +354,47 @@ void ActionParser::DT4_2(
 					distance(
 							x_.begin(),
 							max_element(x_.begin(), x_.end()));
-		if(state_mem.back().vel>0.001)
+		if(state_mem.back().Velocity()>0.001)
 		{
-			output = this->Decode(obj, "", message[8]);
+			output = this->Decode(obj, "", (*message)[8]);
 			message_num[0] = 8;
-			output = output + "Perhaps you are going to " + al[idx] + ".";
+			output = output + "Perhaps you are going to " + KB->AL()[idx] + ".";
 			label  = "MOVE";
 		}
 		else
 		{
-			output = this->Decode(obj, loc, message[9]);
+			output = this->Decode(obj, loc, (*message)[9]);
 			message_num[0] = 9;
 			label  = "STOP";
 		}
 	}
 }
 
-void ActionParser::Display(string filename_)
+void ActionParser::Display(const std::string &filename_)
 {
 	if (state_mem.size() >= delay_factor)
 	{
-		if(state_mem.back().label2 < 0)
+		if(state_mem.back().Label2() < 0)
 		{
 			ob_ac = "";
 		}
 		else
 		{
 			ob_ac =
-					(ol[obj][al[state_mem.back().label2]].empty() ?
-							al[state_mem.back().label2] :
-							ol[obj][al[state_mem.back().label2]]);
+					(KB->OL()[obj][KB->AL()[state_mem.back().Label2()]].empty() ?
+							KB->AL()[state_mem.back().Label2()] :
+							KB->OL()[obj][KB->AL()[state_mem.back().Label2()]]);
 		}
 
-		loc = state_mem.back().surface_name;
+		loc = state_mem.back().SurfaceName();
 
 		this->DT0();
 	}
 
-	ofstream write_file("ParsedResult/" + filename_, ios::app);
+	std::ofstream write_file(msg_path + filename_, std::ios::app);
 
 	// Extra info for transitions
-	if (strcmp(output_mem.c_str(),output.c_str()))
+	if (output_mem!=output)
 	{
 //		if ((output_mem.find(repeat)!=std::string::npos) && (output.find(repeat)!=std::string::npos))
 //		{
@@ -407,23 +405,20 @@ void ActionParser::Display(string filename_)
 		if (message_num[0]==message_num[1])
 		{
 			output = "No," + output;
-			printf("%s\n", output.c_str());
+//			printf("%s\n", output.c_str());
 			write_file << output << "\n";
 			output.erase(0,3);
 		}
 		else
 		{
-			printf("%s\n", output.c_str());
+//			printf("%s\n", output.c_str());
 			write_file << output << "\n";
 		}
 	}
 	message_num[1] = message_num[0];
 	output_mem = output;
 
-	if (strcmp(label_mem.c_str(),label.c_str()))
-	{
-		label_mem = label;
-	}
+	label_mem!=label ? label_mem = label : label_mem;
 
 }
 

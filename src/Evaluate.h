@@ -17,25 +17,35 @@
 #include "CGraph.h"
 #include "CAS.h"
 
-using namespace std;
-
 class Evaluate
 {
 	public:
 		Evaluate();
 		virtual ~Evaluate();
 
-		int UpdateStateNode(CGraph *G_, CAS *AS_);
-		int UpdateStateEdge(CGraph *G_, CAS *AS_);
+		/*
+		 * Update the action state at the node.
+		 */
+		virtual int UpdateStateNode(
+				const CGraph &G_,
+				CAS &AS_);
+
+		/*
+		 * Update the action state at the edge.
+		 */
+		virtual int UpdateStateEdge(
+				const CGraph &G_,
+				CAS &AS_);
 
 	protected:
 		int label1_eval;
 		double vel_eval;
 		double surface_dist_eval;
-		vector<double> win_eval;
-		vector<double> pct_err_eval;
-		vector<string> al_eval;
-		map<string,pair<int,int> > ac_eval;
+		std::vector<double> win_eval;
+		std::vector<double> pct_eval;
+		std::vector<double> pct_eval_mem;
+		std::vector<std::string> al_eval;
+		std::map<std::string, std::pair<int, int> > ac_eval;
 };
 
 #endif /* EVALUATE_H_ */

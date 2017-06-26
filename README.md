@@ -176,3 +176,9 @@
 - used pointer referencing between classes.
 - added "containers" to keep the data that are relevant for processing.
 - removed most inheritance, it is making things unflexible.
+
+[29]
+- 26/06/2017
+- added object state
+- added new recording data
+- reorganized the folders

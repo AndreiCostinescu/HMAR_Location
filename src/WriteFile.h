@@ -74,6 +74,18 @@ class WriteFile
 				vector<Vector3d> boxmid_,
 				vector<Vector3d> boxmax_);
 
+		void WriteOSTransition(
+				string path_,
+				map <string, vector<vector<int> > > transition_);
+
+		void WriteFilePrediction(
+				CGraph *Graph_,
+				CKB *kb_,
+				string path_,
+				vector<string> labels_,
+				vector<map<string,double> > goals_,
+				vector<map<string,double> > windows_);
+
 		void WriteFilePrediction(
 				CGraph *Graph_,
 				CKB *kb_,

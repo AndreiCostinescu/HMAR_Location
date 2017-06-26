@@ -17,10 +17,10 @@ void WriteFile::RewriteDataFileFilter(
 		int mem_,
 		int mem2_,
 		int mem3_,
-		string &mem_s_,
-		string &mem_s2_,
-		string &mem_s3_,
-		vector<string> &label_)
+		std::string &mem_s_,
+		std::string &mem_s2_,
+		std::string &mem_s3_,
+		std::vector<std::string> &label_)
 {
 	// m - r - m
 	if (!strcmp(label_.back().c_str(),mem_s2_.c_str()) 	&&
@@ -94,21 +94,21 @@ void WriteFile::RewriteDataFileFilter(
 }
 
 void WriteFile::RewriteDataFile(
-	string path_,
-	vector<vector<string> > data_,
-	vector<Vector4d> points_,
-	vector<int>	contact_,
+	std::string path_,
+	std::vector<std::vector<std::string> > data_,
+	std::vector<Vector4d> points_,
+	std::vector<int>	contact_,
 	Vector4d face_,
-	vector<Vector3d> label_ref_write_,
-	vector<string> label_ref_name_,
-	vector<string> label_list_)
+	std::vector<Vector3d> label_ref_write_,
+	std::vector<std::string> label_ref_name_,
+	std::vector<std::string> label_list_)
 {
 	float face_lim = 0.20;
 	int mem,mem2,mem3; mem=mem2=mem3=-1;
-	string mem_s,mem_s2,mem_s3;  mem_s=mem_s2=mem_s3= "";
-	vector<string> label, label_list_local;
+	std::string mem_s,mem_s2,mem_s3;  mem_s=mem_s2=mem_s3= "";
+	std::vector<std::string> label, label_list_local;
 
-	string tmp = path_;
+	std::string tmp = path_;
 	reverse(tmp.begin(),tmp.end());
 	if (tmp.compare(tmp.find("/")+1,3,"200")==0) { face_lim = 0.25; }
 
@@ -167,7 +167,7 @@ void WriteFile::RewriteDataFile(
 	}
 
 	remove(path_.c_str());
-	ofstream write_file(path_.c_str(), ios::app);
+	std::ofstream write_file(path_.c_str(), std::ios::app);
 	for(int i=0;i<points_.size();i++)
 	{
 		if(i==0)
@@ -195,7 +195,7 @@ void WriteFile::RewriteDataFile(
 	// Visualize
 	if (0)
 	{
-		vector<Vector4d> point_zero = points_;
+		std::vector<Vector4d> point_zero = points_;
 		for(int ii=0;ii<point_zero.size();ii++)
 		{
 			if (!strcmp(label[ii].c_str(),"MOVE"))
@@ -205,9 +205,9 @@ void WriteFile::RewriteDataFile(
 			else
 				point_zero[ii][3] = 1;
 		}
-		vector<vector<unsigned char> > color_code; colorCode(color_code);
-		vector<string>  goal_action, al; goal_action.resize(5);
-		vector<int> 	loc_idx_zero;
+		std::vector<std::vector<unsigned char> > color_code; colorCode(color_code);
+		std::vector<std::string>  goal_action, al; goal_action.resize(5);
+		std::vector<int> 	loc_idx_zero;
 		showData(
 				point_zero, goal_action, al,
 				loc_idx_zero, color_code, true, false, false);
@@ -227,15 +227,15 @@ void WriteFile::RewriteDataFile(
 }
 
 //void WriteFile::WriteFileLA(
-//	vector<string> line_,
-//	vector<vector<string> > data_tmp,
-//	string path_)
+//	std::vector<std::string> line_,
+//	std::vector<std::vector<std::string> > data_tmp,
+//	std::string path_)
 //{
 //	bool flag = false;
 //	if (!data_tmp.empty())
 //	{
 //		remove(path_.c_str());
-//		ofstream write_file(path_, ios::app);
+//		std::ofstream write_file(path_, std::ios::app);
 //		for(int i=0;i<data_tmp.size();i++)
 //		{
 //			if(!strcmp(data_tmp[i][0].c_str(),line_[0].c_str()))
@@ -288,19 +288,19 @@ void WriteFile::RewriteDataFile(
 void WriteFile::WriteFileLA(
 	CGraph *Graph_,
 	CKB *kb_,
-	string path_)
+	std::string path_)
 {
-	if (ifstream(path_)) { remove(path_.c_str()); }
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
 
-	vector<CGraph::node_t> node_tmp = Graph_->GetNodeList();
+	std::vector<CGraph::node_t> node_tmp = Graph_->GetNodeList();
 
-	ofstream write_file(path_, ios::app);
+	std::ofstream write_file(path_, std::ios::app);
 
 	for(int i=0;i<node_tmp.size();i++)
 	{
-		for(int ii=0;ii<kb_->al.size();ii++)
+		for(int ii=0;ii<kb_->AL().size();ii++)
 		{
-			if(!strcmp(node_tmp[i].name.c_str(),kb_->al[ii].c_str()))
+			if(node_tmp[i].name==kb_->AL()[ii])
 			{
 				write_file << ii << ",";
 				break;
@@ -322,15 +322,15 @@ void WriteFile::WriteFileLA(
 	}
 }
 
-void WriteFile::WriteFileGraph(CGraph *Graph_, string path_)
+void WriteFile::WriteFileGraph(CGraph *Graph_, std::string path_)
 {
-	if (ifstream(path_)) { remove(path_.c_str()); }
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
 
 	int num_location = Graph_->GetNodeList().size();
-	vector<double> sec;
-	vector<vector<vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
+	std::vector<double> sec;
+	std::vector<std::vector<std::vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
 
-	ofstream write_file(path_, ios::app);
+	std::ofstream write_file(path_, std::ios::app);
 	write_file << "Locations," 			<< num_location << "\n";
 	write_file << "Location Intervals," << Graph_->GetLocInt()		<< "\n";
 	write_file << "Sector Intervals," 	<< Graph_->GetSecInt()		<< "\n";
@@ -420,28 +420,27 @@ void WriteFile::WriteFileGraph(CGraph *Graph_, string path_)
 void WriteFile::WriteFilePrediction(
 	CGraph *Graph_,
 	CKB *kb_,
-	string path_,
-	vector<string> labels_,
-	vector<string> labels_predict_,
-	vector<map<string,double> > goals_,
-	vector<map<string,double> > windows_)
+	std::string path_,
+	std::vector<std::string> labels_,
+	std::vector<map<std::string,double> > goals_,
+	std::vector<map<std::string,double> > windows_)
 {
-	if (ifstream(path_)) { remove(path_.c_str()); }
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
 
-	string line;
+	std::string line;
 
-	ofstream write_file(path_, ios::app);
+	std::ofstream write_file(path_, std::ios::app);
 	for(int i=0;i<labels_.size();i++)
 	{
-		line = labels_[i] + "," + labels_predict_[i] + ",";
-		for(int ii=kb_->ac["GEOMETRIC"].first;ii<kb_->ac["GEOMETRIC"].second+1;ii++)
+		line = labels_[i] + "," + "_" + ",";
+		for(int ii=kb_->AC()["GEOMETRIC"].first;ii<kb_->AC()["GEOMETRIC"].second+1;ii++)
 		{
-			line += to_string(goals_[i][kb_->al[ii]]);
+			line += std::to_string(goals_[i][kb_->AL()[ii]]);
 			line += ",";
 		}
-		for(int ii=kb_->ac["GEOMETRIC"].first;ii<kb_->ac["GEOMETRIC"].second+1;ii++)
+		for(int ii=kb_->AC()["GEOMETRIC"].first;ii<kb_->AC()["GEOMETRIC"].second+1;ii++)
 		{
-			line += to_string(windows_[i][kb_->al[ii]]);
+			line += std::to_string(windows_[i][kb_->AL()[ii]]);
 			line += ",";
 		}
 		line.erase(line.size()-1);
@@ -450,25 +449,58 @@ void WriteFile::WriteFilePrediction(
 	}
 }
 
-void WriteFile::WriteFileWindow(CGraph *Graph_, string path_)
+void WriteFile::WriteFilePrediction(
+	CGraph *Graph_,
+	CKB *kb_,
+	std::string path_,
+	std::vector<std::string> labels_,
+	std::vector<std::string> labels_predict_,
+	std::vector<map<std::string,double> > goals_,
+	std::vector<map<std::string,double> > windows_)
 {
-	string path2 = path_;
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
+
+	std::string line;
+
+	std::ofstream write_file(path_, std::ios::app);
+	for(int i=0;i<labels_.size();i++)
+	{
+		line = labels_[i] + "," + labels_predict_[i] + ",";
+		for(int ii=kb_->AC()["GEOMETRIC"].first;ii<kb_->AC()["GEOMETRIC"].second+1;ii++)
+		{
+			line += std::to_string(goals_[i][kb_->AL()[ii]]);
+			line += ",";
+		}
+		for(int ii=kb_->AC()["GEOMETRIC"].first;ii<kb_->AC()["GEOMETRIC"].second+1;ii++)
+		{
+			line += std::to_string(windows_[i][kb_->AL()[ii]]);
+			line += ",";
+		}
+		line.erase(line.size()-1);
+		line += "\n";
+		write_file << line;
+	}
+}
+
+void WriteFile::WriteFileWindow(CGraph *Graph_, std::string path_)
+{
+	std::string path2 = path_;
 	reverse(path2.begin(),path2.end());
 	path2.erase(path2.begin(),path2.begin()+path2.find(".")+1);
 	reverse(path2.begin(),path2.end());
 	path2 = path2 + "2.txt";
 
-	if (ifstream(path_)) { remove(path_.c_str()); }
-	if (ifstream(path2)) { remove(path2.c_str()); }
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
+	if (std::ifstream(path2)) { remove(path2.c_str()); }
 
 	int s_tmp = -1;
 	double max_val = 0.0;
 	int num_location = Graph_->GetNodeList().size();
-	vector<double> sec;
-	vector<vector<vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
+	std::vector<double> sec;
+	std::vector<std::vector<std::vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
 
-	ofstream write_file(path_, ios::app);
-	ofstream write_file2(path2, ios::app);
+	std::ofstream write_file(path_, std::ios::app);
+	std::ofstream write_file2(path2, std::ios::app);
 
 	write_file << "Locations," 			<< num_location 		<< "\n";
 	write_file << "Location Intervals," << Graph_->GetLocInt()	<< "\n";
@@ -517,16 +549,16 @@ void WriteFile::WriteFileWindow(CGraph *Graph_, string path_)
 }
 
 void WriteFile::WriteFileSurface(
-	string path_,
-	vector<Matrix3d> rotation_,
-	vector<Vector4d> planeeq_,
-	vector<Vector3d> boxmin_,
-	vector<Vector3d> boxmid_,
-	vector<Vector3d> boxmax_)
+	std::string path_,
+	std::vector<Matrix3d> rotation_,
+	std::vector<Vector4d> planeeq_,
+	std::vector<Vector3d> boxmin_,
+	std::vector<Vector3d> boxmid_,
+	std::vector<Vector3d> boxmax_)
 {
-	if (ifstream(path_)) { remove(path_.c_str()); }
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
 
-	ofstream write_file(path_, ios::app);
+	std::ofstream write_file(path_, std::ios::app);
 	for(int i=0;i<rotation_.size();i++)
 	{
 		write_file << i	<< ",";
@@ -541,21 +573,40 @@ void WriteFile::WriteFileSurface(
 	}
 }
 
-void WriteFile::WriteFile_(
-	string path_,
-	vector<vector<double> > data_)
+void WriteFile::WriteOSTransition(
+		std::string path_,
+		map <std::string, std::vector<std::vector<int> > > transition_)
 {
-	if (ifstream(path_)) { remove(path_.c_str()); }
-
-	ofstream write_file(path_, ios::app);
-	for(int i=0;i<data_.size();i++)
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
+	std::ofstream write_file(path_, std::ios::app);
+	for(auto i:transition_)
 	{
-		for(int ii=0;ii<data_[i].size();ii++)
+		write_file << i.first;
+		for(auto ii:i.second)
 		{
-			if(ii<data_[i].size()-1)
-				write_file << data_[i][ii] << ",";
-			else
-				write_file << data_[i][ii] << "\n";
+			double sum = 0.0;
+			for(auto iii:ii) { sum += iii; }
+			for(auto iii:ii) { write_file << "," << (sum > 0 ? iii/sum : iii); }
 		}
+		write_file << "\n";
+	}
+}
+
+void WriteFile::WriteFile_(
+	std::string path_,
+	std::vector<std::vector<double> > data_)
+{
+	if (std::ifstream(path_)) { remove(path_.c_str()); }
+	std::ofstream write_file(path_, std::ios::app);
+	for(auto line:data_)
+	{
+		std::string line_tmp;
+		for(auto word:line)
+		{
+			line_tmp += (std::to_string(word) + ",");
+		}
+		line_tmp.erase(line_tmp.size()-1);
+		line_tmp += "\n";
+		write_file << line_tmp;
 	}
 }

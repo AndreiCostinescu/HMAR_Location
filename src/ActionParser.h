@@ -14,68 +14,72 @@
 #include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <memory>
 #include <string>
 #include <vector>
 #include "CGraph.h"
 #include "CKB.h"
 #include "CAS.h"
 
-using namespace std;
-
 class ActionParser
 {
 public:
-	ActionParser();
+	ActionParser(
+			const std::string &obj_,
+			std::shared_ptr<CKB> KB_,
+			std::shared_ptr<std::vector<std::string> > msg_,
+			const std::string &path_);
 	virtual ~ActionParser();
 
-	int ReadMsg(string path_);
-	void SetMsg(vector<string> msg_) { message = msg_; }
+	virtual int ReadMsg(std::string path_);
+	virtual void SetMsg(std::shared_ptr<std::vector<std::string> > msg_) { message = msg_; }
 
-	void Init(
-			string obj_,
-			map<string,pair<int,int> > ac_,
-			vector<string> al_,
-			map<string,map<string,string> > ol_,
-			int delay_);
-	string Decode(string obj_, string loc_, string msg_);
+	virtual void Init(int delay_);
+	virtual std::string Decode(std::string obj_, std::string loc_, std::string msg_);
 
-	void Delay_(CAS *s_);
-	void Parse(CAS *s_);
-	void DT0();
-	void DT1();
-	void DT2_1();
-	void DT2_2();
-	void DT3_1();
-	void DT3_2();
-	void DT4_1(double x_);
-	void DT4_2(vector<double> x_);
-	void Display(string filename_);
+	virtual void Delay_(CAS *s_);
+	virtual void Parse(CAS *s_);
+	virtual void DT0();
+	virtual void DT1();
+	virtual void DT2_1();
+	virtual void DT2_2();
+	virtual void DT3_1();
+	virtual void DT3_2();
+	virtual void DT4_1(double x_);
+	virtual void DT4_2(std::vector<double> x_);
+	virtual void Display(const std::string &filename_);
 
 private:
-	map<string,pair<int,int> > 		ac;
-	vector<string> 					al;
-	map<string,map<string,string> > ol;
+	std::shared_ptr<CKB> KB;
+	std::shared_ptr<std::vector<std::string> > message;
+/*
+	std::map<std::string,std::pair<int,int> > ac;
+	std::vector<std::string> al;
+	std::map<std::string,std::map<std::string,std::string> > ol;
+*/
 
-	vector<string> 	message;
-	vector<int> 	message_num;
+	std::vector<int> 			message_num;
 
-	string 		obj;
-	string 		loc;
-	int			delay_factor;
-	vector<CAS>	state_mem;
-	string 		output;
-	string 		output_mem;
-	string 		label;
-	string 		label_mem;
-	string 		repeat;
-	bool		grasp_flag;
-	bool		start_loc;
+	std::string 		obj;
+	std::string 		loc;
+	int					delay_factor;
+	std::vector<CAS>	state_mem;
+	std::string 		output;
+	std::string 		output_mem;
+	std::string 		label;
+	std::string 		label_mem;
+	std::string 		repeat;
+	bool				grasp_flag;
+	bool				start_loc;
 
-	string o;
-	string l;
-	string a;
+	std::string o;
+	std::string l;
+	std::string a;
 
-	string ob_ac;
+	std::string ob_ac;
+
+
+	std::string msg_path;
 
 	double addFunction (double x, double y) { return fabs(x)+fabs(y); }
 

@@ -13,13 +13,13 @@
 
 TestCase::TestCase() :
 		sub_num(0),
-		file_list(NULL),
-		label_list(NULL),
-		KB(NULL),
-		message(NULL),
-		G(NULL),
-		RF(NULL),
-		WF(NULL)
+		file_list(new std::map<int,std::map<int,std::pair<int,std::string> > >),
+		label_list(new std::map<int,std::vector<std::string> >),
+		KB(new CKB),
+		OS(nullptr),
+		message(new std::vector<std::string>),
+		RF(new ReadFile),
+		WF(new WriteFile)
 {
 
 #ifdef PC
@@ -39,7 +39,7 @@ TestCase::TestCase() :
 #endif
 
 	dict[1] = "CUP";
-	dict[2] = "ORG";
+	dict[2] = "APP";
 	dict[3] = "SPG";
 	dict[4] = "KNF";
 	dict[5] = "PT1";
@@ -64,7 +64,7 @@ printf("========================================================================
 
 void TestCase::Choose(int x_)
 {
-	vector<int> idxs;
+	std::vector<int> idxs;
 
 	switch(x_)
 	{
@@ -74,28 +74,152 @@ void TestCase::Choose(int x_)
 			this->Lbl(idxs);
 			break;
 		}
+		case 100:
+		{
+			PARENT		= "Data1";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Staticface";
+			RESULT		= "Result_Staticface";
+			{
+				idxs.clear();   idxs = {1};
+				this->Trn(idxs, dict[1], false);
+				this->Tst(idxs, dict[1], true, false, false);
+				idxs.clear();   idxs = {2};
+				this->Trn(idxs, dict[2], false);
+				this->Tst(idxs, dict[2], true, false, false);
+				idxs.clear();   idxs = {3,4,5,6,7,8};
+				this->Trn(idxs, dict[3], false);
+				this->Tst(idxs, dict[3], true, false, false);
+				idxs.clear();   idxs = {9};
+				this->Trn(idxs, dict[4], false);
+				this->Tst(idxs, dict[4], true, false, false);
+			}
+			break;
+		}
+		case 200:
+		{
+			PARENT		= "Data1";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Moveface";
+			RESULT		= "Result_Moveface";
+			{
+				idxs.clear();   idxs = {1};
+				this->Trn(idxs, dict[1], true);
+				this->Tst(idxs, dict[1], true, true, false);
+				idxs.clear();   idxs = {2};
+				this->Trn(idxs, dict[2], true);
+				this->Tst(idxs, dict[2], true, true, false);
+				idxs.clear();   idxs = {3,4,5,6,7,8};
+				this->Trn(idxs, dict[3], true);
+				this->Tst(idxs, dict[3], true, true, false);
+				idxs.clear();   idxs = {9};
+				this->Trn(idxs, dict[4], true);
+				this->Tst(idxs, dict[4], true, true, false);
+			}
+			break;
+		}
+		case 300:
+		{
+			PARENT		= "Data1";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Moveface";
+			RESULT		= "Result_ObjectState";
+			{
+				idxs.clear();   idxs = {1};
+				this->Tst(idxs, dict[1], true, true, true);
+				idxs.clear();   idxs = {2};
+				this->Tst(idxs, dict[2], true, true, true);
+				idxs.clear();   idxs = {3,4,5,6,7,8};
+				this->Tst(idxs, dict[3], true, true, true);
+				idxs.clear();   idxs = {9};
+				this->Tst(idxs, dict[4], true, true, true);
+			}
+			break;
+		}
+		case 1000:
+		{
+			PARENT		= "Data2";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Staticface";
+			RESULT		= "Result_Staticface";
+			{
+				idxs.clear();   idxs = {1,2};
+				this->TrnInd(idxs, dict[1], false);
+				this->Tst(idxs, dict[1], true, false, false);
+				idxs.clear();   idxs = {3,4};
+				this->TrnInd(idxs, dict[2], false);
+				this->Tst(idxs, dict[2], true, false, false);
+				idxs.clear();   idxs = {5,6};
+				this->TrnInd(idxs, dict[3], false);
+				this->Tst(idxs, dict[3], true, false, false);
+			}
+			break;
+		}
+		case 2000:
+		{
+			PARENT		= "Data2";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Moveface";
+			RESULT		= "Result_Moveface";
+			{
+				idxs.clear();   idxs = {1,2};
+				this->TrnInd(idxs, dict[1], true);
+				this->Tst(idxs, dict[1], true, true, false);
+				idxs.clear();   idxs = {3,4};
+				this->TrnInd(idxs, dict[2], true);
+				this->Tst(idxs, dict[2], true, true, false);
+				idxs.clear();   idxs = {5,6};
+				this->TrnInd(idxs, dict[3], true);
+				this->Tst(idxs, dict[3], true, true, false);
+			}
+			break;
+		}
+		case 3000:
+		{
+			PARENT		= "Data2";
+			KB_DIR		= "kb";
+			DATA_DIR	= "recording";
+			EVAL		= "Scene_Moveface";
+			RESULT		= "Result_ObjectState";
+			{
+				idxs.clear();   idxs = {1,2};
+				this->Tst(idxs, dict[1], true, true, true);
+				idxs.clear();   idxs = {3,4};
+				this->Tst(idxs, dict[2], true, true, true);
+				idxs.clear();   idxs = {5,6};
+				this->Tst(idxs, dict[3], true, true, true);
+			}
+			break;
+		}
+		/*
 		case 1: // start with 001
 		{
 			idxs = {1};
-			this->TrnIndLA(idxs, dict[1]);
+			this->Trn(idxs, dict[1]);
 			break;
 		}
 		case 2:
 		{
+			PARENT + "/" + EVAL = "Scene_Staticface";
 			idxs = {2};
-			this->TrnIndLA(idxs, dict[2]);
+			this->Trn(idxs, dict[2]);
 			break;
 		}
 		case 3:
 		{
 			idxs = {3,4,5,6,7,8};
-			this->TrnIndLA(idxs, dict[3]);
+			this->Trn(idxs, dict[3]);
 			break;
 		}
 		case 4:
 		{
 			idxs = {9};
-			this->TrnIndLA(idxs, dict[4]);
+			this->Trn(idxs, dict[4]);
 			break;
 		}
 		case 5:
@@ -125,35 +249,36 @@ void TestCase::Choose(int x_)
 		}
 		case 9:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			// start with 001
 			idxs = {1};
-			this->TrnIndLA(idxs, dict[1]);
+			this->Trn(idxs, dict[1]);
 			break;
 		}
 		case 10:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			idxs = {2};
-			this->TrnIndLA(idxs, dict[2]);
+			this->Trn(idxs, dict[2]);
 			break;
 		}
 		case 11:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			idxs = {3,4,5,6,7,8};
-			this->TrnIndLA(idxs, dict[3]);
+			this->Trn(idxs, dict[3]);
 			break;
 		}
 		case 12:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			idxs = {9};
-			this->TrnIndLA(idxs, dict[4]);
+			this->Trn(idxs, dict[4]);
 			break;
 		}
 		case 13:
 		{
+			PARENT + "/" + EVAL = EVAL2;
 			RESULT = RESULT2;
 			// start with 001
 			idxs = {1};
@@ -162,6 +287,7 @@ void TestCase::Choose(int x_)
 		}
 		case 14:
 		{
+			PARENT + "/" + EVAL = EVAL2;
 			RESULT = RESULT2;
 			idxs = {2};
 			this->Tst(idxs, dict[2]);
@@ -169,6 +295,7 @@ void TestCase::Choose(int x_)
 		}
 		case 15:
 		{
+			PARENT + "/" + EVAL = EVAL2;
 			RESULT = RESULT2;
 			idxs = {3,4,5,6,7,8};
 			this->Tst(idxs, dict[3]);
@@ -176,6 +303,7 @@ void TestCase::Choose(int x_)
 		}
 		case 16:
 		{
+			PARENT + "/" + EVAL = EVAL2;
 			RESULT = RESULT2;
 			idxs = {9};
 			this->Tst(idxs, dict[4]);
@@ -183,7 +311,7 @@ void TestCase::Choose(int x_)
 		}
 		case 17:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			idxs = {10};
 			this->TrnInd(idxs, dict[5]);
 			break;
@@ -197,7 +325,7 @@ void TestCase::Choose(int x_)
 		}
 		case 19:
 		{
-			EVAL = EVAL2;
+			PARENT + "/" + EVAL = EVAL2;
 			idxs = {11};
 			this->TrnInd(idxs, dict[6]);
 			break;
@@ -209,6 +337,7 @@ void TestCase::Choose(int x_)
 			this->Tst(idxs, dict[6]);
 			break;
 		}
+		*/
 		default:
 			break;
 	}
@@ -218,40 +347,30 @@ void TestCase::Choose(int x_)
 // TEST CASES
 //=============================================================================
 
-int TestCase::TrnInd(vector<int> idx_, string object_)
+int TestCase::TrnInd(
+		std::vector<int> idx_,
+		std::string object_,
+		bool face_)
 {
 	bool flag;
-	string dir_s, path;
-	pair<int,string> pair_tmp(-1,"");
+	std::string dir_s, path;
+	std::pair<int,std::string> pair_tmp(-1,"");
 
 	printf("==============================================================================\n");
 	printf("|| TrnInd   START                                                           ||\n");
 	printf("==============================================================================\n");
 
-	file_list 	= new map<int,map<int,pair<int,string> > >;
-	label_list	= new map<int,vector<string> >;
-	message		= new vector<string>;
-	KB			= new CKB;
-	RF 			= new ReadFile;
-	WF 			= new WriteFile;
-
-	this->ReadFileExt(idx_, object_);
-
-	Train *T;
+	this->ReadFileExt(idx_, object_, false);
 
 	// Subject
 	for(int f=0;f<sub_num;f++)
 	{
-		T = new Train;
-		T->Init(LOC_INT,SEC_INT,FILTER_WIN);
+		auto T = std::make_shared<Train>(LOC_INT,SEC_INT,FILTER_WIN);
 
-		G = new CGraph;
-		G->SetObject(object_);
-		G->SetLocInt(LOC_INT);
-		G->SetSecInt(SEC_INT);
+		auto G = std::make_shared<CGraph>(object_, LOC_INT, SEC_INT);
 
 		// to check if a LA has already been seen.
-		vector<int> al_tmp_idx; al_tmp_idx.resize(KB->al.size());
+		std::vector<int> al_tmp_idx(KB->AL().size(), 0);
 
 		for(int ff=0;ff<sub_num;ff++)
 		{
@@ -261,25 +380,25 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 				flag = false;
 
 				// create directory if not valid
-				dir_s = EVAL + "/" + object_ + "/" + to_string(f);
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/";
 				directoryCheck(dir_s);
 
 				// read available location areas
-				path = dir_s + "/location_area.txt";
-				RF->ReadFileLA(G,KB->al,path);
+				path = dir_s + "location_area.txt";
+				RF->ReadFileLA(path, KB->AL(), G);
 
-				// action filename pair
+				// action filename std::pair
 				pair_tmp = (*file_list)[ff][fff];
 
 				// for initial labelling
 				if (1)
 				{
-					for(int i=0;i<KB->al.size();i++)
+					for(int i=0;i<KB->AL().size();i++)
 					{
 						if (al_tmp_idx[i]>0) continue;
 						for(int ii=0;ii<(*label_list)[pair_tmp.first].size();ii++)
 						{
-							if (!strcmp(KB->al[i].c_str(),(*label_list)[pair_tmp.first][ii].c_str()))
+							if (!strcmp(KB->AL()[i].c_str(),(*label_list)[pair_tmp.first][ii].c_str()))
 							{
 								flag = true;
 								al_tmp_idx[i] = 1;
@@ -289,32 +408,24 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 				}
 
 				// learning process
-				if (T->Learning(G, KB, pair_tmp.second, path, flag)==EXIT_FAILURE)
+				if (T->Learning(G, KB, pair_tmp.second, path, flag, face_)==EXIT_FAILURE)
 				{ printer(29); return EXIT_FAILURE;	} printer(30);
 
 				// writing location areas data
 				if(G->GetNumberOfNodes()>0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(G, KB, path.c_str());
+					WF->WriteFileLA(G.get(), KB.get(), path.c_str());
 				}
 			}
 		}
 
-		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/graph.txt";
-		WF->WriteFileGraph(G, path);
-		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
-		WF->WriteFileWindow(G,path);
+		path = 	PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/graph.txt";
+		WF->WriteFileGraph(G.get(), path);
+		path = 	PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
+		WF->WriteFileWindow(G.get(),path);
 
-		delete G;
 	}
-
-	delete file_list;
-	delete label_list;
-	delete message;
-	delete KB;
-	delete RF;
-	delete WF;
 
 	printf("==============================================================================\n");
 	printf("|| TrnInd  END                                                              ||\n");
@@ -323,72 +434,62 @@ int TestCase::TrnInd(vector<int> idx_, string object_)
 	return EXIT_SUCCESS;
 }
 
-int TestCase::TrnIndLA(vector<int> idx_, string object_)
+int TestCase::Trn(
+		std::vector<int> idx_,
+		std::string object_,
+		bool face_)
 {
-	bool flag;
-	string dir_s, path;
-	pair<int,string> pair_tmp(-1,"");
+	bool flag_new_label;
+	std::string dir_s, path;
+	std::pair<int,std::string> pair_tmp(-1,"");
 
 	printf("==============================================================================\n");
-	printf("|| TrnIndLA START                                                           ||\n");
+	printf("|| Trn START                                                                ||\n");
 	printf("==============================================================================\n");
 
-	file_list 	= new map<int,map<int,pair<int,string> > >;
-	label_list	= new map<int,vector<string> >;
-	message		= new vector<string>;
-	KB			= new CKB;
-	RF 			= new ReadFile;
-	WF 			= new WriteFile;
-
-	this->ReadFileExt(idx_, object_);
-
-	Train *T;
+	this->ReadFileExt(idx_, object_, false);
 
 	// Subject
 	for(int f=0;f<sub_num;f++)
 	{
-		T = new Train;
-		T->Init(LOC_INT,SEC_INT,FILTER_WIN);
+		auto T = std::make_shared<Train>(LOC_INT, SEC_INT, FILTER_WIN);
 
-		G = new CGraph;
-		G->SetObject(object_);
-		G->SetLocInt(LOC_INT);
-		G->SetSecInt(SEC_INT);
+		auto G = std::make_shared<CGraph>(object_, LOC_INT, SEC_INT);
 
 		// to check if a LA has already been seen.
-		vector<int> al_tmp_idx; al_tmp_idx.resize(KB->al.size());
+		std::vector<int> al_tmp_idx(KB->AL().size(), 0);
 
 		for(int ff=0;ff<sub_num;ff++)
 		{
-			if (f == ff) continue;
+			if (f == ff) { continue; }
 
 			// Data per subject
 			for(int fff=0;fff<(*file_list)[ff].size();fff++)
 			{
-				flag = false;
+				flag_new_label = false;
 
 				// create directory if not valid
-				dir_s = EVAL + "/" + object_ + "/" + to_string(f);
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/";
 				directoryCheck(dir_s);
 
 				// read available location areas
-				path = dir_s + "/location_area.txt";
-				RF->ReadFileLA(G,KB->al,path);
+				path = dir_s + "location_area.txt";
+				RF->ReadFileLA(path,KB->AL(), G);
 
-				// action filename pair
+				// action filename std::pair
 				pair_tmp = (*file_list)[ff][fff];
 
 				// for initial labelling
 				if (1)
 				{
-					for(int i=0;i<KB->al.size();i++)
+					for(int i=0;i<KB->AL().size();i++)
 					{
 						if (al_tmp_idx[i]>0) continue;
-						for(int ii=0;ii<(*label_list)[pair_tmp.first].size();ii++)
+						for(auto label : (*label_list)[pair_tmp.first])
 						{
-							if (!strcmp(KB->al[i].c_str(),(*label_list)[pair_tmp.first][ii].c_str()))
+							if (KB->AL()[i] == label)
 							{
-								flag = true;
+								flag_new_label = true;
 								al_tmp_idx[i] = 1;
 							}
 						}
@@ -396,121 +497,116 @@ int TestCase::TrnIndLA(vector<int> idx_, string object_)
 				}
 
 				// learning process
-				if (T->Learning(G, KB, pair_tmp.second, path, flag)==EXIT_FAILURE)
-				{ printer(29); return EXIT_FAILURE;	} printer(30);
+				if (T->Learning(
+						G, KB, pair_tmp.second, path, flag_new_label,
+						face_)==EXIT_FAILURE)
+				{
+					printer(29);
+					return EXIT_FAILURE;
+				}
+				printer(30);
 
 				// writing location areas data
-				if(G->GetNumberOfNodes()>0)
+				if(G.get()->GetNumberOfNodes()>0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(G, KB, path.c_str());
+					WF->WriteFileLA(G.get(), KB.get(), path.c_str());
 				}
 			}
 		}
 
-		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/graph.txt";
-		WF->WriteFileGraph(G, path);
-		path = 	EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
-		WF->WriteFileWindow(G,path);
+		path = 	PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/graph.txt";
+		WF->WriteFileGraph(G.get(), path);
+		path = 	PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f) + "/window.txt";
+		WF->WriteFileWindow(G.get(),path);
 
-		delete G;
 	}
 
-	delete file_list;
-	delete label_list;
-	delete message;
-	delete KB;
-	delete RF;
-	delete WF;
-
 	printf("==============================================================================\n");
-	printf("|| TrnIndLA END                                                             ||\n");
+	printf("|| Trn END                                                                  ||\n");
 	printf("==============================================================================\n");
 
 	return EXIT_SUCCESS;
 }
 
-int TestCase::Tst(vector<int> idx_, string object_)
+
+int TestCase::Tst(
+		std::vector<int> idx_,
+		std::string object_,
+		bool gauss_,
+		bool face_,
+		bool os_)
 {
-	string dir_s, path;
+	std::string dir_s, path;
+	OS = std::make_shared<COS>();
 
 	printf("==============================================================================\n");
 	printf("|| TST START                                                                ||\n");
 	printf("==============================================================================\n");
 
-	file_list 	= new map<int,map<int,pair<int,string> > >;
-	label_list	= new map<int,vector<string> >;
-	message		= new vector<string>;
-	KB			= new CKB;
-
-	this->ReadFileExt(idx_, object_);
-
-	Test *T;
+	this->ReadFileExt(idx_, object_, os_);
 
 	// Subject
-	for(int f=0;f<sub_num;f++)
+	for(int f=0; f<sub_num; f++)
 	{
-		// directory of learned data of a subject
-		dir_s = EVAL + "/" + object_ + "/" + to_string(f);
+		// directory to parsed message
+		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + to_string(f) + "/ParsedResult/";
+		directoryCheck(dir_s);
 
-		T = new Test;
-		T->Init(LOC_INT, SEC_INT, FILTER_WIN, object_);
+		auto T =
+				std::make_shared<Test>(
+						object_, LOC_INT, SEC_INT, FILTER_WIN, KB, OS, message
+						, dir_s, os_);
 
 		// set parse message
-		T->SetMessage(*message);
-
+		//T->SetMessage(*message);
 		// set kb
-		T->SetKB(KB);
+		//T->SetKB(KB.get());
+		// set os
+		//T->SetOS(OS.get());
+
+		// directory of learned data of a subject
+		dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f);
 
 		// read available location areas
 		path  = dir_s + "/location_area.txt";
-		if (T->ReadLA(path)==EXIT_FAILURE)
-		{return EXIT_FAILURE;}
+		if (T->ReadLA(path)==EXIT_FAILURE) {return EXIT_FAILURE;}
 
-		// read available sector map
+		// read available sector std::map
 		path = 	dir_s + "/graph.txt";
-		if (T->ReadGraph(path)==EXIT_FAILURE)
-		{return EXIT_FAILURE;}
+		if (T->ReadGraph(path)==EXIT_FAILURE) {return EXIT_FAILURE;}
 
 		// apply gauss filter
-		T->ApplyGauss(5,5);
+		if (gauss_) { T->ApplyGauss(5,5); }
 
 		// write window constraint
 		path = 	dir_s + "/window.txt";
-		if (T->WriteWindow(path)==EXIT_FAILURE)
-		{return EXIT_FAILURE;}
+		if (T->WriteWindow(path)==EXIT_FAILURE) {return EXIT_FAILURE;}
 
-		dir_s = RESULT + "/" + object_ + "/";
-		directoryCheck(dir_s);
-		dir_s = RESULT + "/" + object_ + "/" + to_string(f) + "/";
+		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + to_string(f) + "/";
 		directoryCheck(dir_s);
 
 		// Data per subject
-		for(int ff=0;ff<(*file_list)[f].size();ff++)
+		//for(int ff=0;ff<(*file_list)[f].size();ff++)
+		for(auto ff : (*file_list)[f])
 		{
-			// action filename pair
+			// action filename std::pair
 			// pair_tmp = file_list[ff][fff];
 
-			char num[4]; sprintf(num,"%03d",(*file_list)[f][ff].first);
+			char num[4]; sprintf(num,"%03d",ff.second.first);
 
 //			if(strcmp(num,"006")) continue;
+//			if(ff.second.second!="recording/02_Bogdan/001/170419114329.txt") continue;
 
-			path = dir_s + string(num) + "/";
+			path = dir_s + std::string(num) + "/";
 			directoryCheck(path);
 
-			if (T->Testing((*file_list)[f][ff].second, path)==EXIT_FAILURE)
+			if (T->Testing(ff.second.second, path, face_)==EXIT_FAILURE)
 			{ printer(43); return EXIT_FAILURE; }
 			else
 			{ printer(44); }
 		}
-
-		delete T;
 	}
-
-	delete file_list;
-	delete label_list;
-	delete message;
-	delete KB;
 
 	printf("==============================================================================\n");
 	printf("|| TST END                                                                  ||\n");
@@ -519,21 +615,16 @@ int TestCase::Tst(vector<int> idx_, string object_)
 	return EXIT_SUCCESS;
 }
 
-int TestCase::Lbl(vector<int> idx_)
+int TestCase::Lbl(std::vector<int> idx_)
 {
 
 	int n, b, e; n=b=e=0;
-	string path;
+	std::string path;
 
-	map<string, string> label_ref_list;
-	vector<Vector3d> labels_ref;
-	vector<string> labels_ref_name;
+	std::map<std::string, std::string> label_ref_list;
+	std::vector<Vector3d> labels_ref;
+	std::vector<std::string> labels_ref_name;
 
-	file_list 	= new map<int,map<int,pair<int,string> > >;  // subject, file number, action, filename
-	label_list	= new map<int,vector<string> >;
-
-	ReadFile RF;
-	WriteFile WF;
 	DataParser P;
 
 	printf("==============================================================================\n");
@@ -541,35 +632,38 @@ int TestCase::Lbl(vector<int> idx_)
 	printf("==============================================================================\n");
 
 	// Reading label_list
-	path = KB_DIR + "/";
-	if (RF.ReadFileLabel(path, label_list)==EXIT_FAILURE)
+	path = PARENT + "/" + KB_DIR + "/";
+	if (RF->ReadLabelSeq(path, label_list)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
 	// Reading file names for location references of the labels
-	path = "./label/";
-	if (RF.ReadLabelFileName(path, label_ref_list)==EXIT_FAILURE)
+	path = PARENT + "/label/";
+	if (RF->ReadRefLabelFileName(path, label_ref_list)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; }
 
 	// Parsing the data from the reference files
-	typedef map<string, string>::iterator it_type;
+	typedef std::map<std::string, std::string>::iterator it_type;
 	for(it_type itr=label_ref_list.begin();itr!=label_ref_list.end();itr++)
 	{
-		if (RF.ReadFile_(itr->second, ',')==EXIT_FAILURE)
+		if (RF->ReadWord(itr->second, ',')==EXIT_FAILURE)
 		{ return EXIT_FAILURE; } printer(47);
 
 		b = e;
-		e = b + RF.GetDataRF().size();
-		P.SetDataParser(RF.GetDataRF());
+		e = b + RF->GetDataWordRF().size();
+		P.SetDataParser(RF->GetDataWordRF());
 		P.ParseDataNoLabel();
-		vector<Vector4d> tmp = P.GetPointParser();
-		vector<Vector3d> tmp2; tmp2.resize(tmp.size());
+		std::vector<Vector4d> tmp = P.GetPointParser();
+		std::vector<Vector3d> tmp2; tmp2.resize(tmp.size());
 		for(int i=0;i<tmp.size();i++) tmp2[i] = V4d3d(tmp[i]);
 		labels_ref.insert(labels_ref.end(),tmp2.begin(),tmp2.end());
 		for(int i=b;i<e;i++) { labels_ref_name.push_back(itr->first); }
 	}
 
 	// Reading data file name
-	if (RF.ReadFileName(DATA_DIR, idx_, file_list, n)==EXIT_FAILURE)
+	if (
+			RF->ReadFileName(
+					std::string(PARENT + "/" + DATA_DIR),
+					idx_, file_list.get(), n) == EXIT_FAILURE)
 	{ return EXIT_FAILURE; } printer(26);
 
 	// Subject
@@ -578,14 +672,14 @@ int TestCase::Lbl(vector<int> idx_)
 		// Data per subject
 		for(int ff=0;ff<(*file_list)[f].size();ff++)
 		{
-			if (RF.ReadFile_((*file_list)[f][ff].second, ',')==EXIT_FAILURE)
+			if (RF->ReadWord((*file_list)[f][ff].second, ',')==EXIT_FAILURE)
 			{ return EXIT_FAILURE; } printer(8);
 
-			P.SetDataParser(RF.GetDataRF());
+			P.SetDataParser(RF->GetDataWordRF());
 			P.ParseDataNoLabel();
-			WF.RewriteDataFile(
+			WF->RewriteDataFile(
 				(*file_list)[f][ff].second,
-				RF.GetDataRF(),
+				RF->GetDataWordRF(),
 				P.GetPointParser(),
 				P.GetContactParser(),
 				P.GetFaceParser(),
@@ -598,9 +692,9 @@ int TestCase::Lbl(vector<int> idx_)
 			if (0)
 			{
 				VTKExtra *VTK = new VTKExtra(LOC_INT,SEC_INT);
-				vector<vector<unsigned char> > color_code; VTK->ColorCode(color_code);
-				vector<string>  goal_action, al; goal_action.resize(5);
-				vector<int> 	loc_idx_zero;
+				std::vector<std::vector<unsigned char> > color_code; VTK->ColorCode(color_code);
+				std::vector<std::string>  goal_action, al; goal_action.resize(5);
+				std::vector<int> 	loc_idx_zero;
 				VTK->ShowData(
 						P.GetPointParser(), goal_action, al,
 						loc_idx_zero, color_code, true, false, false);
@@ -613,43 +707,51 @@ int TestCase::Lbl(vector<int> idx_)
 	printf("|| LABELLING END                                                            ||\n");
 	printf("==============================================================================\n");
 
-	delete file_list;
-	delete label_list;
-
 	return EXIT_SUCCESS;
 }
 
-int TestCase::ReadFileExt(vector<int> idx_, string object_)
+int TestCase::ReadFileExt(
+		const std::vector<int> &idx_,
+		const std::string &object_,
+		bool os_)
 {
-	string path;
-
-	// Reading data filenames
+	std::string path;
 	ReadFile RF;
-	path = DATA_DIR;
-	if (RF.ReadFileName(path, idx_, file_list, sub_num)==EXIT_FAILURE)
+
+	/* Reading data filenames */
+	path = PARENT + "/" + DATA_DIR;
+	if (RF.ReadFileName(path, idx_, file_list.get(), sub_num)==EXIT_FAILURE)
 	{ return EXIT_FAILURE; } printer(26);
 
-	// Reading action sequence label
-	path = KB_DIR + "/label.txt";
-	if (RF.ReadFileLabel(path, label_list)==EXIT_FAILURE)
+	/* Reading action sequence label */
+	path = PARENT + "/" + KB_DIR + "/";
+	if (RF.ReadLabelSeq(path, label_list)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 
-	// Reading surface
-	// Reading action labels
-	// - reads the labels and initializes a zero list prediction/filter with the same length as the label
-	// Reading object specific labels
-	// - reads the object specific labels and saves them
-	path = KB_DIR + "/";
+	/* Reading surface
+	 * Reading action labels
+	 * - reads the labels and initializes a zero list prediction/filter with the same length as the label
+	 * Reading object specific labels
+	 * - reads the object specific labels and saves them */
+	path = PARENT + "/" + KB_DIR + "/";
 	if (RF.ReadFileKB(path, KB)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 
-	// read parse message
-	path =  KB_DIR + "/message.txt";
+	/* read object state if needed */
+	if (os_)
+	{
+		path = PARENT + "/" + KB_DIR + "/";
+		if (RF.ReadFileOS(path, OS)==EXIT_FAILURE)
+		{return EXIT_FAILURE;}
+	}
+
+	/* read parse message */
+	path = PARENT + "/" + KB_DIR + "/";
 	if (RF.ReadMsg(path, message)==EXIT_FAILURE)
 	{return EXIT_FAILURE;}
 
-	// Check if data was trained.
-	directoryCheck(EVAL + "/" + object_);
+	/* Check if data was trained */
+	directoryCheck(PARENT + "/" + EVAL + "/" + object_ + "/");
 
 	return EXIT_SUCCESS;
 }

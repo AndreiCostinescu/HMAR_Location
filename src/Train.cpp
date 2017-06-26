@@ -7,72 +7,63 @@
 
 #include "Train.h"
 
-Train::Train() : 	VTK(NULL),
-					RF(NULL),
-					WF(NULL),
-					DF(NULL),
-					pvas(NULL),
-					contacts(NULL),
-					loc_int(-1),
-					sec_int(-1),
-					f_win(-1)
+Train::Train(
+		const int &loc_int_,
+		const int &sec_int_,
+		const int &f_win_)
+		:	TrainLA(loc_int_, sec_int_),
+			TrainSM(loc_int_, sec_int_),
+			DF(new DataFilter()),
+			RF(new ReadFile()),
+			WF(new WriteFile()),
+			loc_int(loc_int_),
+			sec_int(sec_int_),
+			f_win(f_win_)
 {
 }
-Train::~Train() { }
 
-int Train::Init(
-		int loc_int_,
-		int sec_int_,
-		int f_win_)
-{
-	this->InitLA(loc_int_,sec_int_,f_win_);
-	this->InitSM(loc_int_,sec_int_,f_win_);
-	loc_int = loc_int_;
-	sec_int = sec_int_;
-	f_win 	= f_win_;
-	return EXIT_SUCCESS;
-}
+Train::~Train() {}
 
 int Train::Learning(
-		CGraph *G_,
-		CKB *KB_,
-		string filename_,
-		string path_LA_,
-		bool flag_)
+		std::shared_ptr<CGraph> G_,
+		std::shared_ptr<CKB> KB_,
+		const std::string &filename_,
+		const std::string &path_LA_,
+		bool new_label_,
+		bool face_)
 {
 	// [VARIABLES]*************************************************************
-	RF = new ReadFile;
-	pvas = new vector<vector<Vector4d> >; // length->motion
-	contacts = new vector<int>;
-	vector<Vector4d> pva; pva.clear(); pva.resize(3);
+	std::vector<Eigen::Vector4d> pva(3, Eigen::Vector4d::Zero());
 	int contact;
 	printer(1);
 	// *************************************************************[VARIABLES]
 
 	// [READ FILE]*************************************************************
-	if (RF->ReadFile_(filename_,',')==EXIT_FAILURE)
+	if (RF->ReadWord(filename_,',')==EXIT_FAILURE)
 	{ return EXIT_FAILURE;	} printer(8);
 	// *************************************************************[READ FILE]
 
 	// [PARSE DATA]************************************************************
 	this->ClearParser();
-	this->SetDataParser(RF->GetDataRF());
+	this->SetDataParser(RF->GetDataWordRF());
 	if (this->ParseDataNoLabel()==EXIT_FAILURE) {return EXIT_FAILURE;}
 	printer(9);
 	// ************************************************************[PARSE DATA]
 
 	// [FACE ADJUST]***********************************************************
-	if (0)
+	if (face_)
 	{
-		face_parser -= Vector4d(0,0.15,0,1);
+//		face_parser -= Eigen::Vector4d(0, 0.15, 0, 1);
+		face_parser[1] *= -1;
+		face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
 		// When a graph is present.
 		if(G_->GetNumberOfNodes()>0)
 		{
 			// Initialize.
 			double scale = 1.0;
-			Vector3d t;
-			Matrix3d R;
-			Matrix4d T = Matrix4d::Zero();
+			Eigen::Vector3d t;
+			Eigen::Matrix3d R;
+			Eigen::Matrix4d T = Matrix4d::Zero();
 			CGraph::node_t old_node;
 			CGraph::edge_t edge_tmp;
 
@@ -99,7 +90,7 @@ int Train::Learning(
 								rodriguezRot(
 										V4d3d(old_node.centroid - G_->GetNode(ii).centroid),
 										V4d3d(face_parser		- G_->GetNode(ii).centroid));
-						T = Matrix4d::Zero();
+						T = Eigen::Matrix4d::Zero();
 						T.block<3,3>(0,0) = R;
 						T(3,3) = scale;
 
@@ -135,7 +126,7 @@ int Train::Learning(
 								V4d3d(G_->GetNode(ii).centroid - face_parser).norm() /
 								V4d3d(G_->GetNode(ii).centroid - old_node.centroid).norm();
 
-						T = Matrix4d::Zero();
+						T = Eigen::Matrix4d::Zero();
 						T.block<3,3>(0,0) = R;
 						T(3,3) = scale;
 
@@ -159,8 +150,11 @@ int Train::Learning(
 	}
 	// ********************************************************** [FACE ADJUST]
 
+
 	// [PREPROCESS DATA] ******************************************************
-	DataFilter *DF = new DataFilter;
+	auto pvas = std::make_shared<std::vector<std::vector<Eigen::Vector4d> > >(); // length->motion
+	auto contacts = std::make_shared<std::vector<int> >();
+
 	DF->ResetFilter();
 	for(int ii=0;ii<points_parser.size();ii++)
 	{
@@ -169,13 +163,12 @@ int Train::Learning(
 		pvas->push_back(pva);
 		contacts->push_back(contact);
 	}
-	delete DF;
 	printer(10);
 	// ****************************************************** [PREPROCESS DATA]
 
 	// [LOCATION AND SECTOR-MAP]***********************************************
 	this->ClearLA();
-	this->BuildLocationArea(G_, KB_, *pvas, contacts, flag_);
+	this->BuildLocationArea(G_, KB_, pvas, contacts, new_label_);
 	printer(11);
 	this->ClearSM();
 	this->BuildSectorMap   (G_, KB_, pvas, contacts);
@@ -185,20 +178,15 @@ int Train::Learning(
 	// Visualize
 	if (0)
 	{
-		VTK = new VTKExtra (loc_int, sec_int);
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
 		vector<Vector4d> point_zero; vector<string> label_zero;
 		for(int i=0;i<G_->GetNumberOfNodes();i++)
 		{ label_zero.push_back(G_->GetNode(i).name); }
 //		for(int ii=0;ii<pva_avg.size();ii++) point_zero.push_back(pva_avg[ii][0]);
 		vector<vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		VTK->ShowConnectionTest(G_, point_zero, label_zero, color_code, true);
-		delete VTK;
+		VTK->ShowConnectionTest(G_.get(), point_zero, label_zero, color_code, true);
 	}
-
-	delete RF;
-	delete pvas;
-	delete contacts;
 
 	return EXIT_SUCCESS;
 }

@@ -16,65 +16,58 @@ Evaluate::Evaluate() : 	label1_eval(-1),
 
 Evaluate::~Evaluate() {}
 
-int Evaluate::UpdateStateNode(CGraph *G_, CAS *AS_)
+int Evaluate::UpdateStateNode(
+		const CGraph &G_,
+		CAS &AS_)
 {
-	AS_->vel = vel_eval;
-	AS_->surface_dist = surface_dist_eval;
+	AS_.Velocity(vel_eval);
+	AS_.SurfaceDistance(surface_dist_eval);
 	return EXIT_SUCCESS;
 }
 
-int Evaluate::UpdateStateEdge(CGraph *G_, CAS *AS_)
+int Evaluate::UpdateStateEdge(
+		const CGraph &G_,
+		CAS &AS_)
 {
-	double max_val = *max_element(pct_err_eval.begin(), pct_err_eval.end());
+	auto minmax = std::minmax_element(pct_eval.begin(), pct_eval.end());
 
-	if (max_val<=0)
+	if (*minmax.second<=0)
 	{
-		AS_->pct_err		= 0.0;
-		AS_->surface_flag	= 0;
-		AS_->surface_name	= "";
+		AS_.Probability(0.0);
+		AS_.SurfaceFlag(0);
+		AS_.SurfaceName("");
 	}
 	else
 	{
-		AS_->pct_err = max_val;
-		int idx =
-					distance(
-							pct_err_eval.begin(),
-							max_element(
-									pct_err_eval.begin(),
-									pct_err_eval.end()));
+		AS_.Probability(*minmax.second);
+		auto max_idx = minmax.second - pct_eval.begin();
 
 		// Saving the LA as integers instead of string.
-		int c= 0;
-		for(int i=0;i<al_eval.size();i++)
+		int c=0, cc=0;
+		for(auto i : al_eval)
 		{
-			if (!strcmp(
-					G_->GetNode(label1_eval).name.c_str(),
-					al_eval[i].c_str()))
-			{
-				AS_->label1 = i;
-				c++;
-			}
-			if (!strcmp(
-					G_->GetNode(idx).name.c_str(),
-					al_eval[i].c_str()))
-			{
-				AS_->label2 = i;
-				c++;
-			}
+			if (G_.GetNode(label1_eval).name==i) { AS_.Label1(cc); c++; }
+			if (G_.GetNode(max_idx).name==i) 	 { AS_.Label2(cc); c++; }
 			if (c==2) break;
+			cc++;
 		}
 
-		AS_->surface_flag = G_->GetNode(idx).surface_flag;
-		AS_->surface_name = G_->GetNode(idx).name;
+		AS_.SurfaceFlag(G_.GetNode(max_idx).surface_flag);
+		AS_.SurfaceName(G_.GetNode(max_idx).name);
 	}
 
-	AS_->vel = vel_eval;
+	AS_.Velocity(vel_eval);
 
-	for(int i=0;i<G_->GetNumberOfNodes();i++)
+	int c=0;
+	auto g = AS_.Goal();
+	auto w = AS_.Window();
+	for(auto i : G_.GetNodeList())
 	{
-		AS_->goal  [G_->GetNode(i).name] = pct_err_eval[i];
-		AS_->window[G_->GetNode(i).name] = win_eval[i];
+		g[i.name] = pct_eval[c];
+		w[i.name] = win_eval[c];
+		c++;
 	}
-
+	AS_.Goal(g);
+	AS_.Window(w);
 	return EXIT_SUCCESS;
 }

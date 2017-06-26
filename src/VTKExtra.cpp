@@ -6,6 +6,8 @@
  *      Detail: For viewing purposes.
  ******************************************************************************/
 
+//#define SAVING_IMAGE
+
 #define DOC_DIR "/home/chen/HMAR/HMAR_Location/doc/"
 
 #include "VTKExtra.h"
@@ -18,32 +20,6 @@ VTKExtra::VTKExtra(
 }
 
 VTKExtra::~VTKExtra() { }
-
-void VTKExtra::ArrayTovector(
-		unsigned char *A,
-		int size,
-		vector<unsigned char> &B)
-{
-	B.clear();
-	B.resize(size);
-	for(int i=0;i<size;i++) { B[i] = A[i]; }
-}
-
-void VTKExtra::vectorToArray(
-		vector<unsigned char> A,
-		unsigned char *B)
-{
-	for(int i=0;i<A.size();i++) { B[i] = A[i]; }
-}
-
-Vector3d VTKExtra::RodriguesVec(
-	AngleAxisd aa_,
-	Vector3d vec_)
-{
-	return 	(vec_*cos(aa_.angle())) +
-			((aa_.axis()).cross(vec_)*sin(aa_.angle())) +
-			(aa_.axis()*((aa_.axis()).dot(vec_))*(1-cos(aa_.angle())));
-}
 
 /*******************************************************************************
  * KEYBOARD
@@ -62,7 +38,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     {
       // Get the key press
       vtkRenderWindowInteractor *rwi = this->Interactor;
-      string key = rwi->GetKeySym();
+      std::string key = rwi->GetKeySym();
 
       // Handle an arrow key
       if(key == "l")
@@ -75,7 +51,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     		exp->SetSortToSimple();
     		exp->TextAsPathOn();
     		exp->DrawBackgroundOn();
-    		exp->SetFilePrefix((string(DOC_DIR) + "LA_drink").c_str());
+    		exp->SetFilePrefix((std::string(DOC_DIR) + "LA_drink").c_str());
     		exp->Write();
       }
 
@@ -89,7 +65,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     		exp->SetSortToSimple();
     		exp->TextAsPathOn();
     		exp->DrawBackgroundOn();
-    		exp->SetFilePrefix((string(DOC_DIR) + "SM_drink").c_str());
+    		exp->SetFilePrefix((std::string(DOC_DIR) + "SM_drink").c_str());
     		exp->Write();
       }
 
@@ -123,17 +99,17 @@ class customMouseInteractorStyle : public vtkInteractorStyleTrackballCamera
 
 		void SetLeftButton(int option_)	{left_click_ = option_;}
 
-		void SetColors(vector<vector<unsigned char> > color) {color_ = color;}
+		void SetColors(std::vector<std::vector<unsigned char> > color) {color_ = color;}
 
-		void SetLabels(vector<string> label_) {label = label_;}
+		void SetLabels(std::vector<std::string> label_) {label = label_;}
 
-		void SetRefLabels(vector<string> label_) {label_ref = label_;}
+		void SetRefLabels(std::vector<std::string> label_) {label_ref = label_;}
 
-		void SetLocations(vector<int> x) {location = x;}
+		void SetLocations(std::vector<int> x) {location = x;}
 
-		vector<string> GetLabels() {return label;}
+		std::vector<std::string> GetLabels() {return label;}
 
-		vector<int> GetLocations() {return location;}
+		std::vector<int> GetLocations() {return location;}
 
 		void SetNumberOfLabels(int x) {num_locations = x;}
 
@@ -156,10 +132,10 @@ class customMouseInteractorStyle : public vtkInteractorStyleTrackballCamera
 	private:
 		int 							num_locations;
 		int								left_click_;
-		vector<int> 					location;
-		vector<string> 					label;
-		vector<string> 					label_ref;
-		vector<vector<unsigned char> > 	color_;
+		std::vector<int> 					location;
+		std::vector<std::string> 					label;
+		std::vector<std::string> 					label_ref;
+		std::vector<std::vector<unsigned char> > 	color_;
 
 		void writeText(
 			const char* text,
@@ -196,13 +172,13 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 					rgb[1]==color_[i+1][1] &&
 					rgb[2]==color_[i+1][2])
 				{
-					for(int ii=0;ii<7;ii++)
+					for(int ii=0;ii<label_ref.size();ii++)
 					{
 						printf(">>>>> %d %s\n", ii, label_ref[ii].c_str());
 					}
 					printf(">>>>> Select label from list by entering the number : ");
-					string mystr; getline (cin, mystr);
-					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) > 6)
+					std::string mystr; getline (cin, mystr);
+					if (atoi(mystr.c_str()) < 0 || atoi(mystr.c_str()) > label_ref.size()-1)
 					{
 						printf(VTKCYEL ">>>>> [WARNING] : Please choose only from the listed numbers.\n" VTKCNOR);
 						printf(">>>>> Pick a location with color.");
@@ -219,7 +195,7 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 						printf(">>>>> ");
 						while(1)
 						{
-							string mystr2; getline (cin, mystr2);
+							std::string mystr2; getline (cin, mystr2);
 							if(!strcmp(mystr2.c_str(),"Y"))
 							{
 								printf(VTKCYEL ">>>>> [WARNING] : Label has been overwritten. New label : %s\n" VTKCNOR, label_ref[atoi(mystr.c_str())].c_str());
@@ -256,7 +232,7 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 					flag = false;
 					printf(VTKCYEL ">>>>> [WARNING] : Label has been fully labeled. Proceed? [Y/N]\n" VTKCNOR);
 					printf(">>>>> ");
-					string mystr3; getline (cin, mystr3);
+					std::string mystr3; getline (cin, mystr3);
 					if(!strcmp(mystr3.c_str(),"Y"))
 					{
 						this->GetInteractor()->TerminateApp();
@@ -299,7 +275,7 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 				{
 					printf(">>>>> Delete label? [Y/N]\n");
 					printf(">>>>> ");
-					string mystr; getline (cin, mystr);
+					std::string mystr; getline (cin, mystr);
 					while(1)
 					{
 						if(!strcmp(mystr.c_str(),"Y"))
@@ -351,7 +327,7 @@ vtkStandardNewMacro(customMouseInteractorStyle);
  ******************************************************************************/
 
 void VTKExtra::ColorCode(
-	vector<vector<unsigned char> > &container_)
+	std::vector<std::vector<unsigned char> > &container_)
 {
 	int N = 1;
 	container_.clear();
@@ -371,18 +347,18 @@ void VTKExtra::ColorCode(
 	unsigned char cpr[]  = {255, 0, 127};
 	for(int i=0;i<N;i++)
 	{
-		ArrayTovector(cw,	3,	container_[12*i+0]);
-		ArrayTovector(cy, 	3, 	container_[12*i+1]);
-		ArrayTovector(co, 	3, 	container_[12*i+2]);
-		ArrayTovector(cr, 	3, 	container_[12*i+3]);
-		ArrayTovector(cc, 	3,	container_[12*i+4]);
-		ArrayTovector(cpb, 	3, 	container_[12*i+5]);
-		ArrayTovector(cgb, 	3, 	container_[12*i+6]);
-		ArrayTovector(clb, 	3, 	container_[12*i+7]);
-		ArrayTovector(cb, 	3, 	container_[12*i+8]);
-		ArrayTovector(cg, 	3, 	container_[12*i+9]);
-		ArrayTovector(clg, 	3, 	container_[12*i+10]);
-		ArrayTovector(cpr, 	3, 	container_[12*i+11]);
+		this->arrayTovector(cw,  3, container_[12*i+0]);
+		this->arrayTovector(cy,  3, container_[12*i+1]);
+		this->arrayTovector(co,  3, container_[12*i+2]);
+		this->arrayTovector(cr,  3, container_[12*i+3]);
+		this->arrayTovector(cc,  3, container_[12*i+4]);
+		this->arrayTovector(cpb, 3, container_[12*i+5]);
+		this->arrayTovector(cgb, 3, container_[12*i+6]);
+		this->arrayTovector(clb, 3, container_[12*i+7]);
+		this->arrayTovector(cb,  3, container_[12*i+8]);
+		this->arrayTovector(cg,  3, container_[12*i+9]);
+		this->arrayTovector(clg, 3, container_[12*i+10]);
+		this->arrayTovector(cpr, 3, container_[12*i+11]);
 	}
 }
 
@@ -391,9 +367,9 @@ void VTKExtra::ColorCode(
  ******************************************************************************/
 
 vtkSmartPointer<vtkPolyDataMapper> VTKExtra::DataPoints(
-	vector<Vector4d> points_,
+	std::vector<Eigen::Vector4d> points_,
 	int num_locations_,
-	vector<vector<unsigned char> > color_,
+	std::vector<std::vector<unsigned char> > color_,
 	bool cluster_)
 {
 	int num_locations = num_locations_;
@@ -446,7 +422,7 @@ vtkSmartPointer<vtkPolyDataMapper> VTKExtra::DataPoints(
 	{
 		colors->SetNumberOfComponents(3);
 		colors->SetName ("Colors");
-		vector<unsigned char*> color_tmp; color_tmp.resize(color_.size());
+		std::vector<unsigned char*> color_tmp; color_tmp.resize(color_.size());
 		for(int i=0;i<color_.size();i++)
 		{
 			color_tmp[i] = new unsigned char[3];
@@ -477,34 +453,30 @@ vtkSmartPointer<vtkPolyDataMapper> VTKExtra::DataPoints(
 }
 
 void VTKExtra::ShowData(
-	vector<Vector4d> points_,
-	vector<string> &labels_,
-	vector<string> labels_ref_,
-	vector<int> &loc_idx_,
-	vector<vector<unsigned char> > color_,
+	std::vector<Eigen::Vector4d> points_,
+	std::vector<std::string> &labels_,
+	std::vector<std::string> labels_ref_,
+	std::vector<int> &loc_idx_,
+	std::vector<std::vector<unsigned char> > color_,
 	bool cluster_,
 	bool labeling_,
 	bool deleting_)
 {
 	int num_locations = labels_.size();
 
-	vtkSmartPointer<vtkPolyDataMapper>			mapper;
 	vtkSmartPointer<vtkActor> 					actor;
 	vtkSmartPointer<vtkRenderer> 				renderer;
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
-	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
 	vtkSmartPointer<vtkTextActor> 				textActor;
 	vtkSmartPointer<vtkCamera>					camera;
 
-//	mapper 			= vtkSmartPointer<vtkPolyDataMapper>::New();
 	actor 			= vtkSmartPointer<vtkActor>::New();
 	renderer 		= vtkSmartPointer<vtkRenderer>::New();
 	renWin 			= vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter 	= vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	style 			= vtkSmartPointer<customMouseInteractorStyle>::New();
-	style2			= vtkSmartPointer<KeyPressInteractorStyle>::New();
 //	textActor 		= vtkSmartPointer<vtkTextActor>::New();
 	camera 			= vtkSmartPointer<vtkCamera>::New();
 
@@ -566,9 +538,13 @@ void VTKExtra::ShowData(
 	style->SetColors(color_);
 	renWinInter->SetInteractorStyle( style );
 
+#ifdef SAVING_IMAGE
+	vtkSmartPointer<KeyPressInteractorStyle> style2
+			= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
+#endif
 
 	renWin->Render();
 	renWinInter->Start();
@@ -583,18 +559,18 @@ void VTKExtra::ShowData(
 
 void VTKExtra::ShowConnection(
 	CGraph *Graph_,
-	vector<Vector4d> points_,
-	vector<string> &labels_,
-	vector<vector<unsigned char> > color_,
+	std::vector<Eigen::Vector4d> points_,
+	std::vector<std::string> &labels_,
+	std::vector<std::vector<unsigned char> > color_,
 	bool Show_points)
 {
 	// [VARIABLES]*************************************************************
-	vector<CGraph::node_t> nodes = Graph_->GetNodeList();
-	vector<vector<vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
+	std::vector<CGraph::node_t> nodes = Graph_->GetNodeList();
+	std::vector<std::vector<std::vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
 
 	int num_locations = nodes.size();
 
-	vector<Vector3d> locations; locations.resize(num_locations);
+	std::vector<Eigen::Vector3d> locations; locations.resize(num_locations);
 	for(int i=0;i<num_locations;i++)
 	{ locations[i] = V4d3d(nodes[i].centroid); }
 
@@ -613,11 +589,9 @@ void VTKExtra::ShowConnection(
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
-	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
 	// *************************************************************[VARIABLES]
 
 	style 		= vtkSmartPointer<customMouseInteractorStyle>::New();
-	style2		= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	renderer    = vtkSmartPointer<vtkRenderer>::New();
 	renWin      = vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -650,9 +624,9 @@ void VTKExtra::ShowConnection(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		AngleAxisd aa;
-		Vector3d Ntmp[2], Nmax[2], init, beg, end;
-		init = Vector3d::Zero();
+		Eigen::AngleAxisd aa;
+		Eigen::Vector3d Ntmp[2], Nmax[2], init, beg, end;
+		init = Eigen::Vector3d::Zero();
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
@@ -661,7 +635,7 @@ void VTKExtra::ShowConnection(
 		{
 			aa.angle() = (double)(2*M_PI*(0)/sec);
 			aa.axis()  = edges[n1][n2][0].tan[l];
-			Ntmp[0] = RodriguesVec(aa, edges[n1][n2][0].nor[l]);
+			Ntmp[0] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 			Nmax[0] = Ntmp[0] * edges[n1][n2][0].sector_map[l*sec+0];
 
 			beg =
@@ -680,7 +654,7 @@ void VTKExtra::ShowConnection(
 			{
 				int s_tmp = (s+1)%sec;
 				aa.angle() = (double)(2*M_PI*(s_tmp)/sec);
-				Ntmp[s_tmp%2] = RodriguesVec(aa, edges[n1][n2][0].nor[l]);
+				Ntmp[s_tmp%2] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 				Nmax[s_tmp%2] =
 						Ntmp[s_tmp%2] * edges[n1][n2][0].sector_map[l*sec+s];
 //				if(edges[n1][n2][0].sector_map[l*sec+s]>0)
@@ -796,10 +770,14 @@ void VTKExtra::ShowConnection(
 	renderer->SetBackground(0.0,0.0,0.0);
 	renWinInter->SetInteractorStyle(style);
 
+#ifdef SAVING_IMAGE
+	vtkSmartPointer<KeyPressInteractorStyle> style2
+			= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	style2->SetWin(renWin);
 	style2->SetWinInter(renWinInter);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
+#endif
 
 	renWin->Render();
 	renWinInter->Start();
@@ -807,18 +785,18 @@ void VTKExtra::ShowConnection(
 
 void VTKExtra::ShowConnectionTest(
 	CGraph *Graph_,
-	vector<Vector4d> points_,
-	vector<string> &labels_,
-	vector<vector<unsigned char> > color_,
+	std::vector<Eigen::Vector4d> points_,
+	std::vector<std::string> &labels_,
+	std::vector<std::vector<unsigned char> > color_,
 	bool Show_points)
 {
 	// [VARIABLES]*************************************************************
-	vector<CGraph::node_t> nodes = Graph_->GetNodeList();
-	vector<vector<vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
+	std::vector<CGraph::node_t> nodes = Graph_->GetNodeList();
+	std::vector<std::vector<std::vector<CGraph::edge_t> > > edges = Graph_->GetListOfEdges();
 
 	int num_locations = nodes.size();
 
-	vector<Vector3d> locations; locations.resize(num_locations);
+	std::vector<Eigen::Vector3d> locations; locations.resize(num_locations);
 	for(int i=0;i<num_locations;i++)
 	{ locations[i] = V4d3d(nodes[i].centroid); }
 
@@ -828,13 +806,11 @@ void VTKExtra::ShowConnectionTest(
 	vtkSmartPointer<vtkRenderWindow> 			renWin;
 	vtkSmartPointer<vtkRenderWindowInteractor> 	renWinInter;
 	vtkSmartPointer<customMouseInteractorStyle> style;
-	vtkSmartPointer<KeyPressInteractorStyle> 	style2;
 	vtkSmartPointer<vtkPolyDataMapper> mapper;
 	vtkSmartPointer<vtkActor> actor;
 	// *************************************************************[VARIABLES]
 
 	style 		= vtkSmartPointer<customMouseInteractorStyle>::New();
-	style2		= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	renderer    = vtkSmartPointer<vtkRenderer>::New();
 	renWin      = vtkSmartPointer<vtkRenderWindow>::New();
 	renWinInter = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -867,9 +843,9 @@ void VTKExtra::ShowConnectionTest(
 		int n1  = i/num_locations;
 		int n2  = i%num_locations;
 
-		AngleAxisd aa;
-		Vector3d Ntmp[2], Nmax[2], init, beg, end;
-		init = Vector3d::Zero();
+		Eigen::AngleAxisd aa;
+		Eigen::Vector3d Ntmp[2], Nmax[2], init, beg, end;
+		init = Eigen::Vector3d::Zero();
 //		init = sector[i][0].loc_start[0];
 
 		vtkIdType ID[4];
@@ -878,7 +854,7 @@ void VTKExtra::ShowConnectionTest(
 		{
 			aa.angle() = (double)(2*M_PI*(0)/sec);
 			aa.axis()  = edges[n1][n2][0].tan[l];
-			Ntmp[0] = RodriguesVec(aa, edges[n1][n2][0].nor[l]);
+			Ntmp[0] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 			Nmax[0] = Ntmp[0] * edges[n1][n2][0].sector_map[l*sec+0];
 
 			beg =
@@ -898,7 +874,7 @@ void VTKExtra::ShowConnectionTest(
 				int s_tmp = (s+1)%sec;
 				aa.angle() = (double)(2*M_PI*(s_tmp)/sec);
 				aa.axis()  = edges[n1][n2][0].tan[l];
-				Ntmp[s_tmp%2] = RodriguesVec(aa, edges[n1][n2][0].nor[l]);
+				Ntmp[s_tmp%2] = rodriguezVec(aa, edges[n1][n2][0].nor[l]);
 				Nmax[s_tmp%2] =
 						Ntmp[s_tmp%2] * edges[n1][n2][0].sector_map[l*sec+s];
 				pointspoly->InsertPoint(
@@ -1027,9 +1003,13 @@ void VTKExtra::ShowConnectionTest(
 	renderer->SetBackground(0.0,0.0,0.0);
 	renWinInter->SetInteractorStyle(style);
 
+#ifdef SAVING_IMAGE
+	vtkSmartPointer<KeyPressInteractorStyle> style2
+			= vtkSmartPointer<KeyPressInteractorStyle>::New();
 	style2->SetWin(renWin);
     style2->SetCurrentRenderer(renderer);
 	renWinInter->SetInteractorStyle( style2 );
+#endif
 
 	renWin->Render();
 	renWinInter->Start();
@@ -1043,8 +1023,8 @@ void VTKExtra::ShowConnectionTest(
 
 
 void VTKExtra::PlotData(
-	vector<double> x,
-	vector<double> y)
+	std::vector<double> x,
+	std::vector<double> y)
 {
 	vtkSmartPointer<vtkTable> 		table;
 	vtkSmartPointer<vtkFloatArray> 	arrX;
@@ -1106,10 +1086,10 @@ void VTKExtra::PlotData(
 }
 
 void VTKExtra::PlotData(
-	vector<double> x,
-	vector<double> y,
-	vector<double> x2,
-	vector<double> y2)
+	std::vector<double> x,
+	std::vector<double> y,
+	std::vector<double> x2,
+	std::vector<double> y2)
 {
 	vtkSmartPointer<vtkTable> 		table;
 	vtkSmartPointer<vtkFloatArray> 	arrX;
@@ -1184,9 +1164,9 @@ void VTKExtra::PlotData(
 }
 
 void VTKExtra::PlotDatas(
-	vector<string> title,
-	vector<double> x,
-	vector<vector<vector<double> > > y)
+	std::vector<std::string> title,
+	std::vector<double> x,
+	std::vector<std::vector<std::vector<double> > > y)
 {
 	vtkSmartPointer<vtkTable> 		table;
 	vtkSmartPointer<vtkFloatArray> 	arrX;
@@ -1200,7 +1180,7 @@ void VTKExtra::PlotDatas(
 	view->GetRenderer()->SetBackground(1.0, 1.0, 1.0);
 	view->GetRenderer()->GetRenderWindow()->SetSize(1600,800); //(width, height)
 
-	vector<vector<unsigned char> > cc; this->ColorCode(cc);
+	std::vector<std::vector<unsigned char> > cc; this->ColorCode(cc);
 
 	for(int i=0;i<title.size();i++)
 	{
@@ -1224,7 +1204,7 @@ void VTKExtra::PlotDatas(
 		for(int ii=0;ii<y[i].size();ii++)
 		{
 			arrY = vtkSmartPointer<vtkFloatArray>::New();
-			arrY->SetName(string("Y" + to_string(ii+1) + " Axis").c_str()); //to_string is c++11
+			arrY->SetName(std::string("Y" + std::to_string(ii+1) + " Axis").c_str()); //std::to_std::string is c++11
 			table->AddColumn(arrY);
 		}
 
@@ -1272,9 +1252,9 @@ void VTKExtra::PlotDatas(
 }
 
 void VTKExtra::PlotDatasGeo(
-	vector<string> title,
-	vector<double> x,
-	vector<vector<vector<double> > > y)
+	std::vector<std::string> title,
+	std::vector<double> x,
+	std::vector<std::vector<std::vector<double> > > y)
 {
 	vtkSmartPointer<vtkTable> 		table;
 	vtkSmartPointer<vtkFloatArray> 	arrX;
@@ -1289,7 +1269,7 @@ void VTKExtra::PlotDatasGeo(
 	view->GetRenderer()->GetRenderWindow()->SetSize(1600,800); //(width, height)
 
 
-	vector<vector<unsigned char> > cc; this->ColorCode(cc);
+	std::vector<std::vector<unsigned char> > cc; this->ColorCode(cc);
 
 	for(int i=0;i<title.size();i++)
 	{
@@ -1314,7 +1294,7 @@ void VTKExtra::PlotDatasGeo(
 		{
 			if(ii!=i) continue;
 			arrY = vtkSmartPointer<vtkFloatArray>::New();
-			arrY->SetName(string("Y" + to_string(ii+1) + " Axis").c_str()); //to_string is c++11
+			arrY->SetName(std::string("Y" + std::to_string(ii+1) + " Axis").c_str()); //std::to_std::string is c++11
 			table->AddColumn(arrY);
 		}
 

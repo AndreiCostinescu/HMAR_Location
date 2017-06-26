@@ -1,4 +1,4 @@
-clean;
+function PredictTrajectory( res_dir_name, out_file_name )
 
 %% Dictionary of actions
 
@@ -27,8 +27,12 @@ for i=2:length(data)
 end
 %% Confusion matrix
 
-dir_name = '../Result';
-file_name = '';
+
+% dir_name = '../Result_Staticface';
+% dir_name = '../Result_Moveface';
+% dir_name = '../Result_ObjectState';
+
+dir_name = res_dir_name;
 
 PROB_ALL = cell(4,2); c=1;
 
@@ -43,7 +47,7 @@ for i=1:length(DIR)
 %         continue;
 %     end
     
-    if (strcmp(DIR(i).name,'.') || strcmp(DIR(i).name,'..'))
+    if (RootDirRemoval(DIR(i).name))
         continue;
     end
     
@@ -52,7 +56,7 @@ for i=1:length(DIR)
     DIR_S = dir(file_name);
     for ii=1:length(DIR_S)
 
-        if (strcmp(DIR_S(ii).name,'.') || strcmp(DIR_S(ii).name,'..'))
+        if (RootDirRemoval(DIR_S(ii).name))
             continue;
         end
                 
@@ -64,7 +68,7 @@ for i=1:length(DIR)
 %             continue;
 %         end
 %         
-%         if (strcmp(DIR_S(ii).name,'0'))
+%         if (strcmp(DIR_S(ii).name,'3'))
 %             continue;
 %         end
         
@@ -73,7 +77,7 @@ for i=1:length(DIR)
         DIR_SAS = dir(file_name);
         for iii=1:length(DIR_SAS)
             
-            if (strcmp(DIR_SAS(iii).name,'.') || strcmp(DIR_SAS(iii).name,'..'))
+            if (RootDirRemoval(DIR_SAS(iii).name))
                 continue;
             end
             
@@ -82,7 +86,7 @@ for i=1:length(DIR)
             DIR_F = dir(file_name);
             for iv=1:length(DIR_F)
 
-                if (strcmp(DIR_F(iv).name,'.') || strcmp(DIR_F(iv).name,'..') || strcmp(DIR_F(iv).name(1),'_'))
+                if (RootDirRemoval(DIR_F(iv).name) || strcmp(DIR_F(iv).name(1),'_'))
                     continue;
                 end
 
@@ -315,8 +319,8 @@ for i=1:length(DIR)
         else
             legend(plot_handles, legend_name');
 %             title(['Trajectory Prediction ( ' DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1) ')']);
-%             title(['Trajectory Prediction (Goal : ' DICT3(mod(ii-1,7)+1) ')']);
-%             print(figure(ii),['0515/GEdgeProb_' DIR(i).name '_' num2str(ii)],'-depsc');
+            title(['Trajectory Prediction (Goal : ' DICT3(mod(ii-1,7)+1) ')']);
+            print(figure(ii),[out_file_name '_' DIR(i).name '_' num2str(ii)],'-depsc');
         end
         
 
@@ -325,4 +329,4 @@ for i=1:length(DIR)
     close all; 
     
 end
-    
+end

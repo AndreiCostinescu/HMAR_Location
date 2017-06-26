@@ -8,8 +8,8 @@
 #include "core.h"
 
 bool directionCheck(
-	Vector3d A,
-	Vector3d B)
+	Eigen::Vector3d A,
+	Eigen::Vector3d B)
 {
 	for(int i=0;i<3;i++)
 		if (((A(i) >= 0) && (B(i) < 0)) || ((A(i) < 0) && (B(i) >= 0)))
@@ -18,8 +18,8 @@ bool directionCheck(
 }
 
 int checkBoundarySphere(
-	Vector4d 		 &point_,
-	vector<Vector4d> centroids_)
+	Eigen::Vector4d 		 	 &point_,
+	std::vector<Eigen::Vector4d> centroids_)
 {
 	point_[3] = -1;
 	for(int ii=0;ii<centroids_.size();ii++)
@@ -28,15 +28,15 @@ int checkBoundarySphere(
 				pdfExp(BOUNDARY_VAR, 0.0, V4d3d(point_-centroids_[ii]).norm());
 //		double boundary = sqrt(-log(centroids_[ii].l)*BOUNDARY_VAR*2);
 		if (max_(location_contact, (double)centroids_[ii][3])) //|| pdfExp(0.005,0.0,(l2Norm(tmp_diff)-boundary))>0.75)
-		{ point_[3] = ii; }
+		{ point_[3] = ii; break;}
 	}
 	return EXIT_SUCCESS;
 }
 
 int checkBoundaryCuboid(
-	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_)
+	Eigen::Vector4d &point_,
+	Eigen::Vector3d box_min_,
+	Eigen::Vector3d box_max_)
 {
 	if(	point_[0] < box_max_[0] &&
 		point_[1] < box_max_[1] &&
@@ -55,26 +55,26 @@ int checkBoundaryCuboid(
 }
 
 int decideBoundarySphere(
-	Vector4d 		 &point_,
-	vector<Vector4d> centroids_)
+	Eigen::Vector4d 		 &point_,
+	std::vector<Eigen::Vector4d> centroids_)
 {
 	return checkBoundarySphere(point_, centroids_);
 }
 
 int decideBoundaryCuboid(
-	Vector4d &point_,
-	Vector3d box_min_,
-	Vector3d box_max_)
+	Eigen::Vector4d &point_,
+	Eigen::Vector3d box_min_,
+	Eigen::Vector3d box_max_)
 {
 	return checkBoundaryCuboid(point_, box_min_, box_max_);
 }
 
 int decideBoundaryClosest(
-	Vector4d 		&point_,
-	vector<Vector4d> centroids_)
+	Eigen::Vector4d 		&point_,
+	std::vector<Eigen::Vector4d> centroids_)
 {
 	point_[3] = -1;
-	vector<double> tmp;
+	std::vector<double> tmp;
 	for(int ii=0;ii<centroids_.size();ii++)
 	{
 		tmp.push_back(
@@ -91,8 +91,8 @@ int decideBoundaryClosest(
 }
 
 double checkSurfaceDistance(
-	Vector4d centroids_,
-	Vector4d surface_eq_)
+	Eigen::Vector4d centroids_,
+	Eigen::Vector4d surface_eq_)
 {
 	return 	centroids_[0] * surface_eq_[0] +
 			centroids_[1] * surface_eq_[1] +
@@ -100,8 +100,8 @@ double checkSurfaceDistance(
 }
 
 bool decideSurface(
-	Vector4d centroids_,
-	Vector4d surface_eq_,
+	Eigen::Vector4d centroids_,
+	Eigen::Vector4d surface_eq_,
 	double 	limit_)
 {
 	if(fabs(checkSurfaceDistance(centroids_,surface_eq_))<limit_)
@@ -112,22 +112,23 @@ bool decideSurface(
 
 double dLI(
 	int &loc_idx_,
-	int loc_last_idx_,
-	Vector4d point_,
-	vector<double> len_,
-	vector<Vector4d> mid_,
-	vector<Vector3d> tangent_,
-	int loc_offset_,
-	bool loc_init_,
-	int LOC_INT_)
+	const Eigen::Vector4d &point_,
+	const std::vector<double> &len_,
+	const std::vector<Eigen::Vector4d> &mid_,
+	const std::vector<Eigen::Vector3d> &tangent_,
+	const int &loc_last_idx_,
+	const int &loc_offset_,
+	const int &loc_int_,
+	bool loc_init_)
 {
 	int idx_tmp;
-	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d1=d2=d3=d4=d5=d6=0.0; d6min = 10;
-	Vector3d proj_dir_tmp, beg, mid, end;
-	// Added an offset buffer to prevent the location prediction from jumping too much
-	int idx1 = ( loc_last_idx_ < 0 ? 0 : loc_last_idx_ );
-	int idx2 = ( idx1+loc_offset_ > LOC_INT_ ? LOC_INT_ : idx1+loc_offset_ );
-	for(int l=idx1;l<idx2;l++)
+	double d1,d2,d3,d4,d5,d6,d6min,d6min2; d6min = 10;
+	Eigen::Vector3d proj_dir_tmp, beg, mid, end;
+
+	/* Added an offset to prevent the prediction from jumping too much */
+	int idx1 = (loc_last_idx_ < 0 ? 0 : loc_last_idx_);
+	int idx2 = (idx1 + loc_offset_ > loc_int_ ? loc_int_ : idx1 + loc_offset_);
+	for(int l=idx1; l<idx2; l++)
 	{
 		mid = V4d3d(mid_[l])* mid_[l][3];
 		beg = mid - (tangent_[l] * (len_[l]/2));
@@ -142,58 +143,38 @@ double dLI(
 
 		if (directionCheck(proj_dir_tmp, tangent_[l]))
 		{
-			if (l == idx1)	{d6min2 = d3-d5; d6 = d6min2;}
-			if (d4<=d2 && (d3-d5) < 0.01) //### TODO small error deviation (deadzone)
-			{
-				d6 = d3-d5;
-			}
+			if (l == idx1) { d6min2 = d3-d5; d6 = d6min2; }
+			/* TODO small error deviation (deadzone) */
+			if (d4<=d2 && (d3-d5) < 0.01)	{ d6 = d3-d5; }
 		}
 		else
 		{
-			if (l == idx1)	{d6min2 = d4-d5; d6 = d6min2;}
-			if (d3<=d1 && (d4-d5) < 0.01)
-			{
-				d6 = d4-d5;
-			}
+			if (l == idx1)					{ d6min2 = d4-d5; d6 = d6min2; }
+			if (d3 <= d1 && (d4-d5) < 0.01)	{ d6 = d4-d5; }
 		}
 
-		// ignore the first loc_int so that we don't get "stuck" at curves
-		if(l==idx1) continue;
+		/* ignore the first loc_int so that we don't get "stuck" at curves */
+		if (l == idx1) { continue; }
 
-		if (min_(d6,d6min))
-		{
-			d6min = d6;
-			idx_tmp = l;
-		}
-		else
-		{
-			// breaks only when the location is larger than the current one
-			if(d6min < 0.0001 && l>idx1) // inside
-			{
-				break;
-			}
-		}
+		/* breaks only when the location is larger than the current one */
+		if (min_(d6,d6min))	{ d6min = d6; idx_tmp = l; }
+		else 				{ if(d6min < 0.0001 && l>idx1) { break; } } //inside
 	}
 
-	// to prevent unknown locations at start and end
-	if (d6min > 0.001 && loc_init_)
-	{
-		loc_idx_ = loc_last_idx_;
-	}
-	else
-	{
-		loc_idx_ = idx_tmp;
-	}
+	/*to prevent unknown locations at start and end */
+	if (d6min > 0.001 && loc_init_)	{ loc_idx_ = loc_last_idx_; }
+	else							{ loc_idx_ = idx_tmp; }
+
 	return d6min;
 }
 
 double dLIPredict(
 	int &loc_idx_,
 	int loc_last_idx_,
-	Vector4d point_,
-	vector<Vector4d> mid_,
-	vector<double> len_,
-	vector<Vector3d> tangent_,
+	Eigen::Vector4d point_,
+	std::vector<Eigen::Vector4d> mid_,
+	std::vector<double> len_,
+	std::vector<Eigen::Vector3d> tangent_,
 	int loc_offset_,
 	int loc_init_, //0 for true
 	int LOC_INT_)
@@ -201,7 +182,7 @@ double dLIPredict(
 	int idx_tmp=loc_last_idx_;
 	double d1,d2,d3,d4,d5,d6,d6min,d6min2,min_dist;
 	d1=d2=d3=d4=d5=d6=0.0; d6min = min_dist = 10;
-	Vector3d proj_dir_tmp, beg, mid, end;
+	Eigen::Vector3d proj_dir_tmp, beg, mid, end;
 
 	// Added an offset buffer to prevent the location prediction from jumping too much
 	int idx1 = ( loc_last_idx_-(loc_offset_/2) < 0 ? 0 : loc_last_idx_-(loc_offset_/2) );
@@ -249,16 +230,6 @@ double dLIPredict(
 		}
 	}
 
-	//	// to prevent unknown locations at start and end
-//	if (d6min > 0.001)
-//	{
-//		loc_idx_ = loc_last_idx_;
-//	}
-//	else
-//	{
-//		loc_idx_ = idx_tmp;
-//	}
-
 	if(loc_init_==0) // initial
 	{
 		min_dist = 10;
@@ -273,10 +244,8 @@ double dLIPredict(
 			}
 		}
 
-		if (tmp<idx_tmp)
-			loc_idx_ = tmp;
-		else
-			loc_idx_ = idx_tmp;
+		if (tmp < idx_tmp)	{ loc_idx_ = tmp; }
+		else				{ loc_idx_ = idx_tmp;}
 	}
 	else
 	{
@@ -287,19 +256,19 @@ double dLIPredict(
 }
 
 int decideSectorInterval(
-	int &sec_idx_,
-	int loc_idx_,
-	Vector3d &delta_t_,
-	Vector4d point_,
-	vector<Vector4d> mid_,
-	vector<Vector3d> tangent_,
-	vector<Vector3d> normal_,
-	int SEC_INT_)
+		int &sec_idx_,
+		Eigen::Vector3d &delta_t_,
+		const Eigen::Vector4d &point_,
+		const std::vector<Eigen::Vector4d> &mid_,
+		const std::vector<Eigen::Vector3d> &tangent_,
+		const std::vector<Eigen::Vector3d> &normal_,
+		const int &loc_idx_,
+		const int &SEC_INT_)
 {
 	//projection of point onto the tangent at mid
-	Vector3d mid = V4d3d(mid_[loc_idx_])* mid_[loc_idx_][3];
+	Eigen::Vector3d mid = V4d3d(mid_[loc_idx_])* mid_[loc_idx_][3];
 
-	Vector3d proj_dir_tmp =
+	Eigen::Vector3d proj_dir_tmp =
 			tangent_[loc_idx_] *
 			((V4d3d(point_) - mid).dot(tangent_[loc_idx_]));
 
@@ -321,7 +290,7 @@ int decideSectorInterval(
 
 //int decideCurvature(
 //	point_d point_,
-//	vector<point_d> &curve_mem_,
+//	std::vector<point_d> &curve_mem_,
 //	double &curve_,
 //	int num_points_)
 //{
@@ -356,7 +325,7 @@ int folderSelect1(
 int folderSelect2(
 	const struct dirent *entry)
 {
-	size_t found_extension = string(entry->d_name).find(".");
+	size_t found_extension = std::string(entry->d_name).find(".");
 	if ((int)found_extension == -1) {return 1;}
 	else							{return 0;}
 }
@@ -364,39 +333,50 @@ int folderSelect2(
 int fileSelect(
 	const struct dirent *entry)
 {
-	size_t found_extension = string(entry->d_name).find(".txt");
+	size_t found_extension = std::string(entry->d_name).find(".txt");
 	if ((int)found_extension == -1) {return 0;}
 	else							{return 1;}
 }
 
 bool copyFile(
-	string SRC,
-	string DEST)
+	const std::string &SRC,
+	const std::string &DEST)
 {
-	ifstream src (SRC,  ios::binary);
-	ofstream dest(DEST, ios::binary);
+	std::ifstream src (SRC,  std::ios::binary);
+	std::ofstream dest(DEST, std::ios::binary);
 	dest << src.rdbuf();
 	return src && dest;
 }
 
-bool directoryCheck(
-	string path_ )
+std::string currentDirectory()
 {
-	if (path_.empty())
+	char buff[FILENAME_MAX];
+	getcwd(buff,FILENAME_MAX);
+	std::string cwd(buff);
+	return cwd;
+}
+
+bool directoryCheck(
+	const std::string &path_ )
+{
+	if (path_.empty()) { return false; }
+	std::size_t found = path_.find("/");
+	while(found != std::string::npos)
 	{
-		return false;
+		std::string path { path_.begin(), path_.begin()+found };
+		DIR *dir;
+		bool exist = false;
+		dir = opendir(path.c_str());
+		if (dir != NULL)
+		{
+			exist = true;
+			closedir(dir);
+		}
+		if (!exist)
+		{
+			mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		}
+		found = path_.find("/", found+1);
 	}
-	DIR *dir;
-	bool exist = false;
-	dir = opendir(path_.c_str());
-	if (dir != NULL)
-	{
-		exist = true;
-		closedir(dir);
-	}
-	if (!exist)
-	{
-		mkdir(path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	}
-	return exist;
+	return true;
 }

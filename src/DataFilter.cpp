@@ -19,14 +19,14 @@ void DataFilter::ResetFilter()
 }
 
 int DataFilter::PreprocessDataLive(
-	Vector4d pos_,
-	vector<Vector4d> &pva_avg_, //motion
-	unsigned int window_)
+		const Eigen::Vector4d &pos_,
+		std::vector<Eigen::Vector4d> &pva_avg_, //motion
+		const int &window_)
 {
-	Vector4d vel = pos_ - pva_avg_[0];
-	Vector4d acc = vel  - pva_avg_[1];
-	vector<Vector4d> tmp; tmp.resize(3);
-	tmp[0] = pos_; tmp[1] = vel; tmp[2] = acc;
+	auto vel = pos_ - pva_avg_[0];
+	auto acc = vel  - pva_avg_[1];
+	std::vector<Eigen::Vector4d> tmp {pos_, vel, acc};
+
 	for(int i=0;i<3;i++)
 	{
 		// 1. Memory is same length as window.
@@ -40,16 +40,19 @@ int DataFilter::PreprocessDataLive(
 			else
 			{
 				if(i==0)
+				{
+					auto new_pva_avg_from_last = pva_avg_[0] + pva_avg_[1];
 					pva_avg_[i] =
 							movingAverage(
-									pva_avg_[0] + pva_avg_[1],
+									new_pva_avg_from_last,
 									pos_vel_acc_mem[i]);
+				}
 			}
 		}
 		// 2. Memory is not empty but less than window.
 		else if (pos_vel_acc_mem[i].size()>0)
 		{
-			pva_avg_[i] = averagePointIncrement(tmp[i], pos_vel_acc_mem[i]);
+			pva_avg_[i] = movingAverageIncrement(tmp[i], pos_vel_acc_mem[i]);
 		}
 		// 3. Memory is empty.
 		else
@@ -72,24 +75,24 @@ int DataFilter::PreprocessDataLive(
 }
 
 int DataFilter::PreprocessContactLive(
-	int contact_,
-	int &contact_out_,
-	unsigned int window_)
+		const int &contact_,
+		int &contact_out_,
+		const int &window_)
 {
 	// 1. Memory is same length as window.
 	if(contact_mem.size() == window_)
 	{
-		contact_out_ = movingAverage(contact_, contact_mem);
+		contact_out_ = round(movingAverage((float)contact_, contact_mem));
 	}
 	// 2. Memory is not empty but less than window.
 	else if (contact_mem.size()>0)
 	{
-		contact_out_ = movingAverageIncrement(contact_, contact_mem);
+		contact_out_ = round(movingAverageIncrement((float)contact_, contact_mem));
 	}
 	// 3. Memory is empty.
 	else
 	{
-		contact_mem.push_back(contact_out_);
+		contact_mem.push_back((float)contact_out_);
 	}
 	return EXIT_SUCCESS;
 }

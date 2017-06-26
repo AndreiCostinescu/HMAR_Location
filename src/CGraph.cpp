@@ -16,30 +16,33 @@ CGraph::CGraph( ) :	OBJECT(""),
 					SEC_INT(-1)
 {
 }
+CGraph::CGraph(
+		const std::string &object_,
+		const int &loc_int_,
+		const int &sec_int_)
+		:	OBJECT(object_),
+			LOC_INT(loc_int_),
+			SEC_INT(sec_int_)
+{
+}
 CGraph::~CGraph() { }
 
 /*******************************************************************************
  * Nodes
  ******************************************************************************/
 
-vector<Vector4d> CGraph::GetCentroidList()
+std::vector<Eigen::Vector4d> CGraph::GetCentroidList() const
 {
-	vector<Vector4d> tmp;
-	for(int i=0;i<node_list.size();i++)
-	{
-		tmp.push_back(node_list[i].centroid);
-	}
-	return tmp;
+	std::vector<Eigen::Vector4d> centroid_list;
+	for(auto i:node_list) { centroid_list.push_back(i.centroid); }
+	return centroid_list;
 }
 
-vector<int> CGraph::GetSurfaceFlagList()
+std::vector<int> CGraph::GetSurfaceFlagList() const
 {
-	vector<int> tmp;
-	for(int i=0;i<node_list.size();i++)
-	{
-		tmp.push_back(node_list[i].surface_flag);
-	}
-	return tmp;
+	std::vector<int> surface_flag_list;
+	for(auto i:node_list) { surface_flag_list.push_back(i.surface_flag); }
+	return surface_flag_list;
 }
 
 /*******************************************************************************
@@ -52,21 +55,21 @@ void CGraph::addEmptyEdgeForNewNode(
 	if(edge_list.size()<idx_+1)
 	{
 		edge_list.resize(idx_+1);
-		for(int i=0;i<edge_list.size();i++)
+
+		for(auto &i:edge_list)
 		{
-			if(edge_list[i].size()<=GetNumberOfNodes())
+			if(i.size()<=GetNumberOfNodes())
 			{
-				edge_list[i].resize(GetNumberOfNodes());
-				for(int ii=0;ii<edge_list[i].size();ii++)
+				i.resize(GetNumberOfNodes());
+				for(auto &ii:i)
 				{
-					if (edge_list[i][ii].size()==0)
-						edge_list[i][ii].push_back({});
-					edge_list[i][ii][0].tan.resize(LOC_INT);
-					edge_list[i][ii][0].nor.resize(LOC_INT);
-					edge_list[i][ii][0].loc_mid.resize(LOC_INT);
-					edge_list[i][ii][0].loc_len.resize(LOC_INT);
-					edge_list[i][ii][0].sector_map.resize(LOC_INT*SEC_INT);
-					edge_list[i][ii][0].mov_const.resize(2);
+					if (ii.size()==0) { ii.push_back({}); }
+					ii[0].tan.resize(LOC_INT);
+					ii[0].nor.resize(LOC_INT);
+					ii[0].loc_mid.resize(LOC_INT);
+					ii[0].loc_len.resize(LOC_INT);
+					ii[0].sector_map.resize(LOC_INT*SEC_INT);
+					ii[0].mov_const.resize(2);
 				}
 			}
 		}

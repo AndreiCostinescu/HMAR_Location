@@ -7,13 +7,14 @@
 
 #include "TrainSM.h"
 
-TrainSM::TrainSM() : label1_sm(-1),
-					 label2_sm(-1),
-					 label_idx_sm(-1),
-					 loc_int(-1),
-					 sec_int(-1),
-					 f_win(-1),
-					 VTK(NULL)
+TrainSM::TrainSM(
+		const int &loc_int_,
+		const int &sec_int_)
+		:	label1_sm(-1),
+			label2_sm(-1),
+			label_idx_sm(-1),
+			loc_int(loc_int_),
+			sec_int(sec_int_)
 {
 }
 
@@ -37,40 +38,28 @@ void TrainSM::ClearSM()
 	vel_sm.clear();
 }
 
-int TrainSM::InitSM(
-		int loc_int_,
-		int sec_int_,
-		int f_win_)
-{
-	loc_int = loc_int_;
-	sec_int = sec_int_;
-	f_win 	= f_win_;
-	return EXIT_SUCCESS;
-}
-
 int TrainSM::FitCurve(
-	vector<Vector4d> &points_est_,
-	vector<Vector3d> &coeffs_)
+	std::vector<Eigen::Vector4d> &points_est_,
+	std::vector<Eigen::Vector3d> &coeffs_)
 {
 	// Performs curve fitting to obtain the coefficients of the curve.
-	vector<Vector3d> covs;
+	std::vector<Eigen::Vector3d> covs;
 	reshapeVector(points_est_,(pos_ind_sm.size())*4);
 	polyCurveFitPoint(pos_ind_sm, points_est_, coeffs_, covs, DEGREE, true);
 
 	// Visualize by comparing both original and estimated points.
 	if(0)
 	{
-		VTK = new VTKExtra(loc_int,sec_int);
-		vector<vector<unsigned char> > color_code;
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		vector<Vector4d> P = pos_ind_sm;
+		std::vector<Eigen::Vector4d> P = pos_ind_sm;
 		P.insert(P.end(),points_est_.begin(),points_est_.end());
 		for(int i=0;i<pos_ind_sm.size();i++) { P[i][3] = 1; }
-		vector<string> label_; label_.resize(2);
-		vector<string> label_ref; label_ref.resize(2);
-		vector<int> loc_idx_zero;
+		std::vector<std::string> label_; label_.resize(2);
+		std::vector<std::string> label_ref; label_ref.resize(2);
+		std::vector<int> loc_idx_zero;
 		VTK->ShowData(P, label_, label_ref, loc_idx_zero, color_code, true, false, false);
-		delete VTK;
 	}
 
 	printer(18);
@@ -78,46 +67,40 @@ int TrainSM::FitCurve(
 }
 
 int TrainSM::DecideSectorIntervalExt(
-	CGraph::edge_t *edge_,
-	Vector4d point_,
-	Vector3d &delta_t_,
+	std::shared_ptr<CGraph::edge_t> edge_,
+	Eigen::Vector4d point_,
+	Eigen::Vector3d &delta_t_,
 	int &sec_idx_,
-	int loc_idx_)
+	const int &loc_idx_)
 {
-//	vector<Vector4d> mid = edge_.loc_mid;
-//	vector<Vector3d> tan = edge_.tan;
-//	vector<Vector3d> nor = edge_.nor;
 	return decideSectorInterval(
-					sec_idx_, loc_idx_, delta_t_, point_, edge_->loc_mid,
-					edge_->tan, edge_->nor, sec_int);
+					sec_idx_, delta_t_, point_, edge_->loc_mid,
+					edge_->tan, edge_->nor, loc_idx_, sec_int);
 }
 
 double TrainSM::DecideLocationIntervalExt(
-	CGraph::edge_t *edge_,
-	Vector4d point_,
+	std::shared_ptr<CGraph::edge_t> edge_,
+	const Eigen::Vector4d &point_,
 	int &loc_idx_,
-	int loc_last_idx_,
-	int loc_offset_,
+	const int &loc_last_idx_,
+	const int &loc_offset_,
 	bool loc_init_)
 {
-//	vector<Vector3d> tan = edge_.tan;
-//	vector<double> 	 len = edge_.loc_len;
-//	vector<Vector4d> mid = edge_.loc_mid;
 	return dLI(
-			loc_idx_, loc_last_idx_, point_, edge_->loc_len, edge_->loc_mid,
-			edge_->tan, loc_offset_, loc_init_, loc_int);
+			loc_idx_, point_, edge_->loc_len, edge_->loc_mid,
+			edge_->tan, loc_last_idx_, loc_offset_, loc_int, loc_init_);
 }
 
 int TrainSM::AdjustSectorMap(
-	CGraph::edge_t *edge_,
-	Vector4d point_,
+	std::shared_ptr<CGraph::edge_t> edge_,
+	Eigen::Vector4d point_,
 	int &loc_last_idx_,
 	int &loc_curr_idx_,
 	double &delta_t_mem_,
 	bool &loc_init_,
 	int loc_offset_)
 {
-	Vector3d delta_t, delta_t_zero;
+	Eigen::Vector3d delta_t, delta_t_zero;
 	int sec_idx = -1;
 	int loc_idx = -1;
 	int loc_last_idx_mem = loc_last_idx_;
@@ -186,7 +169,7 @@ int TrainSM::AdjustSectorMap(
 	{
 		// if point starts before curve
 
-		Vector3d proj_dir_tmp =
+		Eigen::Vector3d proj_dir_tmp =
 				edge_->tan[0] *
 				(V4d3d(
 						point_ - (
@@ -204,7 +187,7 @@ int TrainSM::AdjustSectorMap(
 		{
 			loc_init_ = false;
 			edge_->sector_map[min_idx] =
-					max(edge_->sector_map[min_idx], tmpdeltatmin);
+					std::max(edge_->sector_map[min_idx], tmpdeltatmin);
 //					if (edge_->sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
 			loc_last_idx_ = min_idx/sec_int;
 			loc_curr_idx_ = min_idx/sec_int;
@@ -212,7 +195,7 @@ int TrainSM::AdjustSectorMap(
 		}
 	}
 
-	edge_->sector_map[min_idx] = max(edge_->sector_map[min_idx], tmpdeltatmin);
+	edge_->sector_map[min_idx] = std::max(edge_->sector_map[min_idx], tmpdeltatmin);
 //			if (edge_->sector_map[min_idx]>0.3)  {return EXIT_FAILURE;}
 
 	if ((min_idx/sec_int) - loc_last_idx_ > 1)
@@ -223,7 +206,7 @@ int TrainSM::AdjustSectorMap(
 					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*sec_int + sec_idx;
 			edge_->sector_map[tmp_idx] =
-					max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
+					std::max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
 		}
 		loc_curr_idx_ = (min_idx/sec_int);
 	}
@@ -238,13 +221,13 @@ int TrainSM::AdjustSectorMap(
 }
 
 int TrainSM::AdjustCurve(
-	CGraph::edge_t *edge_,
-	Vector4d point_,
+	std::shared_ptr<CGraph::edge_t> edge_,
+	Eigen::Vector4d point_,
 	int &loc_last_idx_,
 	bool &loc_init_,
 	int loc_offset_)
 {
-	Vector3d delta_t_zero;
+	Eigen::Vector3d delta_t_zero;
 	int sec_idx 			= -1;
 	int loc_idx 			= -1;
 	int loc_last_idx_mem 	= loc_last_idx_;
@@ -272,23 +255,27 @@ int TrainSM::AdjustCurve(
 
 	// to fill up the line if loc_int is valid but tangent is not aligned to traj (at a curve)
 	decideSectorInterval(
-			sec_idx, loc_idx, delta_t_zero, point_, edge_->loc_mid, edge_->tan, edge_->nor, sec_int);
+			sec_idx, delta_t_zero, point_, edge_->loc_mid, edge_->tan,
+			edge_->nor, loc_idx, sec_int);
 //	this->DecideSectorIntervalExt(
 //			edge_, point_, delta_t_zero, sec_idx, loc_idx);
+
 	int tmp_idx = loc_idx*sec_int + sec_idx;
 	edge_->sector_map[tmp_idx] =
-			max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
+			std::max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
+
 	if (loc_idx>10)
 	{
 		for(int l=loc_idx-2;l<loc_idx;l++)
 		{
 			decideSectorInterval(
-					sec_idx, l, delta_t_zero, point_, edge_->loc_mid, edge_->tan, edge_->nor, sec_int);
+					sec_idx, delta_t_zero, point_, edge_->loc_mid,
+					edge_->tan, edge_->nor, l, sec_int);
 //			this->DecideSectorIntervalExt(
 //					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*sec_int + sec_idx;
 			edge_->sector_map[tmp_idx] =
-					max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
+					std::max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
 		}
 	}
 
@@ -298,17 +285,18 @@ int TrainSM::AdjustCurve(
 }
 
 int TrainSM::AdjustCurveExt(
-	CGraph *Graph_,
-	vector<Vector3d> coeffs_)
+	std::shared_ptr<CGraph> G_,
+	std::vector<Eigen::Vector3d> coeffs_)
 {
 	double cx[DEGREE], cy[DEGREE], cz[DEGREE];
-	double N = Graph_->GetEdgeCounter(label1_sm,label2_sm,0);
+	double N = G_->GetEdgeCounter(label1_sm,label2_sm,0);
 	double total_len = 0.0;
-	CGraph::edge_t *edge_tmp = new CGraph::edge_t;
-	CGraph::edge_t *edge_tmp_mem = new CGraph::edge_t;
-	CGraph::node_t node_tmp = Graph_->GetNode(label1_sm);
-	*edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
-	*edge_tmp_mem = Graph_->GetEdge(label1_sm, label2_sm, 0);
+	auto edge_tmp 	  =
+			std::make_shared<CGraph::edge_t>(
+					G_->GetEdge(label1_sm, label2_sm, 0));
+	auto edge_tmp_mem =
+			std::make_shared<CGraph::edge_t>(
+					G_->GetEdge(label1_sm, label2_sm, 0));
 
 	// [CURVE FIT]*************************************************************
 //	polyCurveLength(total_len, 0, integral_limit_, coeffs_);
@@ -329,7 +317,6 @@ int TrainSM::AdjustCurveExt(
 
 	int mem = 0;
 	double tmp_len = 0.0;
-
 	int integral_limit_ = 1000;
 
 	for(int i=0;i<loc_int;i++)
@@ -364,7 +351,7 @@ int TrainSM::AdjustCurveExt(
 
 		if (lim[2]<0) {lim[2] = integral_limit_;}
 
-		Vector3d p_tan, p_nor, p_mid;
+		Eigen::Vector3d p_tan, p_nor, p_mid;
 		p_mid[0] = gsl_poly_eval(cx, DEGREE, lim[1]);
 		p_mid[1] = gsl_poly_eval(cy, DEGREE, lim[1]);
 		p_mid[2] = gsl_poly_eval(cz, DEGREE, lim[1]);
@@ -375,7 +362,7 @@ int TrainSM::AdjustCurveExt(
 			// at location interval 0
 			if (i==0)
 			{
-				cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, true);
+				cal_tangent_normal(p_tan, p_nor, lim[1], coeffs_, true);
 				edge_tmp->nor[i] = p_nor.normalized();
 				edge_tmp->tan[i] = p_tan.normalized();
 
@@ -383,15 +370,15 @@ int TrainSM::AdjustCurveExt(
 			// rotates the normal at location interval 0
 			else
 			{
-				cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, false);
+				cal_tangent_normal(p_tan, p_nor, lim[1], coeffs_, false);
 				edge_tmp->tan [i] = p_tan.normalized();
-				Matrix3d R = rodriguezRot(edge_tmp->tan[0], edge_tmp->tan[i]);
+				Eigen::Matrix3d R = rodriguezRot(edge_tmp->tan[0], edge_tmp->tan[i]);
 				edge_tmp->nor[i] = R.inverse().transpose() * edge_tmp->nor[0];
 			}
 		}
 		else
 		{
-			cal_tangent_normal(lim[1], p_tan, p_nor, coeffs_, DEGREE, false);
+			cal_tangent_normal(p_tan, p_nor, lim[1], coeffs_, false);
 			edge_tmp->nor[i] = p_nor.normalized();
 			edge_tmp->tan[i] = p_tan.normalized();
 		}
@@ -412,6 +399,8 @@ int TrainSM::AdjustCurveExt(
 	// [ADJUSTMENT]************************************************************
 	if (N>0)
 	{
+		CGraph::node_t node_tmp = G_->GetNode(label1_sm);
+
 		// [AVERAGE]***********************************************************
 		for(int l=0;l<loc_int;l++)
 		{
@@ -425,7 +414,7 @@ int TrainSM::AdjustCurveExt(
 									edge_tmp->loc_mid[l][3] +
 										node_tmp.centroid)) ;
 
-			edge_tmp->loc_mid[l]	= edge_tmp->loc_mid[l] - node_tmp.centroid;
+			edge_tmp->loc_mid[l] = edge_tmp->loc_mid[l] - node_tmp.centroid;
 			tmp_len = V4d3d(edge_tmp->loc_mid[l]).norm();
 			edge_tmp->loc_mid[l] =
 					V3d4d(V4d3d(edge_tmp->loc_mid[l]).normalized());
@@ -447,7 +436,7 @@ int TrainSM::AdjustCurveExt(
 			}
 			else
 			{
-				Matrix3d R = rodriguezRot(edge_tmp_mem->tan[l], edge_tmp->tan[l]);
+				auto R = rodriguezRot(edge_tmp_mem->tan[l], edge_tmp->tan[l]);
 				edge_tmp->nor[l] = R.inverse().transpose() * edge_tmp_mem->nor[l];
 			}
 		}
@@ -455,11 +444,10 @@ int TrainSM::AdjustCurveExt(
 
 		// [SECTOR MAP]********************************************************
 		reshapeVector(edge_tmp->sector_map, loc_int*sec_int);
-		vector<double> delta_t_mem; delta_t_mem.resize(3);
-		Vector3d tmpN;
-		Vector4d p_old;
-		AngleAxisd aa;
-
+		std::vector<double> delta_t_mem(3, 0.0);
+		Eigen::Vector3d tmpN;
+		Eigen::Vector4d p_old;
+		Eigen::AngleAxisd aa;
 		for(int l=0;l<loc_int;l++)
 		{
 			for(int s=0;s<sec_int;s++)
@@ -482,27 +470,22 @@ int TrainSM::AdjustCurveExt(
 	}
 	// ************************************************************[ADJUSTMENT]
 
-	Graph_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
+	G_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
 	printer(19);
-
-	delete edge_tmp;
-	delete edge_tmp_mem;
 
 	return EXIT_SUCCESS;
 }
 
 int TrainSM::FitSectorMap(
-	CGraph::edge_t *edge_,
-	Vector4d point_,
+	std::shared_ptr<CGraph::edge_t> edge_,
+	Eigen::Vector4d point_,
 	int &loc_last_idx_,
 	int loc_offset_,
 	bool &loc_init_)
 {
-	int sec_idx 			= -1;
-	int loc_idx 			= -1;
-	int loc_last_idx_mem 	= loc_last_idx_;
-	bool mem_init			= loc_init_;
-	Vector3d delta_t, delta_t_zero;
+	int sec_idx = -1, loc_idx = -1, loc_last_idx_mem = loc_last_idx_;
+	bool mem_init = loc_init_;
+	Eigen::Vector3d delta_t, delta_t_zero;
 
 	double tmp =
 			this->DecideLocationIntervalExt(
@@ -535,13 +518,13 @@ int TrainSM::FitSectorMap(
 	{
 		if (loc_idx>0) loc_init_ = false;
 		edge_->sector_map[min_idx] =
-				max(edge_->sector_map[min_idx], delta_t_min);
+				std::max(edge_->sector_map[min_idx], delta_t_min);
 		if (edge_->sector_map[min_idx]>0.9)  {return EXIT_FAILURE;} // TO BIGGGGGGGGG
 		loc_last_idx_ = min_idx/sec_int;
 		return EXIT_SUCCESS;
 	}
 
-	edge_->sector_map[min_idx] = max(edge_->sector_map[min_idx], delta_t_min);
+	edge_->sector_map[min_idx] = std::max(edge_->sector_map[min_idx], delta_t_min);
 	if (edge_->sector_map[min_idx]>0.9)  {return EXIT_FAILURE;} // TO BIGGGGGGGGG change too big possible for new edge
 
 	if ((min_idx/sec_int) - loc_last_idx_ > 1 && !mem_init)
@@ -552,7 +535,7 @@ int TrainSM::FitSectorMap(
 					edge_, point_, delta_t_zero, sec_idx, l);
 			int tmp_idx = l*sec_int + sec_idx;
 			edge_->sector_map[tmp_idx] =
-					max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
+					std::max(edge_->sector_map[tmp_idx], delta_t_zero.norm());
 			if (edge_->sector_map[min_idx]>0.9)  {return EXIT_FAILURE;} // TO BIGGGGGGGGG
 		}
 		loc_last_idx_ = (min_idx/sec_int);
@@ -569,74 +552,72 @@ int TrainSM::FitSectorMap(
 }
 
 int TrainSM::FitSectorMapInit(
-	CGraph *Graph_,
-	vector<Vector4d> &points_,
-	int loc_offset_)
+	std::shared_ptr<CGraph> G_,
+	std::vector<Eigen::Vector4d> &points_,
+	const int &loc_offset_)
 {
-	int loc_last_idx = 0;
-	int loc_curr_idx = 0;
+	int loc_last_idx = 0, loc_curr_idx = 0, offset = loc_offset_;
 	double delta_t_mem = 0.0;
 	bool init = true;
-	int offset = loc_offset_;
-	CGraph::edge_t *edge_tmp;
-	CGraph::node_t node_tmp = Graph_->GetNode(label1_sm);
-	for(int i=1;i<points_.size();i++)
+	std::size_t idx = 0;
+
+	for(auto p : points_)
 	{
-		edge_tmp = new CGraph::edge_t;
-		*edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
+		if (idx==0) { continue; } idx++;
+
+		auto edge_tmp =
+				std::make_shared<CGraph::edge_t>(
+						G_->GetEdge(label1_sm, label2_sm, 0));
+
 		if (init)	{offset = loc_int;}
 		else		{offset = loc_offset_;}
+
 		this->AdjustSectorMap(
-				edge_tmp, points_[i]-node_tmp.centroid, loc_last_idx, loc_curr_idx,
-				delta_t_mem, init, offset);
-		Graph_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
-		delete edge_tmp;
+				edge_tmp, p - G_->GetNode(label1_sm).centroid,
+				loc_last_idx, loc_curr_idx, delta_t_mem, init, offset);
+
+		G_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
 	}
 	printer(22);
 	return EXIT_SUCCESS;
 }
 
 int TrainSM::FitSectorMapExt(
-	CGraph *Graph_,
-	int loc_offset_)
+	std::shared_ptr<CGraph> G_,
+	const int &loc_offset_)
 {
-	CGraph::edge_t *edge_tmp;
-	CGraph::node_t node_tmp = Graph_->GetNode(label1_sm);
+	bool flag_init = true;
+	int offset = loc_offset_, loc_last_idx = 0;
+	std::size_t idx = 0;
 
-	bool flag_init		= true;
-	int offset			= loc_offset_;
-	int loc_last_idx	= 0;
-
-	for(int i=1;i<pos_ind_sm.size()-1;i++)
+	for(auto pos_ind : pos_ind_sm)
 	{
-		edge_tmp = new CGraph::edge_t;
-		*edge_tmp = Graph_->GetEdge(label1_sm, label2_sm, 0);
+		if (idx==0||idx==pos_ind_sm.size()-2) { continue; } idx++;
+
+		auto edge_tmp =
+				std::make_shared<CGraph::edge_t>(
+						G_->GetEdge(label1_sm, label2_sm, 0));
 
 		if (flag_init)	{offset = loc_int*3/4;}
 		else			{offset = loc_offset_;}
 
 		if (this->FitSectorMap(
-				edge_tmp,
-				pos_ind_sm[i] - node_tmp.centroid,
-				loc_last_idx,
-				offset,
-				flag_init)==EXIT_FAILURE)
+				edge_tmp, pos_ind - G_->GetNode(label1_sm).centroid,
+				loc_last_idx, offset, flag_init)==EXIT_FAILURE)
 		{printer(31); return EXIT_FAILURE;}
 
-		Graph_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
-		delete edge_tmp;
+		G_->SetEdge(label1_sm, label2_sm, 0, *edge_tmp);
 
 		//VISUALIZE
 		if(0)
 		{
-			VTK = new VTKExtra(loc_int,sec_int);
-			vector<vector<unsigned char> > color_code;
+			auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+			std::vector<std::vector<unsigned char> > color_code;
 			VTK->ColorCode(color_code);
-			vector<Vector4d> point_zero = {pos_ind_sm[i]}; vector<string> label_zero;
-			VTK->ShowConnection(Graph_, point_zero, label_zero, color_code, true);
-			delete VTK;
+			std::vector<Eigen::Vector4d> point_zero = {pos_ind};
+			std::vector<std::string> label_zero;
+			VTK->ShowConnection(G_.get(), point_zero, label_zero, color_code, true);
 		}
-
 	}
 
 	printer(20);
@@ -644,7 +625,7 @@ int TrainSM::FitSectorMapExt(
 }
 
 int TrainSM::UpdateSectorMap(
-	CGraph *Graph_)
+	std::shared_ptr<CGraph> G_)
 {
 	/**
 	 * @Function
@@ -655,84 +636,82 @@ int TrainSM::UpdateSectorMap(
 	 * fitSectorMapInit()		: Fit the estimated points to the sector map. (only for the first run)
 	 * fitSectorMapExt()		: Fit the estimated points to the sector map.
 	 * findSectorMapConstraint(): Check the constraints of  the sector map.
-	 * Graph_.setEdgeCounter()	: Increment the counter.
+	 * G_.setEdgeCounter()	: Increment the counter.
 	 */
 
-	vector<Vector4d> points_est;
-	vector<Vector3d> coeffs;
+	std::vector<Eigen::Vector4d> points_est;
+	std::vector<Eigen::Vector3d> coeffs;
 
-	if (Graph_->GetEdgeCounter(label1_sm,label2_sm,0) == 0)
+	if (G_->GetEdgeCounter(label1_sm,label2_sm,0) == 0)
 	{
 		this->FitCurve(points_est, coeffs);
-		this->AdjustCurveExt(Graph_, coeffs);
-//		this->FitSectorMapInit(Graph_, points_avg_, loc_int/2);
-		if(this->FitSectorMapExt(Graph_, loc_int/2)==EXIT_FAILURE)
+		this->AdjustCurveExt(G_, coeffs);
+//		this->FitSectorMapInit(G_, points_avg_, loc_int/2);
+		if(this->FitSectorMapExt(G_, loc_int/2)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
-		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
+		G_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
-	else if (Graph_->GetEdgeCounter(label1_sm,label2_sm,0) < 50)
+	else if (G_->GetEdgeCounter(label1_sm,label2_sm,0) < 50)
 	{
 		this->FitCurve(points_est, coeffs);
-		if(this->FitSectorMapExt(Graph_, loc_int/2)==EXIT_FAILURE)
+		if(this->FitSectorMapExt(G_, loc_int/2)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
 		//VISUALIZE
 		if(0)
 		{
-			VTK = new VTKExtra(loc_int,sec_int);
-			vector<vector<unsigned char> > color_code;
+			auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+			std::vector<std::vector<unsigned char> > color_code;
 			VTK->ColorCode(color_code);
-			vector<string> label_zero;
-			VTK->ShowConnection(Graph_, pos_ind_sm, label_zero, color_code, true);
-			delete VTK;
+			std::vector<std::string> label_zero;
+			VTK->ShowConnection(G_.get(), pos_ind_sm, label_zero, color_code, true);
 		}
-		this->AdjustCurveExt(Graph_, coeffs);
+		this->AdjustCurveExt(G_, coeffs);
 		//VISUALIZE
 		if(0)
 		{
-			VTK = new VTKExtra(loc_int,sec_int);
-			vector<vector<unsigned char> > color_code;
+			auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+			std::vector<std::vector<unsigned char> > color_code;
 			VTK->ColorCode(color_code);
-			vector<string> label_zero;
-			VTK->ShowConnection(Graph_, pos_ind_sm, label_zero, color_code, true);
-			delete VTK;
+			std::vector<std::string> label_zero;
+			VTK->ShowConnection(G_.get(), pos_ind_sm, label_zero, color_code, true);
 		}
-		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
+		G_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
 	else
 	{
 		this->FitCurve(points_est, coeffs);
-		if(this->FitSectorMapExt(Graph_, loc_int/2)==EXIT_FAILURE)
+		if(this->FitSectorMapExt(G_, loc_int/2)==EXIT_FAILURE)
 		{return EXIT_FAILURE;}
-		Graph_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
+		G_->SetEdgeCounter(label1_sm, label2_sm, 0, 1);
 	}
 
 	//VISUALIZE
 	if(0)
 	{
-		VTK = new VTKExtra(loc_int,sec_int);
-		vector<vector<unsigned char> > color_code;
+		auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+		std::vector<std::vector<unsigned char> > color_code;
 		VTK->ColorCode(color_code);
-		vector<string> label_zero;
-		VTK->ShowConnection(Graph_, pos_ind_sm, label_zero, color_code, true);
-		delete VTK;
+		std::vector<std::string> label_zero;
+		VTK->ShowConnection(G_.get(), pos_ind_sm, label_zero, color_code, true);
 	}
 
 	return EXIT_SUCCESS;
 }
 
 int TrainSM::BuildSectorMap(
-		CGraph *Graph_,
-		CKB *kb_,
-		vector<vector<Vector4d> > *pva_avg_,
-		vector<int> *contact_)
+		std::shared_ptr<CGraph> G_,
+		std::shared_ptr<CKB> kb_,
+		std::shared_ptr<std::vector<std::vector<Eigen::Vector4d> > > pva_avg_,
+		std::shared_ptr<std::vector<int> > contact_)
 {
 	this->ClearSM();
 
 	// 1. Saving point and velocity separately.
-	for(int i=0;i<pva_avg_->size();i++)
+
+	for(auto pva_ind : *pva_avg_)
 	{
-		pos_sm.push_back((*pva_avg_)[i][0]);
-		vel_sm.push_back((*pva_avg_)[i][1]);
+		pos_sm.push_back(pva_ind[0]);
+		vel_sm.push_back(pva_ind[1]);
 	}
 
 	// 2. Split the points into blocks according to the LA determined.
@@ -772,22 +751,21 @@ int TrainSM::BuildSectorMap(
 						CGraph::node_t node_tmp = {};
 						pos_ind_sm.insert(
 								pos_ind_sm.begin(),
-								Graph_->GetNode(label1_sm).centroid);
+								G_->GetNode(label1_sm).centroid);
 						pos_ind_sm.push_back(
-								Graph_->GetNode(label2_sm).centroid);
+								G_->GetNode(label2_sm).centroid);
 
-						this->UpdateSectorMap(Graph_);
-						this->FindWindowConstraint(Graph_);
+						this->UpdateSectorMap(G_);
+						this->FindWindowConstraint(G_);
 
 						//VISUALIZE
 						if(0)
 						{
-							VTK = new VTKExtra(loc_int,sec_int);
-							vector<vector<unsigned char> > color_code;
+							auto VTK = std::make_shared<VTKExtra>(loc_int, sec_int);
+							std::vector<std::vector<unsigned char> > color_code;
 							VTK->ColorCode(color_code);
-							vector<string> label_zero;
-							VTK->ShowConnection(Graph_, pos_ind_sm, label_zero, color_code, true);
-							delete VTK;
+							std::vector<std::string> label_zero;
+							VTK->ShowConnection(G_.get(), pos_ind_sm, label_zero, color_code, true);
 						}
 
 					}
