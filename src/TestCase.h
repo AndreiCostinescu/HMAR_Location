@@ -56,7 +56,7 @@ private:
 
 	std::shared_ptr<std::map<int, std::map<int, std::pair<int, std::string> > > > file_list; // subject, file number, action, filename
 	std::shared_ptr<std::map<int, std::vector<std::string> > > label_list;
-	std::shared_ptr<std::vector<std::string> > message;
+	//std::shared_ptr<std::vector<std::string> > message;
 	//std::shared_ptr<CKB> KB;
 	//std::shared_ptr<COS> OS;
 	//std::shared_ptr<CGraph> G;

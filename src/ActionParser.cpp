@@ -10,28 +10,24 @@
 
 ActionParser::ActionParser(
 		const std::string &obj_,
-		std::shared_ptr<CKB> KB,
-		std::shared_ptr<std::vector<std::string> > msg_,
+		std::shared_ptr<CData> cdata_,
 		const std::string &path_)
 		: obj(obj_),
-				message(msg_),
-				KB(KB),
+				message(cdata_->msg),
+				KB(cdata_->KB),
 				delay_factor(-1),
 				output(""),
 				output_mem(""),
 				label(""),
 				label_mem(""),
-				repeat("i think"),
 				ob_ac(""),
 				grasp_flag(true),
-				start_loc(true),
 				o("object"),
 				l("location"),
 				a("action"),
-				msg_path(path_)
+				msg_path(path_),
+				message_num(-1,-1)
 {
-	message_num =
-	{	-1,-1};
 }
 
 ActionParser::~ActionParser()
@@ -147,67 +143,26 @@ void ActionParser::Parse(
 	this->Delay_(s_);
 }
 
-//	0. Grasp
-//	- no: end
-//	- yes: 1.
-//
-//	1. Position (pct_err)
-//	- -1: 2.1. (in LA)
-//	- 0: end
-//	- xx: 2.2. (in SM)
-//
-//	2.1. LA
-//	- start?
-//	-- yes: end
-//	-- no: surface?
-//	--- yes: 3.1
-//	--- no: end
-//
-//	2.2. SM
-//	- yes: 3.2
-//	- no: end
-//
-//	3.1. surface constraint
-//	- vel>0 ?
-//	-- yes: end
-//	-- no: end
-//
-//	3.2 trajectory number
-//	- just 1: 4.1.
-//	- multiple: 4.2.
-//
-//	4.1. 1 trajectory
-//	- pct_err > x% ?
-//	--yes: end
-//	--no: end
-//
-//	4.2. multiple trajectory
-//	- ratio of max > x% ?
-//	-- yes: end
-//	-- no: ratio of next max - end
-
-// GRASP
 void ActionParser::DT0()
 {
-	if (!state_mem.back().Grasp())
+	if (state_mem.back().Grasp() == GRAB::GRABBED)
 	{
-		if (state_mem[state_mem.size() - 2].Grasp())
+		this->DT1();
+	}
+	else
+	{
+		if (state_mem[state_mem.size() - 2].Grasp() != GRAB::RELEASE)
 		{
 			grasp_flag = true;
 			output = this->Decode(obj, loc, (*message)[0]);
-			message_num[0] = 0;
+			message_num.first = 0;
 		}
 		else
 		{
 			output = this->Decode(obj, loc, (*message)[1]);
-			message_num[0] = 1;
+			message_num.first = 1;
 		}
-		start_loc = true;
 		label = "RELEASE";
-	}
-	else
-	{
-		this->DT1();
 	}
 	if (grasp_flag && (state_mem.back().Label1() != state_mem.back().Label2()))
 	{
@@ -227,18 +182,16 @@ void ActionParser::DT1()
 	// in SM
 	else
 	{
-		start_loc = false;
 		this->DT2_2();
 	}
 }
 
-// LA start loc?
 void ActionParser::DT2_1()
 {
 	if (grasp_flag)
 	{
 		output = this->Decode(obj, loc, (*message)[2]);
-		message_num[0] = 2;
+		message_num.first = 2;
 	}
 	else
 	{
@@ -249,7 +202,7 @@ void ActionParser::DT2_1()
 		else
 		{
 			output = this->Decode(obj, loc, (*message)[5]);
-			message_num[0] = 5;
+			message_num.first = 5;
 		}
 	}
 }
@@ -260,12 +213,12 @@ void ActionParser::DT3_1()
 	if (state_mem.back().Velocity() > 0.001)
 	{
 		output = this->Decode(obj, loc, (*message)[3]);
-		message_num[0] = 3;
+		message_num.first = 3;
 	}
 	else
 	{
 		output = this->Decode(obj, loc, (*message)[4]);
-		message_num[0] = 4;
+		message_num.first = 4;
 	}
 }
 
@@ -274,11 +227,11 @@ void ActionParser::DT2_2()
 {
 	if (std::accumulate(
 			KB->TransitionLA()[obj][state_mem.back().Label1()].begin(),
-			KB->TransitionLA()[obj][state_mem.back().Label1()].end(),
-			0.0) == 0.0)
+			KB->TransitionLA()[obj][state_mem.back().Label1()].end(), 0.0)
+			== 0.0)
 	{
 		output = this->Decode(obj, loc, (*message)[11]);
-		message_num[0] = 11;
+		message_num.first = 11;
 		label = "UNKNOWN";
 	}
 	this->DT3_2();
@@ -312,7 +265,7 @@ void ActionParser::DT3_2()
 	else
 	{
 		output = this->Decode(obj, loc, (*message)[10]);
-		message_num[0] = 10;
+		message_num.first = 10;
 		label = "UNKNOWN";
 	}
 }
@@ -324,13 +277,13 @@ void ActionParser::DT4_1(
 	if (state_mem.back().Velocity() > 0.001)
 	{
 		output = this->Decode(obj, loc, (*message)[6]);
-		message_num[0] = 6;
+		message_num.first = 6;
 		label = "MOVE";
 	}
 	else
 	{
 		output = this->Decode(obj, loc, (*message)[7]);
-		message_num[0] = 7;
+		message_num.first = 7;
 		label = "STOP";
 	}
 }
@@ -350,13 +303,13 @@ void ActionParser::DT4_2(
 		if (state_mem.back().Velocity() > 0.001)
 		{
 			output = this->Decode(obj, loc, (*message)[6]);
-			message_num[0] = 6;
+			message_num.first = 6;
 			label = "MOVE";
 		}
 		else
 		{
 			output = this->Decode(obj, loc, (*message)[7]);
-			message_num[0] = 7;
+			message_num.first = 7;
 			label = "STOP";
 		}
 	}
@@ -368,14 +321,14 @@ void ActionParser::DT4_2(
 		if (state_mem.back().Velocity() > 0.001)
 		{
 			output = this->Decode(obj, "", (*message)[8]);
-			message_num[0] = 8;
+			message_num.first = 8;
 			output = output + "Perhaps you are going to " + KB->AL()[idx] + ".";
 			label = "MOVE";
 		}
 		else
 		{
 			output = this->Decode(obj, loc, (*message)[9]);
-			message_num[0] = 9;
+			message_num.first = 9;
 			label = "STOP";
 		}
 	}
@@ -408,13 +361,7 @@ void ActionParser::Display(
 	// Extra info for transitions
 	if (output_mem != output)
 	{
-//		if ((output_mem.find(repeat)!=std::string::npos) && (output.find(repeat)!=std::string::npos))
-//		{
-//			output = "No," + output;
-//		}
-//		if (!strncmp(output_mem.c_str(),repeat.c_str(),strlen(repeat.c_str())) &&
-//			!strncmp(output.c_str(),repeat.c_str(),strlen(repeat.c_str())))
-		if (message_num[0] == message_num[1])
+		if (message_num.first == message_num.second)
 		{
 			output = "No," + output;
 //			printf("%s\n", output.c_str());
@@ -427,7 +374,7 @@ void ActionParser::Display(
 			write_file << output << "\n";
 		}
 	}
-	message_num[1] = message_num[0];
+	message_num.second = message_num.first;
 	output_mem = output;
 
 	label_mem != label ? label_mem = label : label_mem;

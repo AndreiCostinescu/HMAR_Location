@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
+################################################################################
 # Set a default build type if none was specified
+################################################################################
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Debug' as none was specified.")
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -9,8 +11,44 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+################################################################################
+# Compiler option
+################################################################################
 add_compile_options(-std=c++11)
 
+################################################################################
+# Find source and header files
+################################################################################
+file(GLOB HEADERS src/*.h)
+file(GLOB SOURCES 
+  	src/COS.cpp 
+  	src/CKB.cpp 
+  	src/CAS.cpp 
+  	src/CData.cpp 
+  	src/CGraph.cpp 
+  	src/algo.cpp 
+  	src/DataFilter.cpp
+  	src/VTKExtra.cpp 
+  	src/print.cpp
+  	src/core.cpp
+  	src/TestCase.cpp 
+  	src/Evaluate.cpp 
+  	src/ReadFile.cpp 
+  	src/WriteFile.cpp 
+  	src/DataParser.cpp 
+  	src/Test.cpp 
+  	src/Train.cpp 
+  	src/TrainLA.cpp 
+  	src/TrainSM.cpp 
+  	src/ObjectPrediction.cpp  
+    src/ActionPrediction.cpp 
+  	src/ActionParser.cpp 
+  	src/DBSCAN.cpp 
+  	)
+
+################################################################################
+# Build libraries
+################################################################################
 if(false)
 project(hmar)
 
@@ -73,6 +111,9 @@ install(FILES ${HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/../include)
 endif()
 
 
+################################################################################
+# Build project
+################################################################################
 if(true)
 
 project(HMAR_Location)

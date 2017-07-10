@@ -5,8 +5,10 @@ CMakeFiles/HMAR.dir/src/ActionParser.cpp.o
  /home/chen/HMAR/HMAR_Location/src/ActionParser.cpp
  /home/chen/HMAR/HMAR_Location/src/ActionParser.h
  /home/chen/HMAR/HMAR_Location/src/CAS.h
+ /home/chen/HMAR/HMAR_Location/src/CData.h
  /home/chen/HMAR/HMAR_Location/src/CGraph.h
  /home/chen/HMAR/HMAR_Location/src/CKB.h
+ /home/chen/HMAR/HMAR_Location/src/COS.h
  /usr/local/include/eigen3/Eigen/Cholesky
  /usr/local/include/eigen3/Eigen/Core
  /usr/local/include/eigen3/Eigen/Dense

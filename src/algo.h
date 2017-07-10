@@ -102,26 +102,6 @@ void arrayTovector(
 	}
 }
 
-//template<typename T>
-//std::vector<T> addvector(
-//		std::vector<T> A,
-//		std::vector<T> B)
-//{
-//	std::vector<T> C;
-//	for(int i=0;i<A.size();i++) { C.push_back(A[i]+B[i]); }
-//	return C;
-//}
-//
-//template<typename T>
-//std::vector<T> minusvector(
-//		std::vector<T> A,
-//		std::vector<T> B)
-//{
-//	std::vector<T> C;
-//	for(int i=0;i<A.size();i++) { C.push_back(A[i]-B[i]); }
-//	return C;
-//}
-
 template<typename T>
 T l2Norm(
 		std::vector<T> A)

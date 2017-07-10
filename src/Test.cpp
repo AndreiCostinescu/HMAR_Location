@@ -13,13 +13,11 @@ Test::Test(
 		const int &sec_int_,
 		const int &f_win_,
 		std::shared_ptr<CData> cdata_,
-		std::shared_ptr<std::vector<std::string> > msg_,
 		const std::string &path_,
 		bool object_state_)
 		: DF(new DataFilter()),
-				APred(
-						new ActionPrediction(obj_, loc_int_, sec_int_, object_state_)),
-				AParse(new ActionParser(obj_, cdata_->KB, msg_, path_)),
+				APred(new ActionPrediction(object_state_)),
+				AParse(new ActionParser(obj_, cdata_, path_)),
 				cdata(cdata_),
 				RF(new ReadFile()),
 				WF(new WriteFile()),
@@ -32,66 +30,6 @@ Test::Test(
 Test::~Test()
 {
 }
-
-//int Test::ReadKB(
-//		const std::string &path_)
-//{
-//	if (RF->ReadFileKB(path_, cdata->KB) == EXIT_FAILURE)
-//	{
-//		return EXIT_FAILURE;
-//	}
-//	else
-//	{
-//		return EXIT_SUCCESS;
-//	}
-//}
-//
-//int Test::ReadLA(
-//		const std::string &path_)
-//{
-//	if (RF->ReadFileLA(path_, cdata->KB->AL(), cdata->G) == EXIT_FAILURE)
-//	{
-//		return EXIT_FAILURE;
-//	}
-//	else
-//	{
-//		return EXIT_SUCCESS;
-//	}
-//}
-//
-//int Test::ReadGraph(
-//		const std::string &path_)
-//{
-//	if (RF->ReadFileGraph(path_, cdata->G) == EXIT_FAILURE)
-//	{
-//		return EXIT_FAILURE;
-//	}
-//	else
-//	{
-//		return EXIT_SUCCESS;
-//	}
-//}
-//
-//int Test::SetMessage(
-//		std::shared_ptr<std::vector<std::string> > msg_)
-//{
-//	AParse->SetMsg(msg_);
-//	return EXIT_SUCCESS;
-//}
-//
-//int Test::SetKB(
-//		CKB *kb_)
-//{
-//	*cdata->KB.get() = *kb_;
-//	return EXIT_SUCCESS;
-//}
-//
-//int Test::SetOS(
-//		COS *os_)
-//{
-//	*APred->OS = *os_;
-//	return EXIT_SUCCESS;
-//}
 
 int Test::WriteWindow(
 		const std::string &path_)
@@ -379,8 +317,8 @@ int Test::Testing(
 	std::vector<std::string> labels_predict;
 	std::vector<std::vector<Eigen::Vector4d> > pvas;
 
-	std::vector<std::map<std::string, double> > goals;
-	std::vector<std::map<std::string, double> > windows;
+	std::vector<std::map<std::string, double> > goal_list;
+	std::vector<std::map<std::string, double> > window_list;
 
 	std::vector<std::vector<double> > data_writeout;
 	// **************************************************************[VARIABLES]
@@ -437,7 +375,7 @@ int Test::Testing(
 		{
 			std::vector<double> tmp;
 			tmp.push_back(i);
-			tmp.push_back(cdata->AS->Grasp());
+			tmp.push_back((int)cdata->AS->Grasp());
 			tmp.push_back(cdata->AS->Label1());
 			tmp.push_back(cdata->AS->Label2());
 			tmp.push_back(cdata->AS->Velocity());
@@ -452,10 +390,10 @@ int Test::Testing(
 		}
 
 		pvas.push_back(*(cdata->pva));
-		goals.push_back(cdata->AS->Goal());
-		windows.push_back(cdata->AS->Window());
+		goal_list.push_back(cdata->AS->Goal());
+		window_list.push_back(cdata->AS->Window());
 
-		if (cdata->AS->Grasp() == RELEASE)
+		if (cdata->AS->Grasp() == GRAB::RELEASE)
 		{
 			labels_predict.push_back("RELEASE");
 		}
@@ -490,7 +428,7 @@ int Test::Testing(
 	// writing results
 	{
 		this->WriteResult(tmpname, resultdir_, labels_predict, data_writeout,
-				goals, windows, true);
+				goal_list, window_list, true);
 	}
 
 	// Visualize

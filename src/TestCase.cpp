@@ -17,7 +17,6 @@ TestCase::TestCase()
 						new std::map<int,
 								std::map<int, std::pair<int, std::string> > >),
 				label_list(new std::map<int, std::vector<std::string> >),
-				message(new std::vector<std::string>),
 				RF(new ReadFile),
 				WF(new WriteFile)
 {
@@ -447,8 +446,8 @@ int TestCase::TrnInd(
 				}
 
 				// learning process
-				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second, path, flag,
-						face_)==EXIT_FAILURE)
+				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
+						path, flag, face_) == EXIT_FAILURE)
 				{
 					printer(29);
 					return EXIT_FAILURE;
@@ -459,7 +458,8 @@ int TestCase::TrnInd(
 				if (G->GetNumberOfNodes() > 0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(), path.c_str());
+					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(),
+							path.c_str());
 				}
 			}
 		}
@@ -558,8 +558,8 @@ int TestCase::Trn(
 				}
 
 				// learning process
-				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second, path, flag_new_label,
-						face_) == EXIT_FAILURE)
+				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
+						path, flag_new_label, face_) == EXIT_FAILURE)
 				{
 					printer(29);
 					return EXIT_FAILURE;
@@ -570,7 +570,8 @@ int TestCase::Trn(
 				if (G.get()->GetNumberOfNodes() > 0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(), path.c_str());
+					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(),
+							path.c_str());
 				}
 			}
 		}
@@ -601,10 +602,6 @@ int TestCase::Tst(
 		bool face_,
 		bool os_)
 {
-	std::string dir_s, path;
-
-	auto cdata = std::make_shared<CData>(object_, LOC_INT, SEC_INT);
-
 	printf(
 			"==============================================================================\n");
 	printf(
@@ -612,31 +609,33 @@ int TestCase::Tst(
 	printf(
 			"==============================================================================\n");
 
-	this->ReadFileExt(cdata, idx_, object_, os_);
+	std::string dir_s, path;
 
 	// Subject
 	for (int f = 0; f < sub_num; f++)
 	{
-		auto cdata_tmp = std::make_shared<CData>(*cdata);
+		// create a data container
+		auto cdata = std::make_shared<CData>(object_, LOC_INT, SEC_INT);
+
+		// read saved information
+		this->ReadFileExt(cdata, idx_, object_, os_);
 
 		// directory of learned data of a subject
 		dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f);
 
 		// read available location areas
 		path = dir_s + "/location_area.txt";
-		if (RF->ReadFileLA(path, cdata_tmp->KB->AL(), cdata_tmp->G) == EXIT_FAILURE)
+		if (RF->ReadFileLA(path, cdata->KB->AL(), cdata->G) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
 
-		// read available sector std::map
+		// read available sector-map
 		path = dir_s + "/graph.txt";
-		if (RF->ReadFileGraph(path, cdata_tmp->G) == EXIT_FAILURE)
+		if (RF->ReadFileGraph(path, cdata->G) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
-
-		cdata_tmp->OS->OSLabel(-1);
 
 		// directory to parsed message
 		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + to_string(f)
@@ -644,7 +643,7 @@ int TestCase::Tst(
 		directoryCheck(dir_s);
 
 		auto T = std::make_shared<Test>(object_, LOC_INT, SEC_INT, FILTER_WIN,
-				cdata_tmp, message, dir_s, os_);
+				cdata, dir_s, os_);
 
 		// apply gauss filter
 		if (gauss_)
@@ -840,11 +839,14 @@ int TestCase::ReadFileExt(
 		return EXIT_FAILURE;
 	}
 
-	/* Reading surface
+	/**
+	 * Reading surface
 	 * Reading action labels
-	 * - reads the labels and initializes a zero list prediction/filter with the same length as the label
+	 * - reads the labels and initializes a zero list prediction/filter with
+	 *   the same length as the label
 	 * Reading object specific labels
-	 * - reads the object specific labels and saves them */
+	 * - reads the object specific labels and saves them
+	 */
 	path = PARENT + "/" + KB_DIR + "/";
 	if (RF->ReadFileKB(path, cdata_->KB) == EXIT_FAILURE)
 	{
@@ -863,7 +865,7 @@ int TestCase::ReadFileExt(
 
 	/* read parse message */
 	path = PARENT + "/" + KB_DIR + "/";
-	if (RF->ReadMsg(path, message) == EXIT_FAILURE)
+	if (RF->ReadMsg(path, cdata_->msg) == EXIT_FAILURE)
 	{
 		return EXIT_FAILURE;
 	}

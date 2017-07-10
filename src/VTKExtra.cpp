@@ -30,8 +30,8 @@ VTKExtra::~VTKExtra()
 class KeyPressInteractorStyle: public vtkInteractorStyleTrackballCamera
 {
 public:
-	static KeyPressInteractorStyle* New();
-	vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
+	static KeyPressInteractorStyle* New();vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera)
+	;
 
 	void SetWin(
 			vtkSmartPointer<vtkRenderWindow> x)
@@ -103,8 +103,8 @@ vtkStandardNewMacro(KeyPressInteractorStyle);
 class customMouseInteractorStyle: public vtkInteractorStyleTrackballCamera
 {
 public:
-	static customMouseInteractorStyle* New();
-	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleTrackballCamera);
+	static customMouseInteractorStyle* New();vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleTrackballCamera)
+	;
 
 	void SetLeftButton(
 			int option_)

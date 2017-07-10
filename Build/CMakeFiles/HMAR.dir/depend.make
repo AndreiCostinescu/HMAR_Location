@@ -4,8 +4,10 @@
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/ActionParser.cpp
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/ActionParser.h
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/CAS.h
+CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/CData.h
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/CGraph.h
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/CKB.h
+CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: ../src/COS.h
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: /usr/local/include/eigen3/Eigen/Cholesky
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: /usr/local/include/eigen3/Eigen/Core
 CMakeFiles/HMAR.dir/src/ActionParser.cpp.o: /usr/local/include/eigen3/Eigen/Dense

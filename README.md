@@ -195,3 +195,7 @@
 - 10/07/2017
 - updated the code and changed how cdata class works.
 
+[30a]
+- 10/07/2017
+- updated the code comments until ReadFile.h
+

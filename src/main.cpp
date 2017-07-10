@@ -17,6 +17,17 @@
 void transitions();
 void surfaces();
 
+class testing
+{
+public:
+	testing() : a(new int)
+	{};
+	virtual ~testing(){};
+	std::shared_ptr<int> gets(){return a;};
+private:
+	std::shared_ptr<int> a;
+};
+
 //=============================================================================
 // MAIN
 //=============================================================================
@@ -33,10 +44,10 @@ int main(
 
 //	surfaces();
 
-	transitions();
+//	transitions();
 
 //std::shared_ptr<TestCase> TC(new TestCase());
-	auto TC = std::make_shared<TestCase>();
+//	auto TC = std::make_shared<TestCase>();
 //	TC->Choose(100);
 //	TC->Choose(200);
 //	TC->Choose(300);
@@ -192,7 +203,8 @@ void surfaces()
 
 void transitions()
 {
-	std::vector<string> objs = { "CUP", "APP", "SPG" };
+	std::vector<string> objs =
+	{ "CUP", "APP", "SPG" };
 	std::map<string, std::vector<std::vector<int> > > transitions1;
 	std::map<string, std::vector<std::vector<int> > > transitions2;
 	std::map<string, std::vector<std::vector<int> > > transitions3;
@@ -226,15 +238,18 @@ void transitions()
 		//			if (obj == "KNF") { idxs = {9}; }
 		if (obj == "CUP")
 		{
-			idxs = {1,2};
+			idxs =
+			{	1,2};
 		}
 		if (obj == "APP")
 		{
-			idxs = {3,4};
+			idxs =
+			{	3,4};
 		}
 		if (obj == "SPG")
 		{
-			idxs = {5,6};
+			idxs =
+			{	5,6};
 		}
 
 		if (1) // AC()tion

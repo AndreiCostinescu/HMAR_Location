@@ -26,24 +26,9 @@ public:
 			const int &sec_int_,
 			const int &f_win_,
 			std::shared_ptr<CData> cdata_,
-			std::shared_ptr<std::vector<std::string> > msg_,
 			const std::string &path_,
 			bool object_state_);
 	virtual ~Test();
-
-//	virtual int ReadKB(
-//			const std::string &path_);
-//	virtual int ReadLA(
-//			const std::string &path_);
-//	virtual int ReadGraph(
-//			const std::string &path_);
-//
-//	virtual int SetMessage(
-//			std::shared_ptr<std::vector<std::string> > msg_);
-//	virtual int SetKB(
-//			CKB *kb_);
-//	virtual int SetOS(
-//			COS *os_);
 
 	virtual int WriteWindow(
 			const std::string &path_);
