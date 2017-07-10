@@ -7,7 +7,12 @@
 
 #include "COS.h"
 
-COS::COS() : label_os(-1) { }
+COS::COS()
+		: label_os(-1)
+{
+}
 
-COS::~COS() { }
+COS::~COS()
+{
+}
 

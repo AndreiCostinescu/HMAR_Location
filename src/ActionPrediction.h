@@ -27,9 +27,7 @@
 #define P_WIN_VAR 0.001
 #define P_ERR_VAR 0.01
 
-class ActionPrediction : public CData,
-						 public Evaluate,
-						 public ObjectPrediction
+class ActionPrediction: public Evaluate, public ObjectPrediction
 {
 
 private:
@@ -37,22 +35,22 @@ private:
 
 	struct predict_n // prediction for node
 	{
-		double 	acc; // acc
-		double 	vel; // velocity limit 0/1
-		double 	surface_dist; // surface distance
-		double 	curvature; // curvature value : 1 for line
+		double acc; // acc
+		double vel; // velocity limit 0/1
+		double surface_dist; // surface distance
+		double curvature; // curvature value : 1 for line
 	};
 	struct predict_e // prediction for edge
 	{
-		double 				acc; // acc
-		double 				vel; // velocity limit 0/1
-		double 				curvature; // curvature value : 1 for line
-		std::vector<double>	range; // in or outside
+		double acc; // acc
+		double vel; // velocity limit 0/1
+		double curvature; // curvature value : 1 for line
+		std::vector<double> range; // in or outside
 		std::vector<double> err; // prediction error = diff from the sectormap
 		std::vector<double> pct_err; // prob shared between multiple predictions of inside
-		std::vector<double>	err_diff; // change in the error compared to original
-		std::vector<double>	pct_err_diff; // change in the error compared to original
-		std::vector<double>	window; // knot in trajectory
+		std::vector<double> err_diff; // change in the error compared to original
+		std::vector<double> pct_err_diff; // change in the error compared to original
+		std::vector<double> window; // knot in trajectory
 	};
 
 	int label1_ap; // start
@@ -82,27 +80,37 @@ public:
 			const std::string &object_,
 			const int &loc_int_,
 			const int &sec_int_,
-			std::shared_ptr<CKB> KB_,
-			std::shared_ptr<COS> OS_,
 			bool os_flag_);
 	virtual ~ActionPrediction();
 
-	virtual void PredictExt();
+	virtual void PredictExt(
+			std::shared_ptr<CData> cdata_);
 	virtual void Init(
+			std::shared_ptr<CData> cdata_,
 			bool learn_);
-	virtual int Predict();
-	virtual int ContactTrigger();
-	virtual int DecideBoundaryClosestExt();
-	virtual int DecideBoundarySphereExt();
+	virtual int Predict(
+			std::shared_ptr<CData> cdata_);
+	virtual int ContactTrigger(
+			std::shared_ptr<CData> cdata_);
+	virtual int DecideBoundaryClosestExt(
+			std::shared_ptr<CData> cdata_);
+	virtual int DecideBoundarySphereExt(
+			std::shared_ptr<CData> cdata_);
 	virtual int DecideBoundaryCuboidExt(
 			Eigen::Vector4d &point_,
 			Eigen::Vector3d box_min_,
 			Eigen::Vector3d box_max_);
-	virtual int NodePrediction();
-	virtual int EdgePrediction();
-	virtual int DecideMovement(bool x_);
-	virtual int PredictFromSectorMap();
+	virtual int NodePrediction(
+			std::shared_ptr<CData> cdata_);
+	virtual int EdgePrediction(
+			std::shared_ptr<CData> cdata_);
+	virtual int DecideMovement(
+			std::shared_ptr<CData> cdata_,
+			bool x_);
+	virtual int PredictFromSectorMap(
+			std::shared_ptr<CData> cdata_);
 	virtual double DecideLocSecInt(
+			std::shared_ptr<CData> cdata_,
 			Eigen::Vector3d &delta_t_,
 			int &sec_idx_,
 			int &loc_idx_,
@@ -116,7 +124,8 @@ public:
 			const std::vector<double> &len_,
 			const std::vector<Eigen::Vector3d> &tangent_,
 			const int &loc_offset_,
-			const int &loc_init_);
+			const int &loc_init_,
+			const int &loc_int_);
 	virtual int DecideSectorIntervalExt(
 			int &sec_idx_,
 			const int &loc_idx_,
@@ -124,7 +133,8 @@ public:
 			const Eigen::Vector4d &point_,
 			const std::vector<Eigen::Vector4d> &mid_,
 			const std::vector<Eigen::Vector3d> &tangent_,
-			const std::vector<Eigen::Vector3d> &normal_);
+			const std::vector<Eigen::Vector3d> &normal_,
+			const int &sec_int_);
 	virtual bool DecideGoal(
 			const int &label2_,
 			const double &sm_i_, //sectorstd::map single
@@ -132,10 +142,13 @@ public:
 			const double &loc_error_);
 	virtual int DecideWindow(
 			const std::vector<double> &sm_,
+			const int &sec_int,
 			const int &loc_idx_,
 			const int &label2_);
-	virtual int EvaluateNodePrediction();
-	virtual int EvaluateEdgePrediction();
+	virtual int EvaluateNodePrediction(
+			std::shared_ptr<CData> cdata_);
+	virtual int EvaluateEdgePrediction(
+			std::shared_ptr<CData> cdata_);
 
 	//		int RebuildSectorMap(
 	//			std::vector<std::vector<point_d> > pva_avg_,

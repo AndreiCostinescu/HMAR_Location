@@ -35,7 +35,7 @@ public:
 			const int &window_);
 
 private:
-	std::vector<std::vector<Eigen::Vector4d> > 	pos_vel_acc_mem;
+	std::vector<std::vector<Eigen::Vector4d> > pos_vel_acc_mem;
 	std::vector<float> contact_mem;
 };
 

@@ -28,9 +28,7 @@ public:
 	CData(
 			const std::string &object_,
 			const int &loc_int_,
-			const int &sec_int_,
-			std::shared_ptr<CKB> KB_,
-			std::shared_ptr<COS> OS_);
+			const int &sec_int_);
 
 	virtual ~CData();
 

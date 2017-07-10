@@ -26,30 +26,30 @@ class CGraph
 public:
 	struct node_t
 	{
-		std::string 	name;
-		int		 		index; // used to check for new nodes
-		int		 		contact;
+		std::string name;
+		int index; // used to check for new nodes
+		int contact;
 		Eigen::Vector4d centroid; // Sphere
-		int		 		surface_flag; // Surface
+		int surface_flag; // Surface
 		Eigen::Vector3d cuboid_max;
 		Eigen::Vector3d cuboid_min;
 	};
 	struct edge_t
 	{
-		std::string						name;
-		unsigned int 					index1; //start node
-		unsigned int 					index2; // end node
-		std::vector<double> 			sector_map; // locations int * sectors int
-		std::vector<Eigen::Vector3d> 	tan; // locations int
-		std::vector<Eigen::Vector3d> 	nor; // locations int
-		std::vector<Eigen::Vector4d> 	loc_mid; // locations int
-		std::vector<double>  			loc_len; // locations int
-		double 							total_len;
-		int 							counter;
-		std::vector<int> 				mov_const; // 0/1 activation of the mov_const labels
-		std::vector<double> 			loc_mem; // to calculate d2(loc)
-		std::vector<double> 			sec_mem; // to calculate d2(sec)
-		std::vector<double> 			err_mem; // to calculate d2(err)
+		std::string name;
+		unsigned int index1; //start node
+		unsigned int index2; // end node
+		std::vector<double> sector_map; // locations int * sectors int
+		std::vector<Eigen::Vector3d> tan; // locations int
+		std::vector<Eigen::Vector3d> nor; // locations int
+		std::vector<Eigen::Vector4d> loc_mid; // locations int
+		std::vector<double> loc_len; // locations int
+		double total_len;
+		int counter;
+		std::vector<int> mov_const; // 0/1 activation of the mov_const labels
+		std::vector<double> loc_mem; // to calculate d2(loc)
+		std::vector<double> sec_mem; // to calculate d2(sec)
+		std::vector<double> err_mem; // to calculate d2(err)
 	};
 
 	CGraph();
@@ -59,47 +59,87 @@ public:
 			const int &sec_int_);
 	virtual ~CGraph();
 
-	std::string GetObject() 		{ return OBJECT; }
-	void SetObject(std::string obj_){ OBJECT = obj_; }
-	int GetLocInt() 				{ return LOC_INT; }
-	void SetLocInt(int loc_) 		{ LOC_INT = loc_; }
-	int GetSecInt() 				{ return SEC_INT; }
-	void SetSecInt(int sec_) 		{ SEC_INT = sec_; }
-
-/*******************************************************************************
-* Nodes
-*******************************************************************************/
-
-	virtual node_t GetNode(int idx_) const
+	std::string GetObject()
 	{
-		if (idx_<node_list.size()) 	{ return node_list[idx_]; }
-		else 						{ return {}; }
+		return OBJECT;
+	}
+	void SetObject(
+			std::string obj_)
+	{
+		OBJECT = obj_;
+	}
+	int GetLocInt()
+	{
+		return LOC_INT;
+	}
+	void SetLocInt(
+			int loc_)
+	{
+		LOC_INT = loc_;
+	}
+	int GetSecInt()
+	{
+		return SEC_INT;
+	}
+	void SetSecInt(
+			int sec_)
+	{
+		SEC_INT = sec_;
 	}
 
-	virtual int SetNode(node_t node_)
+	/*******************************************************************************
+	 * Nodes
+	 *******************************************************************************/
+
+	virtual node_t GetNode(
+			int idx_) const
 	{
-		if (node_list.size() < node_.index+1)
+		if (idx_ < node_list.size())
 		{
-			node_list.resize(node_.index+1);
+			return node_list[idx_];
+		}
+		else
+		{
+			return
+			{};
+		}
+	}
+
+	virtual int SetNode(
+			node_t node_)
+	{
+		if (node_list.size() < node_.index + 1)
+		{
+			node_list.resize(node_.index + 1);
 		}
 		node_list[node_.index] = node_;
 		return EXIT_SUCCESS;
 	}
 
-	virtual int GetNumberOfNodes() const			{ return node_list.size(); }
-	virtual std::vector<node_t> GetNodeList() const	{ return node_list; }
+	virtual int GetNumberOfNodes() const
+	{
+		return node_list.size();
+	}
+	virtual std::vector<node_t> GetNodeList() const
+	{
+		return node_list;
+	}
 
 	virtual std::vector<Eigen::Vector4d> GetCentroidList() const;
 	virtual std::vector<int> GetSurfaceFlagList() const;
 
-/*******************************************************************************
-* Edges
-*******************************************************************************/
+	/*******************************************************************************
+	 * Edges
+	 *******************************************************************************/
 
-	virtual void addEmptyEdgeForNewNode(int	idx_);
+	virtual void addEmptyEdgeForNewNode(
+			int idx_);
 
 	// edge_list = [#loc1] [#loc2] [#edges] [#sec*#loc]
-	virtual std::vector<std::vector<std::vector<edge_t> > > GetListOfEdges() { return edge_list; }
+	virtual std::vector<std::vector<std::vector<edge_t> > > GetListOfEdges()
+	{
+		return edge_list;
+	}
 
 	virtual edge_t GetEdge(
 			int n1_,
@@ -117,7 +157,6 @@ public:
 	{
 		edge_list[n1_][n2_][edge_num_] = edge_;
 	}
-
 
 	virtual int GetEdgeCounter(
 			unsigned int n1_,

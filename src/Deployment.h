@@ -14,17 +14,16 @@
 
 #define FILTER_WIN 5
 
-class Deployment : 	public ActionPrediction,
-					public DataFilter
+class Deployment: public ActionPrediction, public DataFilter
 {
 public:
 
-Deployment();
-virtual ~Deployment();
+	Deployment();
+	virtual ~Deployment();
 
-int Deploy(
-		Vector4d point_,
-		int contact_);
+	int Deploy(
+			Eigen::Vector4d point_,
+			int contact_);
 };
 
 #endif /* DEPLOYMENT_H_ */

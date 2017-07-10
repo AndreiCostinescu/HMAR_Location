@@ -26,7 +26,7 @@
 #define DBSCAN_EPS 0.015
 #define DBSCAN_MIN 5
 
-class TrainLA : public DBSCAN
+class TrainLA: public DBSCAN
 {
 public:
 	TrainLA(
@@ -63,14 +63,14 @@ private:
 	std::shared_ptr<std::vector<Eigen::Vector4d> > points_avg;
 	std::shared_ptr<std::vector<Eigen::Vector4d> > locations; // centroids
 
-	std::vector<std::string>	 goal_action;
+	std::vector<std::string> goal_action;
 
 	std::vector<Eigen::Vector3d> surfaces_mid;
 	std::vector<Eigen::Vector3d> surfaces_min;
 	std::vector<Eigen::Vector3d> surfaces_max;
 	std::vector<Eigen::Vector4d> surfaces_eq; // equation of plane
-	std::vector<double> 	 	 surfaces_limit; // surface distance limit
-	std::vector<int>		 	 surfaces_flag;  // flag if surface is detected
+	std::vector<double> surfaces_limit; // surface distance limit
+	std::vector<int> surfaces_flag;  // flag if surface is detected
 	std::vector<Eigen::Matrix3d> surfaces_rot;  // surface rotation
 
 protected:

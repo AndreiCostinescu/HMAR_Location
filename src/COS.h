@@ -18,14 +18,15 @@
 class COS
 {
 private:
-	using mSvvD = std::map<std::string, std::vector<std::vector<double> > >;
+	using mSmSI_t = std::map<std::string, std::map<std::string, int> >;
+	using mSvvD_t = std::map<std::string, std::vector<std::vector<double> > >;
 
 	int label_os;
 	std::vector<std::string> label_list_os; // list of object state labels
-	std::map<std::string,int> la_os; // list of object state labels
-	mSvvD transition_os; // transition between the object state
-	mSvvD transition_os_la;
-	mSvvD transition_la_os;
+	mSmSI_t la_os; // list of object state labels
+	mSvvD_t transition_os; // transition between the object state
+	mSvvD_t transition_os_la;
+	mSvvD_t transition_la_os;
 
 public:
 	COS();
@@ -38,7 +39,8 @@ public:
 	{
 		return label_os;
 	}
-	virtual void OSLabel(int x_)
+	virtual void OSLabel(
+			int x_)
 	{
 		label_os = x_;
 	}
@@ -50,7 +52,8 @@ public:
 	{
 		return label_list_os;
 	}
-	virtual void OSLabelList(std::vector<std::string> x_)
+	virtual void OSLabelList(
+			std::vector<std::string> x_)
 	{
 		label_list_os = x_;
 	}
@@ -58,11 +61,12 @@ public:
 	/*
 	 * list of LA object state correspondence
 	 */
-	virtual std::map<std::string,int> LAOSMap() const
+	virtual mSmSI_t LAOSMap() const
 	{
 		return la_os;
 	}
-	virtual void LAOSMap(std::map<std::string,int> x_)
+	virtual void LAOSMap(
+			mSmSI_t x_)
 	{
 		la_os = x_;
 	}
@@ -70,11 +74,12 @@ public:
 	/*
 	 * P(O_t|LA_t)
 	 */
-	virtual mSvvD TransitionLAOS() const
+	virtual mSvvD_t TransitionLAOS() const
 	{
 		return transition_la_os;
 	}
-	virtual void TransitionLAOS(mSvvD x_)
+	virtual void TransitionLAOS(
+			mSvvD_t x_)
 	{
 		transition_la_os = x_;
 	}
@@ -82,11 +87,12 @@ public:
 	/*
 	 * P(LA_t|O_t)
 	 */
-	virtual mSvvD TransitionOSLA() const
+	virtual mSvvD_t TransitionOSLA() const
 	{
 		return transition_os_la;
 	}
-	virtual void TransitionOSLA(mSvvD x_)
+	virtual void TransitionOSLA(
+			mSvvD_t x_)
 	{
 		transition_os_la = x_;
 	}
@@ -94,11 +100,12 @@ public:
 	/*
 	 * P(O_t|O_t-1)
 	 */
-	virtual mSvvD TransitionOS() const
+	virtual mSvvD_t TransitionOS() const
 	{
 		return transition_os;
 	}
-	virtual void TransitionOS(mSvvD x_)
+	virtual void TransitionOS(
+			mSvvD_t x_)
 	{
 		transition_os = x_;
 	}

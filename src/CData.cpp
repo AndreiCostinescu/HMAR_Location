@@ -10,13 +10,11 @@
 CData::CData(
 		const std::string &object_,
 		const int &loc_int_,
-		const int &sec_int_,
-		std::shared_ptr<CKB> KB_,
-		std::shared_ptr<COS> OS_)
-		:	G(new CGraph(object_, loc_int_, sec_int_)),
-			KB(KB_),
+		const int &sec_int_)
+		: 	G(new CGraph(object_, loc_int_, sec_int_)),
+			KB(nullptr),
 			AS(new CAS),
-			OS(OS_),
+			OS(nullptr),
 			contact(new int),
 			pva(new std::vector<Eigen::Vector4d>)
 {
@@ -24,5 +22,7 @@ CData::CData(
 	pva->resize(3);
 }
 
-CData::~CData() { }
+CData::~CData()
+{
+}
 

@@ -83,17 +83,28 @@ public:
 			std::shared_ptr<CGraph> G_,
 			const int &loc_offset_);
 	virtual int FindWindowConstraint(
-			std::shared_ptr<CGraph> G_) {return EXIT_SUCCESS;}
+			std::shared_ptr<CGraph> G_)
+	{
+		return EXIT_SUCCESS;
+	}
 	virtual int UpdateSectorMap(
 			std::shared_ptr<CGraph> G_);
 	virtual int BuildSectorMap(
 			std::shared_ptr<CGraph> G_,
 			std::shared_ptr<CKB> kb_,
-			std::shared_ptr<std::vector<std::vector<Eigen::Vector4d> > >pva_avg_,
-			std::shared_ptr<std::vector<int> >contact_);
+			std::shared_ptr<std::vector<std::vector<Eigen::Vector4d> > > pva_avg_,
+			std::shared_ptr<std::vector<int> > contact_);
 
-	virtual void SetLabel1SM(const int &x_) {label1_sm = x_;}
-	virtual void SetLabel2SM(const int &x_) {label2_sm = x_;}
+	virtual void SetLabel1SM(
+			const int &x_)
+	{
+		label1_sm = x_;
+	}
+	virtual void SetLabel2SM(
+			const int &x_)
+	{
+		label2_sm = x_;
+	}
 
 private:
 	// label1_sm	 : start location

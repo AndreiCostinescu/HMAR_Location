@@ -18,7 +18,7 @@
 
 #include <Eigen/Eigen>
 
-class Train :  public DataParser, public TrainLA, public TrainSM
+class Train: public DataParser, public TrainLA, public TrainSM
 {
 public:
 	Train(

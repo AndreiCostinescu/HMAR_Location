@@ -7,7 +7,11 @@
 
 #include "ObjectPrediction.h"
 
-ObjectPrediction::ObjectPrediction() { }
+ObjectPrediction::ObjectPrediction()
+{
+}
 
-ObjectPrediction::~ObjectPrediction() { }
+ObjectPrediction::~ObjectPrediction()
+{
+}
 

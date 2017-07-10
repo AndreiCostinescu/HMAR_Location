@@ -27,29 +27,45 @@
 #include <gsl/gsl_linalg.h>
 
 template<typename T>
-static inline T Sqr(const T &A) { return A*A; }
+static inline T Sqr(
+		const T &A)
+{
+	return A * A;
+}
 
-static inline Eigen::Vector4d V3d4d(const Eigen::Vector3d &A)
+static inline Eigen::Vector4d V3d4d(
+		const Eigen::Vector3d &A)
 {
 	Eigen::Vector4d B;
-	B(0)=A(0);
-	B(1)=A(1);
-	B(2)=A(2);
-	B(3)=0.0;
+	B(0) = A(0);
+	B(1) = A(1);
+	B(2) = A(2);
+	B(3) = 0.0;
 	return B;
 }
 
-static inline Eigen::Vector3d V4d3d(const Eigen::Vector4d &A)
+static inline Eigen::Vector3d V4d3d(
+		const Eigen::Vector4d &A)
 {
 	Eigen::Vector3d B;
-	B(0)=A(0);
-	B(1)=A(1);
-	B(2)=A(2);
+	B(0) = A(0);
+	B(1) = A(1);
+	B(2) = A(2);
 	return B;
 }
 
-template<typename T> static inline bool min_ (T x,T y) { return (x<y)?true:false; }
-template<typename T> static inline bool max_ (T x,T y) { return (x>y)?true:false; }
+template<typename T> static inline bool min_(
+		T x,
+		T y)
+{
+	return (x < y) ? true : false;
+}
+template<typename T> static inline bool max_(
+		T x,
+		T y)
+{
+	return (x > y) ? true : false;
+}
 
 template<typename T>
 void reshapeVector(
@@ -65,8 +81,12 @@ void vectorToArray(
 		const std::vector<T> &A,
 		T *B)
 {
-	int c=0;
-	for(auto i:A) { B[c] = i; c++;}
+	int c = 0;
+	for (auto i : A)
+	{
+		B[c] = i;
+		c++;
+	}
 }
 
 template<typename T>
@@ -76,7 +96,10 @@ void arrayTovector(
 {
 	//reshapeVector(B, std::extent<decltype(A)>::value);
 	B.clear();
-	for(auto i:A) { B.push_back(i);}
+	for (auto i : A)
+	{
+		B.push_back(i);
+	}
 }
 
 //template<typename T>
@@ -100,11 +123,15 @@ void arrayTovector(
 //}
 
 template<typename T>
-T l2Norm(std::vector<T> A)
+T l2Norm(
+		std::vector<T> A)
 {
-    double a=0.0;
-    for(auto i:A) {a+=Sqr(i);}
-    return sqrt(a);
+	double a = 0.0;
+	for (auto i : A)
+	{
+		a += Sqr(i);
+	}
+	return sqrt(a);
 }
 
 double pdfExp(
@@ -118,20 +145,21 @@ double normalPdf(
 		double x);
 
 template<typename T>
-T addFunction (
+T addFunction(
 		const T &x,
 		const T &y)
 {
-	return fabs(x)+fabs(y);
+	return fabs(x) + fabs(y);
 }
 
 template<typename T>
-T average(const std::vector<T> &A)
+T average(
+		const std::vector<T> &A)
 {
 	if (accumulate(A.begin(), A.end(), 0.0, addFunction<T>) == 0.0)
 		return 0.0;
 	else
-		return accumulate(A.begin(), A.end(), 0.0, addFunction<T>)/A.size();
+		return accumulate(A.begin(), A.end(), 0.0, addFunction<T>) / A.size();
 }
 
 template<typename T>
@@ -153,7 +181,8 @@ T movingAverageIncrement(
 	return average(A);
 }
 
-Eigen::Vector4d average(const std::vector<Eigen::Vector4d> &A);
+Eigen::Vector4d average(
+		const std::vector<Eigen::Vector4d> &A);
 
 Eigen::Vector4d movingAverage(
 		const Eigen::Vector4d &a,
@@ -188,7 +217,7 @@ void cal_tangent_normal(
 // B-spline
 // ============================================================================
 
-double curveIntegral (
+double curveIntegral(
 		double x,
 		void *params);
 

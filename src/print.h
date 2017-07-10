@@ -27,6 +27,6 @@
 #define CNOR "\x1B[0m"
 
 int printer(
-	int x_);
+		int x_);
 
 #endif /* MISC_H_ */

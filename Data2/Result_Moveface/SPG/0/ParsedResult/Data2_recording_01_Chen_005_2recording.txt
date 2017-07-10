@@ -5,6 +5,8 @@ you are cleaning TABLE1 on TABLE1 .
 i think you are going to keep the SPG .
 you are cleaning TABLE1 on TABLE1 .
 i think you are going to keep the SPG .
+you are cleaning TABLE1 on TABLE1 .
+i think you are going to keep the SPG .
 you are keeping the SPG .
 the SPG has been released .
 nothing is happening .

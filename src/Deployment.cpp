@@ -8,13 +8,17 @@
 
 #include "Deployment.h"
 
-Deployment::Deployment() { }
+Deployment::Deployment()
+{
+}
 
-Deployment::~Deployment() { }
+Deployment::~Deployment()
+{
+}
 
 int Deployment::Deploy(
-	Vector4d point_,
-	int contact_)
+		Eigen::Vector4d point_,
+		int contact_)
 {
 	// 1. Filter
 	this->PreprocessDataLive(point_, pva, FILTER_WIN);

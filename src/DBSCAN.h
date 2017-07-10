@@ -54,8 +54,8 @@ private:
 			point_d B);
 	virtual point_d MultiPoint(
 			point_d A,
-			double  B);
-	virtual double  l2Norm(
+			double B);
+	virtual double l2Norm(
 			point_d A);
 	virtual void vectorToArray(
 			std::vector<point_d> A,
@@ -123,10 +123,10 @@ public:
 			const double &epsilon,
 			const unsigned int &minpts);
 	virtual void CombineNearCluster(
-			std::vector<point_d> 	&points_,
-			std::vector<point_d> 	&locations_,
-			std::vector<int> 		&locations_flag_,
-			const std::vector<int> 	&contact_);
+			std::vector<point_d> &points_,
+			std::vector<point_d> &locations_,
+			std::vector<int> &locations_flag_,
+			const std::vector<int> &contact_);
 
 };
 

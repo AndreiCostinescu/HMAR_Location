@@ -189,5 +189,9 @@
 
 [29b]
 - 26/06/2017
-- added a build folder
+- modified testing to allow for integration with online deployment
+
+[30]
+- 10/07/2017
+- updated the code and changed how cdata works.
 

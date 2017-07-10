@@ -53,9 +53,10 @@ public:
 	 */
 	virtual int UpdateOS(
 			COS &OS_,
+			const std::string &obj_,
 			const std::string &la_)
 	{
-		OS_.OSLabel(OS_.LAOSMap()[la_]);
+		OS_.OSLabel(OS_.LAOSMap()[obj_][la_]);
 		return EXIT_SUCCESS;
 	}
 

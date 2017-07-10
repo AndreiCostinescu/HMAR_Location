@@ -8,13 +8,16 @@
 
 #include "Evaluate.h"
 
-Evaluate::Evaluate() : 	label1_eval(-1),
-						vel_eval(0.0),
-						surface_dist_eval(0.0)
+Evaluate::Evaluate()
+		: label1_eval(-1),
+				vel_eval(0.0),
+				surface_dist_eval(0.0)
 {
 }
 
-Evaluate::~Evaluate() {}
+Evaluate::~Evaluate()
+{
+}
 
 int Evaluate::UpdateStateNode(
 		const CGraph &G_,
@@ -31,7 +34,7 @@ int Evaluate::UpdateStateEdge(
 {
 	auto minmax = std::minmax_element(pct_eval.begin(), pct_eval.end());
 
-	if (*minmax.second<=0)
+	if (*minmax.second <= 0)
 	{
 		AS_.Probability(0.0);
 		AS_.SurfaceFlag(0);
@@ -43,12 +46,21 @@ int Evaluate::UpdateStateEdge(
 		auto max_idx = minmax.second - pct_eval.begin();
 
 		// Saving the LA as integers instead of string.
-		int c=0, cc=0;
-		for(auto i : al_eval)
+		int c = 0, cc = 0;
+		for (auto i : al_eval)
 		{
-			if (G_.GetNode(label1_eval).name==i) { AS_.Label1(cc); c++; }
-			if (G_.GetNode(max_idx).name==i) 	 { AS_.Label2(cc); c++; }
-			if (c==2) break;
+			if (G_.GetNode(label1_eval).name == i)
+			{
+				AS_.Label1(cc);
+				c++;
+			}
+			if (G_.GetNode(max_idx).name == i)
+			{
+				AS_.Label2(cc);
+				c++;
+			}
+			if (c == 2)
+				break;
 			cc++;
 		}
 
@@ -58,10 +70,10 @@ int Evaluate::UpdateStateEdge(
 
 	AS_.Velocity(vel_eval);
 
-	int c=0;
+	int c = 0;
 	auto g = AS_.Goal();
 	auto w = AS_.Window();
-	for(auto i : G_.GetNodeList())
+	for (auto i : G_.GetNodeList())
 	{
 		g[i.name] = pct_eval[c];
 		w[i.name] = win_eval[c];
