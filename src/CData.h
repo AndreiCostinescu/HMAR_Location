@@ -46,7 +46,10 @@ public:
 	/**
 	 * Destructor of class CData.
 	 */
-	virtual ~CData(){};
+	virtual ~CData()
+	{
+	}
+	;
 
 	/* Graph class */
 	std::shared_ptr<CGraph> G;

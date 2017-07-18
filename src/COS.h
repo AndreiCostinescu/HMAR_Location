@@ -28,9 +28,9 @@ private:
 	int label_os; 							// Object state label
 	std::vector<std::string> label_list_os;	// list of object state labels
 	mSmSI_t la_os; 							// list of object state labels
-	mSvvD_t transition_os;					// transition between the object state
-	mSvvD_t transition_os_la;				// transition between the object state and LA
-	mSvvD_t transition_la_os;				// transition between LA and the object state
+	mSvvD_t transition_os;				// transition between the object state
+	mSvvD_t transition_os_la;	// transition between the object state and LA
+	mSvvD_t transition_la_os;	// transition between LA and the object state
 
 public:
 	COS();

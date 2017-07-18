@@ -166,7 +166,7 @@ private:
 	std::shared_ptr<std::vector<std::string> > message;
 
 	// Message pair. To check if the same message was parsed twice.
-	std::pair<int,int> message_num;
+	std::pair<int, int> message_num;
 
 	// Object name
 	std::string obj;

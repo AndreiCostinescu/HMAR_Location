@@ -378,6 +378,30 @@ src/Evaluate.cpp.s:
 	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/Evaluate.cpp.s
 .PHONY : src/Evaluate.cpp.s
 
+src/NBayesClassifier.o: src/NBayesClassifier.cpp.o
+.PHONY : src/NBayesClassifier.o
+
+# target to build an object file
+src/NBayesClassifier.cpp.o:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/NBayesClassifier.cpp.o
+.PHONY : src/NBayesClassifier.cpp.o
+
+src/NBayesClassifier.i: src/NBayesClassifier.cpp.i
+.PHONY : src/NBayesClassifier.i
+
+# target to preprocess a source file
+src/NBayesClassifier.cpp.i:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/NBayesClassifier.cpp.i
+.PHONY : src/NBayesClassifier.cpp.i
+
+src/NBayesClassifier.s: src/NBayesClassifier.cpp.s
+.PHONY : src/NBayesClassifier.s
+
+# target to generate assembly for a file
+src/NBayesClassifier.cpp.s:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/NBayesClassifier.cpp.s
+.PHONY : src/NBayesClassifier.cpp.s
+
 src/ObjectPrediction.o: src/ObjectPrediction.cpp.o
 .PHONY : src/ObjectPrediction.o
 
@@ -401,6 +425,30 @@ src/ObjectPrediction.s: src/ObjectPrediction.cpp.s
 src/ObjectPrediction.cpp.s:
 	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/ObjectPrediction.cpp.s
 .PHONY : src/ObjectPrediction.cpp.s
+
+src/Preprocessing.o: src/Preprocessing.cpp.o
+.PHONY : src/Preprocessing.o
+
+# target to build an object file
+src/Preprocessing.cpp.o:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/Preprocessing.cpp.o
+.PHONY : src/Preprocessing.cpp.o
+
+src/Preprocessing.i: src/Preprocessing.cpp.i
+.PHONY : src/Preprocessing.i
+
+# target to preprocess a source file
+src/Preprocessing.cpp.i:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/Preprocessing.cpp.i
+.PHONY : src/Preprocessing.cpp.i
+
+src/Preprocessing.s: src/Preprocessing.cpp.s
+.PHONY : src/Preprocessing.s
+
+# target to generate assembly for a file
+src/Preprocessing.cpp.s:
+	$(MAKE) -f CMakeFiles/HMAR.dir/build.make CMakeFiles/HMAR.dir/src/Preprocessing.cpp.s
+.PHONY : src/Preprocessing.cpp.s
 
 src/ReadFile.o: src/ReadFile.cpp.o
 .PHONY : src/ReadFile.o
@@ -732,9 +780,15 @@ help:
 	@echo "... src/Evaluate.o"
 	@echo "... src/Evaluate.i"
 	@echo "... src/Evaluate.s"
+	@echo "... src/NBayesClassifier.o"
+	@echo "... src/NBayesClassifier.i"
+	@echo "... src/NBayesClassifier.s"
 	@echo "... src/ObjectPrediction.o"
 	@echo "... src/ObjectPrediction.i"
 	@echo "... src/ObjectPrediction.s"
+	@echo "... src/Preprocessing.o"
+	@echo "... src/Preprocessing.i"
+	@echo "... src/Preprocessing.s"
 	@echo "... src/ReadFile.o"
 	@echo "... src/ReadFile.i"
 	@echo "... src/ReadFile.s"

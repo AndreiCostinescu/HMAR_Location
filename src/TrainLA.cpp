@@ -80,9 +80,8 @@ int TrainLA::LearnBoundary(
 			{
 				Eigen::Vector4d point_rot, point_rot2;
 				Eigen::Matrix4d T;
-				T << surfaces_rot[surfaces_flag[(int) p[3]] - 1].row(0), 0, surfaces_rot[surfaces_flag[(int) p[3]]
-						- 1].row(1), 0, surfaces_rot[surfaces_flag[(int) p[3]]
-						- 1].row(2), 0, 0, 0, 0, 0;
+				auto tmp = surfaces_rot[surfaces_flag[(int) p[3]] - 1];
+				T << tmp.row(0), 0, tmp.row(1), 0, tmp.row(2), 0, 0, 0, 0, 0;
 
 				// Last element of T is zero because last std::vector element is used for labeling.
 				// Point transform to the coordinate system of the surface.
@@ -116,9 +115,8 @@ int TrainLA::ContactBoundary(
 			{
 				Eigen::Vector4d point_rot, point_rot2;
 				Eigen::Matrix4d T;
-				T << surfaces_rot[surfaces_flag[(int) p[3]] - 1].row(0), 0, surfaces_rot[surfaces_flag[(int) p[3]]
-						- 1].row(1), 0, surfaces_rot[surfaces_flag[(int) p[3]]
-						- 1].row(2), 0, 0, 0, 0, 0;
+				auto tmp = surfaces_rot[surfaces_flag[(int) p[3]] - 1];
+				T << tmp.row(0), 0, tmp.row(1), 0, tmp.row(2), 0, 0, 0, 0, 0;
 
 				// Last element of T is zero because last std::vector element is used for labeling.
 				// Point transform to the coordinate system of the surface.
@@ -132,20 +130,6 @@ int TrainLA::ContactBoundary(
 				p[3] = point_rot[3];
 			}
 		}
-
-//		if (points_avg[i].l < 0.0) { continue; }
-//
-//		if (surfaces_flag[points_avg[i].l] > 0)
-//		{
-//			if ( !decideSurface(
-//					centroids_[points_avg[i].l],
-//						surfaces_eq[surfaces_flag[points_avg[i].l]-1],
-//						surfaces_limit[surfaces_flag[points_avg[i].l]-1]))
-//			{
-//				points_avg[i].l = UNCLASSIFIED;
-//			}
-//		}
-
 	}
 	return EXIT_SUCCESS;
 }
@@ -164,7 +148,6 @@ int TrainLA::SurfaceContactCheck(
 			// surface already known
 			if (surfaces_flag[(int) p[3]] > 0)
 				continue;
-//			if (decideSurface(p, surfaces_eq[ii], surfaces_limit[ii]) &&
 			if ((surfaces_mid[ii] - V4d3d((*centroids_)[(int) p[3]])).norm()
 					< 0.15) // HACK: to prevent arbitrary surface detection
 			{
@@ -474,11 +457,7 @@ int TrainLA::BuildLocationArea(
 		}
 		c++;
 	}
-	/*	for(int i=0;i<pos_vel_acc_.size();i++)
-	 {
-	 pos_vel_acc_[i][0][3] = points_avg[i][3];
-	 }
-	 */printer(16);
+	printer(16);
 	printer(17);
 
 	// Visualize

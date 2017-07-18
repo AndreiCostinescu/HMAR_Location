@@ -14,9 +14,12 @@ ActionPrediction::ActionPrediction(
 				learn(false),
 				os_flag(os_flag_),
 				la_sm_change(true),
-				node_ap { },
-				pred_sm { },
-				pred_la { }
+				node_ap
+				{ },
+				pred_sm
+				{ },
+				pred_la
+				{ }
 {
 }
 
@@ -30,7 +33,7 @@ void ActionPrediction::EvaluateLAList(
 	auto g = cdata_->AS->Goal();
 	auto w = cdata_->AS->Window();
 	for (int i = cdata_->KB->AC()["GEOMETRIC"].first;
-			 i < cdata_->KB->AC()["GEOMETRIC"].second + 1; i++)
+			i < cdata_->KB->AC()["GEOMETRIC"].second + 1; i++)
 	{
 		g[cdata_->KB->AL()[i]] = 0.0;
 		w[cdata_->KB->AL()[i]] = 0.0;
@@ -165,8 +168,8 @@ int ActionPrediction::Predict(
 			{
 				label1_ap = (*(cdata_->pva))[0][3];
 				node_ap = cdata_->G->GetNode(label1_ap);
-				this->UpdateOS(
-						*(cdata_->OS), cdata_->G->GetObject(), node_ap.name);
+				this->UpdateOS(*(cdata_->OS), cdata_->G->GetObject(),
+						node_ap.name);
 			}
 
 			// iii. update action state_eval
@@ -219,26 +222,25 @@ int ActionPrediction::ContactTrigger(
 
 			if ((*(cdata_->pva))[0][3] >= 0)
 			{
-				if (cdata_->G->
-						GetNode((int) (*(cdata_->pva))[0][3]).surface_flag > 0)
+				if (cdata_->G->GetNode((int) (*(cdata_->pva))[0][3]).surface_flag
+						> 0)
 				{
 					Eigen::Vector4d point_rot, point_rot2;
 					Eigen::Matrix4d T;
 					auto flag =
-							cdata_->G->GetNode(
-									(int) (*(cdata_->pva))[0][3]).surface_flag;
-					T  << cdata_->KB->SurfaceRotation()[flag - 1].row(0), 0,
-						  cdata_->KB->SurfaceRotation()[flag - 1].row(1), 0,
-						  cdata_->KB->SurfaceRotation()[flag - 1].row(2), 0,
-						  0, 0, 0, 0;
+							cdata_->G->GetNode((int) (*(cdata_->pva))[0][3]).surface_flag;
+					T << cdata_->KB->SurfaceRotation()[flag - 1].row(0), 0, cdata_->KB->SurfaceRotation()[flag
+							- 1].row(1), 0, cdata_->KB->SurfaceRotation()[flag
+							- 1].row(2), 0, 0, 0, 0, 0;
 
 					// Last element of T is zero because last std::vector element is used for labeling.
 					// Point transform to the coordinate system of the surface.
 					// p' = [R,R*t]*p
 					point_rot =
-							(T * (*(cdata_->pva))[0]) -
-							(T * cdata_->G->GetNode(
-									(int) (*(cdata_->pva))[0][3]).centroid);
+							(T * (*(cdata_->pva))[0])
+									- (T
+											* cdata_->G->GetNode(
+													(int) (*(cdata_->pva))[0][3]).centroid);
 					point_rot[3] = (*(cdata_->pva))[0][3];
 
 					this->DecideBoundaryCuboidExt(point_rot,
@@ -257,8 +259,8 @@ int ActionPrediction::ContactTrigger(
 											- (cdata_->G->GetLocInt() / 10))
 					{
 						if (pred_sm.pct_err[(int) (*(cdata_->pva))[0][3]] == 0
-								&& pred_sm.range[(int)(*(cdata_->pva))[0][3]]
-								                 != (int)RANGE::EXCEED)
+								&& pred_sm.range[(int) (*(cdata_->pva))[0][3]]
+										!= (int) RANGE::EXCEED)
 						{
 							(*(cdata_->pva))[0][3] = -1;
 						}
@@ -393,11 +395,11 @@ int ActionPrediction::PredictFromSectorMap(
 
 	for (int i = 0; i < cdata_->G->GetNumberOfNodes(); i++)
 	{
-		pred_sm.range[i] 	= (int)RANGE::ZERO;
-		pred_sm.err[i]		= 0.0;
-		pred_sm.pct_err[i] 	= 0.0;
-		pred_sm.window[i] 	= 0.0;
-		label2_ap 			= i;
+		pred_sm.range[i] = (int) RANGE::ZERO;
+		pred_sm.err[i] = 0.0;
+		pred_sm.pct_err[i] = 0.0;
+		pred_sm.window[i] = 0.0;
+		label2_ap = i;
 
 		if (label1_ap == i)
 		{
@@ -409,7 +411,9 @@ int ActionPrediction::PredictFromSectorMap(
 		}
 
 		Eigen::Vector3d delta_t;
-		int loc_idx {-1}, sec_idx {-1};
+		int loc_idx
+		{ -1 }, sec_idx
+		{ -1 };
 
 		// LOC SEC INT
 		int init_tmp = init[i];
@@ -424,9 +428,9 @@ int ActionPrediction::PredictFromSectorMap(
 
 		// Goal LA
 		if (!this->DecideGoal(i,
-				cdata_->G->GetEdgeSectorMap(label1_ap, i, 0)
-						[loc_idx * cdata_->G->GetSecInt() + sec_idx],
-				delta_t.norm(), tmp_dis))
+				cdata_->G->GetEdgeSectorMap(label1_ap, i, 0)[loc_idx
+						* cdata_->G->GetSecInt() + sec_idx], delta_t.norm(),
+				tmp_dis))
 		{
 			continue;
 		}
@@ -566,7 +570,7 @@ bool ActionPrediction::DecideGoal(
 {
 	if (loc_error_ > 0.15) //## TODO :NEED TO VERIFY
 	{
-		pred_sm.range[label2_] = (int)RANGE::EXCEED;
+		pred_sm.range[label2_] = (int) RANGE::EXCEED;
 		pred_sm.err[label2_] = delta_t_ - sm_i_;
 		pred_sm.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, pred_sm.err[label2_]);
 		return false;
@@ -574,12 +578,12 @@ bool ActionPrediction::DecideGoal(
 	if (delta_t_ <= sm_i_)
 	{
 		range_in[label2_] = 1;
-		pred_sm.range[label2_] = (int)RANGE::IN;
+		pred_sm.range[label2_] = (int) RANGE::IN;
 		pred_sm.pct_err[label2_] = 0.999999;
 	}
 	else
 	{
-		pred_sm.range[label2_] = (int)RANGE::OUT;
+		pred_sm.range[label2_] = (int) RANGE::OUT;
 		pred_sm.err[label2_] = delta_t_ - sm_i_;
 		pred_sm.pct_err[label2_] = pdfExp(P_ERR_VAR, 0.0, pred_sm.err[label2_]);
 	}
@@ -611,11 +615,11 @@ int ActionPrediction::UpdateNode(
 	std::vector<double> vel;
 	std::vector<double> surface_dist;
 	for (int i = 0; i < pred_la_mem.size(); i++)
-	for (auto i : pred_la_mem)
-	{
-		vel.push_back(i.vel);
-		surface_dist.push_back(i.surface_dist);
-	}
+		for (auto i : pred_la_mem)
+		{
+			vel.push_back(i.vel);
+			surface_dist.push_back(i.surface_dist);
+		}
 
 	surface_dist_eval = average(surface_dist);
 	vel_eval = pred_la_mem.back().vel;
@@ -690,18 +694,6 @@ int ActionPrediction::UpdateEdge(
 		}
 		else
 		{
-			// this will show zero probability but do we need it ????
-//			if (pred_sm_mem.back().range[i]==(int)RANGE::EXCEED)
-//			{
-//				pct_eval[i] = 0.0;
-//			}
-//			else
-//			{
-//				if (cdata_->G->GetEdgeCounter(label1_ap,i,0)>0)
-//				{
-//					pct_eval[i] = 1.0/counter;
-//				}
-//			}
 			if (cdata_->G->GetEdgeCounter(label1_ap, i, 0) > 0)
 			{
 				pct_eval[i] = 1.0 / counter;
@@ -709,89 +701,11 @@ int ActionPrediction::UpdateEdge(
 		}
 	}
 
-
 	// Object state evaluation
 	if (os_flag)
 	{
-		std::vector<double> P1_container, P1_container_all;
-		for (int ii = 0; ii < cdata_->OS->OSLabelList().size(); ii++)
-		{
-			P1_container.clear();
-			sum_tmp = 0.0;
-			double obj_trans = this->GetOSTransition(*(cdata_->OS),
-					cdata_->G->GetObject())[ii];
-
-			for (int i = 0; i < cdata_->G->GetNumberOfNodes(); i++)
-			{
-				int l, os1, os0, la1, la0, c = 0;
-				for (l = cdata_->KB->AC()["GEOMETRIC"].first;
-						l < cdata_->KB->AC()["GEOMETRIC"].second + 1; l++)
-				{
-					if (cdata_->KB->AL()[l] == cdata_->G->GetNode(i).name)
-					{
-						la1 = l;
-						c++;
-					}
-					if (cdata_->KB->AL()[l]
-							== cdata_->G->GetNode(label1_ap).name)
-					{
-						la0 = l;
-						c++;
-					}
-					if (c > 1)
-					{
-						break;
-					}
-				}
-				auto P_OS_LA =
-						this->GetLAObjectTransition(*(cdata_->OS),
-						cdata_->G->GetObject(),
-						la1 - cdata_->KB->AC()["GEOMETRIC"].first)[ii];
-				auto P_LA_LA =
-						cdata_->KB->TransitionLA()
-						[cdata_->G->GetObject()][la0][la1];
-				P1_container.push_back(P_OS_LA * P_LA_LA);
-				sum_tmp += P1_container.back();
-				P1_container.back() *= obj_trans;
-			}
-
-			int ss = 0.0;
-			if (!P1_container_all.empty())
-			{
-				if (sum_tmp > 0.0)
-				{
-					for (int i = 0; i < P1_container.size(); i++)
-					{
-						P1_container[i] /= sum_tmp;
-						P1_container_all[i] += P1_container[i];
-					}
-				}
-			}
-			else
-			{
-				if (sum_tmp > 0.0)
-				{
-					for (int i = 0; i < P1_container.size(); i++)
-					{
-						P1_container[i] /= sum_tmp;
-					}
-				}
-				P1_container_all = P1_container;
-			}
-			int tt = 0.0;
-		}
-
-		sum_tmp = 0.0;
-		for (int i = 0; i < cdata_->G->GetNumberOfNodes(); i++)
-		{
-			pct_eval[i] *= P1_container_all[i];
-			sum_tmp += pct_eval[i];
-		}
-
-		for (auto &pct_eval_i : pct_eval)
-		{
-			pct_eval_i /= sum_tmp;
-		}
+		this->Prior(cdata_, label1_ap);
+		this->Classify(pct_eval);
 	}
 
 	vel_eval = pred_sm_mem.back().vel;

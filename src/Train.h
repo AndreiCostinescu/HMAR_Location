@@ -3,6 +3,7 @@
  *
  *  Created on: Apr 19, 2017
  *      Author: chen
+ *      Detail: Builds the LA and SM.
  */
 
 #ifndef TRAIN_H_
@@ -18,28 +19,43 @@
 
 #include <Eigen/Eigen>
 
+/**
+ * Evaluates and builds the SM and LA.
+ */
 class Train: public DataParser, public TrainLA, public TrainSM
 {
 public:
+
+	/**
+	 * Constructor for class Train.
+	 *
+	 * @param loc_int_ Number of location interval.
+	 * @param sec_int_ Number of sector interval.
+	 * @param f_win_ Filter window.
+	 */
 	Train(
 			const int &loc_int_,
 			const int &sec_int_,
 			const int &f_win_);
+
+	/**
+	 * Destructor for class Train.
+	 */
 	virtual ~Train();
 
 	/*
-	 * Main learning function.
+	 * Main learning function. Builds the SM and LA.
 	 *
-	 * Input
-	 * - new_label_ : 	to check if a new label is seen in the data,
-	 * 					needed for evaluation only
-	 * - face_ 		:	a flag to use the moving LA transformation.
+	 * @param G_ Graph of the scene.
+	 * @param KB_ List of knowledge-base.
+	 * @param filename_ Name of dataset file.
+	 * @param new_label_ Flag. TRUE = new label is present.
+	 * @param face_ Flag. TRUE = LA face is modified.
 	 */
 	int Learning(
 			std::shared_ptr<CGraph> G_,
 			std::shared_ptr<CKB> KB_,
 			const std::string &filename_,
-			const std::string &path_LA_,
 			bool new_label_,
 			bool face_);
 

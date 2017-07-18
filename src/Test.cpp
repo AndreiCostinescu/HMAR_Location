@@ -42,13 +42,9 @@ int Test::ApplyGauss(
 		const int &num_x_,
 		const int &num_y_)
 {
-	std::vector<std::vector<double> > k_xy;
-	k_xy.resize(num_x_);
-	for (int i = 0; i < num_x_; i++)
-	{
-		k_xy[i].resize(num_x_);
-	}
-	gaussKernel(k_xy, num_x_, num_x_, 1);
+	std::vector<std::vector<double> > k_xy(num_x_,
+			std::vector<double>(num_y_, 0.0));
+	gaussKernel(k_xy, num_x_, num_y_, 1);
 
 	// Visualize
 	if (0)
@@ -130,131 +126,115 @@ int Test::TestInit()
 	return EXIT_SUCCESS;
 }
 
-int Test::TestFaceAdjust()
+int Test::LAAdjust(
+		const std::string &LA_name_,
+		Eigen::Vector4d LA_new)
 {
-	face_parser[1] *= -1;
-	face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
+	auto g = cdata->G;
+
 	// When a graph is present.
-	if (cdata->G.get()->GetNumberOfNodes() > 0)
+	if (g->GetNumberOfNodes() > 0)
 	{
 		// Initialize.
 		double scale = 1.0;
 		Eigen::Vector3d t;
 		Eigen::Matrix3d R;
-		Eigen::Matrix4d T = Matrix4d::Zero();
-		CGraph::node_t old_node;
-		CGraph::edge_t edge_tmp;
+		Eigen::Matrix4d T = Eigen::Matrix4d::Zero();
+		CGraph::node_t node1; // old node.
+		CGraph::node_t node2; // tmp node.
+		CGraph::edge_t edge;
 
 		// Check for the LA that we intend to change.
-		for (int i = 0; i < cdata->G.get()->GetNumberOfNodes(); i++)
+		for (int i = 0; i < g->GetNumberOfNodes(); i++)
 		{
-			old_node = cdata->G.get()->GetNode(i);
-			if (old_node.name == "FACE")
+			node1 = g->GetNode(i);
+
+			if (node1.name == LA_name_)
 			{
+
 				// 1. Change the SM that has the LA as goal.
 				//    The start locations stay the same.
 				//    Transform to new target goal.
 				//    p' = [S]*[R]*p
-				for (int ii = 0; ii < cdata->G.get()->GetNumberOfNodes(); ii++)
+				for (int ii = 0; ii < g->GetNumberOfNodes(); ii++)
 				{
-					edge_tmp = cdata->G.get()->GetEdge(ii, i, 0);
+					edge = g->GetEdge(ii, i, 0);
+					node2 = g->GetNode(ii);
 
-					if (edge_tmp.counter == 0)
+					if (edge.counter == 0)
 					{
 						continue;
 					}
 
-					scale =
-							V4d3d(
-									face_parser
-											- cdata->G.get()->GetNode(ii).centroid).norm()
-									/ V4d3d(
-											old_node.centroid
-													- cdata->G.get()->GetNode(
-															ii).centroid).norm();
-					R =
-							rodriguezRot(
-									V4d3d(
-											old_node.centroid
-													- cdata->G.get()->GetNode(
-															ii).centroid),
-									V4d3d(
-											face_parser
-													- cdata->G.get()->GetNode(
-															ii).centroid));
-					T = Matrix4d::Zero();
+					scale = V4d3d(LA_new - node2.centroid).norm()
+							/ V4d3d(node1.centroid - node2.centroid).norm();
+					R = rodriguezRot(V4d3d(node1.centroid - node2.centroid),
+							V4d3d(LA_new - node2.centroid));
+
+					// Transformation matrix
+					T = Eigen::Matrix4d::Zero();
 					T.block<3, 3>(0, 0) = R;
 					T(3, 3) = scale;
 
-					for (int j = 0; j < cdata->G.get()->GetLocInt(); j++)
+					for (int j = 0; j < g->GetLocInt(); j++)
 					{
-						edge_tmp.tan[j] = R * edge_tmp.tan[j];
-						edge_tmp.nor[j] = R.inverse().transpose()
-								* edge_tmp.nor[j];
-						edge_tmp.loc_mid[j] = T * edge_tmp.loc_mid[j];
-						edge_tmp.loc_len[j] = edge_tmp.loc_len[j] * scale;
+						edge.tan[j] = R * edge.tan[j];
+						edge.nor[j] = R.inverse().transpose() * edge.nor[j];
+						edge.loc_mid[j] = T * edge.loc_mid[j];
+						edge.loc_len[j] = edge.loc_len[j] * scale;
 					}
 
-					cdata->G.get()->SetEdge(ii, i, 0, edge_tmp);
+					g->SetEdge(ii, i, 0, edge);
 				}
 
 				// 2. Change the SM that has the LA as start.
 				//    The goal locations stay the same.
 				//    Transform to new origin.
 				//    p' = [S]*[R,t]*p
-				for (int ii = 0; ii < cdata->G.get()->GetNumberOfNodes(); ii++)
+				for (int ii = 0; ii < g->GetNumberOfNodes(); ii++)
 				{
-					edge_tmp = cdata->G.get()->GetEdge(i, ii, 0);
+					edge = g->GetEdge(i, ii, 0);
+					node2 = g->GetNode(ii);
 
-					if (edge_tmp.counter == 0)
+					if (edge.counter == 0)
 					{
 						continue;
 					}
 
-					t = V4d3d(face_parser - old_node.centroid);
+					scale = V4d3d(node2.centroid - LA_new).norm()
+							/ V4d3d(node2.centroid - node1.centroid).norm();
+					R = rodriguezRot(V4d3d(node2.centroid - node1.centroid),
+							V4d3d(node2.centroid - LA_new));
+					t = V4d3d(LA_new - node1.centroid);
+					t += R * V4d3d(node2.centroid - node1.centroid);
 
-					R = rodriguezRot(
-							V4d3d(
-									cdata->G.get()->GetNode(ii).centroid
-											- old_node.centroid),
-							V4d3d(
-									cdata->G.get()->GetNode(ii).centroid
-											- face_parser));
-					t += R
-							* V4d3d(
-									cdata->G.get()->GetNode(ii).centroid
-											- old_node.centroid);
-					scale =
-							V4d3d(
-									cdata->G.get()->GetNode(ii).centroid
-											- face_parser).norm()
-									/ V4d3d(
-											cdata->G.get()->GetNode(ii).centroid
-													- old_node.centroid).norm();
-
-					T = Matrix4d::Zero();
+					// Transformation matrix
+					T = Eigen::Matrix4d::Zero();
 					T.block<3, 3>(0, 0) = R;
 					T(3, 3) = scale;
 
-					for (int j = 0; j < edge_tmp.tan.size(); j++)
+					for (int j = 0; j < edge.tan.size(); j++)
 					{
-						edge_tmp.tan[j] = R * edge_tmp.tan[j];
-						edge_tmp.nor[j] = R.inverse().transpose()
-								* edge_tmp.nor[j];
-						edge_tmp.loc_mid[j] = T * edge_tmp.loc_mid[j];
-						edge_tmp.loc_len[j] = edge_tmp.loc_len[j] * scale;
+						edge.tan[j] = R * edge.tan[j];
+						edge.nor[j] = R.inverse().transpose() * edge.nor[j];
+						edge.loc_mid[j] = T * edge.loc_mid[j];
+						edge.loc_len[j] = edge.loc_len[j] * scale;
 					}
 
-					cdata->G.get()->SetEdge(i, ii, 0, edge_tmp);
+					g->SetEdge(i, ii, 0, edge);
 				}
 
-				old_node.centroid.head(3) = V4d3d(face_parser);
-				cdata->G.get()->SetNode(old_node);
+				node1.centroid.head(3) = V4d3d(LA_new);
+				g->SetNode(node1);
 				break;
 			}
 		}
+		return EXIT_SUCCESS;
 	}
-	return EXIT_SUCCESS;
+	else
+	{
+		return EXIT_FAILURE;
+	}
 }
 
 int Test::FilterData(
@@ -312,6 +292,9 @@ int Test::Testing(
 		bool face_)
 {
 	// [VARIABLES]**************************************************************
+	// Check if labels was provided in dataset.
+	// Does not affect the testing.
+	// In the output result the ref. label is empty.
 	bool nolabel = false;
 
 	std::vector<std::string> labels_predict;
@@ -357,7 +340,9 @@ int Test::Testing(
 	// [FACE ADJUST]************************************************************
 	if (face_)
 	{
-		this->TestFaceAdjust();
+		face_parser[1] *= -1;
+		face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
+		this->LAAdjust("FACE", face_parser);
 	}
 	// *********************************************************** [FACE ADJUST]
 
@@ -375,7 +360,7 @@ int Test::Testing(
 		{
 			std::vector<double> tmp;
 			tmp.push_back(i);
-			tmp.push_back((int)cdata->AS->Grasp());
+			tmp.push_back((int) cdata->AS->Grasp());
 			tmp.push_back(cdata->AS->Label1());
 			tmp.push_back(cdata->AS->Label2());
 			tmp.push_back(cdata->AS->Velocity());

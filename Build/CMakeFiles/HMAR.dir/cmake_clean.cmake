@@ -1,5 +1,4 @@
 FILE(REMOVE_RECURSE
-  "CMakeFiles/HMAR.dir/src/main.cpp.o"
   "CMakeFiles/HMAR.dir/src/COS.cpp.o"
   "CMakeFiles/HMAR.dir/src/CKB.cpp.o"
   "CMakeFiles/HMAR.dir/src/CAS.cpp.o"
@@ -22,7 +21,10 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/HMAR.dir/src/ObjectPrediction.cpp.o"
   "CMakeFiles/HMAR.dir/src/ActionPrediction.cpp.o"
   "CMakeFiles/HMAR.dir/src/ActionParser.cpp.o"
+  "CMakeFiles/HMAR.dir/src/Preprocessing.cpp.o"
   "CMakeFiles/HMAR.dir/src/DBSCAN.cpp.o"
+  "CMakeFiles/HMAR.dir/src/NBayesClassifier.cpp.o"
+  "CMakeFiles/HMAR.dir/src/main.cpp.o"
   "HMAR.pdb"
   "HMAR"
 )

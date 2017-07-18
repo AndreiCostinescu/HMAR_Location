@@ -54,7 +54,7 @@ public:
 		std::vector<double> loc_len; 			// interval length
 		double total_len;						// total length
 		int counter;							// number of observed trajectory
-		std::vector<int> mov_const; 			// 0/1 activation of the mov_const labels
+		std::vector<int> mov_const; // 0/1 activation of the mov_const labels
 		std::vector<double> loc_mem; 			// to calculate d2(loc)
 		std::vector<double> sec_mem; 			// to calculate d2(sec)
 		std::vector<double> err_mem; 			// to calculate d2(err)
@@ -106,9 +106,9 @@ public:
 		SEC_INT = sec_;
 	}
 
-/*******************************************************************************
- * Nodes
- ******************************************************************************/
+	/*******************************************************************************
+	 * Nodes
+	 ******************************************************************************/
 
 	virtual node_t GetNode(
 			int idx_) const
@@ -147,9 +147,9 @@ public:
 	virtual std::vector<Eigen::Vector4d> GetCentroidList() const;
 	virtual std::vector<int> GetSurfaceFlagList() const;
 
-/*******************************************************************************
- * Edges
- ******************************************************************************/
+	/*******************************************************************************
+	 * Edges
+	 ******************************************************************************/
 
 	/**
 	 * Adds an empty edge for each new node added.

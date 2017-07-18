@@ -13,6 +13,7 @@
 #include "CData.h"
 #include "Evaluate.h"
 #include "ObjectPrediction.h"
+#include "NBayesClassifier.h"
 
 enum class RANGE
 {
@@ -25,7 +26,10 @@ enum class RANGE
 /**
  * Carries out main action prediction inferences.
  */
-class ActionPrediction: public Evaluate, public ObjectPrediction
+class ActionPrediction:
+		public Evaluate,
+		public ObjectPrediction,
+		public NBayesClassifier
 {
 
 private:
@@ -120,14 +124,16 @@ private:
 	 *
 	 * @param P_ predict_n node.
 	 */
-	virtual void ReshapePredictNode(predict_n &P_);
+	virtual void ReshapePredictNode(
+			predict_n &P_);
 
 	/**
 	 * Evaluates goal and maximum variance of SM.
 	 *
 	 * @param cdata_ Data container.
 	 */
-	virtual void EvaluateLAList(std::shared_ptr<CData> cdata_);
+	virtual void EvaluateLAList(
+			std::shared_ptr<CData> cdata_);
 
 public:
 
@@ -136,7 +142,8 @@ public:
 	 *
 	 * @param os_flag_ Flag to activate object state evaluation.
 	 */
-	ActionPrediction(bool os_flag_);
+	ActionPrediction(
+			bool os_flag_);
 
 	/**
 	 * Destructor for class ActionPrediction.
@@ -364,7 +371,6 @@ public:
 	//			std::vector<std::vector<point_d> > pva_avg_,
 	//			int	label1_,
 	//			int label2_);
-
 };
 
 #endif /* ACTIONPREDICTION_H_ */

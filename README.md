@@ -199,3 +199,9 @@
 - 10/07/2017
 - updated the code comments until ReadFile.h
 
+[31]
+- 18/07/2017
+- fixed a bug on accumulate in ActionParser class member function DT2_2.
+- Updated all comments for the project.
+
+

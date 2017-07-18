@@ -54,13 +54,15 @@ static inline Eigen::Vector3d V4d3d(
 	return B;
 }
 
-template<typename T> static inline bool min_(
+template<typename T>
+static inline bool min_(
 		T x,
 		T y)
 {
 	return (x < y) ? true : false;
 }
-template<typename T> static inline bool max_(
+template<typename T>
+static inline bool max_(
 		T x,
 		T y)
 {

@@ -392,7 +392,8 @@ int TestCase::TrnInd(
 	printf(
 			"==============================================================================\n");
 
-	this->ReadFileExt(cdata, idx_, object_, false);
+	this->ReadFileExt(idx_);
+	this->ReadFileCData(cdata, object_, false);
 
 	// Subject
 	for (int f = 0; f < sub_num; f++)
@@ -414,7 +415,7 @@ int TestCase::TrnInd(
 				flag = false;
 
 				// create directory if not valid
-				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 						+ "/";
 				directoryCheck(dir_s);
 
@@ -447,7 +448,7 @@ int TestCase::TrnInd(
 
 				// learning process
 				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
-						path, flag, face_) == EXIT_FAILURE)
+						flag, face_) == EXIT_FAILURE)
 				{
 					printer(29);
 					return EXIT_FAILURE;
@@ -464,10 +465,10 @@ int TestCase::TrnInd(
 			}
 		}
 
-		path = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/graph.txt";
 		WF->WriteFileGraph(G.get(), path);
-		path = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/window.txt";
 		WF->WriteFileWindow(G.get(), path);
 
@@ -501,7 +502,8 @@ int TestCase::Trn(
 	printf(
 			"==============================================================================\n");
 
-	this->ReadFileExt(cdata, idx_, object_, false);
+	this->ReadFileExt(idx_);
+	this->ReadFileCData(cdata, object_, false);
 
 	// Subject
 	for (int f = 0; f < sub_num; f++)
@@ -528,7 +530,7 @@ int TestCase::Trn(
 				flag_new_label = false;
 
 				// create directory if not valid
-				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 						+ "/";
 				directoryCheck(dir_s);
 
@@ -559,7 +561,7 @@ int TestCase::Trn(
 
 				// learning process
 				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
-						path, flag_new_label, face_) == EXIT_FAILURE)
+						flag_new_label, face_) == EXIT_FAILURE)
 				{
 					printer(29);
 					return EXIT_FAILURE;
@@ -576,10 +578,10 @@ int TestCase::Trn(
 			}
 		}
 
-		path = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/graph.txt";
 		WF->WriteFileGraph(G.get(), path);
-		path = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f)
+		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/window.txt";
 		WF->WriteFileWindow(G.get(), path);
 
@@ -611,6 +613,8 @@ int TestCase::Tst(
 
 	std::string dir_s, path;
 
+	this->ReadFileExt(idx_);
+
 	// Subject
 	for (int f = 0; f < sub_num; f++)
 	{
@@ -618,10 +622,10 @@ int TestCase::Tst(
 		auto cdata = std::make_shared<CData>(object_, LOC_INT, SEC_INT);
 
 		// read saved information
-		this->ReadFileExt(cdata, idx_, object_, os_);
+		this->ReadFileCData(cdata, object_, os_);
 
 		// directory of learned data of a subject
-		dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + to_string(f);
+		dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f);
 
 		// read available location areas
 		path = dir_s + "/location_area.txt";
@@ -638,7 +642,7 @@ int TestCase::Tst(
 		}
 
 		// directory to parsed message
-		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + to_string(f)
+		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + std::to_string(f)
 				+ "/ParsedResult/";
 		directoryCheck(dir_s);
 
@@ -658,7 +662,7 @@ int TestCase::Tst(
 			return EXIT_FAILURE;
 		}
 
-		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + to_string(f)
+		dir_s = PARENT + "/" + RESULT + "/" + object_ + "/" + std::to_string(f)
 				+ "/";
 		directoryCheck(dir_s);
 
@@ -709,7 +713,7 @@ int TestCase::Lbl(
 	std::string path;
 
 	std::map<std::string, std::string> label_ref_list;
-	std::vector<Vector3d> labels_ref;
+	std::vector<Eigen::Vector3d> labels_ref;
 	std::vector<std::string> labels_ref_name;
 
 	DataParser P;
@@ -750,8 +754,8 @@ int TestCase::Lbl(
 		e = b + RF->GetDataWordRF().size();
 		P.SetDataParser(RF->GetDataWordRF());
 		P.ParseDataNoLabel();
-		std::vector<Vector4d> tmp = P.GetPointParser();
-		std::vector<Vector3d> tmp2;
+		std::vector<Eigen::Vector4d> tmp = P.GetPointParser();
+		std::vector<Eigen::Vector3d> tmp2;
 		tmp2.resize(tmp.size());
 		for (int i = 0; i < tmp.size(); i++)
 			tmp2[i] = V4d3d(tmp[i]);
@@ -816,28 +820,12 @@ int TestCase::Lbl(
 	return EXIT_SUCCESS;
 }
 
-int TestCase::ReadFileExt(
+int TestCase::ReadFileCData(
 		std::shared_ptr<CData> cdata_,
-		const std::vector<int> &idx_,
 		const std::string &object_,
 		bool os_)
 {
 	std::string path;
-
-	/* Reading data filenames */
-	path = PARENT + "/" + DATA_DIR;
-	if (RF->ReadFileName(path, idx_, file_list.get(), sub_num) == EXIT_FAILURE)
-	{
-		return EXIT_FAILURE;
-	}
-	printer(26);
-
-	/* Reading action sequence label */
-	path = PARENT + "/" + KB_DIR + "/";
-	if (RF->ReadLabelSeq(path, label_list) == EXIT_FAILURE)
-	{
-		return EXIT_FAILURE;
-	}
 
 	/**
 	 * Reading surface
@@ -872,6 +860,29 @@ int TestCase::ReadFileExt(
 
 	/* Check if data was trained */
 	directoryCheck(PARENT + "/" + EVAL + "/" + object_ + "/");
+
+	return EXIT_SUCCESS;
+}
+
+int TestCase::ReadFileExt(
+		const std::vector<int> &idx_)
+{
+	std::string path;
+
+	// Reading data filenames
+	path = PARENT + "/" + DATA_DIR;
+	if (RF->ReadFileName(path, idx_, file_list.get(), sub_num) == EXIT_FAILURE)
+	{
+		return EXIT_FAILURE;
+	}
+	printer(26);
+
+	// Reading action sequence label
+	path = PARENT + "/" + KB_DIR + "/";
+	if (RF->ReadLabelSeq(path, label_list) == EXIT_FAILURE)
+	{
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }

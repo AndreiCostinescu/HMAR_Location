@@ -35,7 +35,7 @@ private:
 	std::vector<Eigen::Vector3d> surface_mid; 	// Surface plane midpoint
 	std::vector<Eigen::Vector3d> surface_min; 	// Surface plane minimum point
 	std::vector<Eigen::Vector3d> surface_max; 	// Surface plane maximum point
-	std::vector<Eigen::Matrix3d> surface_rot; 	// Surface rotation matrix to align to up vecto
+	std::vector<Eigen::Matrix3d> surface_rot; // Surface rotation matrix to align to up vecto
 	std::vector<double> surface_lim; 			// Surface distance limit
 	mspII_t ac; 								// Action category
 	std::vector<std::string> al; 				// Action labels

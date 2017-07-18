@@ -26,7 +26,7 @@ ActionParser::ActionParser(
 				l("location"),
 				a("action"),
 				msg_path(path_),
-				message_num(-1,-1)
+				message_num(-1, -1)
 {
 }
 
@@ -225,16 +225,19 @@ void ActionParser::DT3_1()
 // SM eval
 void ActionParser::DT2_2()
 {
-	if (std::accumulate(
-			KB->TransitionLA()[obj][state_mem.back().Label1()].begin(),
-			KB->TransitionLA()[obj][state_mem.back().Label1()].end(), 0.0)
-			== 0.0)
+	auto vec = KB->TransitionLA()[obj][state_mem.back().Label1()];
+	auto sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+
+	if (state_mem.back().Label1() >= 0 && sum == 0.0)
 	{
 		output = this->Decode(obj, loc, (*message)[11]);
 		message_num.first = 11;
 		label = "UNKNOWN";
 	}
-	this->DT3_2();
+	else
+	{
+		this->DT3_2();
+	}
 }
 
 // prediction on SM
