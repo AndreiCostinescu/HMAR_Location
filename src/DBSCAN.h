@@ -16,7 +16,15 @@
 #include <memory>
 #include <Eigen/Eigen>
 
+// CLUSTER_LIMIT is used to control the proximity in which 2 clusters merge.
+#ifdef DATA1
+#define CLUSTER_LIMIT 0.20
+#elif DATA2
 #define CLUSTER_LIMIT 0.10
+#else
+#define CLUSTER_LIMIT 0.10
+#endif
+
 #define CONTACT_TRIGGER_RATIO 0.65
 
 #define UNCLASSIFIED 	-1

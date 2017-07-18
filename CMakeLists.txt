@@ -100,6 +100,8 @@ endif()
 if(true)
 	project(HMAR_Location)
 	
+    add_definitions(-DDATA2)
+    
 	SET(VTK_DIR /home/chen/vtksrc/VTK-build)
 	find_package(VTK REQUIRED)
 	include(${VTK_USE_FILE})

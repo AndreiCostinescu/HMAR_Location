@@ -564,7 +564,7 @@ int ActionPrediction::DecideSectorIntervalExt(
 
 bool ActionPrediction::DecideGoal(
 		const int &label2_,
-		const double &sm_i_, //sectorstd::map single
+		const double &sm_i_, //sector map single
 		const double &delta_t_,
 		const double &loc_error_)
 {

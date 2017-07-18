@@ -204,4 +204,6 @@
 - fixed a bug on accumulate in ActionParser class member function DT2_2.
 - Updated all comments for the project.
 
-
+[31a]
+- 18/07/2017
+- updated code to run on DATA1 and DATA2

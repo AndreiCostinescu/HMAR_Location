@@ -326,22 +326,28 @@ int Test::Testing(
 	// [PARSE DATA]*************************************************************
 	this->ClearParser();
 	this->SetDataParser(RF->GetDataWordRF());
-//	if (this->ParseData()==EXIT_FAILURE)
-//	{
-	nolabel = true;
-	if (this->ParseDataNoLabel() == EXIT_FAILURE)
+	if (this->ParseData() == EXIT_FAILURE)
 	{
-		return EXIT_FAILURE;
+		nolabel = true;
+		if (this->ParseDataNoLabel() == EXIT_FAILURE)
+		{
+			return EXIT_FAILURE;
+		}
 	}
-//	}
 	printer(9);
 	// *************************************************************[PARSE DATA]
 
 	// [FACE ADJUST]************************************************************
 	if (face_)
 	{
+
+#ifdef DATA1
+		face_parser -= Eigen::Vector4d(0, 0.15, 0, 1);
+#elif DATA2
 		face_parser[1] *= -1;
 		face_parser += Eigen::Vector4d(-0.1, 0, 0.1, -1);
+#endif
+
 		this->LAAdjust("FACE", face_parser);
 	}
 	// *********************************************************** [FACE ADJUST]
@@ -413,7 +419,7 @@ int Test::Testing(
 	// writing results
 	{
 		this->WriteResult(tmpname, resultdir_, labels_predict, data_writeout,
-				goal_list, window_list, true);
+				goal_list, window_list, false);
 	}
 
 	// Visualize

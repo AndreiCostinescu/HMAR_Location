@@ -324,6 +324,7 @@ void WriteFile::WriteFileLA(
 				<< "," << node_tmp[i].contact;
 		write_file << "\n";
 	}
+	int nth = 0;
 }
 
 void WriteFile::WriteFileGraph(

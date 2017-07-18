@@ -8,8 +8,8 @@ nothing is happening .
 you have grabbed the APP that was throwed .
 the APP has been released .
 nothing is happening .
-you have grabbed the APP that was throwed .
 the APP has been released .
+nothing is happening .
 you have grabbed the APP that was throwed .
 the APP has been released .
 nothing is happening .

@@ -43,6 +43,18 @@ public:
 	 */
 	virtual ~Train();
 
+	/**
+	 * Adjusts the a known LA.
+	 *
+	 * @param LA_name_ Name of the LA to be changed.
+	 * @param G_ Scene graph.
+	 * @param LA_new Data for the new LA. 3D point + radius.
+	 */
+	int LAAdjust(
+			const std::string &LA_name_,
+			std::shared_ptr<CGraph> G_,
+			Eigen::Vector4d LA_new);
+
 	/*
 	 * Main learning function. Builds the SM and LA.
 	 *

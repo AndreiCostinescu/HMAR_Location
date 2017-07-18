@@ -15,7 +15,14 @@
 #include "print.h"
 #include "Train.h"
 
+#ifdef DATA1
+#define FILTER_WIN 5
+#elif DATA2
 #define FILTER_WIN 9
+#else
+#define FILTER_WIN 5
+#endif
+
 #define	LOC_INT 100
 #define	SEC_INT 36
 

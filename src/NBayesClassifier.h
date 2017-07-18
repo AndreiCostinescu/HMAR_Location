@@ -46,7 +46,7 @@ public:
 	 * @param prediction_ Likelihood
 	 */
 	void Classify(
-			std::vector<double> prediction_);
+			std::vector<double> &prediction_);
 
 private:
 	std::shared_ptr<ObjectPrediction> OP;

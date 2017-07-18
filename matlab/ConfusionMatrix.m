@@ -1,4 +1,4 @@
-function ConfusionMatrix( res_dir_name, out_file_name )
+function ConfusionMatrix( res_dir_name, out_file_name, print_flag )
 
 %% Dictionary of actions
 
@@ -49,6 +49,10 @@ for i=1:length(DIR)
         for iii=1:length(DIR_SAS)
             
             if (RootDirRemoval(DIR_SAS(iii).name))
+                continue;
+            end
+            
+            if (strcmp(DIR_SAS(iii).name,'ParsedResult'))
                 continue;
             end
             
@@ -157,7 +161,9 @@ set(findobj(gcf,'facecolor',[230,140,140]./255),'facecolor',red)
 set(findobj(gcf,'facecolor',[0.5,0.5,0.5]),'facecolor',white)
 set(findobj(gcf,'facecolor',[120,150,230]./255),'facecolor',blue)
 
-print(fig, out_file_name, '-depsc');
+if(print_flag)
+    print(fig, out_file_name, '-depsc');
+end
 
 close(fig);
 % print(fig,'ConfusionMatrix','-depsc');

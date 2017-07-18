@@ -38,7 +38,13 @@ TestCase::TestCase()
 #endif
 
 	dict[1] = "CUP";
+#ifdef DATA1
+	dict[2] = "ORG";
+#elif DATA2
 	dict[2] = "APP";
+#else
+	dict[2] = "ORG";
+#endif
 	dict[3] = "SPG";
 	dict[4] = "KNF";
 	dict[5] = "PT1";
@@ -223,150 +229,10 @@ void TestCase::Choose(
 			}
 			break;
 		}
-		/*
-		 case 1: // start with 001
-		 {
-		 idxs = {1};
-		 this->Trn(idxs, dict[1]);
-		 break;
-		 }
-		 case 2:
-		 {
-		 PARENT + "/" + EVAL = "Scene_Staticface";
-		 idxs = {2};
-		 this->Trn(idxs, dict[2]);
-		 break;
-		 }
-		 case 3:
-		 {
-		 idxs = {3,4,5,6,7,8};
-		 this->Trn(idxs, dict[3]);
-		 break;
-		 }
-		 case 4:
-		 {
-		 idxs = {9};
-		 this->Trn(idxs, dict[4]);
-		 break;
-		 }
-		 case 5:
-		 {
-		 // start with 001
-		 idxs = {1};
-		 this->Tst(idxs, dict[1]);
-		 break;
-		 }
-		 case 6:
-		 {
-		 idxs = {2};
-		 this->Tst(idxs, dict[2]);
-		 break;
-		 }
-		 case 7:
-		 {
-		 idxs = {3,4,5,6,7,8};
-		 this->Tst(idxs, dict[3]);
-		 break;
-		 }
-		 case 8:
-		 {
-		 idxs = {9};
-		 this->Tst(idxs, dict[4]);
-		 break;
-		 }
-		 case 9:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 // start with 001
-		 idxs = {1};
-		 this->Trn(idxs, dict[1]);
-		 break;
-		 }
-		 case 10:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 idxs = {2};
-		 this->Trn(idxs, dict[2]);
-		 break;
-		 }
-		 case 11:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 idxs = {3,4,5,6,7,8};
-		 this->Trn(idxs, dict[3]);
-		 break;
-		 }
-		 case 12:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 idxs = {9};
-		 this->Trn(idxs, dict[4]);
-		 break;
-		 }
-		 case 13:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 RESULT = RESULT2;
-		 // start with 001
-		 idxs = {1};
-		 this->Tst(idxs, dict[1]);
-		 break;
-		 }
-		 case 14:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 RESULT = RESULT2;
-		 idxs = {2};
-		 this->Tst(idxs, dict[2]);
-		 break;
-		 }
-		 case 15:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 RESULT = RESULT2;
-		 idxs = {3,4,5,6,7,8};
-		 this->Tst(idxs, dict[3]);
-		 break;
-		 }
-		 case 16:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 RESULT = RESULT2;
-		 idxs = {9};
-		 this->Tst(idxs, dict[4]);
-		 break;
-		 }
-		 case 17:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 idxs = {10};
-		 this->TrnInd(idxs, dict[5]);
-		 break;
-		 }
-		 case 18:
-		 {
-		 RESULT = RESULT2;
-		 idxs = {10};
-		 this->Tst(idxs, dict[5]);
-		 break;
-		 }
-		 case 19:
-		 {
-		 PARENT + "/" + EVAL = EVAL2;
-		 idxs = {11};
-		 this->TrnInd(idxs, dict[6]);
-		 break;
-		 }
-		 case 20:
-		 {
-		 RESULT = RESULT2;
-		 idxs = {11};
-		 this->Tst(idxs, dict[6]);
-		 break;
-		 }
-		 */
 		default:
-		break;
+		{
+			break;
+		}
 	}
 }
 
@@ -393,19 +259,21 @@ int TestCase::TrnInd(
 			"==============================================================================\n");
 
 	this->ReadFileExt(idx_);
-	this->ReadFileCData(cdata, object_, false);
 
 	// Subject
 	for (int f = 0; f < sub_num; f++)
 	{
-		auto cdata_tmp = std::make_shared<CData>(*cdata);
-
+		// construct Train class object.
 		auto T = std::make_shared<Train>(LOC_INT, SEC_INT, FILTER_WIN);
 
-		auto G = std::make_shared<CGraph>(object_, LOC_INT, SEC_INT);
+		// create a data container.
+		auto cdata = std::make_shared<CData>(object_, LOC_INT, SEC_INT);
+
+		// read saved information.
+		this->ReadFileCData(cdata, object_, false);
 
 		// to check if a LA has already been seen.
-		std::vector<int> al_tmp_idx(cdata_tmp->KB->AL().size(), 0);
+		std::vector<int> al_tmp_idx(cdata->KB->AL().size(), 0);
 
 		for (int ff = 0; ff < sub_num; ff++)
 		{
@@ -415,13 +283,13 @@ int TestCase::TrnInd(
 				flag = false;
 
 				// create directory if not valid
-				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
-						+ "/";
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/"
+						+ std::to_string(f) + "/";
 				directoryCheck(dir_s);
 
 				// read available location areas
 				path = dir_s + "location_area.txt";
-				RF->ReadFileLA(path, cdata_tmp->KB->AL(), G);
+				RF->ReadFileLA(path, cdata->KB->AL(), cdata->G);
 
 				// action filename std::pair
 				pair_tmp = (*file_list)[ff][fff];
@@ -429,14 +297,14 @@ int TestCase::TrnInd(
 				// for initial labelling
 				if (1)
 				{
-					for (int i = 0; i < cdata_tmp->KB->AL().size(); i++)
+					for (int i = 0; i < cdata->KB->AL().size(); i++)
 					{
 						if (al_tmp_idx[i] > 0)
 							continue;
 						for (int ii = 0;
 								ii < (*label_list)[pair_tmp.first].size(); ii++)
 						{
-							if (!strcmp(cdata_tmp->KB->AL()[i].c_str(),
+							if (!strcmp(cdata->KB->AL()[i].c_str(),
 									(*label_list)[pair_tmp.first][ii].c_str()))
 							{
 								flag = true;
@@ -447,8 +315,8 @@ int TestCase::TrnInd(
 				}
 
 				// learning process
-				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
-						flag, face_) == EXIT_FAILURE)
+				if (T->Learning(cdata->G, cdata->KB, pair_tmp.second, flag,
+						face_) == EXIT_FAILURE)
 				{
 					printer(29);
 					return EXIT_FAILURE;
@@ -456,10 +324,10 @@ int TestCase::TrnInd(
 				printer(30);
 
 				// writing location areas data
-				if (G->GetNumberOfNodes() > 0)
+				if (cdata->G->GetNumberOfNodes() > 0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(),
+					WF->WriteFileLA(cdata->G.get(), cdata->KB.get(),
 							path.c_str());
 				}
 			}
@@ -467,10 +335,10 @@ int TestCase::TrnInd(
 
 		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/graph.txt";
-		WF->WriteFileGraph(G.get(), path);
+		WF->WriteFileGraph(cdata->G.get(), path);
 		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/window.txt";
-		WF->WriteFileWindow(G.get(), path);
+		WF->WriteFileWindow(cdata->G.get(), path);
 
 	}
 
@@ -503,19 +371,21 @@ int TestCase::Trn(
 			"==============================================================================\n");
 
 	this->ReadFileExt(idx_);
-	this->ReadFileCData(cdata, object_, false);
 
 	// Subject
 	for (int f = 0; f < sub_num; f++)
 	{
-		auto cdata_tmp = std::make_shared<CData>(*cdata);
-
+		// construct Train class object.
 		auto T = std::make_shared<Train>(LOC_INT, SEC_INT, FILTER_WIN);
 
-		auto G = std::make_shared<CGraph>(object_, LOC_INT, SEC_INT);
+		// create a data container.
+		auto cdata = std::make_shared<CData>(object_, LOC_INT, SEC_INT);
+
+		// read saved information.
+		this->ReadFileCData(cdata, object_, false);
 
 		// to check if a LA has already been seen.
-		std::vector<int> al_tmp_idx(cdata_tmp->KB->AL().size(), 0);
+		std::vector<int> al_tmp_idx(cdata->KB->AL().size(), 0);
 
 		for (int ff = 0; ff < sub_num; ff++)
 		{
@@ -530,13 +400,13 @@ int TestCase::Trn(
 				flag_new_label = false;
 
 				// create directory if not valid
-				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
-						+ "/";
+				dir_s = PARENT + "/" + EVAL + "/" + object_ + "/"
+						+ std::to_string(f) + "/";
 				directoryCheck(dir_s);
 
 				// read available location areas
 				path = dir_s + "location_area.txt";
-				RF->ReadFileLA(path, cdata_tmp->KB->AL(), G);
+				RF->ReadFileLA(path, cdata->KB->AL(), cdata->G);
 
 				// action filename std::pair
 				pair_tmp = (*file_list)[ff][fff];
@@ -544,13 +414,13 @@ int TestCase::Trn(
 				// for initial labelling
 				if (1)
 				{
-					for (int i = 0; i < cdata_tmp->KB->AL().size(); i++)
+					for (int i = 0; i < cdata->KB->AL().size(); i++)
 					{
 						if (al_tmp_idx[i] > 0)
 							continue;
 						for (auto label : (*label_list)[pair_tmp.first])
 						{
-							if (cdata_tmp->KB->AL()[i] == label)
+							if (cdata->KB->AL()[i] == label)
 							{
 								flag_new_label = true;
 								al_tmp_idx[i] = 1;
@@ -560,7 +430,7 @@ int TestCase::Trn(
 				}
 
 				// learning process
-				if (T->Learning(cdata_tmp->G, cdata_tmp->KB, pair_tmp.second,
+				if (T->Learning(cdata->G, cdata->KB, pair_tmp.second,
 						flag_new_label, face_) == EXIT_FAILURE)
 				{
 					printer(29);
@@ -569,10 +439,10 @@ int TestCase::Trn(
 				printer(30);
 
 				// writing location areas data
-				if (G.get()->GetNumberOfNodes() > 0)
+				if (cdata->G->GetNumberOfNodes() > 0)
 				{
 					remove(path.c_str());
-					WF->WriteFileLA(cdata_tmp->G.get(), cdata_tmp->KB.get(),
+					WF->WriteFileLA(cdata->G.get(), cdata->KB.get(),
 							path.c_str());
 				}
 			}
@@ -580,10 +450,10 @@ int TestCase::Trn(
 
 		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/graph.txt";
-		WF->WriteFileGraph(G.get(), path);
+		WF->WriteFileGraph(cdata->G.get(), path);
 		path = PARENT + "/" + EVAL + "/" + object_ + "/" + std::to_string(f)
 				+ "/window.txt";
-		WF->WriteFileWindow(G.get(), path);
+		WF->WriteFileWindow(cdata->G.get(), path);
 
 	}
 

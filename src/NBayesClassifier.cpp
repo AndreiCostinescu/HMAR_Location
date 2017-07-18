@@ -96,7 +96,7 @@ void NBayesClassifier::Prior(
 }
 
 void NBayesClassifier::Classify(
-		std::vector<double> prediction_)
+		std::vector<double> &prediction_)
 {
 	double sum_tmp = 0.0;
 	for (int i = 0; i < P1_container_all->size(); i++)

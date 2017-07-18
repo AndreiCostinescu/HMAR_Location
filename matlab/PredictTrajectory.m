@@ -1,4 +1,4 @@
-function PredictTrajectory( res_dir_name, out_file_name )
+function PredictTrajectory( res_dir_name, out_file_name, print_flag )
 
 %% Dictionary of actions
 
@@ -81,6 +81,10 @@ for i=1:length(DIR)
                 continue;
             end
             
+            if (strcmp(DIR_SAS(iii).name,'ParsedResult'))
+                continue;
+            end
+            
             % Files of subject
             file_name = [dir_name '/' DIR(i).name '/' DIR_S(ii).name '/' DIR_SAS(iii).name];
             DIR_F = dir(file_name);
@@ -89,7 +93,7 @@ for i=1:length(DIR)
                 if (RootDirRemoval(DIR_F(iv).name) || strcmp(DIR_F(iv).name(1),'_'))
                     continue;
                 end
-
+                
 %                 if (~strcmp(DIR_F(iv).name,'170419135613.txt'))
 %                     continue;
 %                 end
@@ -176,8 +180,7 @@ for i=1:length(DIR)
                 if strcmp(file_name,'../Result/SPG/1/004/170419120357.txt')
                     nth=0;
                 end
-               
-                
+                              
                 % compare between predict and label sequence
                 for v=1:cc
                     if(~strcmp(als{v},als_tmp{v}))
@@ -320,7 +323,9 @@ for i=1:length(DIR)
             legend(plot_handles, legend_name');
 %             title(['Trajectory Prediction ( ' DICT3(ceil(ii/7)) ' to ' DICT3(mod(ii-1,7)+1) ')']);
             title(['Trajectory Prediction (Goal : ' DICT3(mod(ii-1,7)+1) ')']);
-            print(figure(ii),[out_file_name '_' DIR(i).name '_' num2str(ii)],'-depsc');
+            if(print_flag)
+                print(figure(ii),[out_file_name '_' DIR(i).name '_' num2str(ii)],'-depsc');
+            end;
         end
         
 
