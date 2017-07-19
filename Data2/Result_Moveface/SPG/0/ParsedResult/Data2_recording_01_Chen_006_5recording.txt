@@ -1,9 +1,9 @@
-you have grabbed the SPG that was keeped .
-i think you are going to clean SHELF .
-nothing is happening .
-i think you are going to clean SHELF .
-you are cleaning SHELF .
-i think you are going to keep the SPG .
-you are keeping the SPG .
-the SPG has been released .
-nothing is happening .
+50 you have grabbed the SPG that was keeped .
+85 i think you are going to clean SHELF .
+93 nothing is happening .
+97 i think you are going to clean SHELF .
+110 you are cleaning SHELF .
+153 i think you are going to keep the SPG .
+171 you are keeping the SPG .
+182 the SPG has been released .
+184 nothing is happening .

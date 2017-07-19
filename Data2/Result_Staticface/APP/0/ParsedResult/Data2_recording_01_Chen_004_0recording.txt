@@ -1,8 +1,8 @@
-nothing is happening .
-you have grabbed the APP that was keeped .
-i think you are going to eat the APP .
-you are eating the APP .
-i think you are going to throw the APP .
-you are throwing the APP .
-the APP has been released .
-nothing is happening .
+2 nothing is happening .
+65 you have grabbed the APP that was keeped .
+115 i think you are going to eat the APP .
+139 you are eating the APP .
+259 i think you are going to throw the APP .
+281 you are throwing the APP .
+302 the APP has been released .
+304 nothing is happening .

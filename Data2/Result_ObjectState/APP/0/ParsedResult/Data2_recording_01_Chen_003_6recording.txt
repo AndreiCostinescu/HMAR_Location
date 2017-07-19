@@ -1,17 +1,17 @@
-you have grabbed the APP that was keeped .
-i think you are going to eat the APP .
-you are eating the APP .
-i think you are going to place the APP .
-you are placeing the APP on TABLE1 .
-the APP has been released .
-nothing is happening .
-you have grabbed the APP that was placeed .
-i think you are going to eat the APP .
-you are eating the APP .
-i think you are going to throw the APP .
-you are throwing the APP .
-the APP has been released .
-nothing is happening .
-you have grabbed the APP that was throwed .
-the APP has been released .
-nothing is happening .
+44 you have grabbed the APP that was keeped .
+81 i think you are going to eat the APP .
+107 you are eating the APP .
+153 i think you are going to place the APP .
+170 you are placing the APP on TABLE1 .
+185 the APP has been released .
+187 nothing is happening .
+239 you have grabbed the APP that was placed .
+276 i think you are going to eat the APP .
+303 you are eating the APP .
+373 i think you are going to throw the APP .
+400 you are throwing the APP .
+435 the APP has been released .
+437 nothing is happening .
+511 you have grabbed the APP that was throwed .
+518 the APP has been released .
+520 nothing is happening .

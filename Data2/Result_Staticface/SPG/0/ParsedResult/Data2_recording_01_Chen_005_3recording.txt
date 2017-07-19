@@ -1,9 +1,9 @@
-you have grabbed the SPG that was keeped .
-i think you are going to clean TABLE1 .
-you are cleaning TABLE1 on TABLE1 .
-i think you are going to keep the SPG .
-the SPG has been released .
-i think you are going to clean TABLE1 .
-you are keeping the SPG .
-the SPG has been released .
-nothing is happening .
+66 you have grabbed the SPG that was keeped .
+100 i think you are going to clean TABLE1 .
+126 you are cleaning TABLE1 on TABLE1 .
+271 i think you are going to keep the SPG .
+295 the SPG has been released .
+298 i think you are going to clean TABLE1 .
+302 you are keeping the SPG .
+308 the SPG has been released .
+310 nothing is happening .

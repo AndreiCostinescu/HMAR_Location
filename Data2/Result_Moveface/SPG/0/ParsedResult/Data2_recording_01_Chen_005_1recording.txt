@@ -1,8 +1,8 @@
-nothing is happening .
-you have grabbed the SPG that was keeped .
-i think you are going to clean TABLE1 .
-you are cleaning TABLE1 on TABLE1 .
-i think you are going to keep the SPG .
-you are keeping the SPG .
-the SPG has been released .
-nothing is happening .
+2 nothing is happening .
+48 you have grabbed the SPG that was keeped .
+75 i think you are going to clean TABLE1 .
+104 you are cleaning TABLE1 on TABLE1 .
+201 i think you are going to keep the SPG .
+237 you are keeping the SPG .
+254 the SPG has been released .
+256 nothing is happening .

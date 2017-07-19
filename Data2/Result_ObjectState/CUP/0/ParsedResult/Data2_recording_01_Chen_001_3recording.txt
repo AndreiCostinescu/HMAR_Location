@@ -1,17 +1,17 @@
-you have grabbed the CUP that was storeed .
-i think you are going to fill up the CUP .
-you are filling up the CUP .
-i think you are going to drink .
-you are drinking .
-i think you are going to wash the CUP .
-No,i think you are going to place the CUP .
-you are placeing the CUP on TABLE1 .
-the CUP has been released .
-nothing is happening .
-you have grabbed the CUP that was placeed .
-i think you are going to drink .
-you are drinking .
-i think you are going to wash the CUP .
-you are washing the CUP .
-the CUP has been released .
-nothing is happening .
+84 you have grabbed the CUP that was stored .
+106 i think you are going to fill up the CUP .
+133 you are filling up the CUP .
+186 i think you are going to drink .
+201 you are drinking .
+254 i think you are going to wash the CUP .
+257 No,i think you are going to place the CUP .
+275 you are placing the CUP on TABLE1 .
+296 the CUP has been released .
+298 nothing is happening .
+327 you have grabbed the CUP that was placed .
+350 i think you are going to drink .
+386 you are drinking .
+435 i think you are going to wash the CUP .
+474 you are washing the CUP .
+497 the CUP has been released .
+499 nothing is happening .

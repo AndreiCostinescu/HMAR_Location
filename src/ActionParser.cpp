@@ -389,20 +389,14 @@ void ActionParser::Display(
 		{
 			output = "No," + output;
 			display_ = output;
-			if (display_)
-			{
-				printf("%s\n", output.c_str());
-			}
+			// printf("%s\n", output.c_str());
 			write_file << std::to_string(timestamp_) << " " << output << "\n";
 			output.erase(0,3);
 		}
 		else
 		{
 			display_ = output;
-			if (display_)
-			{
-				printf("%s\n", output.c_str());
-			}
+			// printf("%s\n", output.c_str());
 			write_file << std::to_string(timestamp_) << " " << output << "\n";
 		}
 	}

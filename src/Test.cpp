@@ -282,8 +282,8 @@ int Test::GetData(const int &counter)
 	data_writeout.push_back(tmp);
 
 	pvas.push_back(*(cdata->pva));
-	goal_list.push_back(cdata->AS->Goal());
-	window_list.push_back(cdata->AS->Window());
+	goals.push_back(cdata->AS->Goal());
+	windows.push_back(cdata->AS->Window());
 
 	if (cdata->AS->Grasp() == GRAB::RELEASE)
 	{
@@ -310,15 +310,15 @@ int Test::WriteResult(
 	if (nolabel_)
 	{
 		WF->WriteFilePrediction(cdata->G.get(), cdata->KB.get(),
-				(resultdir_ + filename_), labels_predict_, goals_, windows_);
+				(resultdir_ + filename_), labels_predict, goals, windows);
 	}
 	else
 	{
 		WF->WriteFilePrediction(cdata->G.get(), cdata->KB.get(),
-				(resultdir_ + filename_), labels_parser, labels_predict_,
-				goals_, windows_);
+				(resultdir_ + filename_), labels_parser, labels_predict,
+				goals, windows);
 	}
-	WF->WriteFile_((resultdir_ + "_" + filename_), data_writeout_);
+	WF->WriteFile_((resultdir_ + "_" + filename_), data_writeout);
 	return EXIT_SUCCESS;
 }
 
@@ -414,8 +414,7 @@ int Test::Testing(
 
 	// writing results
 	{
-		this->WriteResult(tmpname, resultdir_, labels_predict, data_writeout,
-				goal_list, window_list, false);
+		this->WriteResult(tmpname, resultdir_, false);
 	}
 
 	// Visualize

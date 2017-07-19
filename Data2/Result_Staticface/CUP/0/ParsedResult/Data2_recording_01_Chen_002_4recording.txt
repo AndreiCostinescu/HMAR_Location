@@ -1,9 +1,9 @@
-you have grabbed the CUP that was storeed .
-i think you are going to fill up the CUP .
-you are filling up the CUP .
-i think you are going to drink .
-you are drinking .
-i think you are going to wash the CUP .
-you are washing the CUP .
-the CUP has been released .
-nothing is happening .
+49 you have grabbed the CUP that was stored .
+82 i think you are going to fill up the CUP .
+112 you are filling up the CUP .
+150 i think you are going to drink .
+160 you are drinking .
+223 i think you are going to wash the CUP .
+268 you are washing the CUP .
+292 the CUP has been released .
+294 nothing is happening .

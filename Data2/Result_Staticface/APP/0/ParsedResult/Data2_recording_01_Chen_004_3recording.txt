@@ -1,15 +1,15 @@
-you have grabbed the APP that was keeped .
-i think you are going to eat the APP .
-you are eating the APP .
-i think you are going to throw the APP .
-you are throwing the APP .
-the APP has been released .
-nothing is happening .
-you have grabbed the APP that was throwed .
-the APP has been released .
-nothing is happening .
-the APP has been released .
-nothing is happening .
-you have grabbed the APP that was throwed .
-the APP has been released .
-nothing is happening .
+167 you have grabbed the APP that was keeped .
+194 i think you are going to eat the APP .
+220 you are eating the APP .
+409 i think you are going to throw the APP .
+435 you are throwing the APP .
+456 the APP has been released .
+458 nothing is happening .
+469 you have grabbed the APP that was throwed .
+481 the APP has been released .
+483 nothing is happening .
+489 the APP has been released .
+490 nothing is happening .
+491 you have grabbed the APP that was throwed .
+492 the APP has been released .
+494 nothing is happening .

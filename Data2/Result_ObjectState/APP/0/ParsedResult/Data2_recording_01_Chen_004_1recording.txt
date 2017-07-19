@@ -1,8 +1,8 @@
-you have grabbed the APP that was keeped .
-i think you are going to eat the APP .
-you are eating the APP .
-i think you are going to place the APP .
-No,i think you are going to throw the APP .
-you are throwing the APP .
-the APP has been released .
-nothing is happening .
+46 you have grabbed the APP that was keeped .
+76 i think you are going to eat the APP .
+139 you are eating the APP .
+162 i think you are going to place the APP .
+241 No,i think you are going to throw the APP .
+279 you are throwing the APP .
+309 the APP has been released .
+311 nothing is happening .
