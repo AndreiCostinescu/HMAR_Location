@@ -155,7 +155,9 @@ public:
 	 * @param filename_ Filename to save the parsed message.
 	 */
 	virtual void Display(
-			const std::string &filename_);
+			const std::string &filename_,
+			const int &timestamp_,
+			std::string &display_);
 
 private:
 

@@ -96,10 +96,6 @@ public:
 	virtual int WriteResult(
 			const std::string &filename_,
 			const std::string &resultdir_,
-			std::vector<std::string> labels_predict_,
-			std::vector<std::vector<double> > data_writeout_,
-			std::vector<std::map<std::string, double> > goals_,
-			std::vector<std::map<std::string, double> > windows_,
 			bool nolabel_);
 
 	/**
@@ -125,9 +121,16 @@ public:
 	 * Carries out output data parsing using the class ActionParser.
 	 *
 	 * @param filename_ Name of file to write the parsed messages.
+	 * @param timestamp_ Timestamp.
+	 * @param display_ Displayed output message.
 	 */
 	virtual int Parser(
-			const std::string &filename_);
+			const std::string &filename_,
+			const int &timestamp_,
+			std::string &display_);
+
+
+	virtual int GetData(const int &counter);
 
 	/**
 	 * Main evaluation function.
@@ -150,6 +153,12 @@ private:
 	int loc_int;
 	int sec_int;
 	int f_win;
+
+	std::vector<std::vector<double> > data_writeout;
+	std::vector<std::string> labels_predict;
+	std::vector<std::vector<Eigen::Vector4d> >	pvas;
+	std::vector<std::map<std::string,double> > goals;
+	std::vector<std::map<std::string,double> > windows;
 
 	std::shared_ptr<CData> cdata;
 };

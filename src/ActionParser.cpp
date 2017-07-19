@@ -76,17 +76,23 @@ std::string ActionParser::Decode(
 		msg_.insert(msg_.find(o), obj_);
 		msg_.erase(msg_.find(o), o.length());
 	}
+
 	if (msg_.find(l) != std::string::npos)
 	{
 		msg_.insert(msg_.find(l), loc_);
 		msg_.erase(msg_.find(l), l.length());
 	}
+
 	if (msg_.find(a) != std::string::npos)
 	{
 		if (msg_.find(a) - msg_.find("are") == 4)
 		{
 			if (ob_ac.find(" ") != std::string::npos)
 			{
+				if (ob_ac[ob_ac.find(" ")-1]=='e')
+				{
+					ob_ac.erase(ob_ac.find(" ")-1, 1);
+				}
 				ob_ac.insert(ob_ac.find(" "), "ing");
 			}
 			else
@@ -94,22 +100,33 @@ std::string ActionParser::Decode(
 				ob_ac.insert(ob_ac.length(), "ing");
 			}
 		}
+
 		if (msg_.find(a) - msg_.find("was") == 4)
 		{
 			if (ob_ac.find(" ") != std::string::npos)
 			{
 				ob_ac.erase(ob_ac.find(" "), ob_ac.length() - ob_ac.find(" "));
+				if (ob_ac.back()=='e')
+				{
+					ob_ac.pop_back();
+				}
 				ob_ac.insert(ob_ac.length(), "ed");
 			}
 			else
 			{
+				if (ob_ac.back()=='e')
+				{
+					ob_ac.pop_back();
+				}
 				ob_ac.insert(ob_ac.length(), "ed");
 			}
 		}
+
 		msg_.insert(msg_.find(a), ob_ac);
 		msg_.erase(msg_.find(a), a.length());
 		msg_ = this->Decode(obj_, loc_, msg_);
 	}
+
 	output = msg_;
 	return output;
 }
@@ -301,6 +318,7 @@ void ActionParser::DT4_2(
 		x_[i] /= sum_tmp;
 	}
 
+	// uncertain if probability is less than 0.33 .
 	if (*max_element(x_.begin(), x_.end()) > 0.33)
 	{
 		if (state_mem.back().Velocity() > 0.001)
@@ -338,7 +356,9 @@ void ActionParser::DT4_2(
 }
 
 void ActionParser::Display(
-		const std::string &filename_)
+		const std::string &filename_,
+		const int &timestamp_,
+		std::string &display_)
 {
 	if (state_mem.size() >= delay_factor)
 	{
@@ -361,20 +381,29 @@ void ActionParser::Display(
 
 	std::ofstream write_file(msg_path + filename_, std::ios::app);
 
-	// Extra info for transitions
+	// Outputs only when new message is being parsed.
 	if (output_mem != output)
 	{
+		// Checks if the same message is used but with different content.
 		if (message_num.first == message_num.second)
 		{
 			output = "No," + output;
-//			printf("%s\n", output.c_str());
-			write_file << output << "\n";
-			output.erase(0, 3);
+			display_ = output;
+			if (display_)
+			{
+				printf("%s\n", output.c_str());
+			}
+			write_file << std::to_string(timestamp_) << " " << output << "\n";
+			output.erase(0,3);
 		}
 		else
 		{
-//			printf("%s\n", output.c_str());
-			write_file << output << "\n";
+			display_ = output;
+			if (display_)
+			{
+				printf("%s\n", output.c_str());
+			}
+			write_file << std::to_string(timestamp_) << " " << output << "\n";
 		}
 	}
 	message_num.second = message_num.first;

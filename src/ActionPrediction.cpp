@@ -227,39 +227,39 @@ int ActionPrediction::ContactTrigger(
 				{
 					Eigen::Vector4d point_rot, point_rot2;
 					Eigen::Matrix4d T;
-					auto flag =
-							cdata_->G->GetNode((int) (*(cdata_->pva))[0][3]).surface_flag;
-					T << cdata_->KB->SurfaceRotation()[flag - 1].row(0), 0, cdata_->KB->SurfaceRotation()[flag
-							- 1].row(1), 0, cdata_->KB->SurfaceRotation()[flag
-							- 1].row(2), 0, 0, 0, 0, 0;
+					auto tmp = (*(cdata_->pva))[0];
+					auto flag = cdata_->G->GetNode((int) tmp[3]).surface_flag;
+					T << cdata_->KB->SurfaceRotation()[flag - 1].row(0), 0,
+						 cdata_->KB->SurfaceRotation()[flag - 1].row(1), 0,
+						 cdata_->KB->SurfaceRotation()[flag - 1].row(2), 0,
+						 0, 0, 0, 0;
 
 					// Last element of T is zero because last std::vector element is used for labeling.
 					// Point transform to the coordinate system of the surface.
 					// p' = [R,R*t]*p
 					point_rot =
-							(T * (*(cdata_->pva))[0])
-									- (T
-											* cdata_->G->GetNode(
-													(int) (*(cdata_->pva))[0][3]).centroid);
-					point_rot[3] = (*(cdata_->pva))[0][3];
+							(T * tmp)
+							- (T * cdata_->G->GetNode((int) tmp[3]).centroid);
+					point_rot[3] = tmp[3];
 
 					this->DecideBoundaryCuboidExt(point_rot,
-							cdata_->G->GetNode((int) (*(cdata_->pva))[0][3]).cuboid_min,
-							cdata_->G->GetNode((int) (*(cdata_->pva))[0][3]).cuboid_max);
+							cdata_->G->GetNode((int) tmp[3]).cuboid_min,
+							cdata_->G->GetNode((int) tmp[3]).cuboid_max);
 					(*(cdata_->pva))[0][3] = point_rot[3];
 				}
 
 				// prevent from going to unknown goal locations during middle of movement
 				for (int i = 0; i < cdata_->G->GetNumberOfNodes(); i++)
 				{
+					auto tmp = (*(cdata_->pva))[0];
 					if (pred_sm.pct_err[i] > 0
 							&& last_loc[i] > cdata_->G->GetLocInt() / 10
 							&& last_loc[i]
 									< cdata_->G->GetLocInt()
 											- (cdata_->G->GetLocInt() / 10))
 					{
-						if (pred_sm.pct_err[(int) (*(cdata_->pva))[0][3]] == 0
-								&& pred_sm.range[(int) (*(cdata_->pva))[0][3]]
+						if (pred_sm.pct_err[(int) tmp[3]] == 0
+								&& pred_sm.range[(int) tmp[3]]
 										!= (int) RANGE::EXCEED)
 						{
 							(*(cdata_->pva))[0][3] = -1;
@@ -411,9 +411,7 @@ int ActionPrediction::PredictFromSectorMap(
 		}
 
 		Eigen::Vector3d delta_t;
-		int loc_idx
-		{ -1 }, sec_idx
-		{ -1 };
+		int loc_idx	{ -1 }, sec_idx	{ -1 };
 
 		// LOC SEC INT
 		int init_tmp = init[i];

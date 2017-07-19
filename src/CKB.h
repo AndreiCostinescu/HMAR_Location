@@ -31,15 +31,34 @@ private:
 	using msmss_t = std::map<std::string, std::map<std::string, std::string> >;
 	using mspII_t = std::map<std::string, std::pair<int, int> >;
 
-	std::vector<Eigen::Vector4d> surface_eq; 	// Surface equation
-	std::vector<Eigen::Vector3d> surface_mid; 	// Surface plane midpoint
-	std::vector<Eigen::Vector3d> surface_min; 	// Surface plane minimum point
-	std::vector<Eigen::Vector3d> surface_max; 	// Surface plane maximum point
-	std::vector<Eigen::Matrix3d> surface_rot; // Surface rotation matrix to align to up vecto
-	std::vector<double> surface_lim; 			// Surface distance limit
-	mspII_t ac; 								// Action category
-	std::vector<std::string> al; 				// Action labels
+	// Surface equation
+	std::vector<Eigen::Vector4d> surface_eq;
+
+	// Surface plane midpoint
+	std::vector<Eigen::Vector3d> surface_mid;
+
+ 	// Surface plane minimum point
+	std::vector<Eigen::Vector3d> surface_min;
+
+ 	// Surface plane maximum point
+	std::vector<Eigen::Vector3d> surface_max;
+
+   // Surface rotation matrix to align to up vector
+	std::vector<Eigen::Matrix3d> surface_rot;
+
+ 	// Surface distance limit
+	std::vector<double> surface_lim;
+
+	// Action category
+	mspII_t ac; 			
+			
+	// Action labels	
+	std::vector<std::string> al; 	
+	
+	// Object labels	
 	msmss_t ol;
+
+	// Action transitions
 	msvvD_t transition_action;
 
 public:

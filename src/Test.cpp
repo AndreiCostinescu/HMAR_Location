@@ -255,20 +255,56 @@ int Test::Predict()
 }
 
 int Test::Parser(
-		const std::string &filename_)
+		const std::string &filename_,
+		const int &timestamp_,
+		std::string &display_)
 {
 	AParse->Parse(cdata->AS.get());
-	AParse->Display(filename_);
+	AParse->Display(filename_, timestamp_, display_);
+	return EXIT_SUCCESS;
+}
+
+int Test::GetData(const int &counter)
+{
+	std::vector<double> tmp;
+	tmp.push_back(counter);
+	tmp.push_back((int) cdata->AS->Grasp());
+	tmp.push_back(cdata->AS->Label1());
+	tmp.push_back(cdata->AS->Label2());
+	tmp.push_back(cdata->AS->Velocity());
+	tmp.push_back(cdata->AS->SurfaceFlag());
+	tmp.push_back(
+			(checkSurfaceDistance((*(cdata->pva))[0],
+					cdata->KB->SurfaceEquation()[0])));
+	tmp.push_back((double) ((*(cdata->pva))[0][0]));
+	tmp.push_back((double) ((*(cdata->pva))[0][1]));
+	tmp.push_back((double) ((*(cdata->pva))[0][2]));
+	data_writeout.push_back(tmp);
+
+	pvas.push_back(*(cdata->pva));
+	goal_list.push_back(cdata->AS->Goal());
+	window_list.push_back(cdata->AS->Window());
+
+	if (cdata->AS->Grasp() == GRAB::RELEASE)
+	{
+		labels_predict.push_back("RELEASE");
+	}
+	else if (cdata->AS->Probability() < 0)
+	{
+		labels_predict.push_back(
+				cdata->KB.get()->AL()[cdata->AS->Label2()]);
+	}
+	else
+	{
+		labels_predict.push_back("MOVE");
+	}
+
 	return EXIT_SUCCESS;
 }
 
 int Test::WriteResult(
 		const std::string &filename_,
 		const std::string &resultdir_,
-		std::vector<std::string> labels_predict_,
-		std::vector<std::vector<double> > data_writeout_,
-		std::vector<std::map<std::string, double> > goals_,
-		std::vector<std::map<std::string, double> > windows_,
 		bool nolabel_)
 {
 	if (nolabel_)
@@ -297,13 +333,7 @@ int Test::Testing(
 	// In the output result the ref. label is empty.
 	bool nolabel = false;
 
-	std::vector<std::string> labels_predict;
-	std::vector<std::vector<Eigen::Vector4d> > pvas;
-
-	std::vector<std::map<std::string, double> > goal_list;
-	std::vector<std::map<std::string, double> > window_list;
-
-	std::vector<std::vector<double> > data_writeout;
+	std::string phrase;
 	// **************************************************************[VARIABLES]
 
 	// [Initialization] ********************************************************
@@ -362,43 +392,9 @@ int Test::Testing(
 		// 2. Prediction
 		this->Predict();
 
-//		if(cdata->AS->label1>=0)
-		{
-			std::vector<double> tmp;
-			tmp.push_back(i);
-			tmp.push_back((int) cdata->AS->Grasp());
-			tmp.push_back(cdata->AS->Label1());
-			tmp.push_back(cdata->AS->Label2());
-			tmp.push_back(cdata->AS->Velocity());
-			tmp.push_back(cdata->AS->SurfaceFlag());
-			tmp.push_back(
-					(checkSurfaceDistance((*(cdata->pva))[0],
-							cdata->KB->SurfaceEquation()[0])));
-			tmp.push_back((double) ((*(cdata->pva))[0][0]));
-			tmp.push_back((double) ((*(cdata->pva))[0][1]));
-			tmp.push_back((double) ((*(cdata->pva))[0][2]));
-			data_writeout.push_back(tmp);
-		}
+		this->GetData(i);
 
-		pvas.push_back(*(cdata->pva));
-		goal_list.push_back(cdata->AS->Goal());
-		window_list.push_back(cdata->AS->Window());
-
-		if (cdata->AS->Grasp() == GRAB::RELEASE)
-		{
-			labels_predict.push_back("RELEASE");
-		}
-		else if (cdata->AS->Probability() < 0)
-		{
-			labels_predict.push_back(
-					cdata->KB.get()->AL()[cdata->AS->Label2()]);
-		}
-		else
-		{
-			labels_predict.push_back("MOVE");
-		}
-
-		this->Parser(tmpname);
+		this->Parser(tmpname, i, phrase);
 
 		// Visualize
 		if (0)
